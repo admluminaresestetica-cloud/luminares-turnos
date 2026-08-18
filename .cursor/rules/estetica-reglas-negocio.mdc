@@ -1,0 +1,31 @@
+---
+description: Reglas de negocio y hoja de ruta del sistema de reservas de estética
+alwaysApply: true
+---
+
+# Sistema de Reservas — Centro de Estética
+
+Stack: Next.js 14 App Router, Tailwind CSS, Supabase (PostgreSQL), Vercel.
+
+## Tablas (esquema definitivo)
+- `servicios_laser`: genero, nombre_zona, categoria_zona (chica/media/grande), precio_lista, duracion_minutos
+- `promos_laser`: genero, nombre_promo, zonas_incluidas (array), precio_promo, duracion_total_min, permite_swap
+- `servicios_generales`: categoria (faciales/manicura/masajes), subtipo, precio, duracion_minutos
+- `configuracion_calendario`: tipo_servicio (laser/general), fechas_habilitadas_laser, horarios_atencion
+- `configuracion_sistema`: porcentaje_sena, ventana_horas_cancelacion, whatsapp_numero
+- `reservas`: codigo_unico (#7842), cliente_nombre, cliente_celular, servicio_tipo, detalle_reserva (JSON), precio_total, duracion_total, fecha_hora_inicio, estado (pendiente_sena/confirmado/cancelado), modificado_por_admin
+
+## Flujo cliente
+1. Home: 3 accesos → Láser, Servicios Generales, Mis Turnos
+2. Láser: selector género → promos fijas (swap si permite_swap) o zonas individuales
+3. Reglas láser: promo + zona extra = 10% OFF en zona extra; detectar si zonas = promo activa y sugerir cambio
+4. Servicios generales: categoría → subtipo; sumar precio/duración
+5. Agenda: láser solo en fechas_habilitadas_laser; bloques contiguos sin huecos muertos
+6. Confirmación: nombre + celular (sin login), codigo_unico, botón WhatsApp con mensaje de seña
+7. Mis Turnos: celular + codigo_unico; cancelar/reprogramar salvo ventana límite
+
+## Admin (futuro)
+- Auth por PIN/contraseña
+- Buscador: nombre, celular, codigo, fecha
+- Agenda diaria/semanal/mensual; verde=cliente, rojo=modificado_por_admin
+- ABM zonas/promos/servicios; config días láser, seña y ventana cancelación
