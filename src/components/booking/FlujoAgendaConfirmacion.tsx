@@ -40,6 +40,13 @@ interface Props {
   titulo?: string;
 }
 
+interface DatosReservaExitosa {
+  codigo: string;
+  detalle: string;
+  fecha: string;
+  hora: string;
+}
+
 const COLOR_ACCENTS = {
   violet: {
     stepActive: 'bg-violet-600 text-white shadow-sm',
@@ -91,22 +98,22 @@ export default function FlujoAgendaConfirmacion({
   const [confirmando, setConfirmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Estado para detectar si recién vuelve de reservar
-  const [reservaExitosa, setReservaExitosa] = useState<{ codigo: string; detalle: string } | null>(null);
-
-  const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
-
-  // Detectar al cargar la página si ya completó una reserva previa
-  useEffect(() => {
-    const guardado = sessionStorage.getItem('reserva-exitosa');
-    if (guardado) {
-      try {
-        setReservaExitosa(JSON.parse(guardado));
-      } catch (e) {
-        sessionStorage.removeItem('reserva-exitosa');
+  // Estado que lee sessionStorage de inmediato si existe
+  const [reservaExitosa, setReservaExitosa] = useState<DatosReservaExitosa | null>(() => {
+    if (typeof window !== 'undefined') {
+      const guardado = sessionStorage.getItem('reserva-exitosa');
+      if (guardado) {
+        try {
+          return JSON.parse(guardado);
+        } catch (e) {
+          sessionStorage.removeItem('reserva-exitosa');
+        }
       }
     }
-  }, []);
+    return null;
+  });
+
+  const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
 
   useEffect(() => {
     async function cargar() {
@@ -166,14 +173,18 @@ export default function FlujoAgendaConfirmacion({
       return;
     }
 
-    // Guardamos la confirmación localmente antes de salir a WhatsApp
-    sessionStorage.setItem(
-      'reserva-exitosa',
-      JSON.stringify({
-        codigo: reserva.codigo_unico,
-        detalle: detalleTexto,
-      })
-    );
+    const datosExito: DatosReservaExitosa = {
+      codigo: reserva.codigo_unico,
+      detalle: detalleTexto,
+      fecha,
+      hora,
+    };
+
+    // 1. Guardar en memoria de sesión
+    sessionStorage.setItem('reserva-exitosa', JSON.stringify(datosExito));
+
+    // 2. Activar modal inmediatamente en el cliente sin depender del reload
+    setReservaExitosa(datosExito);
 
     const montoSena = calcularMontoSena(precioTotal, configSistema.porcentaje_sena);
     const mensaje = buildMensajeReserva({
@@ -186,7 +197,9 @@ export default function FlujoAgendaConfirmacion({
       montoSena,
     });
 
-    window.location.href = buildWhatsAppUrl('5493413954355', mensaje);
+    // 3. Redirigir a WhatsApp
+    const urlWhatsapp = buildWhatsAppUrl('5493413954355', mensaje);
+    window.open(urlWhatsapp, '_blank') || (window.location.href = urlWhatsapp);
   };
 
   if (cargandoConfig) {
@@ -389,17 +402,33 @@ export default function FlujoAgendaConfirmacion({
             <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900">¡Turno Reservado con Éxito!</h3>
-            <p className="text-xs text-slate-500 mt-1">
-              Código de reserva: <span className="font-mono font-bold text-slate-800">{reservaExitosa.codigo}</span>
+            
+            <h3 className="text-lg font-bold text-slate-900">¡Turno Reservado!</h3>
+            
+            <p className="text-xs text-slate-500 mt-1 mb-3">
+              Código único: <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">{reservaExitosa.codigo}</span>
             </p>
             
-            <div className="mt-4 bg-slate-50 p-3 rounded-xl border border-slate-100 text-left text-xs text-slate-600 font-medium leading-relaxed">
-              {reservaExitosa.detalle}
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-left space-y-2 mb-4">
+              <div>
+                <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Servicio / Selección</span>
+                <p className="text-xs text-slate-700 font-semibold">{reservaExitosa.detalle}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/60">
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Fecha</span>
+                  <p className="text-xs text-slate-700 font-medium">{reservaExitosa.fecha}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Horario</span>
+                  <p className="text-xs text-slate-700 font-medium">{reservaExitosa.hora} hs</p>
+                </div>
+              </div>
             </div>
 
-            <p className="text-[11px] text-slate-400 mt-3">
-              Si fuiste a WhatsApp a enviar tu mensaje, tu turno ya quedó pre-agendado.
+            <p className="text-[11px] text-slate-400 mb-5 leading-tight">
+              Si fuiste redirigido a WhatsApp, asegurate de enviar el mensaje para finalizar la coordinación.
             </p>
 
             <button
@@ -408,7 +437,7 @@ export default function FlujoAgendaConfirmacion({
                 sessionStorage.removeItem('reserva-exitosa');
                 window.location.href = '/';
               }}
-              className="mt-5 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs transition-colors shadow-sm"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs transition-colors shadow-sm"
             >
               Volver al inicio
             </button>
