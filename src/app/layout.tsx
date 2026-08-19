@@ -1,8 +1,8 @@
+
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Footer from "@/components/footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -34,7 +34,6 @@ export default function RootLayout({
           {children}
         </div>
         <Footer />
-        <WhatsAppButton />
       </body>
     </html>
   );
