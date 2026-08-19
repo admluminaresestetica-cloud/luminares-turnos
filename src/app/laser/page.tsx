@@ -114,12 +114,18 @@ export default function LaserPage() {
 
   const detalleBarra = useMemo(() => {
     if (modo === 'promo' && promoSeleccionada) {
+      // Obtenemos los nombres de las zonas resueltas de la promo
+      const zonasNombres = getZonasPromoResueltas(promoSeleccionada, zonas, swaps)
+        .map((z) => z.nombre_zona);
+
       const extras = zonasExtraIds
         .map((id) => getZonaById(zonas, id)?.nombre_zona)
         .filter((n): n is string => Boolean(n));
-      return extras.length > 0
-        ? `${promoSeleccionada.nombre_promo} + ${extras.join(', ')}`
-        : promoSeleccionada.nombre_promo;
+
+      const zonasTexto = zonasNombres.length > 0 ? ` (${zonasNombres.join(' + ')})` : '';
+      const extrasTexto = extras.length > 0 ? ` + ${extras.join(', ')}` : '';
+
+      return `${promoSeleccionada.nombre_promo}${zonasTexto}${extrasTexto}`;
     }
     if (modo === 'zonas') {
       return zonasIndividualesIds
@@ -128,7 +134,7 @@ export default function LaserPage() {
         .join(' · ');
     }
     return '';
-  }, [modo, promoSeleccionada, zonas, zonasExtraIds, zonasIndividualesIds]);
+  }, [modo, promoSeleccionada, zonas, swaps, zonasExtraIds, zonasIndividualesIds]);
 
   const puedeContinuar =
     (modo === 'promo' && promoSeleccionada !== null) ||
