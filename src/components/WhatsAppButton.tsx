@@ -2,7 +2,7 @@ import { MessageCircle } from 'lucide-react';
 
 export default function WhatsAppButton() {
   // Reemplazá el número por el tuyo (con 549 y sin +, ni guiones, ni espacios)
-  const whatsappUrl = "https://wa.me/5493410000000?text=Hola!%20Tengo%20una%20consulta%20sobre%20la%20reserva.";
+  const whatsappUrl = "https://wa.me/5493413954355?text=Hola!%20Tengo%20una%20consulta%20sobre%20la%20reserva.";
 
   return (
     <a
