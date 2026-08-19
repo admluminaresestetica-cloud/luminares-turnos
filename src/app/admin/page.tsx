@@ -1477,7 +1477,15 @@ const guardarConfigGeneral = async () => {
                     {servicios.map((serv) => (
                       <tr key={serv.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3 font-medium">{serv.nombre_zona || '-'}</td>
-                        <td className="px-4 py-3 text-xs capitalize text-gray-500">{serv.genero || '-'}</td>
+                        <td className="px-4 py-3 text-xs">
+  <span className={`px-2.5 py-1 rounded-full font-medium capitalize ${
+    serv.genero?.toLowerCase() === 'masculino'
+      ? 'bg-blue-100 text-blue-700'
+      : 'bg-pink-100 text-pink-700'
+  }`}>
+    {serv.genero || '-'}
+  </span>
+</td>
                         <td className="px-4 py-3 text-xs text-gray-500">{serv.categoria_zona || '-'}</td>
                         <td className="px-4 py-3 text-xs">{serv.duracion_minutos || 0} min</td>
                         <td className="px-4 py-3 font-semibold">
