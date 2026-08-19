@@ -162,7 +162,7 @@ export default function FlujoAgendaConfirmacion({
       montoSena,
     });
 
-    window.location.href = buildWhatsAppUrl(configSistema.whatsapp_numero, mensaje);
+    window.location.href = buildWhatsAppUrl('5493413954355', mensaje);
   };
 
   if (cargandoConfig) {
