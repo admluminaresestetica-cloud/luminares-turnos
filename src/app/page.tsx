@@ -42,7 +42,7 @@ const ACCESOS = [
 
 export default function Home() {
   // Número de teléfono configurado
-  const whatsappUrl = "https://wa.me/5493410000000?text=Hola!%20Tengo%20una%20consulta.";
+  const whatsappUrl = "https://wa.me/5493413954355?text=Hola!%20Tengo%20una%20consulta.";
 
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 md:p-12">
