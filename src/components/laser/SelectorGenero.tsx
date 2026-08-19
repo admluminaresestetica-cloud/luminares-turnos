@@ -1,3 +1,6 @@
+'use client';
+
+import { User } from 'lucide-react';
 import type { GeneroLaser } from '@/lib/types';
 
 interface Props {
@@ -5,14 +8,14 @@ interface Props {
   onSelect: (genero: GeneroLaser) => void;
 }
 
-const OPCIONES: { valor: GeneroLaser; label: string; emoji: string }[] = [
-  { valor: 'femenino', label: 'Femenino', emoji: '👩' },
-  { valor: 'masculino', label: 'Masculino', emoji: '👨' },
+const OPCIONES: { valor: GeneroLaser; label: string }[] = [
+  { valor: 'femenino', label: 'Femenino' },
+  { valor: 'masculino', label: 'Masculino' },
 ];
 
 export default function SelectorGenero({ genero, onSelect }: Props) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 gap-3">
       {OPCIONES.map((op) => {
         const activo = genero === op.valor;
         return (
@@ -20,16 +23,14 @@ export default function SelectorGenero({ genero, onSelect }: Props) {
             key={op.valor}
             type="button"
             onClick={() => onSelect(op.valor)}
-            className={`p-6 rounded-2xl border-2 text-center transition-all ${
+            className={`flex items-center justify-center gap-2.5 p-4 rounded-xl border text-sm font-semibold transition-all ${
               activo
-                ? 'border-violet-600 bg-violet-50 shadow-sm'
-                : 'border-slate-200 bg-white hover:border-violet-300'
+                ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
+                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
             }`}
           >
-            <span className="text-3xl block mb-2">{op.emoji}</span>
-            <span className={`font-semibold ${activo ? 'text-violet-700' : 'text-slate-800'}`}>
-              {op.label}
-            </span>
+            <User className={`w-4 h-4 ${activo ? 'text-white' : 'text-slate-400'}`} />
+            <span>{op.label}</span>
           </button>
         );
       })}

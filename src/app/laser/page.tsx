@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import SelectorGenero from '@/components/laser/SelectorGenero';
 import SelectorModoLaser from '@/components/laser/SelectorModoLaser';
 import PanelPromos from '@/components/laser/PanelPromos';
@@ -181,15 +182,19 @@ export default function LaserPage() {
   return (
     <main className="min-h-screen bg-slate-50 pb-32">
       <div className="max-w-3xl mx-auto p-6 md:p-10">
+        {/* Botón Volver Minimalista */}
         <Link
           href="/"
-          className="text-sm text-violet-600 font-semibold hover:underline inline-block mb-6"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-8 group"
         >
-          ← Volver al inicio
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          Volver al inicio
         </Link>
 
         <header className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Depilación Láser</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+            Depilación Láser
+          </h1>
           <p className="text-slate-500 mt-1 text-sm">
             {!genero
               ? 'Paso 1: Seleccioná tu perfil'
@@ -199,7 +204,7 @@ export default function LaserPage() {
 
         {/* Paso 1: Género */}
         <section className="mb-8">
-          <h2 className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-3">
+          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
             Género
           </h2>
           <SelectorGenero genero={genero} onSelect={handleGenero} />
@@ -209,12 +214,14 @@ export default function LaserPage() {
         {genero && (
           <section>
             {cargando ? (
-              <div className="text-center py-16 text-slate-400 text-sm">Cargando servicios...</div>
+              <div className="flex items-center justify-center py-16 text-slate-400 text-sm font-medium">
+                Cargando servicios...
+              </div>
             ) : (
               <>
                 <SelectorModoLaser modo={modo} onChange={handleModoChange} />
 
-                <div className="mt-5">
+                <div className="mt-6">
                   {modo === 'promo' ? (
                     <>
                       <PanelPromos

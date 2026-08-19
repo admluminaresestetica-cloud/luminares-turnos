@@ -2,6 +2,15 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { 
+  ArrowLeft, 
+  Calendar, 
+  Clock, 
+  Sparkles, 
+  ChevronRight, 
+  CheckCircle2, 
+  Loader2 
+} from 'lucide-react';
 import SelectorFecha from '@/components/booking/SelectorFecha';
 import SelectorHorario from '@/components/booking/SelectorHorario';
 import FormConfirmacion from '@/components/booking/FormConfirmacion';
@@ -31,6 +40,30 @@ interface Props {
   titulo?: string;
 }
 
+const COLOR_ACCENTS = {
+  violet: {
+    stepActive: 'bg-violet-600 text-white shadow-sm',
+    badge: 'bg-violet-50 text-violet-700 border-violet-200/80',
+    button: 'bg-violet-600 hover:bg-violet-500 text-white',
+    link: 'text-violet-600 hover:text-violet-700',
+    summaryBg: 'bg-violet-50/50 border-violet-100',
+  },
+  indigo: {
+    stepActive: 'bg-indigo-600 text-white shadow-sm',
+    badge: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
+    button: 'bg-indigo-600 hover:bg-indigo-500 text-white',
+    link: 'text-indigo-600 hover:text-indigo-700',
+    summaryBg: 'bg-indigo-50/50 border-indigo-100',
+  },
+  rose: {
+    stepActive: 'bg-rose-500 text-white shadow-sm',
+    badge: 'bg-rose-50 text-rose-700 border-rose-200/80',
+    button: 'bg-rose-500 hover:bg-rose-400 text-white',
+    link: 'text-rose-600 hover:text-rose-700',
+    summaryBg: 'bg-rose-50/50 border-rose-100',
+  },
+};
+
 export default function FlujoAgendaConfirmacion({
   tipo,
   precioTotal,
@@ -39,9 +72,9 @@ export default function FlujoAgendaConfirmacion({
   detalleReserva,
   volverHref,
   onVolver,
-  volverLabel = '← Modificar selección',
+  volverLabel = 'Modificar selección',
   colorAccent = 'violet',
-  titulo = 'Agenda',
+  titulo = 'Agenda tu turno',
 }: Props) {
   const [paso, setPaso] = useState<Paso>('agenda');
   const [configCalendario, setConfigCalendario] = useState<ConfiguracionCalendario | null>(null);
@@ -57,6 +90,8 @@ export default function FlujoAgendaConfirmacion({
   const [celular, setCelular] = useState('');
   const [confirmando, setConfirmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
 
   useEffect(() => {
     async function cargar() {
@@ -132,8 +167,9 @@ export default function FlujoAgendaConfirmacion({
 
   if (cargandoConfig) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <p className="text-slate-400 text-sm">Cargando calendario...</p>
+      <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-800" />
+        <p className="text-slate-500 text-xs font-medium">Cargando disponibilidad...</p>
       </main>
     );
   }
@@ -141,15 +177,17 @@ export default function FlujoAgendaConfirmacion({
   if (!configCalendario || !configSistema) {
     return (
       <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="text-center">
-          <p className="text-slate-600 mb-4">No se pudo cargar la configuración del calendario.</p>
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm max-w-sm text-center">
+          <p className="text-slate-700 text-sm font-medium mb-4">
+            No se pudo cargar la configuración del calendario.
+          </p>
           {volverHref ? (
-            <Link href={volverHref} className="text-violet-600 font-semibold hover:underline">
-              Volver
+            <Link href={volverHref} className={`text-xs font-bold ${styles.link}`}>
+              Volver al inicio
             </Link>
           ) : onVolver ? (
-            <button type="button" onClick={onVolver} className="text-violet-600 font-semibold hover:underline">
-              Volver
+            <button type="button" onClick={onVolver} className={`text-xs font-bold ${styles.link}`}>
+              Volver al inicio
             </button>
           ) : null}
         </div>
@@ -163,42 +201,73 @@ export default function FlujoAgendaConfirmacion({
   const diasSemana = configCalendario.horarios_atencion.dias_semana;
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6 md:p-12 pb-24">
+    <main className="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-12 pb-24">
       <div className="max-w-lg mx-auto">
-        {volverHref ? (
-          <Link href={volverHref} className="text-sm text-violet-600 font-semibold hover:underline inline-block mb-6">
-            {volverLabel}
-          </Link>
-        ) : onVolver ? (
-          <button
-            type="button"
-            onClick={onVolver}
-            className="text-sm text-violet-600 font-semibold hover:underline inline-block mb-6"
-          >
-            {volverLabel}
-          </button>
-        ) : null}
+        {/* Botón Volver */}
+        <div className="mb-4">
+          {volverHref ? (
+            <Link
+              href={volverHref}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{volverLabel}</span>
+            </Link>
+          ) : onVolver ? (
+            <button
+              type="button"
+              onClick={onVolver}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>{volverLabel}</span>
+            </button>
+          ) : null}
+        </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-md">
+        {/* Tarjeta Principal */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-7 shadow-sm">
+          {/* Indicador de Pasos */}
           <div className="flex items-center gap-2 mb-6">
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${paso === 'agenda' ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-500'}`}>
+            <span
+              className={`text-xs font-bold px-3 py-1 rounded-full transition-all flex items-center gap-1.5 ${
+                paso === 'agenda' ? styles.stepActive : 'bg-slate-100 text-slate-500'
+              }`}
+            >
+              <Calendar className="w-3 h-3" />
               1. Fecha y hora
             </span>
-            <span className="text-slate-300">→</span>
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${paso === 'confirmacion' ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-500'}`}>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+            <span
+              className={`text-xs font-bold px-3 py-1 rounded-full transition-all flex items-center gap-1.5 ${
+                paso === 'confirmacion' ? styles.stepActive : 'bg-slate-100 text-slate-500'
+              }`}
+            >
+              <CheckCircle2 className="w-3 h-3" />
               2. Confirmación
             </span>
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-800 mb-1">{titulo}</h1>
-          <p className="text-sm text-slate-500 mb-6 truncate">{detalleTexto}</p>
+          {/* Header del Servicio */}
+          <div className="mb-6">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              {titulo}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-relaxed truncate">
+              {detalleTexto}
+            </p>
+          </div>
 
+          {/* PASO 1: AGENDA */}
           {paso === 'agenda' && (
             <div className="space-y-6">
               <section>
-                <h2 className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-3">
-                  Elegí la fecha
-                </h2>
+                <div className="flex items-center gap-1.5 mb-3">
+                  <Calendar className="w-4 h-4 text-slate-700" />
+                  <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    Elegí la fecha
+                  </h2>
+                </div>
                 <SelectorFecha
                   tipo={tipo}
                   fechasLaser={fechasLaser}
@@ -209,10 +278,13 @@ export default function FlujoAgendaConfirmacion({
               </section>
 
               {fecha && (
-                <section>
-                  <h2 className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-3">
-                    Elegí el horario
-                  </h2>
+                <section className="animate-in fade-in duration-300">
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <Clock className="w-4 h-4 text-slate-700" />
+                    <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Elegí el horario
+                    </h2>
+                  </div>
                   <SelectorHorario
                     slots={slots}
                     horaSeleccionada={hora}
@@ -222,33 +294,49 @@ export default function FlujoAgendaConfirmacion({
                 </section>
               )}
 
-              <div className="bg-violet-50 border border-violet-100 rounded-xl p-4 text-sm flex justify-between">
-                <span className="text-slate-600">Total</span>
-                <span className="font-bold text-slate-800">
-                  ${precioTotal.toLocaleString('es-AR')} · {duracionTotal} min
-                </span>
+              {/* Resumen Total */}
+              <div
+                className={`border rounded-xl p-4 flex justify-between items-center transition-colors ${styles.summaryBg}`}
+              >
+                <div className="flex items-center gap-2 text-slate-600 text-xs font-medium">
+                  <Sparkles className="w-4 h-4 text-slate-700" />
+                  <span>Resumen</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-extrabold text-slate-900 text-sm sm:text-base">
+                    ${precioTotal.toLocaleString('es-AR')}
+                  </span>
+                  <span className="text-xs text-slate-400 font-medium ml-2">
+                    ({duracionTotal} min)
+                  </span>
+                </div>
               </div>
 
+              {/* Botón Siguiente */}
               <button
                 type="button"
                 disabled={!fecha || !hora}
                 onClick={() => setPaso('confirmacion')}
-                className="w-full bg-violet-600 hover:bg-violet-500 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-3.5 rounded-xl transition-colors"
+                className={`w-full font-bold py-3.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 shadow-xs disabled:bg-slate-100 disabled:text-slate-400 ${styles.button}`}
               >
-                Continuar a confirmación
+                <span>Continuar a confirmación</span>
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}
 
+          {/* PASO 2: CONFIRMACIÓN */}
           {paso === 'confirmacion' && fecha && hora && (
             <div>
               <button
                 type="button"
                 onClick={() => setPaso('agenda')}
-                className="text-sm text-violet-600 font-semibold hover:underline mb-4"
+                className={`inline-flex items-center gap-1 text-xs font-semibold mb-4 transition-colors ${styles.link}`}
               >
-                ← Cambiar fecha u hora
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Cambiar fecha u hora</span>
               </button>
+              
               <FormConfirmacion
                 servicioDetalle={detalleTexto}
                 precioTotal={precioTotal}

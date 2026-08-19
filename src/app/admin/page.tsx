@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import ResumenAgenda from '@/components/admin/ResumenAgenda'
 
 interface Reserva {
   id: string
@@ -554,6 +555,40 @@ const guardarEdicionTurno = async (e: React.FormEvent) => {
     }
     setGuardandoCobro(false)
   }
+
+// ==========================================
+  // LÓGICA DE RESUMEN PARA LA AGENDA
+  // ==========================================
+  const turnosAgendaResumen = useMemo(() => {
+    return turnos.filter((t) => {
+      if (busqueda.trim() !== '') {
+        const q = busqueda.toLowerCase()
+        const nombre = (t.cliente_nombre || '').toLowerCase()
+        const celular = (t.cliente_celular || '').toLowerCase()
+        const codigo = (t.codigo_unico || '').toLowerCase()
+        if (!nombre.includes(q) && !celular.includes(q) && !codigo.includes(q)) return false
+      }
+
+      if (filtroFechaTipo === 'hoy') {
+        if (!t.fecha_hora_inicio) return false
+        const fechaTurno = new Date(t.fecha_hora_inicio).toISOString().split('T')[0]
+        const hoy = new Date().toISOString().split('T')[0]
+        if (fechaTurno !== hoy) return false
+      } else if (filtroFechaTipo === 'especifica' && fechaEspecifica) {
+        if (!t.fecha_hora_inicio) return false
+        const fechaTurno = new Date(t.fecha_hora_inicio).toISOString().split('T')[0]
+        if (fechaTurno !== fechaEspecifica) return false
+      }
+
+      return true
+    })
+  }, [turnos, busqueda, filtroFechaTipo, fechaEspecifica])
+
+  const esFechaAgendaPasada = useMemo(() => {
+    if (filtroFechaTipo !== 'especifica' || !fechaEspecifica) return false
+    const hoy = new Date().toISOString().split('T')[0]
+    return fechaEspecifica < hoy
+  }, [filtroFechaTipo, fechaEspecifica])
 
   // --- ACCIONES DE SERVICIOS / ZONAS (LASER) ---
   const abrirModalServicio = (serv?: ServicioLaser) => {
@@ -1265,6 +1300,12 @@ const guardarConfigGeneral = async () => {
               </div>
             </div>
 
+{/* AQUÍ VA EL NUEVO COMPONENTE */}
+          <ResumenAgenda 
+            turnos={turnosAgendaResumen} 
+            esFechaPasada={esFechaAgendaPasada} 
+          />
+          
             {loading ? (
               <div className="p-8 text-center text-gray-500">Cargando turnos...</div>
             ) : turnosFiltrados.length === 0 ? (
