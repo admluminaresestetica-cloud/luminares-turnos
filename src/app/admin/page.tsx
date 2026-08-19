@@ -2295,7 +2295,7 @@ const guardarConfigGeneral = async () => {
             value={nuevoTurno.cliente_celular}
             onChange={(e) => setNuevoTurno({ ...nuevoTurno, cliente_celular: e.target.value })}
             className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-black"
-            placeholder="Ej: +5493413954355"
+            placeholder="+5493413954355"
           />
         </div>
 
