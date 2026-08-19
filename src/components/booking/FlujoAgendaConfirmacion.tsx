@@ -91,7 +91,22 @@ export default function FlujoAgendaConfirmacion({
   const [confirmando, setConfirmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Estado para detectar si recién vuelve de reservar
+  const [reservaExitosa, setReservaExitosa] = useState<{ codigo: string; detalle: string } | null>(null);
+
   const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
+
+  // Detectar al cargar la página si ya completó una reserva previa
+  useEffect(() => {
+    const guardado = sessionStorage.getItem('reserva-exitosa');
+    if (guardado) {
+      try {
+        setReservaExitosa(JSON.parse(guardado));
+      } catch (e) {
+        sessionStorage.removeItem('reserva-exitosa');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     async function cargar() {
@@ -151,6 +166,15 @@ export default function FlujoAgendaConfirmacion({
       return;
     }
 
+    // Guardamos la confirmación localmente antes de salir a WhatsApp
+    sessionStorage.setItem(
+      'reserva-exitosa',
+      JSON.stringify({
+        codigo: reserva.codigo_unico,
+        detalle: detalleTexto,
+      })
+    );
+
     const montoSena = calcularMontoSena(precioTotal, configSistema.porcentaje_sena);
     const mensaje = buildMensajeReserva({
       codigo: reserva.codigo_unico,
@@ -201,7 +225,7 @@ export default function FlujoAgendaConfirmacion({
   const diasSemana = configCalendario.horarios_atencion.dias_semana;
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-12 pb-24">
+    <main className="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-12 pb-24 relative">
       <div className="max-w-lg mx-auto">
         {/* Botón Volver */}
         <div className="mb-4">
@@ -336,7 +360,7 @@ export default function FlujoAgendaConfirmacion({
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Cambiar fecha u hora</span>
               </button>
-              
+
               <FormConfirmacion
                 servicioDetalle={detalleTexto}
                 precioTotal={precioTotal}
@@ -357,6 +381,40 @@ export default function FlujoAgendaConfirmacion({
           )}
         </div>
       </div>
+
+      {/* MODAL POP-UP DE RESERVA EXITOSA */}
+      {reservaExitosa && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl border border-slate-100">
+            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">¡Turno Reservado con Éxito!</h3>
+            <p className="text-xs text-slate-500 mt-1">
+              Código de reserva: <span className="font-mono font-bold text-slate-800">{reservaExitosa.codigo}</span>
+            </p>
+            
+            <div className="mt-4 bg-slate-50 p-3 rounded-xl border border-slate-100 text-left text-xs text-slate-600 font-medium leading-relaxed">
+              {reservaExitosa.detalle}
+            </div>
+
+            <p className="text-[11px] text-slate-400 mt-3">
+              Si fuiste a WhatsApp a enviar tu mensaje, tu turno ya quedó pre-agendado.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                sessionStorage.removeItem('reserva-exitosa');
+                window.location.href = '/';
+              }}
+              className="mt-5 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs transition-colors shadow-sm"
+            >
+              Volver al inicio
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
