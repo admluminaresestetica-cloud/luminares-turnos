@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Zap, Sparkles, Calendar, ChevronRight } from 'lucide-react';
+import SeccionFAQ from '@/components/home/SeccionFAQ';
 
 const ACCESOS = [
   {
@@ -25,13 +26,13 @@ const ACCESOS = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 md:p-12">
-      <div className="max-w-lg w-full">
+      <div className="max-w-2xl w-full">
         <header className="text-center mb-10">
           <p className="text-xs font-black tracking-[0.2em] uppercase mb-2">
-  <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]">
-    LUMINARES ESTÉTICA
-  </span>
-</p>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]">
+              LUMINARES ESTÉTICA
+            </span>
+          </p>
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
             Reservá tu turno
           </h1>
@@ -40,7 +41,8 @@ export default function Home() {
           </p>
         </header>
 
-        <nav className="flex flex-col gap-4">
+        {/* Accesos Principales */}
+        <nav className="flex flex-col gap-4 max-w-lg mx-auto">
           {ACCESOS.map((acceso) => {
             const Icon = acceso.icon;
             return (
@@ -69,6 +71,11 @@ export default function Home() {
             );
           })}
         </nav>
+
+        {/* Sección de Preguntas Frecuentes */}
+        <div className="mt-8">
+          <SeccionFAQ />
+        </div>
 
         <p className="text-center text-xs text-slate-400 mt-10">
           Sin registro · Confirmación por WhatsApp
