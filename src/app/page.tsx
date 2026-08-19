@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Zap, Sparkles, Calendar, HelpCircle, ChevronRight } from 'lucide-react';
+import Footer from '@/components/Footer';
 
 const ACCESOS = [
   {
@@ -7,24 +8,36 @@ const ACCESOS = [
     titulo: 'Depilación Láser',
     descripcion: 'Elegí género, promos o zonas individuales. Descuentos automáticos y agenda inteligente.',
     icon: Zap,
+    colorBg: 'bg-rose-50 group-hover:bg-rose-500',
+    colorText: 'text-rose-600 group-hover:text-white',
+    borderColor: 'hover:border-rose-300',
   },
   {
     href: '/servicios',
     titulo: 'Servicios Generales',
-    descripcion: 'Faciales, uñas y masajes. Elegí categoría y subtipo.',
+    descripcion: 'Faciales, uñas, masajes y ojos. Elegí categoría y subtipo.',
     icon: Sparkles,
+    colorBg: 'bg-indigo-50 group-hover:bg-indigo-500',
+    colorText: 'text-indigo-600 group-hover:text-white',
+    borderColor: 'hover:border-indigo-300',
   },
   {
     href: '/mis-turnos',
     titulo: 'Mis Turnos',
     descripcion: 'Consultá, cancelá o reprogramá con tu celular y código de reserva.',
     icon: Calendar,
+    colorBg: 'bg-emerald-50 group-hover:bg-emerald-500',
+    colorText: 'text-emerald-600 group-hover:text-white',
+    borderColor: 'hover:border-emerald-300',
   },
   {
     href: '/faq',
     titulo: 'Preguntas Frecuentes',
-    descripcion: 'Resolve todas tus dudas sobre señas, métodos de pago y recomendaciones.',
+    descripcion: 'Resolvé todas tus dudas sobre señas, métodos de pago y recomendaciones.',
     icon: HelpCircle,
+    colorBg: 'bg-amber-50 group-hover:bg-amber-500',
+    colorText: 'text-amber-600 group-hover:text-white',
+    borderColor: 'hover:border-amber-300',
   },
 ];
 
@@ -32,9 +45,9 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 md:p-12">
       <div className="max-w-lg w-full">
-        <header className="text-center mb-10">
+        <header className="text-center mb-8">
           <p className="text-xs font-black tracking-[0.2em] uppercase mb-2">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-indigo-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-indigo-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.3)]">
               LUMINARES ESTÉTICA
             </span>
           </p>
@@ -53,14 +66,16 @@ export default function Home() {
               <Link
                 key={acceso.href}
                 href={acceso.href}
-                className="group flex items-center gap-4 bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm hover:border-slate-400 hover:shadow-md transition-all duration-200"
+                className={`group flex items-center gap-4 bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-200 -translate-y-0 hover:-translate-y-0.5 ${acceso.borderColor}`}
               >
-                <div className="w-12 h-12 rounded-xl bg-slate-100/80 flex items-center justify-center text-slate-700 shrink-0 group-hover:bg-slate-900 group-hover:text-white transition-colors duration-200">
-                  <Icon className="w-5 h-5 stroke-[1.75]" />
+                <div
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200 ${acceso.colorBg}`}
+                >
+                  <Icon className={`w-5 h-5 stroke-[1.75] transition-colors duration-200 ${acceso.colorText}`} />
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h2 className="font-semibold text-slate-900 group-hover:text-slate-900 transition-colors">
+                  <h2 className="font-semibold text-slate-900 transition-colors">
                     {acceso.titulo}
                   </h2>
                   <p className="text-sm text-slate-500 mt-0.5 leading-relaxed">
@@ -68,15 +83,18 @@ export default function Home() {
                   </p>
                 </div>
 
-                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all duration-200 shrink-0" />
+                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-200 shrink-0" />
               </Link>
             );
           })}
         </nav>
 
-        <p className="text-center text-xs text-slate-400 mt-10">
+        <p className="text-center text-xs text-slate-400 my-6">
           Sin registro · Confirmación por WhatsApp
         </p>
+
+        {/* Footer integrado */}
+        <Footer />
       </div>
     </main>
   );
