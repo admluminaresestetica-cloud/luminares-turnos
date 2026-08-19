@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { Sparkles, Hand, Heart, Eye, ChevronRight } from 'lucide-react';
 import FlujoAgendaConfirmacion from '@/components/booking/FlujoAgendaConfirmacion';
 import { SERVICIOS_STORAGE_KEY } from '@/lib/booking/session';
 import {
@@ -11,6 +12,40 @@ import {
 import type { CategoriaGeneral, DetalleReservaGeneral, ServicioGeneral } from '@/lib/types';
 
 type Paso = 'categoria' | 'servicios' | 'agenda';
+
+// Configuración visual por categoría (Ícono, Fondo y Colores de hover)
+const CATEGORIA_CONFIG: Record<string, { icon: any; colorBg: string; colorText: string; borderColor: string }> = {
+  faciales: {
+    icon: Sparkles,
+    colorBg: 'bg-rose-50 group-hover:bg-rose-500',
+    colorText: 'text-rose-600 group-hover:text-white',
+    borderColor: 'hover:border-rose-300',
+  },
+  unas: {
+    icon: Hand,
+    colorBg: 'bg-indigo-50 group-hover:bg-indigo-500',
+    colorText: 'text-indigo-600 group-hover:text-white',
+    borderColor: 'hover:border-indigo-300',
+  },
+  uñas: {
+    icon: Hand,
+    colorBg: 'bg-indigo-50 group-hover:bg-indigo-500',
+    colorText: 'text-indigo-600 group-hover:text-white',
+    borderColor: 'hover:border-indigo-300',
+  },
+  masajes: {
+    icon: Heart,
+    colorBg: 'bg-amber-50 group-hover:bg-amber-500',
+    colorText: 'text-amber-600 group-hover:text-white',
+    borderColor: 'hover:border-amber-300',
+  },
+  ojos: {
+    icon: Eye,
+    colorBg: 'bg-violet-50 group-hover:bg-violet-500',
+    colorText: 'text-violet-600 group-hover:text-white',
+    borderColor: 'hover:border-violet-300',
+  },
+};
 
 export default function ServiciosPage() {
   const [servicios, setServicios] = useState<ServicioGeneral[]>([]);
@@ -121,6 +156,15 @@ export default function ServiciosPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {categorias.map((cat) => {
               const count = servicios.filter((s) => s.categoria === cat).length;
+              const key = cat.toLowerCase();
+              const config = CATEGORIA_CONFIG[key] || {
+                icon: Sparkles,
+                colorBg: 'bg-rose-50 group-hover:bg-rose-500',
+                colorText: 'text-rose-600 group-hover:text-white',
+                borderColor: 'hover:border-rose-300',
+              };
+              const Icono = config.icon;
+
               return (
                 <button
                   key={cat}
@@ -130,14 +174,26 @@ export default function ServiciosPage() {
                     setSeleccionados([]);
                     setPaso('servicios');
                   }}
-                  className="text-left bg-white border border-slate-200 rounded-2xl p-5 hover:border-rose-300 hover:bg-rose-50/50 transition-all shadow-sm"
+                  className={`group relative flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-all duration-200 text-left ${config.borderColor}`}
                 >
-                  <p className="font-semibold text-slate-800 text-lg">
-                    {LABELS_CATEGORIA[cat] ?? cat}
-                  </p>
-                  <p className="text-sm text-slate-500 mt-1">
-                    {count} {count === 1 ? 'servicio disponible' : 'servicios disponibles'}
-                  </p>
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-200 shrink-0 ${config.colorBg}`}
+                    >
+                      <Icono className={`w-6 h-6 transition-colors duration-200 ${config.colorText}`} />
+                    </div>
+
+                    <div>
+                      <p className="font-bold text-slate-800 group-hover:text-slate-900 transition-colors capitalize text-base">
+                        {LABELS_CATEGORIA[cat] ?? cat}
+                      </p>
+                      <span className="inline-block text-xs font-medium text-slate-500 mt-0.5">
+                        {count} {count === 1 ? 'servicio disponible' : 'servicios disponibles'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-200 shrink-0" />
                 </button>
               );
             })}
