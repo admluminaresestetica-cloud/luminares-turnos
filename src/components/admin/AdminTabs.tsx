@@ -1,6 +1,7 @@
-// src/components/admin/AdminTabs.tsx
 'use client'
 
+import React from 'react'
+import { LayoutDashboard, Calendar, Sparkles, Scissors, Clock } from 'lucide-react'
 import { TabKey } from './types'
 
 interface AdminTabsProps {
@@ -11,30 +12,37 @@ interface AdminTabsProps {
 }
 
 export default function AdminTabs({ activeTab, onChange, totalTurnos, totalGenerales }: AdminTabsProps) {
-  const tabClass = (tab: TabKey) =>
-    `pb-3 px-2 font-medium text-sm border-b-2 transition whitespace-nowrap ${
-      activeTab === tab
-        ? 'border-black text-black'
-        : 'border-transparent text-gray-500 hover:text-gray-700'
-    }`
+  const tabs = [
+    { key: 'overview' as TabKey, label: 'Resumen General', icon: LayoutDashboard },
+    { key: 'agenda' as TabKey, label: `Agenda de Turnos (${totalTurnos})`, icon: Calendar },
+    { key: 'precios' as TabKey, label: 'Editor Depilación (Láser)', icon: Sparkles },
+    { key: 'generales' as TabKey, label: `Editor Servicios Generales (${totalGenerales})`, icon: Scissors },
+    { key: 'horarios' as TabKey, label: 'Editar Horarios', icon: Clock },
+  ]
 
   return (
-    <div className="flex space-x-4 border-b border-gray-200 mb-6 overflow-x-auto">
-      <button onClick={() => onChange('overview')} className={tabClass('overview')}>
-        Resumen General
-      </button>
-      <button onClick={() => onChange('agenda')} className={tabClass('agenda')}>
-        Agenda de Turnos ({totalTurnos})
-      </button>
-      <button onClick={() => onChange('precios')} className={tabClass('precios')}>
-        Editor Depilacion (Láser)
-      </button>
-      <button onClick={() => onChange('generales')} className={tabClass('generales')}>
-        Editor Servicios Generales ({totalGenerales})
-      </button>
-      <button onClick={() => onChange('horarios')} className={tabClass('horarios')}>
-        Editar Horarios
-      </button>
+    <div className="bg-gray-100/80 p-1.5 rounded-2xl mb-6 overflow-x-auto border border-gray-200/60 shadow-inner">
+      <div className="flex gap-1 min-w-max">
+        {tabs.map((tab) => {
+          const Icon = tab.icon
+          const isActive = activeTab === tab.key
+
+          return (
+            <button
+              key={tab.key}
+              onClick={() => onChange(tab.key)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap ${
+                isActive
+                  ? 'bg-white text-gray-900 shadow-sm border border-gray-200/50 font-semibold'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
+              }`}
+            >
+              <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-rose-500' : 'text-gray-400'}`} />
+              <span>{tab.label}</span>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
