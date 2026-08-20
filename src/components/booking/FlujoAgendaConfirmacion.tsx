@@ -98,7 +98,6 @@ export default function FlujoAgendaConfirmacion({
   const [confirmando, setConfirmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Estado que lee sessionStorage de inmediato si existe
   const [reservaExitosa, setReservaExitosa] = useState<DatosReservaExitosa | null>(() => {
     if (typeof window !== 'undefined') {
       const guardado = sessionStorage.getItem('reserva-exitosa');
@@ -180,10 +179,7 @@ export default function FlujoAgendaConfirmacion({
       hora,
     };
 
-    // 1. Guardar en memoria de sesión
     sessionStorage.setItem('reserva-exitosa', JSON.stringify(datosExito));
-
-    // 2. Activar modal inmediatamente en el cliente sin depender del reload
     setReservaExitosa(datosExito);
 
     const montoSena = calcularMontoSena(precioTotal, configSistema.porcentaje_sena);
@@ -197,14 +193,13 @@ export default function FlujoAgendaConfirmacion({
       montoSena,
     });
 
-    // 3. Redirigir a WhatsApp
     const urlWhatsapp = buildWhatsAppUrl('5493413954355', mensaje);
     window.open(urlWhatsapp, '_blank') || (window.location.href = urlWhatsapp);
   };
 
   if (cargandoConfig) {
     return (
-      <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 gap-3">
+      <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-slate-800" />
         <p className="text-slate-500 text-xs font-medium">Cargando disponibilidad...</p>
       </main>
@@ -213,8 +208,8 @@ export default function FlujoAgendaConfirmacion({
 
   if (!configCalendario || !configSistema) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm max-w-sm text-center">
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm max-w-sm w-full text-center">
           <p className="text-slate-700 text-sm font-medium mb-4">
             No se pudo cargar la configuración del calendario.
           </p>
@@ -238,14 +233,14 @@ export default function FlujoAgendaConfirmacion({
   const diasSemana = configCalendario.horarios_atencion.dias_semana;
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-12 pb-24 relative">
+    <main className="min-h-screen bg-slate-50 px-3 py-4 sm:p-6 md:p-12 pb-20 sm:pb-24 relative">
       <div className="max-w-lg mx-auto">
         {/* Botón Volver */}
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           {volverHref ? (
             <Link
               href={volverHref}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors p-1 -ml-1"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>{volverLabel}</span>
@@ -254,7 +249,7 @@ export default function FlujoAgendaConfirmacion({
             <button
               type="button"
               onClick={onVolver}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors p-1 -ml-1"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>{volverLabel}</span>
@@ -263,20 +258,20 @@ export default function FlujoAgendaConfirmacion({
         </div>
 
         {/* Tarjeta Principal */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-7 shadow-sm">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-7 shadow-xs">
           {/* Indicador de Pasos */}
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-5 sm:mb-6 overflow-x-auto pb-1 no-scrollbar">
             <span
-              className={`text-xs font-bold px-3 py-1 rounded-full transition-all flex items-center gap-1.5 ${
+              className={`text-[11px] sm:text-xs font-bold px-2.5 py-1 sm:px-3 rounded-full transition-all flex items-center gap-1 sm:gap-1.5 shrink-0 ${
                 paso === 'agenda' ? styles.stepActive : 'bg-slate-100 text-slate-500'
               }`}
             >
               <Calendar className="w-3 h-3" />
               1. Fecha y hora
             </span>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+            <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
             <span
-              className={`text-xs font-bold px-3 py-1 rounded-full transition-all flex items-center gap-1.5 ${
+              className={`text-[11px] sm:text-xs font-bold px-2.5 py-1 sm:px-3 rounded-full transition-all flex items-center gap-1 sm:gap-1.5 shrink-0 ${
                 paso === 'confirmacion' ? styles.stepActive : 'bg-slate-100 text-slate-500'
               }`}
             >
@@ -286,20 +281,20 @@ export default function FlujoAgendaConfirmacion({
           </div>
 
           {/* Header del Servicio */}
-          <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+          <div className="mb-5 sm:mb-6">
+            <h1 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
               {titulo}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-relaxed truncate">
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-normal line-clamp-2 sm:line-clamp-none">
               {detalleTexto}
             </p>
           </div>
 
           {/* PASO 1: AGENDA */}
           {paso === 'agenda' && (
-            <div className="space-y-6">
+            <div className="space-y-5 sm:space-y-6">
               <section>
-                <div className="flex items-center gap-1.5 mb-3">
+                <div className="flex items-center gap-1.5 mb-2.5 sm:mb-3">
                   <Calendar className="w-4 h-4 text-slate-700" />
                   <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                     Elegí la fecha
@@ -316,7 +311,7 @@ export default function FlujoAgendaConfirmacion({
 
               {fecha && (
                 <section className="animate-in fade-in duration-300">
-                  <div className="flex items-center gap-1.5 mb-3">
+                  <div className="flex items-center gap-1.5 mb-2.5 sm:mb-3">
                     <Clock className="w-4 h-4 text-slate-700" />
                     <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                       Elegí el horario
@@ -333,17 +328,17 @@ export default function FlujoAgendaConfirmacion({
 
               {/* Resumen Total */}
               <div
-                className={`border rounded-xl p-4 flex justify-between items-center transition-colors ${styles.summaryBg}`}
+                className={`border rounded-xl p-3.5 sm:p-4 flex justify-between items-center transition-colors ${styles.summaryBg}`}
               >
-                <div className="flex items-center gap-2 text-slate-600 text-xs font-medium">
-                  <Sparkles className="w-4 h-4 text-slate-700" />
+                <div className="flex items-center gap-1.5 sm:gap-2 text-slate-600 text-xs font-medium">
+                  <Sparkles className="w-4 h-4 text-slate-700 shrink-0" />
                   <span>Resumen</span>
                 </div>
                 <div className="text-right">
                   <span className="font-extrabold text-slate-900 text-sm sm:text-base">
                     ${precioTotal.toLocaleString('es-AR')}
                   </span>
-                  <span className="text-xs text-slate-400 font-medium ml-2">
+                  <span className="text-[11px] sm:text-xs text-slate-400 font-medium ml-1.5 sm:ml-2">
                     ({duracionTotal} min)
                   </span>
                 </div>
@@ -354,7 +349,7 @@ export default function FlujoAgendaConfirmacion({
                 type="button"
                 disabled={!fecha || !hora}
                 onClick={() => setPaso('confirmacion')}
-                className={`w-full font-bold py-3.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 shadow-xs disabled:bg-slate-100 disabled:text-slate-400 ${styles.button}`}
+                className={`w-full font-bold py-3.5 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:bg-slate-100 disabled:text-slate-400 ${styles.button}`}
               >
                 <span>Continuar a confirmación</span>
                 <ChevronRight className="w-4 h-4" />
@@ -368,7 +363,7 @@ export default function FlujoAgendaConfirmacion({
               <button
                 type="button"
                 onClick={() => setPaso('agenda')}
-                className={`inline-flex items-center gap-1 text-xs font-semibold mb-4 transition-colors ${styles.link}`}
+                className={`inline-flex items-center gap-1 text-xs font-semibold mb-4 transition-colors p-1 -ml-1 ${styles.link}`}
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Cambiar fecha u hora</span>
@@ -398,18 +393,18 @@ export default function FlujoAgendaConfirmacion({
       {/* MODAL POP-UP DE RESERVA EXITOSA */}
       {reservaExitosa && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl border border-slate-100">
-            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-sm w-full text-center shadow-2xl border border-slate-100">
+            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3.5">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             
-            <h3 className="text-lg font-bold text-slate-900">¡Turno Reservado!</h3>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900">¡Turno Reservado!</h3>
             
             <p className="text-xs text-slate-500 mt-1 mb-3">
               Código único: <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">{reservaExitosa.codigo}</span>
             </p>
             
-            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 text-left space-y-2 mb-4">
+            <div className="bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-100 text-left space-y-2 mb-4">
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Servicio / Selección</span>
                 <p className="text-xs text-slate-700 font-semibold">{reservaExitosa.detalle}</p>
@@ -427,7 +422,7 @@ export default function FlujoAgendaConfirmacion({
               </div>
             </div>
 
-            <p className="text-[11px] text-slate-400 mb-5 leading-tight">
+            <p className="text-[10px] sm:text-[11px] text-slate-400 mb-4 sm:mb-5 leading-tight">
               Si fuiste redirigido a WhatsApp, asegurate de enviar el mensaje para finalizar la coordinación.
             </p>
 
@@ -437,7 +432,7 @@ export default function FlujoAgendaConfirmacion({
                 sessionStorage.removeItem('reserva-exitosa');
                 window.location.href = '/';
               }}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs transition-colors shadow-sm"
+              className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white font-bold py-3 rounded-xl text-xs transition-all shadow-xs"
             >
               Volver al inicio
             </button>

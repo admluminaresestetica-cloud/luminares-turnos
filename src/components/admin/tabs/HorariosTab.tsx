@@ -1,7 +1,7 @@
 // src/components/admin/tabs/HorariosTab.tsx
 'use client'
 
-import { Plus, Calendar, Clock, Sparkles, CheckCircle2, XCircle, Trash2, CalendarX, Save } from 'lucide-react'
+import { Plus, Calendar, Sparkles, CheckCircle2, XCircle, Trash2, CalendarX, Save } from 'lucide-react'
 import { ConfigCalendario, DIAS_SEMANA, HorarioDia, HorariosSemana, formatFecha, horarioDiaDefault } from '../types'
 
 interface HorariosTabProps {
@@ -49,7 +49,7 @@ export default function HorariosTab({
 }: HorariosTabProps) {
   if (loadingHorarios) {
     return (
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-12 text-center text-xs font-medium text-gray-400 animate-pulse">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-8 sm:p-12 text-center text-xs font-medium text-gray-400 animate-pulse">
         Cargando configuración de horarios...
       </div>
     )
@@ -58,8 +58,8 @@ export default function HorariosTab({
   return (
     <div className="space-y-6 pb-10">
       {/* DEPILACIÓN LÁSER */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 transition-all">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6 transition-all">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-2">
               <div className="p-2 bg-rose-50 text-rose-600 rounded-xl">
@@ -74,20 +74,20 @@ export default function HorariosTab({
           <button
             onClick={onGuardarConfigLaser}
             disabled={guardandoLaser}
-            className="px-4 py-2.5 text-xs font-bold bg-black text-white rounded-xl hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
+            className="w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold bg-black text-white rounded-xl hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
           >
             <Save className="w-3.5 h-3.5" />
             {guardandoLaser ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Rango Horario */}
           <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
             <label className="block text-xs font-bold text-gray-800 mb-3">
               Rango Horario de Atención
             </label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="flex-1">
                 <span className="block text-[11px] font-semibold text-gray-400 mb-1">Desde</span>
                 <input
@@ -109,8 +109,7 @@ export default function HorariosTab({
               </div>
             </div>
             <p className="text-[11px] text-gray-400 mt-3 leading-relaxed">
-              Este rango aplica a todas las fechas habilitadas para láser. Las duraciones de cada turno
-              se calculan automáticamente según las zonas o promos elegidas por el cliente.
+              Este rango aplica a todas las fechas habilitadas para láser.
             </p>
           </div>
 
@@ -119,7 +118,7 @@ export default function HorariosTab({
             <label className="block text-xs font-bold text-gray-800 mb-3">
               Fechas Habilitadas para Turnos
             </label>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-3">
               <input
                 type="date"
                 value={nuevaFechaLaser}
@@ -128,7 +127,7 @@ export default function HorariosTab({
               />
               <button
                 onClick={onAgregarFechaLaser}
-                className="px-3 py-2 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-black transition-all flex items-center gap-1 active:scale-95"
+                className="justify-center px-3 py-2 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-black transition-all flex items-center gap-1 active:scale-95"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Agregar
@@ -162,8 +161,8 @@ export default function HorariosTab({
       </div>
 
       {/* SERVICIOS GENERALES */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 transition-all">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6 transition-all">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-2">
               <div className="p-2 bg-gray-100 text-gray-800 rounded-xl">
@@ -178,7 +177,7 @@ export default function HorariosTab({
           <button
             onClick={onGuardarConfigGeneral}
             disabled={guardandoGeneral}
-            className="px-4 py-2.5 text-xs font-bold bg-black text-white rounded-xl hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
+            className="w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold bg-black text-white rounded-xl hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
           >
             <Save className="w-3.5 h-3.5" />
             {guardandoGeneral ? 'Guardando...' : 'Guardar Cambios'}
@@ -186,79 +185,81 @@ export default function HorariosTab({
         </div>
 
         {/* Tabla Semanal */}
-        <div className="overflow-x-auto mb-6">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase tracking-wider text-[11px] font-semibold">
-              <tr>
-                <th className="px-4 py-3.5 rounded-l-xl">Día</th>
-                <th className="px-4 py-3.5">Estado</th>
-                <th className="px-4 py-3.5">Desde</th>
-                <th className="px-4 py-3.5 rounded-r-xl">Hasta</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {DIAS_SEMANA.map(({ key, label }) => {
-                const horario: HorarioDia =
-                  configGeneral.horarios_atencion?.[key] || horarioDiaDefault()
-                return (
-                  <tr key={key} className="hover:bg-gray-50/60 transition-colors">
-                    <td className="px-4 py-3.5 font-bold text-gray-800">{label}</td>
-                    
-                    <td className="px-4 py-3.5">
-                      <button
-                        onClick={() => onToggleDiaGeneral(key)}
-                        className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 ${
-                          horario.abierto
-                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                        }`}
-                      >
-                        {horario.abierto ? (
-                          <>
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            Abierto
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="w-3.5 h-3.5 text-gray-400" />
-                            Cerrado
-                          </>
-                        )}
-                      </button>
-                    </td>
+        <div className="overflow-x-auto -mx-4 sm:mx-0 mb-6">
+          <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+            <table className="min-w-full text-left text-xs">
+              <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase tracking-wider text-[11px] font-semibold">
+                <tr>
+                  <th className="px-3 sm:px-4 py-3.5 rounded-l-xl">Día</th>
+                  <th className="px-3 sm:px-4 py-3.5">Estado</th>
+                  <th className="px-3 sm:px-4 py-3.5">Desde</th>
+                  <th className="px-3 sm:px-4 py-3.5 rounded-r-xl">Hasta</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {DIAS_SEMANA.map(({ key, label }) => {
+                  const horario: HorarioDia =
+                    configGeneral.horarios_atencion?.[key] || horarioDiaDefault()
+                  return (
+                    <tr key={key} className="hover:bg-gray-50/60 transition-colors">
+                      <td className="px-3 sm:px-4 py-3.5 font-bold text-gray-800 whitespace-nowrap">{label}</td>
+                      
+                      <td className="px-3 sm:px-4 py-3.5 whitespace-nowrap">
+                        <button
+                          onClick={() => onToggleDiaGeneral(key)}
+                          className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 ${
+                            horario.abierto
+                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                          }`}
+                        >
+                          {horario.abierto ? (
+                            <>
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              Abierto
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3.5 h-3.5 text-gray-400" />
+                              Cerrado
+                            </>
+                          )}
+                        </button>
+                      </td>
 
-                    <td className="px-4 py-3.5">
-                      <input
-                        type="time"
-                        disabled={!horario.abierto}
-                        value={horario.inicio}
-                        onChange={(e) => onActualizarHorarioGeneral(key, 'inicio', e.target.value)}
-                        className="border border-gray-200 rounded-xl p-1.5 text-xs font-bold text-gray-800 outline-none focus:border-black disabled:bg-gray-50 disabled:text-gray-300 transition-all"
-                      />
-                    </td>
+                      <td className="px-3 sm:px-4 py-3.5 whitespace-nowrap">
+                        <input
+                          type="time"
+                          disabled={!horario.abierto}
+                          value={horario.inicio}
+                          onChange={(e) => onActualizarHorarioGeneral(key, 'inicio', e.target.value)}
+                          className="border border-gray-200 rounded-xl p-1.5 text-xs font-bold text-gray-800 outline-none focus:border-black disabled:bg-gray-50 disabled:text-gray-300 transition-all"
+                        />
+                      </td>
 
-                    <td className="px-4 py-3.5">
-                      <input
-                        type="time"
-                        disabled={!horario.abierto}
-                        value={horario.fin}
-                        onChange={(e) => onActualizarHorarioGeneral(key, 'fin', e.target.value)}
-                        className="border border-gray-200 rounded-xl p-1.5 text-xs font-bold text-gray-800 outline-none focus:border-black disabled:bg-gray-50 disabled:text-gray-300 transition-all"
-                      />
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                      <td className="px-3 sm:px-4 py-3.5 whitespace-nowrap">
+                        <input
+                          type="time"
+                          disabled={!horario.abierto}
+                          value={horario.fin}
+                          onChange={(e) => onActualizarHorarioGeneral(key, 'fin', e.target.value)}
+                          className="border border-gray-200 rounded-xl p-1.5 text-xs font-bold text-gray-800 outline-none focus:border-black disabled:bg-gray-50 disabled:text-gray-300 transition-all"
+                        />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Excepciones */}
         <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
           <label className="block text-xs font-bold text-gray-800 mb-3">
-            Días de Excepción / Bloqueados (feriados, vacaciones, etc.)
+            Días de Excepción / Bloqueados
           </label>
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-3">
             <input
               type="date"
               value={nuevaExcepcionGeneral}
@@ -267,7 +268,7 @@ export default function HorariosTab({
             />
             <button
               onClick={onAgregarExcepcionGeneral}
-              className="px-3 py-2 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-black transition-all flex items-center gap-1 active:scale-95"
+              className="justify-center px-3 py-2 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-black transition-all flex items-center gap-1 active:scale-95"
             >
               <Plus className="w-3.5 h-3.5" />
               Agregar Excepción

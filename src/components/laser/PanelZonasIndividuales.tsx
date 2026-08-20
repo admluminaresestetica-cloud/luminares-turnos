@@ -13,7 +13,7 @@ interface Props {
 export default function PanelZonasIndividuales({ zonas, seleccionadas, onToggle }: Props) {
   if (zonas.length === 0) {
     return (
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-8 text-center">
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 text-center">
         <p className="text-slate-500 text-sm font-medium">
           No hay zonas disponibles para este perfil.
         </p>
@@ -22,7 +22,7 @@ export default function PanelZonasIndividuales({ zonas, seleccionadas, onToggle 
   }
 
   return (
-    <div className="space-y-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
       {zonas.map((zona) => {
         const activa = seleccionadas.includes(zona.id);
         return (
@@ -30,7 +30,7 @@ export default function PanelZonasIndividuales({ zonas, seleccionadas, onToggle 
             key={zona.id}
             type="button"
             onClick={() => onToggle(zona.id)}
-            className={`w-full flex items-center gap-3.5 p-3.5 md:p-4 rounded-2xl border text-left transition-all ${
+            className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-2xl border text-left transition-all active:scale-[0.98] ${
               activa
                 ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
                 : 'border-slate-200/80 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/50'
@@ -51,16 +51,16 @@ export default function PanelZonasIndividuales({ zonas, seleccionadas, onToggle 
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className={`text-sm font-bold ${activa ? 'text-white' : 'text-slate-900'}`}>
+              <p className={`text-xs sm:text-sm font-bold truncate ${activa ? 'text-white' : 'text-slate-900'}`}>
                 {zona.nombre_zona}
               </p>
-              <p className={`text-xs ${activa ? 'text-slate-300' : 'text-slate-400'}`}>
+              <p className={`text-[11px] sm:text-xs truncate ${activa ? 'text-slate-300' : 'text-slate-400'}`}>
                 {ETIQUETA_CATEGORIA[zona.categoria_zona]} · {zona.duracion_minutos} min
               </p>
             </div>
 
-            <p className={`text-sm font-bold shrink-0 ${activa ? 'text-white' : 'text-slate-900'}`}>
-              ${Number(zona.precio_lista).toLocaleString()}
+            <p className={`text-xs sm:text-sm font-bold shrink-0 ${activa ? 'text-white' : 'text-slate-900'}`}>
+              ${Number(zona.precio_lista).toLocaleString('es-AR')}
             </p>
           </button>
         );

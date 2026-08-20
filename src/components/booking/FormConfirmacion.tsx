@@ -70,10 +70,10 @@ export default function FormConfirmacion({
   const puedeConfirmar = nombre.trim().length >= 2 && celular.replace(/\D/g, '').length >= 8;
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-200">
+    <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-200">
       
       {/* Resumen de la Reserva */}
-      <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-3">
+      <div className="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-3.5 sm:p-5 space-y-3">
         <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-200/60">
           <div className="space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -88,7 +88,7 @@ export default function FormConfirmacion({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
           <div className="flex items-center gap-2 text-slate-600 bg-white p-2.5 rounded-xl border border-slate-200/60">
             <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span className="font-semibold text-slate-800 truncate">
@@ -105,7 +105,7 @@ export default function FormConfirmacion({
         </div>
 
         {/* Desglose de Precios */}
-        <div className="pt-2 flex items-center justify-between">
+        <div className="pt-2 flex items-center justify-between gap-2">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Total a pagar
@@ -115,7 +115,7 @@ export default function FormConfirmacion({
             </p>
           </div>
 
-          <div className={`px-3 py-1.5 rounded-xl border ${styles.badgeSena} text-right`}>
+          <div className={`px-2.5 py-1.5 sm:px-3 rounded-xl border ${styles.badgeSena} text-right`}>
             <p className="text-[10px] uppercase font-bold tracking-wider opacity-80">
               Seña ({porcentajeSena}%)
             </p>
@@ -127,9 +127,9 @@ export default function FormConfirmacion({
       </div>
 
       {/* Formulario de Datos */}
-      <div className="space-y-3.5">
+      <div className="space-y-3 sm:space-y-3.5">
         <div>
-          <label htmlFor="nombre" className="block text-xs font-bold text-slate-800 mb-1.5">
+          <label htmlFor="nombre" className="block text-xs font-bold text-slate-800 mb-1">
             Nombre completo
           </label>
           <div className="relative">
@@ -142,13 +142,13 @@ export default function FormConfirmacion({
               value={nombre}
               onChange={(e) => onNombreChange(e.target.value)}
               placeholder="Ej: María García"
-              className={`w-full pl-10 pr-3.5 py-3 text-xs sm:text-sm bg-white border border-slate-200/80 rounded-xl text-slate-900 placeholder:text-slate-400 transition-all outline-none ${styles.focusRing}`}
+              className={`w-full pl-10 pr-3.5 py-3 text-base sm:text-sm bg-white border border-slate-200/80 rounded-xl text-slate-900 placeholder:text-slate-400 transition-all outline-none ${styles.focusRing}`}
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="celular" className="block text-xs font-bold text-slate-800 mb-1.5">
+          <label htmlFor="celular" className="block text-xs font-bold text-slate-800 mb-1">
             Celular (WhatsApp)
           </label>
           <div className="relative">
@@ -161,7 +161,7 @@ export default function FormConfirmacion({
               value={celular}
               onChange={(e) => onCelularChange(e.target.value)}
               placeholder="Ej: 11 2345-6789"
-              className={`w-full pl-10 pr-3.5 py-3 text-xs sm:text-sm bg-white border border-slate-200/80 rounded-xl text-slate-900 placeholder:text-slate-400 transition-all outline-none ${styles.focusRing}`}
+              className={`w-full pl-10 pr-3.5 py-3 text-base sm:text-sm bg-white border border-slate-200/80 rounded-xl text-slate-900 placeholder:text-slate-400 transition-all outline-none ${styles.focusRing}`}
             />
           </div>
         </div>
@@ -179,7 +179,7 @@ export default function FormConfirmacion({
         type="button"
         onClick={onConfirmar}
         disabled={!puedeConfirmar || confirmando}
-        className={`w-full font-bold py-3.5 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed ${styles.button}`}
+        className={`w-full font-bold py-3.5 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed ${styles.button}`}
       >
         {confirmando ? (
           <>
@@ -195,9 +195,9 @@ export default function FormConfirmacion({
       </button>
 
       {/* Disclaimer */}
-      <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium text-center">
+      <div className="flex items-center justify-center gap-1.5 text-[10px] sm:text-[11px] text-slate-400 font-medium text-center">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-        <span>Se redigirá a WhatsApp para coordinar el pago de la seña.</span>
+        <span>Se redirigirá a WhatsApp para coordinar el pago de la seña.</span>
       </div>
 
     </div>

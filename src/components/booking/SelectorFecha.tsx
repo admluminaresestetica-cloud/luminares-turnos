@@ -52,14 +52,14 @@ export default function SelectorFecha({
   }, [hoy, mesOffset]);
 
   return (
-    <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 sm:p-5">
+    <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-3 sm:p-5">
       {/* Cabecera del Calendario */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
         <button
           type="button"
           onClick={() => setMesOffset((m) => m - 1)}
           disabled={mesOffset === 0}
-          className="p-1.5 rounded-xl border border-slate-200/80 text-slate-600 hover:bg-white hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="p-2 sm:p-1.5 rounded-xl border border-slate-200/80 text-slate-600 hover:bg-white hover:text-slate-900 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label="Mes anterior"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -72,7 +72,7 @@ export default function SelectorFecha({
         <button
           type="button"
           onClick={() => setMesOffset((m) => m + 1)}
-          className="p-1.5 rounded-xl border border-slate-200/80 text-slate-600 hover:bg-white hover:text-slate-900 transition-all"
+          className="p-2 sm:p-1.5 rounded-xl border border-slate-200/80 text-slate-600 hover:bg-white hover:text-slate-900 active:scale-95 transition-all"
           aria-label="Mes siguiente"
         >
           <ChevronRight className="w-4 h-4" />
@@ -80,16 +80,16 @@ export default function SelectorFecha({
       </div>
 
       {/* Días de la semana */}
-      <div className="grid grid-cols-7 gap-1 mb-2">
+      <div className="grid grid-cols-7 gap-1 mb-1.5 sm:mb-2">
         {DIAS_CORTOS.map((d) => (
-          <div key={d} className="text-center text-[11px] font-bold text-slate-400 py-1">
+          <div key={d} className="text-center text-[10px] sm:text-[11px] font-bold text-slate-400 py-0.5 sm:py-1">
             {d}
           </div>
         ))}
       </div>
 
       {/* Celdas del mes */}
-      <div className="grid grid-cols-7 gap-1.5">
+      <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
         {celdas.map((fecha, i) => {
           if (!fecha) return <div key={`empty-${i}`} className="aspect-square" />;
 
@@ -105,7 +105,7 @@ export default function SelectorFecha({
               disabled={!habilitada}
               onClick={() => onSelect(iso)}
               className={`
-                relative aspect-square rounded-xl text-xs sm:text-sm font-bold transition-all flex flex-col items-center justify-center
+                relative aspect-square rounded-xl text-xs sm:text-sm font-bold transition-all flex flex-col items-center justify-center active:scale-95
                 ${seleccionada
                   ? 'bg-slate-900 text-white shadow-md scale-105 z-10'
                   : habilitada
@@ -118,7 +118,7 @@ export default function SelectorFecha({
               
               {/* Indicador sutil para el día de HOY si no está seleccionado */}
               {esHoy && !seleccionada && (
-                <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-emerald-500" />
+                <span className="absolute bottom-1 sm:bottom-1.5 w-1 h-1 rounded-full bg-emerald-500" />
               )}
             </button>
           );
@@ -127,7 +127,7 @@ export default function SelectorFecha({
 
       {/* Leyenda de servicio Láser */}
       {tipo === 'laser' && fechasLaser.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+        <div className="mt-3.5 sm:mt-4 pt-3 border-t border-slate-200/60 flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-slate-500">
           <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
           <span>Fechas exclusivas para la jornada de depilación láser.</span>
         </div>

@@ -985,7 +985,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-100 font-sans text-gray-900">
       <AdminHeader onLogout={handleLogout} />
 
-      <div className="max-w-7xl mx-auto px-6 pt-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
         <AdminTabs
           activeTab={activeTab}
           onChange={setActiveTab}
