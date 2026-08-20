@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Sparkles, Hand, Heart, Eye, ChevronRight } from 'lucide-react';
 import FlujoAgendaConfirmacion from '@/components/booking/FlujoAgendaConfirmacion';
 import { SERVICIOS_STORAGE_KEY } from '@/lib/booking/session';
@@ -217,7 +218,7 @@ export default function ServiciosPage() {
             </h2>
 
             <div className="space-y-3">
-              {serviciosCategoria.map((servicio) => {
+              {serviciosCategoria.map((servicio: any) => {
                 const activo = seleccionados.includes(servicio.id);
                 return (
                   <button
@@ -243,6 +244,30 @@ export default function ServiciosPage() {
                         ${Number(servicio.precio).toLocaleString('es-AR')}
                       </p>
                     </div>
+
+                    {/* CONTENIDO DESPLEGABLE: Se muestra solo si está activo y tiene descripción o imagen */}
+                    {activo && (servicio.descripcion || servicio.imagen) && (
+                      <div className="mt-4 pt-4 border-t border-rose-200/60 animate-fadeIn space-y-3">
+                        {servicio.imagen && (
+                          <div className="relative w-full h-48 rounded-xl overflow-hidden shadow-sm bg-slate-100">
+                            <img
+                              src={`/images/${servicio.imagen}`}
+                              alt={servicio.subtipo}
+                              className="w-full h-full object-cover"
+                              onError={(e: any) => {
+                                // Plan de resguardo si la imagen no existe o está mal escrita
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        )}
+                        {servicio.descripcion && (
+                          <p className="text-sm text-slate-600 leading-relaxed">
+                            {servicio.descripcion}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </button>
                 );
               })}
