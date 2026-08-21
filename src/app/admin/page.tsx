@@ -11,6 +11,7 @@ import AgendaTab from '@/components/admin/tabs/AgendaTab'
 import PreciosTab from '@/components/admin/tabs/PreciosTab'
 import GeneralesTab from '@/components/admin/tabs/GeneralesTab'
 import HorariosTab from '@/components/admin/tabs/HorariosTab'
+import BannerTab from '@/components/admin/tabs/BannerTab';
 
 import ModalServicioLaser from '@/components/admin/modals/ModalServicioLaser'
 import ModalPromo from '@/components/admin/modals/ModalPromo'
@@ -18,6 +19,7 @@ import ModalServicioGeneral from '@/components/admin/modals/ModalServicioGeneral
 import ModalCobro from '@/components/admin/modals/ModalCobro'
 import ModalNuevoTurno from '@/components/admin/modals/ModalNuevoTurno'
 import ModalEditarTurno from '@/components/admin/modals/ModalEditarTurno'
+
 
 import {
   Reserva,
@@ -1053,6 +1055,7 @@ export default function AdminDashboard() {
             onEliminarServicio={eliminarServicioGeneral}
           />
         )}
+        
 
         {activeTab === 'horarios' && (
           <HorariosTab
@@ -1075,6 +1078,9 @@ export default function AdminDashboard() {
             onQuitarExcepcionGeneral={quitarExcepcionGeneral}
             onGuardarConfigGeneral={guardarConfigGeneral}
           />
+        )}
+        {activeTab === 'banner' && (
+          <BannerTab />
         )}
       </div>
 

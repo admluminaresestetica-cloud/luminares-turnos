@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Zap, Sparkles, Calendar, HelpCircle, ChevronRight, MessageCircle } from 'lucide-react';
+import BannerPrincipal from '@/components/BannerPrincipal';
 
 const ACCESOS = [
   {
@@ -46,7 +47,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 md:p-12">
-      <div className="max-w-lg w-full">
+      <BannerPrincipal />
+
+      <div className="max-w-lg w-full mt-6">
         <header className="text-center mb-8">
           <p className="text-xs font-black tracking-[0.2em] uppercase mb-2">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-indigo-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.3)]">
