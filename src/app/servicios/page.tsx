@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Sparkles, Hand, Heart, Eye, ChevronRight } from 'lucide-react';
 import FlujoAgendaConfirmacion from '@/components/booking/FlujoAgendaConfirmacion';
 import { SERVICIOS_STORAGE_KEY } from '@/lib/booking/session';
@@ -220,6 +219,9 @@ export default function ServiciosPage() {
             <div className="space-y-3">
               {serviciosCategoria.map((servicio: any) => {
                 const activo = seleccionados.includes(servicio.id);
+                // Permite verificar tanto imagen_url (Supabase) como el campo legacy imagen
+                const imagenParaMostrar = servicio.imagen_url || servicio.imagen;
+
                 return (
                   <button
                     key={servicio.id}
@@ -246,16 +248,19 @@ export default function ServiciosPage() {
                     </div>
 
                     {/* CONTENIDO DESPLEGABLE: Se muestra solo si está activo y tiene descripción o imagen */}
-                    {activo && (servicio.descripcion || servicio.imagen) && (
+                    {activo && (servicio.descripcion || imagenParaMostrar) && (
                       <div className="mt-4 pt-4 border-t border-rose-200/60 animate-fadeIn space-y-3">
-                        {servicio.imagen && (
+                        {imagenParaMostrar && (
                           <div className="relative w-full h-48 rounded-xl overflow-hidden shadow-sm bg-slate-100">
                             <img
-                              src={`/images/${servicio.imagen}`}
+                              src={
+                                imagenParaMostrar.startsWith('http')
+                                  ? imagenParaMostrar
+                                  : `/images/${imagenParaMostrar}`
+                              }
                               alt={servicio.subtipo}
                               className="w-full h-full object-cover"
                               onError={(e: any) => {
-                                // Plan de resguardo si la imagen no existe o está mal escrita
                                 e.target.style.display = 'none';
                               }}
                             />

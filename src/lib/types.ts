@@ -2,7 +2,7 @@
 
 export type GeneroLaser = 'femenino' | 'masculino';
 export type CategoriaZona = 'chica' | 'media' | 'grande';
-export type CategoriaGeneral = 'faciales' | 'manicura' | 'masajes';
+export type CategoriaGeneral = string;
 export type TipoServicio = 'laser' | 'general';
 export type TipoJornada = 'laser' | 'general';
 export type EstadoReserva = 'pendiente_sena' | 'confirmado' | 'cancelado';
@@ -37,6 +37,8 @@ export interface ServicioGeneral {
   precio: number;
   duracion_minutos: number;
   activo: boolean;
+  descripcion?: string;
+  imagen_url?: string;
 }
 
 export interface ConfiguracionCalendario {

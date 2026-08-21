@@ -683,7 +683,9 @@ export default function AdminDashboard() {
         subtipo: '',
         precio: 0,
         duracion_minutos: 30,
-        activo: true
+        activo: true,
+        descripcion: '',
+        imagen_url: ''
       })
     }
     setModalGeneral(true)
@@ -698,7 +700,9 @@ export default function AdminDashboard() {
       subtipo: servicioGeneralEdit.subtipo,
       precio: Number(servicioGeneralEdit.precio),
       duracion_minutos: Number(servicioGeneralEdit.duracion_minutos),
-      activo: servicioGeneralEdit.activo ?? true
+      activo: servicioGeneralEdit.activo ?? true,
+      descripcion: servicioGeneralEdit.descripcion || '',
+      imagen_url: servicioGeneralEdit.imagen_url || ''
     }
 
     if (servicioGeneralEdit.id) {

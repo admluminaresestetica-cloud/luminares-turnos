@@ -44,6 +44,8 @@ export interface ServicioGeneral {
   duracion_minutos?: number
   activo?: boolean
   created_at?: string
+  descripcion?: string
+  imagen_url?: string
 }
 
 // --- TIPOS PARA CONFIGURACIÓN DE CALENDARIO / HORARIOS ---

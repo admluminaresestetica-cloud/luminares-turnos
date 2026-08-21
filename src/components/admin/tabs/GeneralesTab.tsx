@@ -1,7 +1,6 @@
-// src/components/admin/tabs/GeneralesTab.tsx
 'use client'
 
-import { Plus, Clock, CheckCircle2, XCircle, Scissors } from 'lucide-react'
+import { Plus, Clock, CheckCircle2, XCircle, Scissors, Image as ImageIcon } from 'lucide-react'
 import { ServicioGeneral } from '../types'
 
 interface GeneralesTabProps {
@@ -33,7 +32,7 @@ export default function GeneralesTab({
             </div>
             <h2 className="text-base font-bold text-gray-900">Servicios Generales</h2>
           </div>
-          <p className="text-xs text-gray-500 mt-1">Gestión de categorías, subtipos, precios y duración</p>
+          <p className="text-xs text-gray-500 mt-1">Gestión de categorías, subtipos, precios, imágenes y duración</p>
         </div>
 
         <button
@@ -59,8 +58,8 @@ export default function GeneralesTab({
             <table className="min-w-full text-left text-xs">
               <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase tracking-wider text-[11px] font-semibold">
                 <tr>
-                  <th className="px-3 sm:px-4 py-3.5 rounded-l-xl">Categoría</th>
-                  <th className="px-3 sm:px-4 py-3.5">Subtipo</th>
+                  <th className="px-3 sm:px-4 py-3.5 rounded-l-xl">Imagen</th>
+                  <th className="px-3 sm:px-4 py-3.5">Categoría / Subtipo</th>
                   <th className="px-3 sm:px-4 py-3.5">Duración</th>
                   <th className="px-3 sm:px-4 py-3.5">Precio</th>
                   <th className="px-3 sm:px-4 py-3.5">Estado</th>
@@ -70,12 +69,37 @@ export default function GeneralesTab({
               <tbody className="divide-y divide-gray-50">
                 {serviciosGenerales.map((serv) => (
                   <tr key={serv.id} className="hover:bg-gray-50/60 transition-colors">
-                    <td className="px-3 sm:px-4 py-3.5 font-bold text-gray-900 whitespace-nowrap">
-                      {serv.categoria || '-'}
+                    
+                    {/* Vista Previa de Imagen */}
+                    <td className="px-3 sm:px-4 py-3.5 whitespace-nowrap">
+                      {serv.imagen_url ? (
+                        <img
+                          src={serv.imagen_url}
+                          alt={serv.categoria || 'Servicio'}
+                          className="w-10 h-10 object-cover rounded-xl border border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-gray-100 text-gray-400 rounded-xl flex items-center justify-center border border-gray-200">
+                          <ImageIcon className="w-5 h-5" />
+                        </div>
+                      )}
                     </td>
 
-                    <td className="px-3 sm:px-4 py-3.5 text-gray-500 font-medium whitespace-nowrap">
-                      {serv.subtipo || '-'}
+                    {/* Categoría, Subtipo y Descripción */}
+                    <td className="px-3 sm:px-4 py-3.5">
+                      <div className="font-bold text-gray-900 whitespace-nowrap">
+                        {serv.categoria || '-'}
+                      </div>
+                      {serv.subtipo && (
+                        <div className="text-gray-500 font-medium whitespace-nowrap text-[11px]">
+                          {serv.subtipo}
+                        </div>
+                      )}
+                      {serv.descripcion && (
+                        <div className="text-gray-400 text-[11px] max-w-xs truncate mt-0.5">
+                          {serv.descripcion}
+                        </div>
+                      )}
                     </td>
 
                     <td className="px-3 sm:px-4 py-3.5 text-gray-600 font-medium whitespace-nowrap">
