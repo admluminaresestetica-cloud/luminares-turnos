@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState } from 'react'
@@ -45,6 +46,12 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-[#F9F8F6] px-4">
       <div className="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-2xl shadow-sm border border-stone-200/80">
         <div className="text-center">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 text-stone-700">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+
           <span className="inline-block px-3 py-1 mb-3 text-xs font-medium tracking-widest text-stone-600 uppercase bg-stone-100 rounded-full">
             Panel Privado
           </span>
