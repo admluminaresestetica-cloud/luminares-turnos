@@ -9,7 +9,10 @@ import {
   Sparkles, 
   ChevronRight, 
   CheckCircle2, 
-  Loader2 
+  Loader2,
+  Gift,
+  Copy,
+  Check
 } from 'lucide-react';
 import SelectorFecha from '@/components/booking/SelectorFecha';
 import SelectorHorario from '@/components/booking/SelectorHorario';
@@ -17,6 +20,8 @@ import FormConfirmacion from '@/components/booking/FormConfirmacion';
 import { calcularSlotsDisponibles } from '@/lib/calendario/slots';
 import { getConfiguracionCalendario, getConfiguracionSistema } from '@/lib/supabase/configuracion';
 import { crearReserva, getReservasPorFecha } from '@/lib/supabase/reservas';
+import { supabase } from '@/lib/supabase';
+import { generarCodigoReferido } from '@/lib/admin/helpers';
 import {
   buildMensajeReserva,
   buildWhatsAppUrl,
@@ -42,6 +47,7 @@ interface Props {
 
 interface DatosReservaExitosa {
   codigo: string;
+  codigoReferidoPropio: string;
   detalle: string;
   fecha: string;
   hora: string;
@@ -95,8 +101,16 @@ export default function FlujoAgendaConfirmacion({
 
   const [nombre, setNombre] = useState('');
   const [celular, setCelular] = useState('');
+  const [codigoReferidoUsado, setCodigoReferidoUsado] = useState('');
+  
+  // Estados para validación de referido
+  const [descuentoMonto, setDescuentoMonto] = useState(0);
+  const [referidoValido, setReferidoValido] = useState<boolean | null>(null);
+  const [mensajeReferido, setMensajeReferido] = useState<string | null>(null);
+
   const [confirmando, setConfirmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
 
   const [reservaExitosa, setReservaExitosa] = useState<DatosReservaExitosa | null>(() => {
     if (typeof window !== 'undefined') {
@@ -128,6 +142,58 @@ export default function FlujoAgendaConfirmacion({
     cargar();
   }, [tipo]);
 
+  // Validar el código de referido en tiempo real
+  useEffect(() => {
+    async function validarCodigo() {
+      const cod = codigoReferidoUsado.trim().toUpperCase();
+
+      if (!cod) {
+        setReferidoValido(null);
+        setMensajeReferido(null);
+        setDescuentoMonto(0);
+        return;
+      }
+
+      if (!configSistema?.referidos_activo) {
+        setReferidoValido(false);
+        setMensajeReferido('El programa de referidos no está activo en este momento.');
+        setDescuentoMonto(0);
+        return;
+      }
+
+      // Valor por defecto seguro si viene undefined desde Supabase
+      const valorDescuento = configSistema.referidos_valor_descuento ?? 0;
+
+      // Verificar si existe el cliente con ese código
+      const { data: dueno } = await supabase
+        .from('clientes')
+        .select('id, nombre')
+        .eq('codigo_referido', cod)
+        .maybeSingle();
+
+      if (!dueno) {
+        setReferidoValido(false);
+        setMensajeReferido('Código no encontrado. Verificalo e intentá de nuevo.');
+        setDescuentoMonto(0);
+        return;
+      }
+
+      // Calcular monto de descuento sin riesgos de undefined
+      let desc = 0;
+      if (configSistema.referidos_tipo_descuento === 'porcentaje') {
+        desc = Math.round((precioTotal * valorDescuento) / 100);
+      } else {
+        desc = valorDescuento;
+      }
+
+      setReferidoValido(true);
+      setMensajeReferido(`¡Código válido de ${dueno.nombre}! Se aplicó un descuento de $${desc.toLocaleString('es-AR')}.`);
+      setDescuentoMonto(desc);
+    }
+
+    validarCodigo();
+  }, [codigoReferidoUsado, configSistema, precioTotal]);
+
   const cargarSlots = useCallback(async (fechaSel: string) => {
     if (!configCalendario) return;
     setCargandoSlots(true);
@@ -154,47 +220,114 @@ export default function FlujoAgendaConfirmacion({
     setConfirmando(true);
     setError(null);
 
-    const fechaHoraInicio = new Date(`${fecha}T${hora}:00`).toISOString();
-    const reserva = await crearReserva({
-      cliente_nombre: nombre.trim(),
-      cliente_celular: celular.trim(),
-      servicio_tipo: tipo,
-      detalle_reserva: { ...detalleReserva, detalle_texto: detalleTexto },
-      precio_total: precioTotal,
-      duracion_total: duracionTotal,
-      fecha_hora_inicio: fechaHoraInicio,
-    });
+    try {
+      const celularLimpio = celular.replace(/\D/g, '');
+      const nombreLimpio = nombre.trim();
+      let codigoReferidoPropio = '';
 
-    setConfirmando(false);
+      // 1. GESTIÓN DE CLIENTE Y CÓDIGO DE REFERIDO PROPIO
+      const { data: clienteExistente } = await supabase
+        .from('clientes')
+        .select('codigo_referido')
+        .eq('celular', celularLimpio)
+        .maybeSingle();
 
-    if (!reserva) {
-      setError('No pudimos crear la reserva. Intentá de nuevo.');
-      return;
+      if (clienteExistente) {
+        codigoReferidoPropio = clienteExistente.codigo_referido;
+      } else {
+        codigoReferidoPropio = generarCodigoReferido(nombreLimpio);
+        await supabase.from('clientes').insert([
+          {
+            celular: celularLimpio,
+            nombre: nombreLimpio,
+            codigo_referido: codigoReferidoPropio,
+            descuentos_disponibles: 0,
+          },
+        ]);
+      }
+
+      // 2. ACREDITAR BENEFICIO A LA AMIGA SI SE INGRESÓ UN CÓDIGO VÁLIDO
+      const codigoUsadoLimpio = codigoReferidoUsado.trim().toUpperCase();
+      if (codigoUsadoLimpio && referidoValido) {
+        const { data: duenoCodigo } = await supabase
+          .from('clientes')
+          .select('id, descuentos_disponibles')
+          .eq('codigo_referido', codigoUsadoLimpio)
+          .maybeSingle();
+
+        if (duenoCodigo) {
+          await supabase
+            .from('clientes')
+            .update({ descuentos_disponibles: (duenoCodigo.descuentos_disponibles || 0) + 1 })
+            .eq('id', duenoCodigo.id);
+        }
+      }
+
+      const precioFinal = Math.max(0, precioTotal - descuentoMonto);
+
+      // 3. CREAR LA RESERVA
+      const fechaHoraInicio = new Date(`${fecha}T${hora}:00`).toISOString();
+      const reserva = await crearReserva({
+        cliente_nombre: nombreLimpio,
+        cliente_celular: celularLimpio,
+        codigo_referido_usado: (referidoValido && codigoUsadoLimpio) ? codigoUsadoLimpio : null,
+        servicio_tipo: tipo,
+        detalle_reserva: { ...detalleReserva, detalle_texto: detalleTexto },
+        precio_total: precioFinal,
+        duracion_total: duracionTotal,
+        fecha_hora_inicio: fechaHoraInicio,
+      });
+
+      setConfirmando(false);
+
+      if (!reserva) {
+        setError('No pudimos crear la reserva. Intentá de nuevo.');
+        return;
+      }
+
+      const datosExito: DatosReservaExitosa = {
+        codigo: reserva.codigo_unico,
+        codigoReferidoPropio,
+        detalle: detalleTexto,
+        fecha,
+        hora,
+      };
+
+      sessionStorage.setItem('reserva-exitosa', JSON.stringify(datosExito));
+      setReservaExitosa(datosExito);
+
+      // 4. MENSAJE DE WHATSAPP
+      const montoSena = calcularMontoSena(precioFinal, configSistema.porcentaje_sena);
+      let mensaje = buildMensajeReserva({
+        codigo: reserva.codigo_unico,
+        clienteNombre: nombreLimpio,
+        servicioDetalle: detalleTexto,
+        fecha,
+        hora,
+        precioTotal: precioFinal,
+        montoSena,
+      });
+
+      if (descuentoMonto > 0) {
+        mensaje += `\n🎟️ *Descuento aplicado:* -$${descuentoMonto.toLocaleString('es-AR')} (Ref: ${codigoUsadoLimpio})`;
+      }
+
+      mensaje += `\n\n🎁 *Tu código de recomendada:* ${codigoReferidoPropio}`;
+
+      const urlWhatsapp = buildWhatsAppUrl('5493413954355', mensaje);
+      window.open(urlWhatsapp, '_blank') || (window.location.href = urlWhatsapp);
+
+    } catch (e) {
+      console.error(e);
+      setConfirmando(false);
+      setError('Ocurrió un error al procesar la reserva.');
     }
+  };
 
-    const datosExito: DatosReservaExitosa = {
-      codigo: reserva.codigo_unico,
-      detalle: detalleTexto,
-      fecha,
-      hora,
-    };
-
-    sessionStorage.setItem('reserva-exitosa', JSON.stringify(datosExito));
-    setReservaExitosa(datosExito);
-
-    const montoSena = calcularMontoSena(precioTotal, configSistema.porcentaje_sena);
-    const mensaje = buildMensajeReserva({
-      codigo: reserva.codigo_unico,
-      clienteNombre: nombre.trim(),
-      servicioDetalle: detalleTexto,
-      fecha,
-      hora,
-      precioTotal,
-      montoSena,
-    });
-
-    const urlWhatsapp = buildWhatsAppUrl('5493413954355', mensaje);
-    window.open(urlWhatsapp, '_blank') || (window.location.href = urlWhatsapp);
+  const copiarCodigo = (codigo: string) => {
+    navigator.clipboard.writeText(codigo);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2000);
   };
 
   if (cargandoConfig) {
@@ -378,8 +511,13 @@ export default function FlujoAgendaConfirmacion({
                 porcentajeSena={configSistema.porcentaje_sena}
                 nombre={nombre}
                 celular={celular}
+                codigoReferidoUsado={codigoReferidoUsado}
+                descuentoMonto={descuentoMonto}
+                referidoValido={referidoValido}
+                mensajeReferido={mensajeReferido}
                 onNombreChange={setNombre}
                 onCelularChange={setCelular}
+                onCodigoReferidoChange={setCodigoReferidoUsado}
                 onConfirmar={handleConfirmar}
                 confirmando={confirmando}
                 error={error}
@@ -401,10 +539,10 @@ export default function FlujoAgendaConfirmacion({
             <h3 className="text-base sm:text-lg font-bold text-slate-900">¡Turno Reservado!</h3>
             
             <p className="text-xs text-slate-500 mt-1 mb-3">
-              Código único: <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">{reservaExitosa.codigo}</span>
+              Código de reserva: <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">{reservaExitosa.codigo}</span>
             </p>
             
-            <div className="bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-100 text-left space-y-2 mb-4">
+            <div className="bg-slate-50 p-3 sm:p-3.5 rounded-xl border border-slate-100 text-left space-y-2 mb-3">
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Servicio / Selección</span>
                 <p className="text-xs text-slate-700 font-semibold">{reservaExitosa.detalle}</p>
@@ -421,6 +559,32 @@ export default function FlujoAgendaConfirmacion({
                 </div>
               </div>
             </div>
+
+            {/* CAJA DEL CÓDIGO DE RECOMENDADA (CÓDIGO PROPIO) */}
+            {reservaExitosa.codigoReferidoPropio && (
+              <div className="bg-violet-50/70 border border-violet-100 p-3 rounded-xl mb-4 text-left">
+                <div className="flex items-center gap-1.5 text-violet-800 mb-1">
+                  <Gift className="w-3.5 h-3.5 shrink-0" />
+                  <span className="text-[11px] font-bold">¡Sumá descuentos!</span>
+                </div>
+                <p className="text-[10px] text-violet-600 mb-2 leading-tight">
+                  Compartí tu código con tus amigas. Si lo usan al reservar, ¡sumás un beneficio para tu próxima sesión!
+                </p>
+                <div className="flex items-center justify-between bg-white border border-violet-200/80 rounded-lg p-2">
+                  <span className="font-mono text-xs font-black text-violet-900 tracking-wide">
+                    {reservaExitosa.codigoReferidoPropio}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => copiarCodigo(reservaExitosa.codigoReferidoPropio)}
+                    className="text-[10px] font-bold text-violet-700 hover:text-violet-900 flex items-center gap-1 bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded-md transition-colors"
+                  >
+                    {copiado ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiado ? 'Copiado' : 'Copiar'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             <p className="text-[10px] sm:text-[11px] text-slate-400 mb-4 sm:mb-5 leading-tight">
               Si fuiste redirigido a WhatsApp, asegurate de enviar el mensaje para finalizar la coordinación.

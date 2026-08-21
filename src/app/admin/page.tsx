@@ -19,6 +19,7 @@ import ModalServicioGeneral from '@/components/admin/modals/ModalServicioGeneral
 import ModalCobro from '@/components/admin/modals/ModalCobro'
 import ModalNuevoTurno from '@/components/admin/modals/ModalNuevoTurno'
 import ModalEditarTurno from '@/components/admin/modals/ModalEditarTurno'
+import ReferidosTab from '@/components/admin/tabs/ReferidosTab';
 
 
 import {
@@ -60,6 +61,9 @@ export default function AdminDashboard() {
     tipo_servicio: 'general',
     horarios_atencion: { ...horariosSemanaDefault(), excepciones: [] as string[] }
   })
+  const [referidosActivo, setReferidosActivo] = useState<boolean>(true)
+  const [referidosTipoDescuento, setReferidosTipoDescuento] = useState<'porcentaje' | 'monto_fijo'>('porcentaje')
+  const [referidosValorDescuento, setReferidosValorDescuento] = useState<number>(10)
   const [loadingHorarios, setLoadingHorarios] = useState(false)
   const [guardandoLaser, setGuardandoLaser] = useState(false)
   const [guardandoGeneral, setGuardandoGeneral] = useState(false)
@@ -953,29 +957,32 @@ export default function AdminDashboard() {
   }
 
   // Filtrado de reservas (tabla principal de agenda)
-  const turnosFiltrados = turnos.filter((t) => {
-    if (filtroEstado !== 'todos' && (t.estado || 'pendiente') !== filtroEstado) return false
-    if (busqueda.trim() !== '') {
-      const q = busqueda.toLowerCase()
-      const nombre = (t.cliente_nombre || '').toLowerCase()
-      const celular = (t.cliente_celular || '').toLowerCase()
-      const codigo = (t.codigo_unico || '').toLowerCase()
-      if (!nombre.includes(q) && !celular.includes(q) && !codigo.includes(q)) return false
-    }
+const turnosFiltrados = turnos.filter((t) => {
+  if (filtroEstado !== 'todos' && (t.estado || 'pendiente') !== filtroEstado) return false
+  if (busqueda.trim() !== '') {
+    const q = busqueda.toLowerCase()
+    const nombre = (t.cliente_nombre || '').toLowerCase()
+    const celular = (t.cliente_celular || '').toLowerCase()
+    const codigo = (t.codigo_unico || '').toLowerCase()
+    const referido = (t.codigo_referido_usado || '').toLowerCase() // <--- AGREGÁS ESTA LÍNEA
 
-    if (filtroFechaTipo === 'hoy') {
-      if (!t.fecha_hora_inicio) return false
-      const fechaTurno = new Date(t.fecha_hora_inicio).toISOString().split('T')[0]
-      const hoy = new Date().toISOString().split('T')[0]
-      if (fechaTurno !== hoy) return false
-    } else if (filtroFechaTipo === 'especifica' && fechaEspecifica) {
-      if (!t.fecha_hora_inicio) return false
-      const fechaTurno = new Date(t.fecha_hora_inicio).toISOString().split('T')[0]
-      if (fechaTurno !== fechaEspecifica) return false
-    }
+    // AGREGÁS "&& !referido.includes(q)" AL FINAL DE ESTA CONDICIÓN:
+    if (!nombre.includes(q) && !celular.includes(q) && !codigo.includes(q) && !referido.includes(q)) return false
+  }
 
-    return true
-  })
+  if (filtroFechaTipo === 'hoy') {
+    if (!t.fecha_hora_inicio) return false
+    const fechaTurno = new Date(t.fecha_hora_inicio).toISOString().split('T')[0]
+    const hoy = new Date().toISOString().split('T')[0]
+    if (fechaTurno !== hoy) return false
+  } else if (filtroFechaTipo === 'especifica' && fechaEspecifica) {
+    if (!t.fecha_hora_inicio) return false
+    const fechaTurno = new Date(t.fecha_hora_inicio).toISOString().split('T')[0]
+    if (fechaTurno !== fechaEspecifica) return false
+  }
+
+  return true
+})
 
   // Métricas
   const totalReservas = turnos.length
@@ -1046,15 +1053,21 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'generales' && (
-          <GeneralesTab
-            loadingGenerales={loadingGenerales}
-            serviciosGenerales={serviciosGenerales}
-            onNuevoServicio={() => abrirModalGeneral()}
-            onEditarServicio={(s) => abrirModalGeneral(s)}
-            onToggleActivo={toggleActivoGeneral}
-            onEliminarServicio={eliminarServicioGeneral}
-          />
-        )}
+  <GeneralesTab
+    loadingGenerales={loadingGenerales}
+    serviciosGenerales={serviciosGenerales}
+    onNuevoServicio={() => abrirModalGeneral()}
+    onEditarServicio={(s) => abrirModalGeneral(s)}
+    onToggleActivo={toggleActivoGeneral}
+    onEliminarServicio={eliminarServicioGeneral}
+    referidosActivo={referidosActivo}
+    setReferidosActivo={setReferidosActivo}
+    referidosTipoDescuento={referidosTipoDescuento}
+    setReferidosTipoDescuento={setReferidosTipoDescuento}
+    referidosValorDescuento={referidosValorDescuento}
+    setReferidosValorDescuento={setReferidosValorDescuento}
+  />
+)}
         
 
         {activeTab === 'horarios' && (
@@ -1082,6 +1095,8 @@ export default function AdminDashboard() {
         {activeTab === 'banner' && (
           <BannerTab />
         )}
+
+        {activeTab === 'referidos' && <ReferidosTab />}
       </div>
 
       {/* MODALES */}

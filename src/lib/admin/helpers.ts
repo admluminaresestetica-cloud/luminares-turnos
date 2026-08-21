@@ -30,3 +30,19 @@ export function matchBusqueda(reserva: Reserva, q: string): boolean {
     fechaIso.includes(term)
   );
 }
+
+export function generarCodigoReferido(nombreCompleto: string): string {
+  // 1. Toma el primer nombre, remueve tildes y caracteres especiales, pasa a mayúsculas
+  const primerNombre = nombreCompleto
+    .trim()
+    .split(' ')[0]
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toUpperCase();
+
+  // 2. Genera 4 caracteres alfanuméricos aleatorios
+  const sufijoAleatorio = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+  // 3. Retorna la combinación (ej: MARIA-A8F2)
+  return `${primerNombre}-${sufijoAleatorio}`;
+}

@@ -47,7 +47,17 @@ export async function updateFechasLaser(fechas: string[]): Promise<boolean> {
 }
 
 export async function updateConfiguracionSistema(
-  campos: Partial<Pick<ConfiguracionSistema, 'porcentaje_sena' | 'ventana_horas_cancelacion' | 'whatsapp_numero'>>
+  campos: Partial<
+    Pick<
+      ConfiguracionSistema,
+      | 'porcentaje_sena'
+      | 'ventana_horas_cancelacion'
+      | 'whatsapp_numero'
+      | 'referidos_activo'
+      | 'referidos_tipo_descuento'
+      | 'referidos_valor_descuento'
+    >
+  >
 ): Promise<boolean> {
   const config = await getConfiguracionSistema();
   if (!config) return false;

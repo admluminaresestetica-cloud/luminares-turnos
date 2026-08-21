@@ -84,7 +84,7 @@ export interface TurnoForm {
   metodo_pago: string
 }
 
-export type TabKey = 'overview' | 'agenda' | 'precios' | 'generales' | 'horarios' | 'banner';
+export type TabKey = 'overview' | 'agenda' | 'precios' | 'generales' | 'horarios' | 'banner' | 'referidos';
 
 export const DIAS_SEMANA: { key: keyof HorariosSemana; label: string }[] = [
   { key: 'lunes', label: 'Lunes' },
@@ -182,4 +182,26 @@ export const getNombresZonas = (servicios: ServicioLaser[], idsZonas?: string[])
     .map((id) => servicios.find((s) => s.id === id)?.nombre_zona)
     .filter(Boolean)
   return nombres.length > 0 ? nombres.join(' + ') : 'Zonas no encontradas'
+}
+
+export interface Reserva {
+  id: string
+  codigo_unico?: string
+  cliente_nombre?: string
+  cliente_celular?: string
+  codigo_referido_usado?: string | null // <--- AGREGÁ ESTA LÍNEA AQUÍ
+  servicio_tipo?: string
+  detalle_reserva?: any
+  precio_total?: number
+  duracion_total?: number
+  fecha_hora_inicio?: string
+  estado?: string
+  medio_pago?: string
+}
+
+export interface ConfiguracionSistema {
+  // ... tus campos existentes ...
+  referidos_activo?: boolean;
+  referidos_tipo_descuento?: 'porcentaje' | 'monto_fijo';
+  referidos_valor_descuento?: number;
 }

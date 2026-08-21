@@ -100,3 +100,21 @@ export interface CierreJornada {
   cerrado_por: string | null;
   fecha_cierre: string;
 }
+
+export interface CrearReservaInput {
+  cliente_nombre: string;
+  cliente_celular: string;
+  codigo_referido_usado?: string | null;
+  servicio_tipo: TipoServicio;
+  detalle_reserva: any;
+  precio_total: number;
+  duracion_total: number;
+  fecha_hora_inicio: string;
+}
+
+export interface ConfiguracionSistema {
+  // ... tus campos existentes ...
+  referidos_activo?: boolean;
+  referidos_tipo_descuento?: 'porcentaje' | 'monto_fijo';
+  referidos_valor_descuento?: number;
+}

@@ -9,6 +9,7 @@ import type {
 export interface CrearReservaInput {
   cliente_nombre: string;
   cliente_celular: string;
+  codigo_referido_usado?: string | null;
   servicio_tipo: TipoServicio;
   detalle_reserva: DetalleReservaLaser | DetalleReservaGeneral;
   precio_total: number;

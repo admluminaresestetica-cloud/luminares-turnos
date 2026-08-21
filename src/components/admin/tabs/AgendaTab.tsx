@@ -120,7 +120,14 @@ export default function AgendaTab({
                     {t.codigo_unico || '-'}
                   </td>
                   <td className="px-6 py-4 font-medium">
-                    <div>{t.cliente_nombre || 'Sin nombre'}</div>
+                    <div className="flex items-center gap-2">
+                      <span>{t.cliente_nombre || 'Sin nombre'}</span>
+                      {t.codigo_referido_usado && (
+                        <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-[11px] font-semibold">
+                          🎁 {t.codigo_referido_usado}
+                        </span>
+                      )}
+                    </div>
                     {t.cliente_celular && (
                       <div className="text-xs text-gray-500">{t.cliente_celular}</div>
                     )}

@@ -8,7 +8,10 @@ import {
   Sparkles, 
   ShieldCheck, 
   Loader2, 
-  MessageCircle 
+  MessageCircle,
+  Gift,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { calcularMontoSena } from '@/lib/whatsapp';
 import { formatFechaDisplay } from '@/lib/calendario/slots';
@@ -22,8 +25,13 @@ interface Props {
   porcentajeSena: number;
   nombre: string;
   celular: string;
+  codigoReferidoUsado?: string;
+  descuentoMonto?: number;
+  referidoValido?: boolean | null;
+  mensajeReferido?: string | null;
   onNombreChange: (v: string) => void;
   onCelularChange: (v: string) => void;
+  onCodigoReferidoChange?: (v: string) => void;
   onConfirmar: () => void;
   confirmando?: boolean;
   error?: string | null;
@@ -57,14 +65,20 @@ export default function FormConfirmacion({
   porcentajeSena,
   nombre,
   celular,
+  codigoReferidoUsado = '',
+  descuentoMonto = 0,
+  referidoValido = null,
+  mensajeReferido = null,
   onNombreChange,
   onCelularChange,
+  onCodigoReferidoChange,
   onConfirmar,
   confirmando,
   error,
   colorAccent = 'violet',
 }: Props) {
-  const montoSena = calcularMontoSena(precioTotal, porcentajeSena);
+  const precioFinal = Math.max(0, precioTotal - descuentoMonto);
+  const montoSena = calcularMontoSena(precioFinal, porcentajeSena);
   const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
 
   const puedeConfirmar = nombre.trim().length >= 2 && celular.replace(/\D/g, '').length >= 8;
@@ -110,9 +124,16 @@ export default function FormConfirmacion({
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               Total a pagar
             </p>
-            <p className="text-base sm:text-lg font-black text-slate-900">
-              ${precioTotal.toLocaleString('es-AR')}
-            </p>
+            <div className="flex items-baseline gap-1.5">
+              <p className="text-base sm:text-lg font-black text-slate-900">
+                ${precioFinal.toLocaleString('es-AR')}
+              </p>
+              {descuentoMonto > 0 && (
+                <span className="text-xs text-slate-400 line-through font-medium">
+                  ${precioTotal.toLocaleString('es-AR')}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className={`px-2.5 py-1.5 sm:px-3 rounded-xl border ${styles.badgeSena} text-right`}>
@@ -165,9 +186,43 @@ export default function FormConfirmacion({
             />
           </div>
         </div>
+
+        {/* Input Opcional: Código de Recomendada / Referida */}
+        {onCodigoReferidoChange && (
+          <div>
+            <label htmlFor="codigoReferido" className="block text-xs font-bold text-slate-800 mb-1">
+              ¿Tenés un código de recomendada? <span className="text-slate-400 font-normal">(Opcional)</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <Gift className="w-4 h-4 text-violet-500" />
+              </div>
+              <input
+                id="codigoReferido"
+                type="text"
+                value={codigoReferidoUsado}
+                onChange={(e) => onCodigoReferidoChange(e.target.value.toUpperCase())}
+                placeholder="Ej: MARIA-A8F2"
+                className={`w-full pl-10 pr-3.5 py-3 text-base sm:text-sm bg-white border border-slate-200/80 rounded-xl text-slate-900 uppercase placeholder:normal-case placeholder:text-slate-400 transition-all outline-none ${styles.focusRing}`}
+              />
+            </div>
+            
+            {/* Feedback del código */}
+            {mensajeReferido && (
+              <div className={`mt-1.5 flex items-center gap-1.5 text-xs font-medium ${referidoValido ? 'text-emerald-600' : 'text-amber-600'}`}>
+                {referidoValido ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                )}
+                <span>{mensajeReferido}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Mensaje de Error */}
+      {/* Mensaje de Error General */}
       {error && (
         <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200/80 rounded-xl p-3 font-medium">
           {error}
