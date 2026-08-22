@@ -70,7 +70,7 @@ export default function FormularioProducto({
       const filePath = `productos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("imagenes") // Asegúrate de usar el nombre de tu bucket de Supabase
+        .from("productos") // Asegúrate de usar el nombre de tu bucket de Supabase
         .upload(filePath, imagenFile);
 
       if (uploadError) {
@@ -81,7 +81,7 @@ export default function FormularioProducto({
 
       // Obtener URL pública
       const { data: publicUrlData } = supabase.storage
-        .from("imagenes")
+        .from("productos")
         .getPublicUrl(filePath);
 
       finalImagenUrl = publicUrlData.publicUrl;
