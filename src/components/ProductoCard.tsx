@@ -21,142 +21,84 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
   const itemEnCarrito = carrito.find((item) => item.id === producto.id);
   const cantidad = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
+  // Cálculo de porcentaje de descuento
+  const tieneDescuento =
+    producto.precio_original && producto.precio_original > producto.precio;
+  const porcentajeDescuento = tieneDescuento
+    ? Math.round(
+        ((producto.precio_original! - producto.precio) /
+          producto.precio_original!) *
+          100
+      )
+    : 0;
+
   return (
-    <div
-      style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: "12px",
-        padding: "16px",
-        background: "#ffffff",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-      }}
-    >
+    <div className="relative flex flex-col justify-between rounded-2xl border border-[#E7E5E0] bg-white p-5 transition-all hover:border-[#12151B]/20 hover:shadow-lg">
+      {/* Badge de Descuento */}
+      {tieneDescuento && (
+        <span className="absolute left-3 top-3 z-10 rounded-md bg-[#E54D42] px-2 py-1 text-xs font-bold text-white shadow-sm">
+          -{porcentajeDescuento}%
+        </span>
+      )}
+
       <div>
+        {/* Contenedor de Imagen adaptada */}
         {producto.imagen_url && (
-          <img
-            src={producto.imagen_url}
-            alt={producto.nombre}
-            style={{
-              width: "100%",
-              height: "160px",
-              objectFit: "cover",
-              borderRadius: "8px",
-              marginBottom: "12px",
-            }}
-          />
+          <div className="relative mb-4 flex h-48 w-full items-center justify-center overflow-hidden rounded-xl bg-gray-50">
+            <img
+              src={producto.imagen_url}
+              alt={producto.nombre}
+              className="max-h-full max-w-full object-contain p-2"
+            />
+          </div>
         )}
-        <h3
-          style={{
-            fontSize: "16px",
-            fontWeight: "700",
-            margin: "0 0 6px 0",
-            color: "#1f2937",
-          }}
-        >
+
+        <h3 className="m-0 text-base font-bold text-[#12151B]">
           {producto.nombre}
         </h3>
+
         {producto.descripcion && (
-          <p
-            style={{
-              fontSize: "13px",
-              color: "#6b7280",
-              margin: "0 0 12px 0",
-              lineHeight: "1.4",
-            }}
-          >
+          <p className="mb-4 mt-1 text-xs text-[#6B675F] line-clamp-2">
             {producto.descripcion}
           </p>
         )}
       </div>
 
       <div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            gap: "8px",
-            marginBottom: "12px",
-          }}
-        >
-          <span
-            style={{ fontSize: "18px", fontWeight: "700", color: "#111827" }}
-          >
+        {/* Precios */}
+        <div className="mb-4 flex items-baseline gap-2">
+          <span className="text-xl font-extrabold text-[#12151B]">
             ${producto.precio}
           </span>
           {producto.precio_original && (
-            <span
-              style={{
-                fontSize: "13px",
-                color: "#9ca3af",
-                textDecoration: "line-through",
-              }}
-            >
+            <span className="text-sm font-medium text-[#A6A29B] line-through">
               ${producto.precio_original}
             </span>
           )}
         </div>
 
+        {/* Botones de acción */}
         {cantidad === 0 ? (
           <button
             onClick={() => agregarAlCarrito(producto)}
-            style={{
-              width: "100%",
-              backgroundColor: "#111827",
-              color: "#ffffff",
-              padding: "10px",
-              borderRadius: "8px",
-              border: "none",
-              fontWeight: "600",
-              fontSize: "14px",
-              cursor: "pointer",
-            }}
+            className="w-full rounded-xl bg-[#0E6E55] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0A5340]"
           >
             Agregar al carrito
           </button>
         ) : (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              backgroundColor: "#f3f4f6",
-              borderRadius: "8px",
-              padding: "4px 8px",
-            }}
-          >
+          <div className="flex items-center justify-between rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-1.5">
             <button
               onClick={() => restarUnidad(producto.id)}
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "6px",
-                border: "1px solid #d1d5db",
-                background: "#ffffff",
-                fontSize: "16px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white font-bold text-[#12151B] shadow-sm hover:bg-gray-100"
             >
               -
             </button>
-            <span style={{ fontWeight: "700", fontSize: "14px" }}>
+            <span className="font-bold text-[#12151B] text-sm">
               {cantidad}
             </span>
             <button
               onClick={() => agregarAlCarrito(producto)}
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "6px",
-                border: "1px solid #d1d5db",
-                background: "#ffffff",
-                fontSize: "16px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white font-bold text-[#12151B] shadow-sm hover:bg-gray-100"
             >
               +
             </button>
