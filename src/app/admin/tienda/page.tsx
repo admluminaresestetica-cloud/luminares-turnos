@@ -15,8 +15,8 @@ export default function AdminTiendaPage() {
   const [categorias, setCategorias] = useState<any[]>([]);
   const [nuevaCategoria, setNuevaCategoria] = useState("");
   const [cargandoCat, setCargandoCat] = useState(false);
+  const [productoEditando, setProductoEditando] = useState<any | null>(null);
 
-  // Cargar Productos
   const fetchProductos = async () => {
     const { data, error } = await supabase
       .from("productos")
@@ -29,7 +29,6 @@ export default function AdminTiendaPage() {
     }
   };
 
-  // Cargar Categorías
   const fetchCategorias = async () => {
     const { data, error } = await supabase
       .from("categorias")
@@ -48,12 +47,8 @@ export default function AdminTiendaPage() {
     fetchCategorias();
   }, []);
 
-  // Prevenir renderizado en el servidor para evitar discrepancias de hidratación
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
 
-  // Agregar Categoría
   const handleCrearCategoria = async (e: React.FormEvent) => {
     e.preventDefault();
     const nombreLimpio = nuevaCategoria.trim();
@@ -73,13 +68,12 @@ export default function AdminTiendaPage() {
     setCargandoCat(false);
   };
 
-  // Eliminar Categoría
   const handleEliminarCategoria = async (cat: any) => {
     const productosAfectados = productos.filter((p) => p.categoria === cat.nombre);
 
     if (productosAfectados.length > 0) {
       const confirmar = confirm(
-        `Hay ${productosAfectados.length} producto(s) usando la categoría "${cat.nombre}". ¿Deseás eliminarla de todas formas? (Los productos pasarán a categoría 'General')`
+        `Hay ${productosAfectados.length} producto(s) usando la categoría "${cat.nombre}". ¿Deseás eliminarla de todas formas?`
       );
       if (!confirmar) return;
 
@@ -151,15 +145,13 @@ export default function AdminTiendaPage() {
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-lg">{m.icono}</span>
               </div>
-              <p className="m-0 text-2xl font-bold text-[#12151B]">
-                {m.valor}
-              </p>
+              <p className="m-0 text-2xl font-bold text-[#12151B]">{m.valor}</p>
               <p className="m-0 mt-1 text-xs font-medium text-[#6B675F]">{m.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Sección de Gestión de Categorías */}
+        {/* Sección Categorías */}
         <div className="mb-8 rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-sm">
           <h2 className="m-0 text-lg font-bold text-[#12151B]">
             🏷️ Gestión de Categorías
@@ -168,7 +160,7 @@ export default function AdminTiendaPage() {
           <form onSubmit={handleCrearCategoria} className="mt-4 flex gap-3">
             <input
               type="text"
-              placeholder="Nombre de la nueva categoría (ej: Perfumes)"
+              placeholder="Nombre de la nueva categoría"
               value={nuevaCategoria}
               onChange={(e) => setNuevaCategoria(e.target.value)}
               className="flex-1 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-4 py-2.5 text-sm outline-none focus:border-[#0E6E55] focus:bg-white"
@@ -182,7 +174,6 @@ export default function AdminTiendaPage() {
             </button>
           </form>
 
-          {/* Listado de Categorías Existentes */}
           <div className="mt-5 flex flex-wrap gap-2">
             {categorias.length === 0 ? (
               <p className="text-xs text-[#6B675F]">No hay categorías creadas aún.</p>
@@ -195,8 +186,7 @@ export default function AdminTiendaPage() {
                   {cat.nombre}
                   <button
                     onClick={() => handleEliminarCategoria(cat)}
-                    className="ml-1 text-[#C84343] hover:text-red-700 font-bold"
-                    title="Eliminar categoría"
+                    className="ml-1 font-bold text-[#C84343] hover:text-red-700"
                   >
                     ✕
                   </button>
@@ -206,15 +196,24 @@ export default function AdminTiendaPage() {
           </div>
         </div>
 
-        {/* Formulario de Producto */}
+        {/* Formulario */}
         <FormularioProducto
           onProductoAgregado={fetchProductos}
           supabase={supabase}
           categorias={categorias}
+          productoEditando={productoEditando}
+          onCancelarEdicion={() => setProductoEditando(null)}
         />
 
-        {/* Lista de Productos */}
-        <ListaProductos productos={productos} onEliminar={handleDeleteProducto} />
+        {/* Lista con botón de Editar */}
+        <ListaProductos
+          productos={productos}
+          onEliminar={handleDeleteProducto}
+          onEditar={(prod) => {
+            setProductoEditando(prod);
+            window.scrollTo({ top: 300, behavior: "smooth" });
+          }}
+        />
       </div>
     </div>
   );
