@@ -32,7 +32,7 @@ const ACCESOS = [
   },
   {
     href: '/faq',
-    titulo: 'Preguntas Frecuentes',
+    titulo: 'Preguntas Frecuentes y Información Útil',
     descripcion: 'Resolvé todas tus dudas sobre señas, métodos de pago y recomendaciones.',
     icon: HelpCircle,
     colorBg: 'bg-amber-50 group-hover:bg-amber-500',

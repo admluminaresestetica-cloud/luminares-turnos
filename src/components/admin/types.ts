@@ -84,7 +84,7 @@ export interface TurnoForm {
   metodo_pago: string
 }
 
-export type TabKey = 'overview' | 'agenda' | 'precios' | 'generales' | 'horarios' | 'banner' | 'referidos';
+export type TabKey = 'overview' | 'agenda' | 'precios' | 'generales' | 'horarios' | 'banner' | 'referidos' | 'faq'
 
 export const DIAS_SEMANA: { key: keyof HorariosSemana; label: string }[] = [
   { key: 'lunes', label: 'Lunes' },

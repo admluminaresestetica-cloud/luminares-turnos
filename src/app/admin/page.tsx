@@ -12,6 +12,7 @@ import PreciosTab from '@/components/admin/tabs/PreciosTab'
 import GeneralesTab from '@/components/admin/tabs/GeneralesTab'
 import HorariosTab from '@/components/admin/tabs/HorariosTab'
 import BannerTab from '@/components/admin/tabs/BannerTab';
+import FaqTab from '@/components/admin/tabs/FaqTab'
 
 import ModalServicioLaser from '@/components/admin/modals/ModalServicioLaser'
 import ModalPromo from '@/components/admin/modals/ModalPromo'
@@ -1097,6 +1098,8 @@ const turnosFiltrados = turnos.filter((t) => {
         )}
 
         {activeTab === 'referidos' && <ReferidosTab />}
+
+        {activeTab === 'faq' && <FaqTab />}
       </div>
 
       {/* MODALES */}

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { LayoutDashboard, Calendar, Sparkles, Scissors, Clock, Image, Gift } from 'lucide-react'
+import { LayoutDashboard, Calendar, Sparkles, Scissors, Clock, Image, Gift, HelpCircle } from 'lucide-react'
 import { TabKey } from './types'
 
 interface AdminTabsProps {
@@ -20,6 +20,7 @@ export default function AdminTabs({ activeTab, onChange, totalTurnos, totalGener
     { key: 'horarios' as TabKey, label: 'Editar Horarios', icon: Clock },
     { key: 'banner' as TabKey, label: 'Banner Inicio', icon: Image },
     { key: 'referidos' as TabKey, label: 'Programa Referidos', icon: Gift },
+    { key: 'faq' as TabKey, label: 'Preguntas Frecuentes', icon: HelpCircle }, // <-- ¡Agregado aquí!
   ]
 
   return (
