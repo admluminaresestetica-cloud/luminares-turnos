@@ -70,7 +70,7 @@ export default function TiendaPage() {
     const total = carrito.reduce((acc, p) => acc + Number(p.precio), 0);
     const mensaje = `Hola! Quiero encargar los siguientes productos:%0A%0A${resumen}%0A%0A*TOTAL: $${total}*%0A%0A¿Cómo coordinamos el pago y la entrega?`;
 
-    window.open(`https://wa.me/TU_NUMERO_DE_WHATSAPP?text=${mensaje}`, "_blank");
+    window.open(`https://wa.me/5493413954355?text=${mensaje}`, "_blank");
   };
 
   return (
