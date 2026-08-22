@@ -1,13 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, HelpCircle, Sparkles } from 'lucide-react';
-import { FAQS_DATA } from '@/data/faqs';
+import { supabase } from '@/lib/supabase';
 
 export default function SeccionFAQ() {
-  const [abiertoId, setAbiertoId] = useState<string | null>(null);
+  const [abiertoId, setAbiertoId] = useState<number | null>(null);
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const toggleFAQ = (id: string) => {
+  useEffect(() => {
+    fetchFaqs();
+  }, []);
+
+  const fetchFaqs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('preguntas_frecuentes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error al cargar FAQs:', error);
+      } else if (data) {
+        setFaqs(data);
+      }
+    } catch (err) {
+      console.error('Error inesperado:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleFAQ = (id: number) => {
     setAbiertoId(abiertoId === id ? null : id);
   };
 
@@ -29,53 +54,63 @@ export default function SeccionFAQ() {
 
       {/* Lista de acordeones */}
       <div className="space-y-3">
-        {FAQS_DATA.map((faq) => {
-          const estaAbierto = abiertoId === faq.id;
+        {loading ? (
+          <div className="text-center py-6 text-xs text-slate-400 font-medium">
+            Cargando preguntas...
+          </div>
+        ) : faqs.length === 0 ? (
+          <div className="text-center py-6 text-xs text-slate-400 font-medium">
+            No hay preguntas frecuentes cargadas todavía.
+          </div>
+        ) : (
+          faqs.map((faq) => {
+            const estaAbierto = abiertoId === faq.id;
 
-          return (
-            <div
-              key={faq.id}
-              className={`border rounded-2xl transition-all duration-200 overflow-hidden bg-white ${
-                estaAbierto
-                  ? 'border-rose-300 shadow-xs ring-1 ring-rose-200'
-                  : 'border-slate-200/80 hover:border-slate-300'
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => toggleFAQ(faq.id)}
-                className="w-full text-left p-4 flex items-center justify-between gap-3 cursor-pointer select-none"
+            return (
+              <div
+                key={faq.id}
+                className={`border rounded-2xl transition-all duration-200 overflow-hidden bg-white ${
+                  estaAbierto
+                    ? 'border-rose-300 shadow-xs ring-1 ring-rose-200'
+                    : 'border-slate-200/80 hover:border-slate-300'
+                }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <HelpCircle
-                    className={`w-4 h-4 shrink-0 transition-colors ${
-                      estaAbierto ? 'text-rose-500' : 'text-slate-400'
-                    }`}
-                  />
-                  <span className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
-                    {faq.pregunta}
-                  </span>
-                </div>
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 ${
-                    estaAbierto
-                      ? 'bg-rose-100 text-rose-600 rotate-180'
-                      : 'bg-slate-100 text-slate-500'
-                  }`}
+                <button
+                  type="button"
+                  onClick={() => toggleFAQ(faq.id)}
+                  className="w-full text-left p-4 flex items-center justify-between gap-3 cursor-pointer select-none"
                 >
-                  <ChevronDown className="w-3.5 h-3.5" />
-                </div>
-              </button>
+                  <div className="flex items-center gap-2.5">
+                    <HelpCircle
+                      className={`w-4 h-4 shrink-0 transition-colors ${
+                        estaAbierto ? 'text-rose-500' : 'text-slate-400'
+                      }`}
+                    />
+                    <span className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
+                      {faq.pregunta}
+                    </span>
+                  </div>
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 ${
+                      estaAbierto
+                        ? 'bg-rose-100 text-rose-600 rotate-180'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </div>
+                </button>
 
-              {/* Contenido desplegable */}
-              {estaAbierto && (
-                <div className="px-4 pb-4 text-xs text-slate-600 font-medium leading-relaxed border-t border-slate-100 pt-3 animate-in fade-in duration-200">
-                  {faq.respuesta}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                {/* Contenido desplegable */}
+                {estaAbierto && (
+                  <div className="px-4 pb-4 text-xs text-slate-600 font-medium leading-relaxed border-t border-slate-100 pt-3 animate-in fade-in duration-200">
+                    {faq.respuesta}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </section>
   );
