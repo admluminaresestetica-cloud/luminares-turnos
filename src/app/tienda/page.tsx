@@ -11,13 +11,17 @@ const supabase = createClient(
 );
 
 export default function TiendaPage() {
+  const [mounted, setMounted] = useState(false);
   const [productos, setProductos] = useState<any[]>([]);
+  const [categorias, setCategorias] = useState<string[]>(["Todos"]);
   const [carrito, setCarrito] = useState<any[]>([]);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("Todos");
 
   useEffect(() => {
+    setMounted(true);
+
     const fetchProductos = async () => {
       const { data, error } = await supabase.from("productos").select("*");
       if (error) {
@@ -26,8 +30,25 @@ export default function TiendaPage() {
         setProductos(data || []);
       }
     };
+
+    const fetchCategorias = async () => {
+      const { data, error } = await supabase
+        .from("categorias")
+        .select("nombre")
+        .order("nombre", { ascending: true });
+
+      if (error) {
+        console.error("Error al cargar categorías:", error);
+      } else if (data && data.length > 0) {
+        setCategorias(["Todos", ...data.map((c) => c.nombre)]);
+      }
+    };
+
     fetchProductos();
+    fetchCategorias();
   }, []);
+
+  if (!mounted) return null;
 
   const productosFiltrados = productos.filter((p) => {
     const coincideBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase());
@@ -45,15 +66,12 @@ export default function TiendaPage() {
   };
 
   const enviarWhatsApp = () => {
-    const resumen = carrito.map(p => `• ${p.nombre} ($${p.precio})`).join("%0A");
+    const resumen = carrito.map((p) => `• ${p.nombre} ($${p.precio})`).join("%0A");
     const total = carrito.reduce((acc, p) => acc + Number(p.precio), 0);
     const mensaje = `Hola! Quiero encargar los siguientes productos:%0A%0A${resumen}%0A%0A*TOTAL: $${total}*%0A%0A¿Cómo coordinamos el pago y la entrega?`;
 
-    // REEMPLAZÁ AQUÍ TU NÚMERO DE WHATSAPP (Ej: 5493411234567)
     window.open(`https://wa.me/TU_NUMERO_DE_WHATSAPP?text=${mensaje}`, "_blank");
   };
-
-  const categorias = ["Todos", "Cremas", "Pañales", "Perfumes", "Otros"];
 
   return (
     <div className="min-h-screen bg-[#F7F7F5] text-[#12151B]">
@@ -98,7 +116,7 @@ export default function TiendaPage() {
         />
         <div className="relative mx-auto max-w-2xl">
           <span className="mb-4 inline-block rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-[#D9B87A]">
-            CATÁLOGO 2026
+            CATÁLOGO
           </span>
           <h1 className="m-0 mb-3 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
             Encontrá lo que buscás al mejor precio
@@ -127,7 +145,7 @@ export default function TiendaPage() {
           </div>
         </div>
 
-        {/* Filtros de categoría */}
+        {/* Filtros de categoría dinámicos */}
         <div className="mb-8 flex flex-wrap gap-2.5">
           {categorias.map((cat) => (
             <button
