@@ -45,7 +45,7 @@ export default function SeccionFAQ() {
           <span>Dudas frecuentes</span>
         </div>
         <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-          Preguntas Frecuentes
+          Preguntas Frecuentes y Información útil
         </h2>
         <p className="text-xs text-slate-500 mt-1 font-medium">
           Todo lo que necesitás saber antes de tu primera sesión
