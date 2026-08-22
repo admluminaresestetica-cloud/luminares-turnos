@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useCarrito } from "@/context/CarritoContext";
+import { supabase } from "@/lib/supabase"; // Importación del cliente de Supabase
 
 export default function CarritoDrawer({
   isOpen,
@@ -16,6 +17,7 @@ export default function CarritoDrawer({
   const [nombre, setNombre] = useState("");
   const [tipoEntrega, setTipoEntrega] = useState<"local" | "envio">("local");
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
   if (!isOpen) return null;
 
@@ -24,41 +26,76 @@ export default function CarritoDrawer({
     0
   );
 
-  const handleEnviarWhatsApp = () => {
+  const handleEnviarWhatsApp = async () => {
     if (!nombre.trim()) {
       alert("Por favor, ingresá tu nombre completo antes de continuar.");
       return;
     }
 
-    let mensaje = `*¡Hola! Quiero realizar un pedido desde la Tienda Online* 🛍️\n\n`;
-    mensaje += `*Cliente:* ${nombre}\n`;
-    mensaje += `*Entrega:* ${
-      tipoEntrega === "local" ? "Retiro en Local" : "Envío a Domicilio"
-    }\n\n`;
-    mensaje += `*Detalle del pedido:*\n`;
+    setCargando(true);
 
-    carrito.forEach((item) => {
-      mensaje += `• ${item.nombre} x${item.cantidad} - $${
-        item.precio * item.cantidad
-      }\n`;
-    });
+    try {
+      // 1. Guardar la orden en la tabla 'pedidos' de Supabase
+      const { error: errorPedido } = await supabase.from("pedidos").insert([
+        {
+          cliente_nombre: nombre,
+          tipo_entrega: tipoEntrega,
+          items: carrito,
+          total: total,
+          estado: "pendiente",
+        },
+      ]);
 
-    mensaje += `\n*Total a pagar: $${total}*`;
+      if (errorPedido) {
+        console.error("Error al registrar pedido:", errorPedido);
+      }
 
-    const numeroWhatsApp = "5493416373376"; // Cambiar por tu número configurado
-    const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(
-      mensaje
-    )}`;
+      // 2. Descontar stock en Supabase mediante la función almacenada
+      for (const item of carrito) {
+        const { error: errorStock } = await supabase.rpc("descontar_stock", {
+          producto_id: item.id,
+          cantidad_comprada: item.cantidad,
+        });
 
-    // Redirige a WhatsApp en nueva pestaña
-    window.open(url, "_blank");
+        if (errorStock) {
+          console.error(`Error al descontar stock de ${item.nombre}:`, errorStock);
+        }
+      }
 
-    // Muestra el modal de confirmación
-    setMostrarModalExito(true);
+      // 3. Formatear y abrir el mensaje de WhatsApp
+      let mensaje = `*¡Hola! Quiero realizar un pedido desde la Tienda Online* 🛍️\n\n`;
+      mensaje += `*Cliente:* ${nombre}\n`;
+      mensaje += `*Entrega:* ${
+        tipoEntrega === "local" ? "Retiro en Local" : "Envío a Domicilio"
+      }\n\n`;
+      mensaje += `*Detalle del pedido:*\n`;
+
+      carrito.forEach((item) => {
+        mensaje += `• ${item.nombre} x${item.cantidad} - $${
+          item.precio * item.cantidad
+        }\n`;
+      });
+
+      mensaje += `\n*Total a pagar: $${total}*`;
+
+      const numeroWhatsApp = "5493416373376";
+      const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(
+        mensaje
+      )}`;
+
+      window.open(url, "_blank");
+      setMostrarModalExito(true);
+    } catch (err) {
+      console.error("Error en la transacción:", err);
+      alert("Ocurrió un error al procesar la orden.");
+    } finally {
+      setCargando(false);
+    }
   };
 
   const handleCerrarTodo = () => {
     vaciarCarrito();
+    setNombre("");
     setMostrarModalExito(false);
     onClose();
   };
@@ -177,9 +214,10 @@ export default function CarritoDrawer({
 
             <button
               onClick={handleEnviarWhatsApp}
-              className="w-full rounded-xl bg-[#25D366] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1ebd59] shadow-md"
+              disabled={cargando}
+              className="w-full rounded-xl bg-[#25D366] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1ebd59] shadow-md disabled:opacity-50"
             >
-              Confirmar Pedido por WhatsApp
+              {cargando ? "Procesando..." : "Confirmar Pedido por WhatsApp"}
             </button>
           </div>
         )}
