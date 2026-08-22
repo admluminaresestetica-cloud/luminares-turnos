@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 import { useState, useEffect } from "react";
 
 interface FormularioProductoProps {
@@ -23,9 +23,10 @@ export default function FormularioProducto({
   const [stock, setStock] = useState("");
   const [categoria, setCategoria] = useState("");
   const [imagenUrl, setImagenUrl] = useState("");
+  const [imagenFile, setImagenFile] = useState<File | null>(null);
   const [cargando, setCargando] = useState(false);
 
-  // Cargar datos en los inputs si se selecciona editar un producto
+  // Cargar datos si estamos editando
   useEffect(() => {
     if (productoEditando) {
       setNombre(productoEditando.nombre || "");
@@ -35,6 +36,7 @@ export default function FormularioProducto({
       setStock(productoEditando.stock || "");
       setCategoria(productoEditando.categoria || "");
       setImagenUrl(productoEditando.imagen_url || "");
+      setImagenFile(null);
     } else {
       limpiarFormulario();
     }
@@ -48,6 +50,7 @@ export default function FormularioProducto({
     setStock("");
     setCategoria("");
     setImagenUrl("");
+    setImagenFile(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,7 +61,33 @@ export default function FormularioProducto({
     }
 
     setCargando(true);
+    let finalImagenUrl = imagenUrl;
 
+    // 1. Si el usuario seleccionó un nuevo archivo, subirlo al Bucket de Supabase
+    if (imagenFile) {
+      const fileExt = imagenFile.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+      const filePath = `productos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("imagenes") // Asegúrate de usar el nombre de tu bucket de Supabase
+        .upload(filePath, imagenFile);
+
+      if (uploadError) {
+        alert("Error al subir imagen: " + uploadError.message);
+        setCargando(false);
+        return;
+      }
+
+      // Obtener URL pública
+      const { data: publicUrlData } = supabase.storage
+        .from("imagenes")
+        .getPublicUrl(filePath);
+
+      finalImagenUrl = publicUrlData.publicUrl;
+    }
+
+    // 2. Armar objeto para Supabase
     const productoData = {
       nombre,
       descripcion,
@@ -66,20 +95,20 @@ export default function FormularioProducto({
       precio_original: precioOriginal ? Number(precioOriginal) : null,
       stock: stock ? Number(stock) : 0,
       categoria: categoria || "General",
-      imagen_url: imagenUrl || null,
+      imagen_url: finalImagenUrl || null,
     };
 
     let error;
 
     if (productoEditando) {
-      // Editar en Supabase
+      // Guardar cambios del producto existente
       const res = await supabase
         .from("productos")
         .update(productoData)
         .eq("id", productoEditando.id);
       error = res.error;
     } else {
-      // Crear en Supabase
+      // Crear nuevo producto
       const res = await supabase.from("productos").insert([productoData]);
       error = res.error;
     }
@@ -103,6 +132,7 @@ export default function FormularioProducto({
         </h2>
         {productoEditando && (
           <button
+            type="button"
             onClick={onCancelarEdicion}
             className="text-xs font-semibold text-[#C84343] hover:underline"
           >
@@ -172,14 +202,22 @@ export default function FormularioProducto({
           </select>
         </div>
 
+        {/* Carga de Imagen al Bucket */}
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-[#6B675F]">URL Imagen</label>
+          <label className="block text-xs font-medium text-[#6B675F]">
+            Imagen del Producto {productoEditando && "(Opcional si ya tiene una)"}
+          </label>
           <input
-            type="text"
-            value={imagenUrl}
-            onChange={(e) => setImagenUrl(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm outline-none focus:border-[#0E6E55]"
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImagenFile(e.target.files?.[0] || null)}
+            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-2.5 text-sm text-[#6B675F] outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-[#12151B] file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-[#2C323E]"
           />
+          {imagenUrl && !imagenFile && (
+            <p className="mt-1 text-[11px] text-[#0E6E55]">
+              ✓ Tiene una imagen cargada actualmente. Si no seleccionás un archivo nuevo, se mantendrá.
+            </p>
+          )}
         </div>
 
         <div className="sm:col-span-2">
@@ -192,14 +230,14 @@ export default function FormularioProducto({
           />
         </div>
 
-        <div className="sm:col-span-2 flex gap-3">
+        <div className="sm:col-span-2">
           <button
             type="submit"
             disabled={cargando}
-            className="flex-1 rounded-xl bg-[#0E6E55] py-3 text-sm font-semibold text-white transition-all hover:bg-[#0A5340] disabled:opacity-50"
+            className="w-full rounded-xl bg-[#0E6E55] py-3 text-sm font-semibold text-white transition-all hover:bg-[#0A5340] disabled:opacity-50"
           >
             {cargando
-              ? "Guardando..."
+              ? "Guardando e imagen subiendo..."
               : productoEditando
               ? "Actualizar Producto"
               : "Guardar Producto"}
