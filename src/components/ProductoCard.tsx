@@ -21,7 +21,6 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
   const itemEnCarrito = carrito.find((item) => item.id === producto.id);
   const cantidad = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
-  // Cálculo de porcentaje de descuento
   const tieneDescuento =
     producto.precio_original && producto.precio_original > producto.precio;
   const porcentajeDescuento = tieneDescuento
@@ -33,22 +32,24 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
     : 0;
 
   return (
-    <div className="relative flex flex-col justify-between rounded-2xl border border-[#E7E5E0] bg-white p-5 transition-all hover:border-[#12151B]/20 hover:shadow-lg">
-      {/* Badge de Descuento */}
+    <div className="relative flex flex-col justify-between rounded-3xl border border-[#E7E5E0] bg-white p-6 shadow-sm transition-all hover:border-[#12151B]/20">
+      {/* Badge de Descuento con solapa doblada exacto */}
       {tieneDescuento && (
-        <span className="absolute left-3 top-3 z-10 rounded-md bg-[#E54D42] px-2 py-1 text-xs font-bold text-white shadow-sm">
-          -{porcentajeDescuento}%
-        </span>
+        <div className="absolute top-4 left-0 z-10">
+          <span className="bg-[#E54D42] text-white text-xs font-bold px-2.5 py-1 rounded-r-md shadow-sm inline-block">
+            -{porcentajeDescuento}%
+          </span>
+        </div>
       )}
 
       <div>
-        {/* Contenedor de Imagen adaptada */}
+        {/* Contenedor de Imagen Limpia sin fondo */}
         {producto.imagen_url && (
-          <div className="relative mb-4 flex h-48 w-full items-center justify-center overflow-hidden rounded-xl bg-gray-50">
+          <div className="relative mb-3 flex h-52 w-full items-center justify-center">
             <img
               src={producto.imagen_url}
               alt={producto.nombre}
-              className="max-h-full max-w-full object-contain p-2"
+              className="max-h-full max-w-full object-contain"
             />
           </div>
         )}
@@ -58,7 +59,7 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
         </h3>
 
         {producto.descripcion && (
-          <p className="mb-4 mt-1 text-xs text-[#6B675F] line-clamp-2">
+          <p className="mt-1 mb-4 text-xs text-[#6B675F] line-clamp-2 leading-relaxed">
             {producto.descripcion}
           </p>
         )}
@@ -77,19 +78,19 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
           )}
         </div>
 
-        {/* Botones de acción */}
+        {/* Botón de acción con el tono verde/azul oscuro original */}
         {cantidad === 0 ? (
           <button
             onClick={() => agregarAlCarrito(producto)}
-            className="w-full rounded-xl bg-[#0E6E55] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0A5340]"
+            className="w-full rounded-2xl bg-[#0F4C42] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#0A3730]"
           >
             Agregar al carrito
           </button>
         ) : (
-          <div className="flex items-center justify-between rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-1.5">
+          <div className="flex items-center justify-between rounded-2xl border border-[#E7E5E0] bg-[#F7F7F5] p-1.5">
             <button
               onClick={() => restarUnidad(producto.id)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white font-bold text-[#12151B] shadow-sm hover:bg-gray-100"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white font-bold text-[#12151B] shadow-sm hover:bg-gray-100"
             >
               -
             </button>
@@ -98,7 +99,7 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
             </span>
             <button
               onClick={() => agregarAlCarrito(producto)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white font-bold text-[#12151B] shadow-sm hover:bg-gray-100"
+              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white font-bold text-[#12151B] shadow-sm hover:bg-gray-100"
             >
               +
             </button>
