@@ -3,293 +3,210 @@
 import React, { useState } from "react";
 import { useCarrito } from "@/context/CarritoContext";
 
-interface CarritoDrawerProps {
+export default function CarritoDrawer({
+  isOpen,
+  onClose,
+}: {
   isOpen: boolean;
   onClose: () => void;
-}
+}) {
+  const { carrito, sumarUnidad, restarUnidad, eliminarProducto, vaciarCarrito } =
+    useCarrito();
 
-export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
-  const {
-    carrito,
-    agregarAlCarrito,
-    restarUnidad,
-    eliminarDelCarrito,
-    vaciarCarrito,
-    totalPrecio,
-    datosEnvio,
-    setDatosEnvio,
-  } = useCarrito();
-
-  const [telefonoWhatsApp, setTelefonoWhatsApp] = useState("5493413954355"); // Cambiá por tu número real con código de país
+  const [nombre, setNombre] = useState("");
+  const [tipoEntrega, setTipoEntrega] = useState<"local" | "envio">("local");
+  const [mostrarModalExito, setMostrarModalExito] = useState(false);
 
   if (!isOpen) return null;
 
-  const enviarAWhatsApp = () => {
-    if (!datosEnvio.nombreCliente.trim()) {
-      alert("Por favor, ingresá tu nombre para continuar.");
+  const total = carrito.reduce(
+    (acc, item) => acc + item.precio * item.cantidad,
+    0
+  );
+
+  const handleEnviarWhatsApp = () => {
+    if (!nombre.trim()) {
+      alert("Por favor, ingresá tu nombre completo antes de continuar.");
       return;
     }
 
-    let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
-    mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
-    mensaje += `*Método:* ${
-      datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"
-    }\n`;
+    let mensaje = `*¡Hola! Quiero realizar un pedido desde la Tienda Online* 🛍️\n\n`;
+    mensaje += `*Cliente:* ${nombre}\n`;
+    mensaje += `*Entrega:* ${
+      tipoEntrega === "local" ? "Retiro en Local" : "Envío a Domicilio"
+    }\n\n`;
+    mensaje += `*Detalle del pedido:*\n`;
 
-    if (datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion) {
-      mensaje += `*Dirección:* ${datosEnvio.direccion}\n`;
-    }
-
-    if (datosEnvio.notaAdicional) {
-      mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
-    }
-
-    mensaje += `\n*Detalle del pedido:*\n`;
     carrito.forEach((item) => {
-      mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
+      mensaje += `• ${item.nombre} x${item.cantidad} - $${
+        item.precio * item.cantidad
+      }\n`;
     });
 
-    mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
-    mensaje += `Quedo a la espera de los datos para concretar la compra.`;
+    mensaje += `\n*Total a pagar: $${total}*`;
 
-    const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(
+    const numeroWhatsApp = "5493416373376"; // Cambiar por tu número configurado
+    const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(
       mensaje
     )}`;
+
+    // Redirige a WhatsApp en nueva pestaña
     window.open(url, "_blank");
+
+    // Muestra el modal de confirmación
+    setMostrarModalExito(true);
+  };
+
+  const handleCerrarTodo = () => {
+    vaciarCarrito();
+    setMostrarModalExito(false);
+    onClose();
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "rgba(0, 0, 0, 0.5)",
-        zIndex: 1000,
-        display: "flex",
-        justifyContent: "flex-end",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "420px",
-          height: "100%",
-          background: "#ffffff",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          padding: "20px",
-          boxSizing: "border-box",
-          overflowY: "auto",
-        }}
-      >
-        {/* Cabecera del Carrito */}
-        <div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderBottom: "1px solid #e5e7eb",
-              paddingBottom: "12px",
-              marginBottom: "16px",
-            }}
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm transition-opacity">
+      <div className="relative flex h-full w-full max-w-md flex-col bg-white p-6 shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+          <h2 className="text-xl font-bold text-gray-900">Tu Carrito</h2>
+          <button
+            onClick={onClose}
+            className="rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
           >
-            <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "700" }}>
-              Tu Carrito
-            </h2>
-            <button
-              onClick={onClose}
-              style={{
-                background: "none",
-                border: "none",
-                fontSize: "20px",
-                cursor: "pointer",
-                color: "#6b7280",
-              }}
-            >
-              ✕
-            </button>
-          </div>
+            ✕
+          </button>
+        </div>
 
-          {/* Lista de productos agregados */}
+        {/* Lista de Productos */}
+        <div className="flex-1 overflow-y-auto py-4 space-y-4">
           {carrito.length === 0 ? (
-            <p style={{ textAlign: "center", color: "#6b7280", my: "40px" }}>
-              El carrito está vacío.
+            <p className="text-center text-sm text-gray-500 py-10">
+              El carrito está vacío
             </p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {carrito.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    borderBottom: "1px solid #f3f4f6",
-                    paddingBottom: "8px",
-                  }}
-                >
-                  <div>
-                    <strong style={{ fontSize: "14px", color: "#1f2937" }}>
-                      {item.nombre}
-                    </strong>
-                    <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                      ${item.precio} c/u
-                    </div>
-                  </div>
+            carrito.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50/50 p-3"
+              >
+                <div className="flex-1 pr-2">
+                  <h4 className="text-sm font-semibold text-gray-800 line-clamp-1">
+                    {item.nombre}
+                  </h4>
+                  <p className="text-xs text-gray-500">
+                    ${item.precio} c/u
+                  </p>
+                </div>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {/* Control de Cantidad Estilizado */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center rounded-xl bg-white border border-gray-200 p-1 shadow-sm">
                     <button
                       onClick={() => restarUnidad(item.id)}
-                      style={{
-                        padding: "2px 8px",
-                        borderRadius: "4px",
-                        border: "1px solid #ccc",
-                        cursor: "pointer",
-                      }}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 font-bold"
                     >
                       -
                     </button>
-                    <span style={{ fontWeight: "600", fontSize: "14px" }}>
+                    <span className="w-8 text-center text-xs font-bold text-gray-800">
                       {item.cantidad}
                     </span>
                     <button
-                      onClick={() => agregarAlCarrito(item)}
-                      style={{
-                        padding: "2px 8px",
-                        borderRadius: "4px",
-                        border: "1px solid #ccc",
-                        cursor: "pointer",
-                      }}
+                      onClick={() => sumarUnidad(item.id)}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 font-bold"
                     >
                       +
                     </button>
-                    <button
-                      onClick={() => eliminarDelCarrito(item.id)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        color: "#dc2626",
-                        cursor: "pointer",
-                        fontSize: "12px",
-                        marginLeft: "4px",
-                      }}
-                    >
-                      Eliminar
-                    </button>
                   </div>
+
+                  <button
+                    onClick={() => eliminarProducto(item.id)}
+                    className="p-1 text-xs font-medium text-red-500 hover:text-red-700 transition-colors"
+                    title="Eliminar"
+                  >
+                    ✕
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
         </div>
 
-        {/* Sección de Datos y Confirmación */}
+        {/* Footer / Datos del comprador */}
         {carrito.length > 0 && (
-          <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
-            <h3 style={{ fontSize: "14px", marginBottom: "8px" }}>
-              Datos del Comprador
-            </h3>
+          <div className="border-t border-gray-100 pt-4 space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                Datos del Comprador
+              </label>
+              <input
+                type="text"
+                placeholder="Tu Nombre completo"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none"
+              />
+            </div>
 
-            <input
-              type="text"
-              placeholder="Tu Nombre completo"
-              value={datosEnvio.nombreCliente}
-              onChange={(e) =>
-                setDatosEnvio({ ...datosEnvio, nombreCliente: e.target.value })
-              }
-              style={{
-                width: "100%",
-                padding: "8px",
-                marginBottom: "8px",
-                borderRadius: "6px",
-                border: "1px solid #ccc",
-                boxSizing: "border-box",
-              }}
-            />
-
-            <div style={{ display: "flex", gap: "10px", marginBottom: "8px" }}>
-              <label style={{ fontSize: "13px" }}>
+            <div className="flex items-center gap-4 text-xs font-medium text-gray-700">
+              <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
                   type="radio"
-                  name="metodoEnvio"
-                  value="retiro"
-                  checked={datosEnvio.metodoEnvio === "retiro"}
-                  onChange={() =>
-                    setDatosEnvio({ ...datosEnvio, metodoEnvio: "retiro" })
-                  }
-                />{" "}
+                  name="entrega"
+                  checked={tipoEntrega === "local"}
+                  onChange={() => setTipoEntrega("local")}
+                  className="accent-emerald-600"
+                />
                 Retiro en Local
               </label>
-              <label style={{ fontSize: "13px" }}>
+              <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
                   type="radio"
-                  name="metodoEnvio"
-                  value="envio"
-                  checked={datosEnvio.metodoEnvio === "envio"}
-                  onChange={() =>
-                    setDatosEnvio({ ...datosEnvio, metodoEnvio: "envio" })
-                  }
-                />{" "}
+                  name="entrega"
+                  checked={tipoEntrega === "envio"}
+                  onChange={() => setTipoEntrega("envio")}
+                  className="accent-emerald-600"
+                />
                 Envío a Domicilio
               </label>
             </div>
 
-            {datosEnvio.metodoEnvio === "envio" && (
-              <input
-                type="text"
-                placeholder="Dirección de envío"
-                value={datosEnvio.direccion}
-                onChange={(e) =>
-                  setDatosEnvio({ ...datosEnvio, direccion: e.target.value })
-                }
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  marginBottom: "8px",
-                  borderRadius: "6px",
-                  border: "1px solid #ccc",
-                  boxSizing: "border-box",
-                }}
-              />
-            )}
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "16px",
-                fontWeight: "700",
-                margin: "12px 0",
-              }}
-            >
+            <div className="flex items-center justify-between text-base font-bold text-gray-900 pt-2">
               <span>Total:</span>
-              <span>${totalPrecio}</span>
+              <span>${total}</span>
             </div>
 
             <button
-              onClick={enviarAWhatsApp}
-              style={{
-                width: "100%",
-                background: "#25D366",
-                color: "white",
-                border: "none",
-                padding: "12px",
-                borderRadius: "8px",
-                fontWeight: "700",
-                fontSize: "15px",
-                cursor: "pointer",
-              }}
+              onClick={handleEnviarWhatsApp}
+              className="w-full rounded-xl bg-[#25D366] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1ebd59] shadow-md"
             >
               Confirmar Pedido por WhatsApp
             </button>
           </div>
         )}
       </div>
+
+      {/* Pop-up Modal de Confirmación */}
+      {mostrarModalExito && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-2xl">
+              ✓
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              ¡Pedido preparado!
+            </h3>
+            <p className="text-xs text-gray-500 mb-6 leading-relaxed">
+              Te redirigimos a WhatsApp para enviar el mensaje. Presioná aceptar para limpiar tu carrito.
+            </p>
+            <button
+              onClick={handleCerrarTodo}
+              className="w-full rounded-xl bg-gray-900 py-3 text-sm font-semibold text-white transition-colors hover:bg-gray-800"
+            >
+              Aceptar y cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
