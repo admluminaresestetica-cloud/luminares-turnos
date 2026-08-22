@@ -116,7 +116,7 @@ export default function TiendaPage() {
         />
         <div className="relative mx-auto max-w-2xl">
           <span className="mb-4 inline-block rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-[#D9B87A]">
-            CATÁLOGO
+            TIENDA LUMINARES
           </span>
           <h1 className="m-0 mb-3 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
             Encontrá lo que buscás al mejor precio
