@@ -20,7 +20,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     setDatosEnvio,
   } = useCarrito();
 
-  const [telefonoWhatsApp, setTelefonoWhatsApp] = useState("549XXXXXXXXX"); // Cambiá por tu número real con código de país
+  const [telefonoWhatsApp, setTelefonoWhatsApp] = useState("5493413954355"); // Cambiá por tu número real con código de país
 
   if (!isOpen) return null;
 
