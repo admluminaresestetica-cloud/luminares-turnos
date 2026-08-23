@@ -11,11 +11,9 @@ interface ProductoCardProps {
 export default function ProductoCard({ producto }: ProductoCardProps) {
   const { carrito, agregarAlCarrito, restarUnidad } = useCarrito();
 
-  // Buscar cuántas unidades de este producto ya tiene el cliente en el carrito
   const itemEnCarrito = carrito.find((item) => item.id === producto.id);
   const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
-  // Lógica de disponibilidad
   const stockDisponible = producto.stock ?? 0;
   const estaPausado = producto.activo === false;
   const sinStock = stockDisponible <= 0 || estaPausado;
@@ -35,7 +33,6 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
         backgroundColor: '#ffffff',
       }}
     >
-      {/* Badge de Pausado o Sin Stock */}
       {sinStock && (
         <span
           style={{

@@ -1,111 +1,114 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Producto, CarritoItem, DatosEnvio } from '@/types/tienda';
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+export interface Producto {
+  id: number | string;
+  nombre: string;
+  precio: number;
+  precio_original?: number;
+  imagen_url?: string;
+  categoria?: string;
+  stock?: number;
+  activo?: boolean;
+}
+
+export interface CarritoItem extends Producto {
+  cantidad: number;
+}
+
+export interface DatosEnvio {
+  nombreCliente: string;
+  telefonoCliente: string;
+  direccion: string;
+  metodoEnvio: "retiro" | "envio";
+  notaAdicional: string;
+}
 
 interface CarritoContextType {
   carrito: CarritoItem[];
-  agregarAlCarrito: (producto: Producto) => void;
-  restarUnidad: (id: string) => void;
-  eliminarDelCarrito: (id: string) => void;
-  vaciarCarrito: () => void;
-  totalPrecio: number;
-  totalItems: number;
   datosEnvio: DatosEnvio;
   setDatosEnvio: React.Dispatch<React.SetStateAction<DatosEnvio>>;
+  agregarAlCarrito: (producto: Producto) => void;
+  restarDelCarrito: (id: number | string) => void;
+  eliminarDelCarrito: (id: number | string) => void;
+  vaciarCarrito: () => void;
+  total: number;
 }
 
 const CarritoContext = createContext<CarritoContextType | undefined>(undefined);
 
-export const CarritoProvider = ({ children }: { children: React.ReactNode }) => {
+export function CarritoProvider({ children }: { children: React.ReactNode }) {
   const [carrito, setCarrito] = useState<CarritoItem[]>([]);
   const [datosEnvio, setDatosEnvio] = useState<DatosEnvio>({
-    nombreCliente: '',
-<<<<<<< HEAD
-    telefonoCliente: '', // <-- Nuevo campo para WhatsApp / Teléfono
-=======
-    telefonoCliente: '', // <-- Agregado para el teléfono/WhatsApp
->>>>>>> c2357e45214b1dd6c17f7c8f886f53ebdb3c8cb1
-    direccion: '',
-    metodoEnvio: 'retiro',
-    notaAdicional: '',
+    nombreCliente: "",
+    telefonoCliente: "",
+    direccion: "",
+    metodoEnvio: "retiro",
+    notaAdicional: "",
   });
 
-  // Cargar carrito desde localStorage al iniciar
+  // Cargar carrito desde localStorage
   useEffect(() => {
-    const carritoGuardado = localStorage.getItem('tienda_carrito');
-    if (carritoGuardado) {
+    const guardado = localStorage.getItem("luminares_carrito");
+    if (guardado) {
       try {
-        setCarrito(JSON.parse(carritoGuardado));
-      } catch (error) {
-        console.error('Error al cargar el carrito:', error);
+        setCarrito(JSON.parse(guardado));
+      } catch (e) {
+        console.error("Error al cargar el carrito:", e);
       }
     }
   }, []);
 
-  // Guardar en localStorage cada vez que cambia el carrito
+  // Guardar carrito en localStorage
   useEffect(() => {
-    localStorage.setItem('tienda_carrito', JSON.stringify(carrito));
+    localStorage.setItem("luminares_carrito", JSON.stringify(carrito));
   }, [carrito]);
 
   const agregarAlCarrito = (producto: Producto) => {
+    // Si el producto está inactivo/pausado
+    if (producto.activo === false) {
+      alert("Este producto no está disponible en este momento.");
+      return;
+    }
+
     setCarrito((prev) => {
       const existe = prev.find((item) => item.id === producto.id);
-<<<<<<< HEAD
       const stockDisponible = producto.stock ?? 0;
-=======
       const cantidadActual = existe ? existe.cantidad : 0;
 
-      // Validar si el producto está pausado o inactivo
-      if (producto.activo === false) {
-        alert('Este producto no está disponible temporalmente.');
+      // Validar si supera el stock disponible
+      if (cantidadActual + 1 > stockDisponible) {
+        alert(`Solo hay ${stockDisponible} unidad(es) disponible(s) de este producto.`);
         return prev;
       }
-
-      // Validar límite de stock disponible en Supabase
-      if (cantidadActual + 1 > producto.stock) {
-        alert(`Solo hay ${producto.stock} unidad(es) disponible(s) de este producto.`);
-        return prev;
-      }
->>>>>>> c2357e45214b1dd6c17f7c8f886f53ebdb3c8cb1
 
       if (existe) {
-        // Validar que no supere el stock disponible de Supabase
-        if (existe.cantidad >= stockDisponible) {
-          alert(`Llegaste al límite. El stock disponible de "${producto.nombre}" es de ${stockDisponible} unidades.`);
-          return prev;
-        }
         return prev.map((item) =>
-          item.id === producto.id ? { ...item, cantidad: item.cantidad + 1 } : item
+          item.id === producto.id
+            ? { ...item, cantidad: item.cantidad + 1 }
+            : item
         );
       }
 
-<<<<<<< HEAD
-      // Si no existe en el carrito pero no hay stock disponible
-      if (stockDisponible < 1) {
-        alert('Este producto no tiene stock disponible.');
-        return prev;
-      }
-
-=======
->>>>>>> c2357e45214b1dd6c17f7c8f886f53ebdb3c8cb1
       return [...prev, { ...producto, cantidad: 1 }];
     });
   };
 
-  const restarUnidad = (id: string) => {
-    setCarrito((prev) => {
-      const existe = prev.find((item) => item.id === id);
-      if (existe && existe.cantidad > 1) {
-        return prev.map((item) =>
-          item.id === id ? { ...item, cantidad: item.cantidad - 1 } : item
-        );
-      }
-      return prev.filter((item) => item.id !== id);
-    });
+  const restarDelCarrito = (id: number | string) => {
+    setCarrito((prev) =>
+      prev
+        .map((item) => {
+          if (item.id === id) {
+            return { ...item, cantidad: item.cantidad - 1 };
+          }
+          return item;
+        })
+        .filter((item) => item.cantidad > 0)
+    );
   };
 
-  const eliminarDelCarrito = (id: string) => {
+  const eliminarDelCarrito = (id: number | string) => {
     setCarrito((prev) => prev.filter((item) => item.id !== id));
   };
 
@@ -113,36 +116,33 @@ export const CarritoProvider = ({ children }: { children: React.ReactNode }) => 
     setCarrito([]);
   };
 
-  const totalPrecio = carrito.reduce(
-    (total, item) => total + item.precio * item.cantidad,
+  const total = carrito.reduce(
+    (acc, item) => acc + item.precio * item.cantidad,
     0
   );
-
-  const totalItems = carrito.reduce((total, item) => total + item.cantidad, 0);
 
   return (
     <CarritoContext.Provider
       value={{
         carrito,
-        agregarAlCarrito,
-        restarUnidad,
-        eliminarDelCarrito,
-        vaciarCarrito,
-        totalPrecio,
-        totalItems,
         datosEnvio,
         setDatosEnvio,
+        agregarAlCarrito,
+        restarDelCarrito,
+        eliminarDelCarrito,
+        vaciarCarrito,
+        total,
       }}
     >
       {children}
     </CarritoContext.Provider>
   );
-};
+}
 
-export const useCarrito = () => {
+export function useCarrito() {
   const context = useContext(CarritoContext);
   if (!context) {
-    throw new Error('useCarrito debe usarse dentro de un CarritoProvider');
+    throw new Error("useCarrito debe usarse dentro de un CarritoProvider");
   }
   return context;
-};
+}

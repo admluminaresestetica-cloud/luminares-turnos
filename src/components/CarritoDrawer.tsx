@@ -1,10 +1,5 @@
 'use client';
 
-<<<<<<< HEAD
-import React from 'react';
-import { Producto } from '@/types/tienda';
-import { useCarrito } from '@/context/CarritoContext';
-=======
 import React, { useState } from "react";
 import { useCarrito } from "@/context/CarritoContext";
 import { createClient } from "@supabase/supabase-js";
@@ -13,34 +8,37 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
->>>>>>> c2357e45214b1dd6c17f7c8f886f53ebdb3c8cb1
 
-interface ProductoCardProps {
-  producto: Producto;
+interface CarritoDrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export default function ProductoCard({ producto }: ProductoCardProps) {
-  const { carrito, agregarAlCarrito, restarUnidad } = useCarrito();
+export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
+  const { carrito, agregarAlCarrito, restarUnidad, eliminarDelCarrito, vaciarCarrito } = useCarrito();
 
-<<<<<<< HEAD
-  // Buscar cuántas unidades de este producto ya tiene el cliente en el carrito
-  const itemEnCarrito = carrito.find((item) => item.id === producto.id);
-  const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
-
-  // Lógica de disponibilidad
-  const stockDisponible = producto.stock ?? 0;
-  const estaPausado = producto.activo === false;
-  const sinStock = stockDisponible <= 0 || estaPausado;
-  const alcanzoLimiteStock = cantidadEnCarrito >= stockDisponible;
-=======
-  const [telefonoWhatsApp, setTelefonoWhatsApp] = useState("5493413954355"); // Tu número de recepción
+  const [telefonoWhatsApp] = useState("5493413954355");
   const [guardandoPedido, setGuardandoPedido] = useState(false);
+  const [datosEnvio, setDatosEnvio] = useState({
+    nombreCliente: "",
+    telefonoCliente: "",
+    metodoEnvio: "retiro" as "retiro" | "envio",
+    direccion: "",
+    notaAdicional: "",
+  });
 
   if (!isOpen) return null;
+
+  const totalPrecio = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
 
   const enviarAWhatsApp = async () => {
     if (!datosEnvio.nombreCliente.trim()) {
       alert("Por favor, ingresá tu nombre para continuar.");
+      return;
+    }
+
+    if (datosEnvio.metodoEnvio === "envio" && !datosEnvio.direccion.trim()) {
+      alert("Por favor, ingresá tu dirección de envío.");
       return;
     }
 
@@ -52,11 +50,11 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
         .from("pedidos")
         .insert([
           {
-            nombre_cliente: datosEnvio.nombreCliente,
-            telefono_cliente: datosEnvio.telefonoCliente || "",
+            nombre_cliente: datosEnvio.nombreCliente.trim(),
+            telefono_cliente: datosEnvio.telefonoCliente.trim() || null,
             metodo_envio: datosEnvio.metodoEnvio,
-            direccion: datosEnvio.metodoEnvio === "envio" ? datosEnvio.direccion : null,
-            nota_adicional: datosEnvio.notaAdicional || null,
+            direccion: datosEnvio.metodoEnvio === "envio" ? datosEnvio.direccion.trim() : null,
+            nota_adicional: datosEnvio.notaAdicional.trim() || null,
             total: totalPrecio,
             estado: "pendiente",
           },
@@ -81,7 +79,7 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
 
       if (itemsError) throw itemsError;
 
-      // 3. Crear el mensaje y abrir WhatsApp
+      // 3. Armar mensaje de WhatsApp
       let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
       mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
       if (datosEnvio.telefonoCliente) {
@@ -119,49 +117,18 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
       setGuardandoPedido(false);
     }
   };
->>>>>>> c2357e45214b1dd6c17f7c8f886f53ebdb3c8cb1
 
   return (
     <div
       style={{
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        padding: '16px',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        opacity: sinStock ? 0.65 : 1,
-        backgroundColor: '#ffffff',
+        position: "fixed",
+        inset: 0,
+        backgroundColor: "rgba(0,0,0,0.4)",
+        zIndex: 50,
+        display: "flex",
+        justifyContent: "flex-end",
       }}
     >
-<<<<<<< HEAD
-      {/* Badge de Pausado o Sin Stock */}
-      {sinStock && (
-        <span
-          style={{
-            position: 'absolute',
-            top: '10px',
-            right: '10px',
-            backgroundColor: '#ef4444',
-            color: '#ffffff',
-            fontSize: '11px',
-            fontWeight: 'bold',
-            padding: '2px 8px',
-            borderRadius: '4px',
-            textTransform: 'uppercase',
-          }}
-        >
-          {estaPausado ? 'No disponible' : 'Sin Stock'}
-        </span>
-      )}
-
-      <div>
-        {producto.imagen_url && (
-          <img
-            src={producto.imagen_url}
-            alt={producto.nombre}
-=======
       <div
         style={{
           width: "100%",
@@ -176,56 +143,16 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
           overflowY: "auto",
         }}
       >
-        {/* Cabecera */}
+        {/* Header */}
         <div>
           <div
->>>>>>> c2357e45214b1dd6c17f7c8f886f53ebdb3c8cb1
             style={{
-              width: '100%',
-              height: '160px',
-              objectFit: 'cover',
-              borderRadius: '6px',
-              marginBottom: '12px',
-            }}
-          />
-        )}
-        <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 4px 0' }}>
-          {producto.nombre}
-        </h3>
-        {producto.descripcion && (
-          <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>
-            {producto.descripcion}
-          </p>
-        )}
-        <div style={{ fontSize: '18px', fontWeight: '700', color: '#111827' }}>
-          ${producto.precio}
-        </div>
-      </div>
-
-      <div style={{ marginTop: '16px' }}>
-        {sinStock ? (
-          <button
-            disabled
-            style={{
-              width: '100%',
-              padding: '8px',
-              backgroundColor: '#d1d5db',
-              color: '#6b7280',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: '600',
-              cursor: 'not-allowed',
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
             }}
           >
-<<<<<<< HEAD
-            {estaPausado ? 'Pausado' : 'Agotado'}
-          </button>
-        ) : cantidadEnCarrito > 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button
-                onClick={() => restarUnidad(producto.id)}
-=======
             <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "700" }}>
               Tu Carrito
             </h2>
@@ -245,7 +172,7 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
 
           {/* Lista de productos */}
           {carrito.length === 0 ? (
-            <p style={{ textAlign: "center", color: "#6b7280", marginTop: "40px", marginBottom: "40px" }}>
+            <p style={{ textAlign: "center", color: "#6b7280", marginTop: "40px" }}>
               El carrito está vacío.
             </p>
           ) : (
@@ -299,7 +226,6 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
                           cursor: alcanzoLimite ? "not-allowed" : "pointer",
                           opacity: alcanzoLimite ? 0.5 : 1,
                         }}
-                        title={alcanzoLimite ? "Stock máximo alcanzado" : ""}
                       >
                         +
                       </button>
@@ -311,7 +237,6 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
                           color: "#dc2626",
                           cursor: "pointer",
                           fontSize: "12px",
-                          marginLeft: "4px",
                         }}
                       >
                         Eliminar
@@ -324,20 +249,16 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
           )}
         </div>
 
-        {/* Sección de Datos y Confirmación */}
+        {/* Sección Checkout */}
         {carrito.length > 0 && (
-          <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
-            <h3 style={{ fontSize: "14px", marginBottom: "8px" }}>
-              Datos del Comprador
-            </h3>
+          <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px", marginTop: "16px" }}>
+            <h3 style={{ fontSize: "14px", marginBottom: "8px" }}>Datos del Comprador</h3>
 
             <input
               type="text"
               placeholder="Tu Nombre completo *"
               value={datosEnvio.nombreCliente}
-              onChange={(e) =>
-                setDatosEnvio({ ...datosEnvio, nombreCliente: e.target.value })
-              }
+              onChange={(e) => setDatosEnvio({ ...datosEnvio, nombreCliente: e.target.value })}
               style={{
                 width: "100%",
                 padding: "8px",
@@ -351,10 +272,8 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
             <input
               type="text"
               placeholder="Tu Teléfono / WhatsApp"
-              value={datosEnvio.telefonoCliente || ""}
-              onChange={(e) =>
-                setDatosEnvio({ ...datosEnvio, telefonoCliente: e.target.value })
-              }
+              value={datosEnvio.telefonoCliente}
+              onChange={(e) => setDatosEnvio({ ...datosEnvio, telefonoCliente: e.target.value })}
               style={{
                 width: "100%",
                 padding: "8px",
@@ -372,9 +291,7 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
                   name="metodoEnvio"
                   value="retiro"
                   checked={datosEnvio.metodoEnvio === "retiro"}
-                  onChange={() =>
-                    setDatosEnvio({ ...datosEnvio, metodoEnvio: "retiro" })
-                  }
+                  onChange={() => setDatosEnvio({ ...datosEnvio, metodoEnvio: "retiro" })}
                 />{" "}
                 Retiro en Local
               </label>
@@ -384,9 +301,7 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
                   name="metodoEnvio"
                   value="envio"
                   checked={datosEnvio.metodoEnvio === "envio"}
-                  onChange={() =>
-                    setDatosEnvio({ ...datosEnvio, metodoEnvio: "envio" })
-                  }
+                  onChange={() => setDatosEnvio({ ...datosEnvio, metodoEnvio: "envio" })}
                 />{" "}
                 Envío a Domicilio
               </label>
@@ -395,43 +310,19 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
             {datosEnvio.metodoEnvio === "envio" && (
               <input
                 type="text"
-                placeholder="Dirección de envío"
+                placeholder="Dirección de envío *"
                 value={datosEnvio.direccion}
-                onChange={(e) =>
-                  setDatosEnvio({ ...datosEnvio, direccion: e.target.value })
-                }
->>>>>>> c2357e45214b1dd6c17f7c8f886f53ebdb3c8cb1
+                onChange={(e) => setDatosEnvio({ ...datosEnvio, direccion: e.target.value })}
                 style={{
-                  padding: '4px 10px',
-                  borderRadius: '4px',
-                  border: '1px solid #ccc',
-                  cursor: 'pointer',
+                  width: "100%",
+                  padding: "8px",
+                  marginBottom: "8px",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  boxSizing: "border-box",
                 }}
-              >
-                -
-              </button>
-              <span style={{ fontWeight: '600' }}>{cantidadEnCarrito}</span>
-              <button
-                onClick={() => agregarAlCarrito(producto)}
-                disabled={alcanzoLimiteStock}
-                style={{
-                  padding: '4px 10px',
-                  borderRadius: '4px',
-                  border: '1px solid #ccc',
-                  cursor: alcanzoLimiteStock ? 'not-allowed' : 'pointer',
-                  opacity: alcanzoLimiteStock ? 0.4 : 1,
-                }}
-              >
-                +
-              </button>
-            </div>
-<<<<<<< HEAD
-            {alcanzoLimiteStock && (
-              <span style={{ fontSize: '11px', color: '#dc2626', fontWeight: '500' }}>
-                Máx. alcanzado
-              </span>
+              />
             )}
-=======
 
             <button
               onClick={enviarAWhatsApp}
@@ -446,28 +337,12 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
                 fontWeight: "700",
                 fontSize: "15px",
                 cursor: guardandoPedido ? "not-allowed" : "pointer",
+                marginTop: "10px",
               }}
             >
               {guardandoPedido ? "Procesando..." : "Confirmar Pedido por WhatsApp"}
             </button>
->>>>>>> c2357e45214b1dd6c17f7c8f886f53ebdb3c8cb1
           </div>
-        ) : (
-          <button
-            onClick={() => agregarAlCarrito(producto)}
-            style={{
-              width: '100%',
-              padding: '8px',
-              backgroundColor: '#2563eb',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: '600',
-              cursor: 'pointer',
-            }}
-          >
-            Agregar al Carrito
-          </button>
         )}
       </div>
     </div>
