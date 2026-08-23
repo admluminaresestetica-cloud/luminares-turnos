@@ -2,7 +2,12 @@
 
 import React, { useState } from "react";
 import { useCarrito } from "@/context/CarritoContext";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface CarritoDrawerProps {
   isOpen: boolean;
@@ -21,56 +26,60 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     setDatosEnvio,
   } = useCarrito();
 
-  const [telefonoWhatsApp] = useState("5493413954355"); // Tu número receptor con código de país
-  const [procesando, setProcesando] = useState(false);
+  const [telefonoWhatsApp, setTelefonoWhatsApp] = useState("5493413954355"); // Tu número de recepción
+  const [guardandoPedido, setGuardandoPedido] = useState(false);
 
   if (!isOpen) return null;
 
   const enviarAWhatsApp = async () => {
     if (!datosEnvio.nombreCliente.trim()) {
-      alert("Por favor, ingresá tu nombre completo.");
+      alert("Por favor, ingresá tu nombre para continuar.");
       return;
     }
 
-    if (!datosEnvio.telefonoCliente.trim()) {
-      alert("Por favor, ingresá tu número de celular / WhatsApp.");
-      return;
-    }
-
-    if (datosEnvio.metodoEnvio === "envio" && !datosEnvio.direccion.trim()) {
-      alert("Por favor, ingresá la dirección para el envío.");
-      return;
-    }
-
-    setProcesando(true);
+    setGuardandoPedido(true);
 
     try {
-      // 1. Guardar el pedido en Supabase en estado pendiente
-      const { data, error } = await supabase.rpc("registrar_pedido_pendiente", {
-        p_nombre_cliente: `${datosEnvio.nombreCliente} (Tel: ${datosEnvio.telefonoCliente})`,
-        p_metodo_envio: datosEnvio.metodoEnvio,
-        p_direccion: datosEnvio.metodoEnvio === "envio" ? datosEnvio.direccion : "",
-        p_nota_adicional: datosEnvio.notaAdicional || "",
-        p_total: totalPrecio,
-        p_items: carrito.map((item) => ({
-          id: item.id,
-          nombre: item.nombre,
-          precio: item.precio,
-          cantidad: item.cantidad,
-        })),
-      });
+      // 1. Guardar el pedido en Supabase
+      const { data: pedidoData, error: pedidoError } = await supabase
+        .from("pedidos")
+        .insert([
+          {
+            nombre_cliente: datosEnvio.nombreCliente,
+            telefono_cliente: datosEnvio.telefonoCliente || "",
+            metodo_envio: datosEnvio.metodoEnvio,
+            direccion: datosEnvio.metodoEnvio === "envio" ? datosEnvio.direccion : null,
+            nota_adicional: datosEnvio.notaAdicional || null,
+            total: totalPrecio,
+            estado: "pendiente",
+          },
+        ])
+        .select()
+        .single();
 
-      if (error) {
-        console.error("Error al registrar pedido:", error);
-        alert(`Ocurrió un error al procesar el pedido: ${error.message}`);
-        setProcesando(false);
-        return;
-      }
+      if (pedidoError) throw pedidoError;
 
-      // 2. Armar el mensaje de WhatsApp
+      // 2. Guardar los ítems del pedido
+      const itemsParaInsertar = carrito.map((item) => ({
+        pedido_id: pedidoData.id,
+        producto_id: item.id,
+        nombre_producto: item.nombre,
+        precio_unitario: item.precio,
+        cantidad: item.cantidad,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("pedido_items")
+        .insert(itemsParaInsertar);
+
+      if (itemsError) throw itemsError;
+
+      // 3. Crear el mensaje y abrir WhatsApp
       let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
       mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
-      mensaje += `*Teléfono:* ${datosEnvio.telefonoCliente}\n`;
+      if (datosEnvio.telefonoCliente) {
+        mensaje += `*Teléfono:* ${datosEnvio.telefonoCliente}\n`;
+      }
       mensaje += `*Método:* ${
         datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"
       }\n`;
@@ -89,76 +98,148 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       });
 
       mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
-      mensaje += `Quedo a la espera para coordinar el pago.`;
+      mensaje += `Quedo a la espera de los datos para concretar la compra.`;
 
-      // 3. Abrir WhatsApp, vaciar carrito y cerrar drawer
       const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
       window.open(url, "_blank");
 
       vaciarCarrito();
       onClose();
-    } catch (err) {
-      console.error("Error inesperado:", err);
-      alert("Ocurrió un error inesperado.");
+    } catch (error: any) {
+      console.error("Error al registrar el pedido:", error);
+      alert("Hubo un problema al procesar el pedido. Por favor intentá nuevamente.");
     } finally {
-      setProcesando(false);
+      setGuardandoPedido(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50">
-      <div className="flex h-full w-full max-w-md flex-col justify-between bg-white p-6 shadow-xl overflow-y-auto">
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        background: "rgba(0, 0, 0, 0.5)",
+        zIndex: 1000,
+        display: "flex",
+        justifyContent: "flex-end",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "420px",
+          height: "100%",
+          background: "#ffffff",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "20px",
+          boxSizing: "border-box",
+          overflowY: "auto",
+        }}
+      >
         {/* Cabecera */}
         <div>
-          <div className="flex items-center justify-between border-b pb-4 mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Tu Carrito</h2>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-xl font-bold">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderBottom: "1px solid #e5e7eb",
+              paddingBottom: "12px",
+              marginBottom: "16px",
+            }}
+          >
+            <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "700" }}>
+              Tu Carrito
+            </h2>
+            <button
+              onClick={onClose}
+              style={{
+                background: "none",
+                border: "none",
+                fontSize: "20px",
+                cursor: "pointer",
+                color: "#6b7280",
+              }}
+            >
               ✕
             </button>
           </div>
 
-          {/* Items */}
+          {/* Lista de productos */}
           {carrito.length === 0 ? (
-            <p className="my-10 text-center text-sm text-gray-500">
+            <p style={{ textAlign: "center", color: "#6b7280", marginTop: "40px", marginBottom: "40px" }}>
               El carrito está vacío.
             </p>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {carrito.map((item) => {
-                const alcanzadoLimite = item.cantidad >= item.stock;
+                const stockDisponible = item.stock ?? 0;
+                const alcanzoLimite = item.cantidad >= stockDisponible;
 
                 return (
-                  <div key={item.id} className="flex items-center justify-between border-b pb-3">
+                  <div
+                    key={item.id}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      borderBottom: "1px solid #f3f4f6",
+                      paddingBottom: "8px",
+                    }}
+                  >
                     <div>
-                      <strong className="text-sm text-gray-800">{item.nombre}</strong>
-                      <div className="text-xs text-gray-500">
-                        ${item.precio} c/u | Disponibles: {item.stock}
+                      <strong style={{ fontSize: "14px", color: "#1f2937" }}>
+                        {item.nombre}
+                      </strong>
+                      <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                        ${item.precio} c/u
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                       <button
                         onClick={() => restarUnidad(item.id)}
-                        className="rounded border px-2 py-0.5 text-xs font-bold hover:bg-gray-100"
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                          border: "1px solid #ccc",
+                          cursor: "pointer",
+                        }}
                       >
                         -
                       </button>
-                      <span className="text-sm font-semibold">{item.cantidad}</span>
+                      <span style={{ fontWeight: "600", fontSize: "14px" }}>
+                        {item.cantidad}
+                      </span>
                       <button
                         onClick={() => agregarAlCarrito(item)}
-                        disabled={alcanzadoLimite}
-                        className={`rounded border px-2 py-0.5 text-xs font-bold ${
-                          alcanzadoLimite
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                            : "hover:bg-gray-100"
-                        }`}
-                        title={alcanzadoLimite ? "Máximo stock disponible alcanzado" : ""}
+                        disabled={alcanzoLimite}
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: "4px",
+                          border: "1px solid #ccc",
+                          cursor: alcanzoLimite ? "not-allowed" : "pointer",
+                          opacity: alcanzoLimite ? 0.5 : 1,
+                        }}
+                        title={alcanzoLimite ? "Stock máximo alcanzado" : ""}
                       >
                         +
                       </button>
                       <button
                         onClick={() => eliminarDelCarrito(item.id)}
-                        className="ml-2 text-xs text-red-600 hover:underline"
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#dc2626",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          marginLeft: "4px",
+                        }}
                       >
                         Eliminar
                       </button>
@@ -170,50 +251,70 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           )}
         </div>
 
-        {/* Formulario de Checkout */}
+        {/* Sección de Datos y Confirmación */}
         {carrito.length > 0 && (
-          <div className="border-t pt-4 mt-6">
-            <h3 className="text-sm font-bold text-gray-900 mb-3">Datos del Comprador</h3>
+          <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
+            <h3 style={{ fontSize: "14px", marginBottom: "8px" }}>
+              Datos del Comprador
+            </h3>
 
             <input
               type="text"
-              placeholder="Nombre y Apellido *"
-              value={datosEnvio.nombreCliente || ""}
+              placeholder="Tu Nombre completo *"
+              value={datosEnvio.nombreCliente}
               onChange={(e) =>
                 setDatosEnvio({ ...datosEnvio, nombreCliente: e.target.value })
               }
-              className="mb-2 w-full rounded-lg border border-gray-300 p-2.5 text-sm outline-none focus:border-emerald-600"
+              style={{
+                width: "100%",
+                padding: "8px",
+                marginBottom: "8px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                boxSizing: "border-box",
+              }}
             />
 
             <input
-              type="tel"
-              placeholder="Teléfono / WhatsApp (Ej: 1123456789) *"
+              type="text"
+              placeholder="Tu Teléfono / WhatsApp"
               value={datosEnvio.telefonoCliente || ""}
               onChange={(e) =>
                 setDatosEnvio({ ...datosEnvio, telefonoCliente: e.target.value })
               }
-              className="mb-3 w-full rounded-lg border border-gray-300 p-2.5 text-sm outline-none focus:border-emerald-600"
+              style={{
+                width: "100%",
+                padding: "8px",
+                marginBottom: "8px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                boxSizing: "border-box",
+              }}
             />
 
-            <div className="flex gap-4 mb-3">
-              <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 cursor-pointer">
+            <div style={{ display: "flex", gap: "10px", marginBottom: "8px" }}>
+              <label style={{ fontSize: "13px" }}>
                 <input
                   type="radio"
                   name="metodoEnvio"
                   value="retiro"
                   checked={datosEnvio.metodoEnvio === "retiro"}
-                  onChange={() => setDatosEnvio({ ...datosEnvio, metodoEnvio: "retiro" })}
-                />
+                  onChange={() =>
+                    setDatosEnvio({ ...datosEnvio, metodoEnvio: "retiro" })
+                  }
+                />{" "}
                 Retiro en Local
               </label>
-              <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 cursor-pointer">
+              <label style={{ fontSize: "13px" }}>
                 <input
                   type="radio"
                   name="metodoEnvio"
                   value="envio"
                   checked={datosEnvio.metodoEnvio === "envio"}
-                  onChange={() => setDatosEnvio({ ...datosEnvio, metodoEnvio: "envio" })}
-                />
+                  onChange={() =>
+                    setDatosEnvio({ ...datosEnvio, metodoEnvio: "envio" })
+                  }
+                />{" "}
                 Envío a Domicilio
               </label>
             </div>
@@ -221,26 +322,51 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             {datosEnvio.metodoEnvio === "envio" && (
               <input
                 type="text"
-                placeholder="Dirección de entrega *"
-                value={datosEnvio.direccion || ""}
+                placeholder="Dirección de envío"
+                value={datosEnvio.direccion}
                 onChange={(e) =>
                   setDatosEnvio({ ...datosEnvio, direccion: e.target.value })
                 }
-                className="mb-3 w-full rounded-lg border border-gray-300 p-2.5 text-sm outline-none focus:border-emerald-600"
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  marginBottom: "8px",
+                  borderRadius: "6px",
+                  border: "1px solid #ccc",
+                  boxSizing: "border-box",
+                }}
               />
             )}
 
-            <div className="flex justify-between text-base font-bold text-gray-900 my-4">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "16px",
+                fontWeight: "700",
+                margin: "12px 0",
+              }}
+            >
               <span>Total:</span>
               <span>${totalPrecio}</span>
             </div>
 
             <button
               onClick={enviarAWhatsApp}
-              disabled={procesando}
-              className="w-full rounded-lg bg-emerald-600 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+              disabled={guardandoPedido}
+              style={{
+                width: "100%",
+                background: guardandoPedido ? "#9ca3af" : "#25D366",
+                color: "white",
+                border: "none",
+                padding: "12px",
+                borderRadius: "8px",
+                fontWeight: "700",
+                fontSize: "15px",
+                cursor: guardandoPedido ? "not-allowed" : "pointer",
+              }}
             >
-              {procesando ? "Procesando..." : "Confirmar Pedido por WhatsApp"}
+              {guardandoPedido ? "Procesando..." : "Confirmar Pedido por WhatsApp"}
             </button>
           </div>
         )}
