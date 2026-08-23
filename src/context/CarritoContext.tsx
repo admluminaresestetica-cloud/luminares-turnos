@@ -31,6 +31,7 @@ interface CarritoContextType {
   setDatosEnvio: React.Dispatch<React.SetStateAction<DatosEnvio>>;
   agregarAlCarrito: (producto: Producto) => void;
   restarDelCarrito: (id: number | string) => void;
+  restarUnidad: (id: number | string) => void; // <-- Agregado para compatibilidad
   eliminarDelCarrito: (id: number | string) => void;
   vaciarCarrito: () => void;
   total: number;
@@ -66,7 +67,6 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
   }, [carrito]);
 
   const agregarAlCarrito = (producto: Producto) => {
-    // Si el producto está inactivo/pausado
     if (producto.activo === false) {
       alert("Este producto no está disponible en este momento.");
       return;
@@ -77,7 +77,6 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
       const stockDisponible = producto.stock ?? 0;
       const cantidadActual = existe ? existe.cantidad : 0;
 
-      // Validar si supera el stock disponible
       if (cantidadActual + 1 > stockDisponible) {
         alert(`Solo hay ${stockDisponible} unidad(es) disponible(s) de este producto.`);
         return prev;
@@ -129,6 +128,7 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
         setDatosEnvio,
         agregarAlCarrito,
         restarDelCarrito,
+        restarUnidad: restarDelCarrito, // <-- Mapeado aquí para CarritoDrawer.tsx
         eliminarDelCarrito,
         vaciarCarrito,
         total,
