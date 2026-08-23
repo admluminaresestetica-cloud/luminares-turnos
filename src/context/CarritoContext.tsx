@@ -21,6 +21,7 @@ export const CarritoProvider = ({ children }: { children: React.ReactNode }) => 
   const [carrito, setCarrito] = useState<CarritoItem[]>([]);
   const [datosEnvio, setDatosEnvio] = useState<DatosEnvio>({
     nombreCliente: '',
+    telefonoCliente: '', // <-- Agregado para el teléfono/WhatsApp
     direccion: '',
     metodoEnvio: 'retiro',
     notaAdicional: '',
@@ -46,11 +47,26 @@ export const CarritoProvider = ({ children }: { children: React.ReactNode }) => 
   const agregarAlCarrito = (producto: Producto) => {
     setCarrito((prev) => {
       const existe = prev.find((item) => item.id === producto.id);
+      const cantidadActual = existe ? existe.cantidad : 0;
+
+      // Validar si el producto está pausado o inactivo
+      if (producto.activo === false) {
+        alert('Este producto no está disponible temporalmente.');
+        return prev;
+      }
+
+      // Validar límite de stock disponible en Supabase
+      if (cantidadActual + 1 > producto.stock) {
+        alert(`Solo hay ${producto.stock} unidad(es) disponible(s) de este producto.`);
+        return prev;
+      }
+
       if (existe) {
         return prev.map((item) =>
           item.id === producto.id ? { ...item, cantidad: item.cantidad + 1 } : item
         );
       }
+
       return [...prev, { ...producto, cantidad: 1 }];
     });
   };
