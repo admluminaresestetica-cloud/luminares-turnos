@@ -21,6 +21,7 @@ export const CarritoProvider = ({ children }: { children: React.ReactNode }) => 
   const [carrito, setCarrito] = useState<CarritoItem[]>([]);
   const [datosEnvio, setDatosEnvio] = useState<DatosEnvio>({
     nombreCliente: '',
+    telefonoCliente: '', // <-- Nuevo campo para WhatsApp / Teléfono
     direccion: '',
     metodoEnvio: 'retiro',
     notaAdicional: '',
@@ -46,11 +47,25 @@ export const CarritoProvider = ({ children }: { children: React.ReactNode }) => 
   const agregarAlCarrito = (producto: Producto) => {
     setCarrito((prev) => {
       const existe = prev.find((item) => item.id === producto.id);
+      const stockDisponible = producto.stock ?? 0;
+
       if (existe) {
+        // Validar que no supere el stock disponible de Supabase
+        if (existe.cantidad >= stockDisponible) {
+          alert(`Llegaste al límite. El stock disponible de "${producto.nombre}" es de ${stockDisponible} unidades.`);
+          return prev;
+        }
         return prev.map((item) =>
           item.id === producto.id ? { ...item, cantidad: item.cantidad + 1 } : item
         );
       }
+
+      // Si no existe en el carrito pero no hay stock disponible
+      if (stockDisponible < 1) {
+        alert('Este producto no tiene stock disponible.');
+        return prev;
+      }
+
       return [...prev, { ...producto, cantidad: 1 }];
     });
   };
@@ -63,7 +78,6 @@ export const CarritoProvider = ({ children }: { children: React.ReactNode }) => 
           item.id === id ? { ...item, cantidad: item.cantidad - 1 } : item
         );
       }
-      // Si la cantidad es 1 y resta, lo elimina del carrito
       return prev.filter((item) => item.id !== id);
     });
   };
