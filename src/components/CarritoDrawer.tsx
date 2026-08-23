@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useCarrito } from "@/context/CarritoContext";
+import { supabase } from "@/lib/supabase";
 
 interface CarritoDrawerProps {
   isOpen: boolean;
@@ -20,42 +21,82 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     setDatosEnvio,
   } = useCarrito();
 
-  const [telefonoWhatsApp, setTelefonoWhatsApp] = useState("5493413954355"); // Cambiá por tu número real con código de país
+  const [telefonoWhatsApp] = useState("549XXXXXXXXX"); // Cambiá por tu número real con código de país
+  const [procesando, setProcesando] = useState(false);
 
   if (!isOpen) return null;
 
-  const enviarAWhatsApp = () => {
+  const enviarAWhatsApp = async () => {
     if (!datosEnvio.nombreCliente.trim()) {
       alert("Por favor, ingresá tu nombre para continuar.");
       return;
     }
 
-    let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
-    mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
-    mensaje += `*Método:* ${
-      datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"
-    }\n`;
-
-    if (datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion) {
-      mensaje += `*Dirección:* ${datosEnvio.direccion}\n`;
+    if (datosEnvio.metodoEnvio === "envio" && !datosEnvio.direccion.trim()) {
+      alert("Por favor, ingresá tu dirección para el envío.");
+      return;
     }
 
-    if (datosEnvio.notaAdicional) {
-      mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
+    setProcesando(true);
+
+    try {
+      // 1. Guardar el pedido y descontar stock en Supabase mediante RPC
+      // 1. Guardar el pedido en Supabase en estado pendiente (sin descontar stock todavía)
+      const { data, error } = await supabase.rpc("registrar_pedido_pendiente", {
+        p_nombre_cliente: datosEnvio.nombreCliente,
+        p_metodo_envio: datosEnvio.metodoEnvio,
+        p_direccion: datosEnvio.metodoEnvio === "envio" ? datosEnvio.direccion : "",
+        p_nota_adicional: datosEnvio.notaAdicional || "",
+        p_total: totalPrecio,
+        p_items: carrito.map((item) => ({
+          id: item.id,
+          nombre: item.nombre,
+          precio: item.precio,
+          cantidad: item.cantidad,
+        })),
+      });
+
+      if (error) {
+        console.error("Error al registrar pedido:", error);
+        alert(`Ocurrió un error al procesar el pedido: ${error.message}`);
+        setProcesando(false);
+        return;
+      }
+      // 2. Construir el mensaje de WhatsApp
+      let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
+      mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
+      mensaje += `*Método:* ${
+        datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"
+      }\n`;
+
+      if (datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion) {
+        mensaje += `*Dirección:* ${datosEnvio.direccion}\n`;
+      }
+
+      if (datosEnvio.notaAdicional) {
+        mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
+      }
+
+      mensaje += `\n*Detalle del pedido:*\n`;
+      carrito.forEach((item) => {
+        mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
+      });
+
+      mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
+      mensaje += `Quedo a la espera de los datos para concretar la compra.`;
+
+      // 3. Abrir WhatsApp, vaciar el carrito y cerrar el Drawer
+      const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+      window.open(url, "_blank");
+
+      vaciarCarrito();
+      onClose();
+    } catch (err) {
+      console.error("Error inesperado:", err);
+      alert("Ocurrió un error inesperado al procesar la compra.");
+    } finally {
+      setProcesando(false);
     }
-
-    mensaje += `\n*Detalle del pedido:*\n`;
-    carrito.forEach((item) => {
-      mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
-    });
-
-    mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
-    mensaje += `Quedo a la espera de los datos para concretar la compra.`;
-
-    const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(
-      mensaje
-    )}`;
-    window.open(url, "_blank");
   };
 
   return (
@@ -116,11 +157,11 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           </div>
 
           {/* Lista de productos agregados */}
-{carrito.length === 0 ? (
-  <p style={{ textAlign: "center", color: "#6b7280", marginTop: "40px", marginBottom: "40px" }}>
-    El carrito está vacío.
-  </p>
-) : (
+          {carrito.length === 0 ? (
+            <p style={{ textAlign: "center", color: "#6b7280", marginTop: "40px", marginBottom: "40px" }}>
+              El carrito está vacío.
+            </p>
+          ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {carrito.map((item) => (
                 <div
@@ -273,19 +314,20 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
             <button
               onClick={enviarAWhatsApp}
+              disabled={procesando}
               style={{
                 width: "100%",
-                background: "#25D366",
+                background: procesando ? "#9ca3af" : "#25D366",
                 color: "white",
                 border: "none",
                 padding: "12px",
                 borderRadius: "8px",
                 fontWeight: "700",
                 fontSize: "15px",
-                cursor: "pointer",
+                cursor: procesando ? "not-allowed" : "pointer",
               }}
             >
-              Confirmar Pedido por WhatsApp
+              {procesando ? "Procesando pedido..." : "Confirmar Pedido por WhatsApp"}
             </button>
           </div>
         )}
