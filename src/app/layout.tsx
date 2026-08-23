@@ -1,23 +1,23 @@
-
-import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Footer from "@/components/footer";
+import { CarritoProvider } from "@/context/CarritoContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
 });
+
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
 });
 
-export const metadata: Metadata = {
-  title: "Centro de Estética — Reservas",
-  description: "Sistema de reservas online para depilación láser y servicios de estética",
+export const metadata = {
+  title: "Luminares - Estética",
+  description: "Servicios de estética y tienda online",
 };
 
 export default function RootLayout({
@@ -28,12 +28,12 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-slate-50/50`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="flex-1">
+        <CarritoProvider>
           {children}
-        </div>
-        <Footer />
+          <Footer />
+        </CarritoProvider>
       </body>
     </html>
   );

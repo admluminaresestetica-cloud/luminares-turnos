@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-import ProductoCard from "@/app/tienda/components/ProductoCard";
-import CarritoModal from "@/app/tienda/components/CarritoModal";
+import ProductoCard from "@/components/ProductoCard";
+import CarritoDrawer from "@/components/CarritoDrawer";
+import { useCarrito } from "@/context/CarritoContext";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,10 +15,11 @@ export default function TiendaPage() {
   const [mounted, setMounted] = useState(false);
   const [productos, setProductos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<string[]>(["Todos"]);
-  const [carrito, setCarrito] = useState<any[]>([]);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("Todos");
+
+  const { totalItems } = useCarrito();
 
   useEffect(() => {
     setMounted(true);
@@ -56,23 +58,6 @@ export default function TiendaPage() {
     return coincideBusqueda && coincideCategoria;
   });
 
-  const agregarAlCarrito = (producto: any) => {
-    setCarrito([...carrito, producto]);
-  };
-
-  const eliminarDelCarrito = (index: number) => {
-    const nuevoCarrito = carrito.filter((_, i) => i !== index);
-    setCarrito(nuevoCarrito);
-  };
-
-  const enviarWhatsApp = () => {
-    const resumen = carrito.map((p) => `• ${p.nombre} ($${p.precio})`).join("%0A");
-    const total = carrito.reduce((acc, p) => acc + Number(p.precio), 0);
-    const mensaje = `Hola! Quiero encargar los siguientes productos:%0A%0A${resumen}%0A%0A*TOTAL: $${total}*%0A%0A¿Cómo coordinamos el pago y la entrega?`;
-
-    window.open(`https://wa.me/5493413954355?text=${mensaje}`, "_blank");
-  };
-
   return (
     <div className="min-h-screen bg-[#F7F7F5] text-[#12151B]">
       {/* Navbar */}
@@ -91,9 +76,9 @@ export default function TiendaPage() {
           className="relative flex items-center gap-2 rounded-full border border-[#E7E5E0] bg-white px-5 py-2.5 text-sm font-semibold text-[#12151B] transition-colors hover:border-[#12151B]"
         >
           🛒 Mi Carrito
-          {carrito.length > 0 && (
+          {totalItems > 0 && (
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0E6E55] text-[11px] font-bold text-white">
-              {carrito.length}
+              {totalItems}
             </span>
           )}
         </button>
@@ -116,7 +101,7 @@ export default function TiendaPage() {
         />
         <div className="relative mx-auto max-w-2xl">
           <span className="mb-4 inline-block rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-[#D9B87A]">
-            TIENDA LUMINARES
+            CATÁLOGO
           </span>
           <h1 className="m-0 mb-3 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
             Encontrá lo que buscás al mejor precio
@@ -173,21 +158,17 @@ export default function TiendaPage() {
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
             {productosFiltrados.map((p) => (
-              <ProductoCard key={p.id} producto={p} onAgregar={agregarAlCarrito} />
+              <ProductoCard key={p.id} producto={p} />
             ))}
           </div>
         )}
       </div>
 
-      {/* Modal del carrito */}
-      {modalAbierto && (
-        <CarritoModal
-          carrito={carrito}
-          onClose={() => setModalAbierto(false)}
-          onEliminar={eliminarDelCarrito}
-          onEnviar={enviarWhatsApp}
-        />
-      )}
+      {/* Drawer / Modal del carrito */}
+      <CarritoDrawer
+        isOpen={modalAbierto}
+        onClose={() => setModalAbierto(false)}
+      />
     </div>
   );
 }
