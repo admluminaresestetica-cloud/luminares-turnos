@@ -1,109 +1,182 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useCarrito } from "@/context/CarritoContext";
+import React from 'react';
+import { Producto } from '@/types/tienda';
+import { useCarrito } from '@/context/CarritoContext';
 
-interface Producto {
-  id: string;
-  nombre: string;
-  precio: number;
-  precio_original?: number;
-  descripcion?: string;
-  imagen_url?: string;
-  categoria?: string;
-  stock?: number;
-  disponible?: boolean;
+interface ProductoCardProps {
+  producto: Producto;
 }
 
-export default function ProductoCard({ producto }: { producto: Producto }) {
+export default function ProductoCard({ producto }: ProductoCardProps) {
   const { carrito, agregarAlCarrito, restarUnidad } = useCarrito();
 
   const itemEnCarrito = carrito.find((item) => item.id === producto.id);
-  const cantidad = itemEnCarrito ? itemEnCarrito.cantidad : 0;
+  const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
-  const tieneDescuento =
-    producto.precio_original && producto.precio_original > producto.precio;
-  const porcentajeDescuento = tieneDescuento
-    ? Math.round(
-        ((producto.precio_original! - producto.precio) /
-          producto.precio_original!) *
-          100
-      )
-    : 0;
+   const stockDisponible = producto.stock ?? 0;
+  const estaPausado = producto.activo === false;
+  const sinStock = stockDisponible <= 0 || estaPausado;
+  const alcanzoLimiteStock = cantidadEnCarrito >= stockDisponible;
+
+  // Número de WhatsApp e ingreso de mensaje automático para reingreso
+  const numeroTelefono = "5493413954355"; // Reemplazá por tu número de WhatsApp real con código de país
+  const mensajeWA = encodeURIComponent(
+    `¡Hola! Quería consultar cuándo vuelve a ingresar el producto: ${producto.nombre}`
+  );
+  const urlWhatsApp = `https://wa.me/${numeroTelefono}?text=${mensajeWA}`;
+
 
   return (
-    <div className="relative flex flex-col justify-between rounded-3xl border border-[#E7E5E0] bg-white p-6 shadow-sm transition-all hover:border-[#12151B]/20">
-      {/* Badge de Descuento con solapa doblada exacto */}
-      {tieneDescuento && (
-        <div className="absolute top-4 left-0 z-10">
-          <span className="bg-[#E54D42] text-white text-xs font-bold px-2.5 py-1 rounded-r-md shadow-sm inline-block">
-            -{porcentajeDescuento}%
-          </span>
-        </div>
+    <div
+      style={{
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        padding: '16px',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        opacity: sinStock ? 0.65 : 1,
+        backgroundColor: '#ffffff',
+      }}
+    >
+      {sinStock && (
+        <span
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            backgroundColor: '#ef4444',
+            color: '#ffffff',
+            fontSize: '11px',
+            fontWeight: 'bold',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            textTransform: 'uppercase',
+          }}
+        >
+          {estaPausado ? 'No disponible' : 'Sin Stock'}
+        </span>
       )}
 
       <div>
-        {/* Contenedor de Imagen Limpia sin fondo */}
         {producto.imagen_url && (
-          <div className="relative mb-3 flex h-52 w-full items-center justify-center">
-            <img
-              src={producto.imagen_url}
-              alt={producto.nombre}
-              className="max-h-full max-w-full object-contain"
-            />
-          </div>
+          <img
+            src={producto.imagen_url}
+            alt={producto.nombre}
+            style={{
+              width: '100%',
+              height: '160px',
+              objectFit: 'cover',
+              borderRadius: '6px',
+              marginBottom: '12px',
+            }}
+          />
         )}
-
-        <h3 className="m-0 text-base font-bold text-[#12151B]">
+        <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 4px 0' }}>
           {producto.nombre}
         </h3>
-
         {producto.descripcion && (
-          <p className="mt-1 mb-4 text-xs text-[#6B675F] line-clamp-2 leading-relaxed">
+          <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>
             {producto.descripcion}
           </p>
         )}
+        <div style={{ fontSize: '18px', fontWeight: '700', color: '#111827' }}>
+          ${producto.precio}
+        </div>
       </div>
 
-      <div>
-        {/* Precios */}
-        <div className="mb-4 flex items-baseline gap-2">
-          <span className="text-xl font-extrabold text-[#12151B]">
-            ${producto.precio}
-          </span>
-          {producto.precio_original && (
-            <span className="text-sm font-medium text-[#A6A29B] line-through">
-              ${producto.precio_original}
-            </span>
-          )}
-        </div>
-
-        {/* Botón de acción con el tono verde/azul oscuro original */}
-        {cantidad === 0 ? (
+      <div style={{ marginTop: '16px' }}>
+               {sinStock ? (
+          estaPausado ? (
+            <button
+              disabled
+              style={{
+                width: '100%',
+                padding: '8px',
+                backgroundColor: '#d1d5db',
+                color: '#6b7280',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: '600',
+                cursor: 'not-allowed',
+              }}
+            >
+              Pausado
+            </button>
+          ) : (
+            <a
+              href={urlWhatsApp}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '8px',
+                backgroundColor: '#25D366',
+                color: '#ffffff',
+                textAlign: 'center',
+                borderRadius: '6px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                boxSizing: 'border-box',
+              }}
+            >
+              Consultar Reingreso 💬
+            </a>
+          )
+        ) : cantidadEnCarrito > 0 ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                onClick={() => restarUnidad(producto.id)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc',
+                  cursor: 'pointer',
+                }}
+              >
+                -
+              </button>
+              <span style={{ fontWeight: '600' }}>{cantidadEnCarrito}</span>
+              <button
+                onClick={() => agregarAlCarrito(producto)}
+                disabled={alcanzoLimiteStock}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc',
+                  cursor: alcanzoLimiteStock ? 'not-allowed' : 'pointer',
+                  opacity: alcanzoLimiteStock ? 0.4 : 1,
+                }}
+              >
+                +
+              </button>
+            </div>
+            {alcanzoLimiteStock && (
+              <span style={{ fontSize: '11px', color: '#dc2626', fontWeight: '500' }}>
+                Máx. alcanzado
+              </span>
+            )}
+          </div>
+        ) : (
           <button
             onClick={() => agregarAlCarrito(producto)}
-            className="w-full rounded-2xl bg-[#0F4C42] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#0A3730]"
+            style={{
+              width: '100%',
+              padding: '8px',
+              backgroundColor: '#2563eb',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              fontWeight: '600',
+              cursor: 'pointer',
+            }}
           >
-            Agregar al carrito
+            Agregar al Carrito
           </button>
-        ) : (
-          <div className="flex items-center justify-between rounded-2xl border border-[#E7E5E0] bg-[#F7F7F5] p-1.5">
-            <button
-              onClick={() => restarUnidad(producto.id)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white font-bold text-[#12151B] shadow-sm hover:bg-gray-100"
-            >
-              -
-            </button>
-            <span className="font-bold text-[#12151B] text-sm">
-              {cantidad}
-            </span>
-            <button
-              onClick={() => agregarAlCarrito(producto)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-white font-bold text-[#12151B] shadow-sm hover:bg-gray-100"
-            >
-              +
-            </button>
-          </div>
         )}
       </div>
     </div>

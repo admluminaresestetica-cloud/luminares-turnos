@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import FormularioProducto from "./components/FormularioProducto";
 import ListaProductos from "./components/ListaProductos";
+import PedidosTab, { Pedido } from "./components/PedidosTab";
+import MetricasHeader from "./components/MetricasHeader";
+import CategoriasTab from "./components/CategoriasTab";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,23 +13,28 @@ const supabase = createClient(
 );
 
 export default function AdminTiendaPage() {
+  const [activeTab, setActiveTab] = useState<"catalogo" | "pedidos">("catalogo");
   const [mounted, setMounted] = useState(false);
+
+  // Estados de datos
   const [productos, setProductos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
-  const [nuevaCategoria, setNuevaCategoria] = useState("");
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+
+  // Estados de carga e interacción
   const [cargandoCat, setCargandoCat] = useState(false);
   const [productoEditando, setProductoEditando] = useState<any | null>(null);
+  const [cargandoPedidos, setCargandoPedidos] = useState(false);
+  const [procesandoPedidoId, setProcesandoPedidoId] = useState<string | null>(null);
 
+  // Fetchers
   const fetchProductos = async () => {
     const { data, error } = await supabase
       .from("productos")
       .select("*")
       .order("id", { ascending: false });
-    if (error) {
-      console.error("Error al cargar productos:", error);
-    } else {
-      setProductos(data || []);
-    }
+    if (error) console.error("Error al cargar productos:", error);
+    else setProductos(data || []);
   };
 
   const fetchCategorias = async () => {
@@ -34,26 +42,33 @@ export default function AdminTiendaPage() {
       .from("categorias")
       .select("*")
       .order("nombre", { ascending: true });
-    if (error) {
-      console.error("Error al cargar categorías:", error);
-    } else {
-      setCategorias(data || []);
-    }
+    if (error) console.error("Error al cargar categorías:", error);
+    else setCategorias(data || []);
+  };
+
+  const fetchPedidos = async () => {
+    setCargandoPedidos(true);
+    const { data, error } = await supabase
+      .from("pedidos")
+      .select("*, pedido_items(*)")
+      .order("created_at", { ascending: false });
+
+    if (error) console.error("Error al cargar pedidos:", error);
+    else setPedidos(data || []);
+    setCargandoPedidos(false);
   };
 
   useEffect(() => {
     setMounted(true);
     fetchProductos();
     fetchCategorias();
+    fetchPedidos();
   }, []);
 
   if (!mounted) return null;
 
-  const handleCrearCategoria = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const nombreLimpio = nuevaCategoria.trim();
-    if (!nombreLimpio) return;
-
+  // Handlers Categorías
+  const handleCrearCategoria = async (nombreLimpio: string) => {
     setCargandoCat(true);
     const { error } = await supabase
       .from("categorias")
@@ -62,7 +77,6 @@ export default function AdminTiendaPage() {
     if (error) {
       alert("Error al crear categoría: " + error.message);
     } else {
-      setNuevaCategoria("");
       fetchCategorias();
     }
     setCargandoCat(false);
@@ -86,34 +100,99 @@ export default function AdminTiendaPage() {
     }
 
     const { error } = await supabase.from("categorias").delete().eq("id", cat.id);
-    if (error) {
-      alert("Error al eliminar categoría");
-    } else {
+    if (error) alert("Error al eliminar categoría");
+    else {
       fetchCategorias();
       fetchProductos();
     }
   };
 
-  const handleDeleteProducto = async (id: number) => {
+  // Handlers Productos
+  const handleDeleteProducto = async (id: any) => {
     if (!confirm("¿Estás segura de eliminar este producto?")) return;
     const { error } = await supabase.from("productos").delete().eq("id", id);
+    if (error) alert("Error al eliminar");
+    else fetchProductos();
+  };
+
+  // Handler para sumar o restar unidades al stock (Restock/Ajuste)
+  const handleRestock = async (id: any, cantidadAjuste: number) => {
+    const productoActual = productos.find((p) => p.id === id);
+    if (!productoActual) return;
+
+    const stockActual = Number(productoActual.stock) || 0;
+    const nuevoStock = Math.max(0, stockActual + Number(cantidadAjuste));
+
+    const { error } = await supabase
+      .from("productos")
+      .update({ stock: nuevoStock })
+      .eq("id", id);
+
     if (error) {
-      alert("Error al eliminar");
+      console.error("Error al ajustar stock:", error);
+      alert("No se pudo actualizar el stock.");
     } else {
       fetchProductos();
     }
   };
 
+  // Handler para alternar entre Activo y Pausado
+  const handleToggleActivo = async (id: any, estaPausado: boolean) => {
+    const nuevoEstado = estaPausado; // Si estaba pausado (activo === false), pasa a true y viceversa
+
+    const { error } = await supabase
+      .from("productos")
+      .update({ activo: nuevoEstado })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error al cambiar estado:", error);
+      alert("No se pudo cambiar el estado del producto.");
+    } else {
+      fetchProductos();
+    }
+  };
+
+  // Handlers Pedidos
+  const handleAprobarPedido = async (pedidoId: string) => {
+    if (!confirm("¿Confirmás la aprobación del pedido? Esto descontará las unidades del stock actual.")) {
+      return;
+    }
+
+    setProcesandoPedidoId(pedidoId);
+    const { error } = await supabase.rpc("aprobar_pedido_y_descontar_stock", {
+      p_pedido_id: pedidoId,
+    });
+
+    if (error) {
+      alert(`Error al aprobar pedido: ${error.message}`);
+    } else {
+      alert("¡Pedido aprobado y stock descontado con éxito!");
+      fetchPedidos();
+      fetchProductos();
+    }
+    setProcesandoPedidoId(null);
+  };
+
+  const handleCancelarPedido = async (pedidoId: string) => {
+    if (!confirm("¿Estás seguro de cancelar este pedido?")) return;
+
+    setProcesandoPedidoId(pedidoId);
+    const { error } = await supabase
+      .from("pedidos")
+      .update({ estado: "cancelado" })
+      .eq("id", pedidoId);
+
+    if (error) alert("Error al cancelar el pedido.");
+    else fetchPedidos();
+
+    setProcesandoPedidoId(null);
+  };
+
+  // Cálculo de Métricas
   const totalProductos = productos.length;
   const stockTotal = productos.reduce((acc, p) => acc + (Number(p.stock) || 0), 0);
-  const ofertasActivas = productos.filter((p) => p.precio_original).length;
-
-  const metricas = [
-    { label: "Productos", valor: totalProductos, icono: "📦" },
-    { label: "Categorías activas", valor: categorias.length, icono: "🏷️" },
-    { label: "Unidades en stock", valor: stockTotal, icono: "📊" },
-    { label: "Ofertas activas", valor: ofertasActivas, icono: "🔥" },
-  ];
+  const pedidosPendientes = pedidos.filter((p) => p.estado === "pendiente").length;
 
   return (
     <div className="min-h-screen bg-[#F7F7F5]">
@@ -136,84 +215,79 @@ export default function AdminTiendaPage() {
 
       <div className="mx-auto max-w-[1100px] px-6 py-8 sm:px-10">
         {/* Métricas rápidas */}
-        <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {metricas.map((m) => (
-            <div
-              key={m.label}
-              className="rounded-2xl border border-[#E7E5E0] bg-white p-4 transition-shadow hover:shadow-[0_10px_25px_-12px_rgba(11,15,20,0.15)]"
-            >
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-lg">{m.icono}</span>
-              </div>
-              <p className="m-0 text-2xl font-bold text-[#12151B]">{m.valor}</p>
-              <p className="m-0 mt-1 text-xs font-medium text-[#6B675F]">{m.label}</p>
-            </div>
-          ))}
+        <MetricasHeader
+          totalProductos={totalProductos}
+          stockTotal={stockTotal}
+          pedidosPendientes={pedidosPendientes}
+          totalCategorias={categorias.length}
+        />
+
+        {/* Navigation Tabs */}
+        <div className="mb-6 flex gap-4 border-b border-[#E7E5E0]">
+          <button
+            onClick={() => setActiveTab("catalogo")}
+            className={`pb-3 text-sm font-bold transition-colors ${
+              activeTab === "catalogo"
+                ? "border-b-2 border-[#0E6E55] text-[#0E6E55]"
+                : "text-[#6B675F] hover:text-[#12151B]"
+            }`}
+          >
+            📦 Catálogo y Stock
+          </button>
+          <button
+            onClick={() => setActiveTab("pedidos")}
+            className={`pb-3 text-sm font-bold transition-colors ${
+              activeTab === "pedidos"
+                ? "border-b-2 border-[#0E6E55] text-[#0E6E55]"
+                : "text-[#6B675F] hover:text-[#12151B]"
+            }`}
+          >
+            📋 Historial de Pedidos {pedidosPendientes > 0 && `(${pedidosPendientes})`}
+          </button>
         </div>
 
-        {/* Sección Categorías */}
-        <div className="mb-8 rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-sm">
-          <h2 className="m-0 text-lg font-bold text-[#12151B]">
-            🏷️ Gestión de Categorías
-          </h2>
-
-          <form onSubmit={handleCrearCategoria} className="mt-4 flex gap-3">
-            <input
-              type="text"
-              placeholder="Nombre de la nueva categoría"
-              value={nuevaCategoria}
-              onChange={(e) => setNuevaCategoria(e.target.value)}
-              className="flex-1 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-4 py-2.5 text-sm outline-none focus:border-[#0E6E55] focus:bg-white"
+        {/* Tab 1: Catálogo y Stock */}
+        {activeTab === "catalogo" && (
+          <>
+            <CategoriasTab
+              categorias={categorias}
+              cargandoCat={cargandoCat}
+              onCrearCategoria={handleCrearCategoria}
+              onEliminarCategoria={handleEliminarCategoria}
             />
-            <button
-              type="submit"
-              disabled={cargandoCat || !nuevaCategoria.trim()}
-              className="rounded-xl bg-[#0E6E55] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#0A5340] disabled:opacity-50"
-            >
-              {cargandoCat ? "Guardando..." : "Guardar Categoría"}
-            </button>
-          </form>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            {categorias.length === 0 ? (
-              <p className="text-xs text-[#6B675F]">No hay categorías creadas aún.</p>
-            ) : (
-              categorias.map((cat) => (
-                <span
-                  key={cat.id}
-                  className="inline-flex items-center gap-2 rounded-lg border border-[#E7E5E0] bg-[#F7F7F5] px-3 py-1.5 text-xs font-medium text-[#12151B]"
-                >
-                  {cat.nombre}
-                  <button
-                    onClick={() => handleEliminarCategoria(cat)}
-                    className="ml-1 font-bold text-[#C84343] hover:text-red-700"
-                  >
-                    ✕
-                  </button>
-                </span>
-              ))
-            )}
-          </div>
-        </div>
+            <FormularioProducto
+              onProductoAgregado={fetchProductos}
+              supabase={supabase}
+              categorias={categorias}
+              productoEditando={productoEditando}
+              onCancelarEdicion={() => setProductoEditando(null)}
+            />
 
-        {/* Formulario */}
-        <FormularioProducto
-          onProductoAgregado={fetchProductos}
-          supabase={supabase}
-          categorias={categorias}
-          productoEditando={productoEditando}
-          onCancelarEdicion={() => setProductoEditando(null)}
-        />
+            <ListaProductos
+              productos={productos}
+              onEliminar={handleDeleteProducto}
+              onEditar={(prod) => {
+                setProductoEditando(prod);
+                window.scrollTo({ top: 300, behavior: "smooth" });
+              }}
+              onRestock={handleRestock}
+              onToggleActivo={handleToggleActivo}
+            />
+          </>
+        )}
 
-        {/* Lista con botón de Editar */}
-        <ListaProductos
-          productos={productos}
-          onEliminar={handleDeleteProducto}
-          onEditar={(prod) => {
-            setProductoEditando(prod);
-            window.scrollTo({ top: 300, behavior: "smooth" });
-          }}
-        />
+        {/* Tab 2: Historial de Pedidos */}
+        {activeTab === "pedidos" && (
+          <PedidosTab
+            pedidos={pedidos}
+            cargandoPedidos={cargandoPedidos}
+            procesandoPedidoId={procesandoPedidoId}
+            onFetchPedidos={fetchPedidos}
+            onAprobarPedido={handleAprobarPedido}
+            onCancelarPedido={handleCancelarPedido}
+          />
+        )}
       </div>
     </div>
   );
