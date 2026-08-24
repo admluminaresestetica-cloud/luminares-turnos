@@ -14,10 +14,17 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
   const itemEnCarrito = carrito.find((item) => item.id === producto.id);
   const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
-  const stockDisponible = producto.stock ?? 0;
+    const stockDisponible = producto.stock ?? 0;
   const estaPausado = producto.activo === false;
   const sinStock = stockDisponible <= 0 || estaPausado;
   const alcanzoLimiteStock = cantidadEnCarrito >= stockDisponible;
+
+  // Número de WhatsApp e ingreso de mensaje automático para reingreso
+  const numeroTelefono = "5491112345678"; // Reemplazá por tu número de WhatsApp real con código de país
+  const mensajeWA = encodeURIComponent(
+    `¡Hola! Quería consultar cuándo vuelve a ingresar el producto: ${producto.nombre}`
+  );
+  const urlWhatsApp = `https://wa.me/${5493413954355}?text=${mensajeWA}`;
 
   return (
     <div
