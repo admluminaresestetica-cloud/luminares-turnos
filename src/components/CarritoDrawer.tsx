@@ -47,7 +47,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     setGuardandoPedido(true);
 
     try {
-      // 1. Guardar el pedido en estado 'pendiente' (NO modifica stock)
+      // 1. Guardar en la tabla 'pedidos' incluyendo el teléfono del cliente
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
         .insert([
@@ -55,21 +55,23 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             nombre_cliente: datosEnvio.nombreCliente.trim(),
             telefono_cliente: datosEnvio.telefonoCliente.trim() || null,
             metodo_envio: datosEnvio.metodoEnvio,
-            direccion: datosEnvio.metodoEnvio === "envio" ? datosEnvio.direccion.trim() : null,
-            nota_adicional: datosEnvio.notaAdicional.trim() || null,
             total: totalPrecio,
             estado: "pendiente",
+            direccion: datosEnvio.metodoEnvio === "envio" ? datosEnvio.direccion.trim() : null,
+            nota_adicional: datosEnvio.notaAdicional.trim() || null,
           },
         ])
-        .select()
-        .single();
+        .select();
 
-      if (pedidoError) throw pedidoError;
+      if (pedidoError) {
+        console.error("Error al insertar pedido:", pedidoError);
+      }
 
-      // 2. Guardar los ítems del pedido
-      if (pedidoData) {
+      // 2. Guardar en 'pedido_items' si el pedido principal se generó con éxito
+      if (pedidoData && pedidoData.length > 0) {
+        const idPedido = pedidoData[0].id;
         const itemsParaInsertar = carrito.map((item) => ({
-          pedido_id: pedidoData.id,
+          pedido_id: idPedido,
           producto_id: item.id,
           nombre_producto: item.nombre,
           precio_unitario: item.precio,
@@ -80,49 +82,48 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           .from("pedido_items")
           .insert(itemsParaInsertar);
 
-        if (itemsError) throw itemsError;
+        if (itemsError) {
+          console.error("Error al insertar items:", itemsError);
+        }
       }
-
-      // 3. Redirigir a WhatsApp
-      let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
-      mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
-      if (datosEnvio.telefonoCliente) {
-        mensaje += `*Teléfono:* ${datosEnvio.telefonoCliente}\n`;
-      }
-      mensaje += `*Método:* ${
-        datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"
-      }\n`;
-
-      if (datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion) {
-        mensaje += `*Dirección:* ${datosEnvio.direccion}\n`;
-      }
-
-      if (datosEnvio.notaAdicional) {
-        mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
-      }
-
-      mensaje += `\n*Detalle del pedido:*\n`;
-      carrito.forEach((item) => {
-        mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
-      });
-
-      mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
-      mensaje += `Quedo a la espera de los datos para concretar la compra.`;
-
-      const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-      window.open(url, "_blank");
-
-      // 4. Limpiar carrito y mostrar modal de éxito
-      vaciarCarrito();
-      onClose();
-      setMostrarModalExito(true);
-
     } catch (err) {
-      console.error("Error crítico al guardar en Supabase:", err);
-      alert("Hubo un error al registrar el pedido en la base de datos. Revisa la conexión o intenta nuevamente.");
-    } finally {
-      setGuardandoPedido(false);
+      console.error("Excepción:", err);
     }
+
+    // 3. Generar mensaje y abrir WhatsApp
+    let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
+    mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
+    if (datosEnvio.telefonoCliente) {
+      mensaje += `*Teléfono:* ${datosEnvio.telefonoCliente}\n`;
+    }
+    mensaje += `*Método:* ${
+      datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"
+    }\n`;
+
+    if (datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion) {
+      mensaje += `*Dirección:* ${datosEnvio.direccion}\n`;
+    }
+
+    if (datosEnvio.notaAdicional) {
+      mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
+    }
+
+    mensaje += `\n*Detalle del pedido:*\n`;
+    carrito.forEach((item) => {
+      mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
+    });
+
+    mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
+    mensaje += `Quedo a la espera de los datos para concretar la compra.`;
+
+    const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, "_blank");
+
+    // 4. Limpiar estado y mostrar Pop-up verde de éxito
+    vaciarCarrito();
+    setGuardandoPedido(false);
+    onClose();
+    setMostrarModalExito(true);
   };
 
   return (
