@@ -31,7 +31,7 @@ export default function ListaProductos({
   });
 
   const handleConfirmarRestock = (id: number | string) => {
-    if (cantidadRestock === 0 || isNaN(cantidadRestock))     return;
+    if (cantidadRestock === 0 || isNaN(cantidadRestock)) return;
     if (onRestock) {
       onRestock(id, cantidadRestock);
     }
@@ -77,7 +77,7 @@ export default function ListaProductos({
                     <span className="rounded-md bg-white px-2 py-1 text-[11px] font-semibold text-[#6B675F]">
                       {p.categoria || "General"}
                     </span>
-                    
+
                     {/* Botón de Pausa / Activar */}
                     <button
                       onClick={() => onToggleActivo && onToggleActivo(p.id, estaPausado)}
@@ -117,7 +117,7 @@ export default function ListaProductos({
                       </span>
                       <button
                         onClick={() => setModalRestockId(p.id)}
-                        title="Sumar stock"
+                        title="Ajustar stock"
                         className="rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-[#0E6E55] border border-[#E7E5E0] hover:bg-[#E7E5E0]"
                       >
                         + Restock
@@ -147,7 +147,7 @@ export default function ListaProductos({
         </div>
       )}
 
-            {/* Modal de Re-stock / Ajuste de Stock */}
+      {/* Modal de Re-stock / Ajuste de Stock */}
       {modalRestockId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-xs rounded-2xl border border-[#E7E5E0] bg-white p-5 shadow-lg">
@@ -180,3 +180,6 @@ export default function ListaProductos({
           </div>
         </div>
       )}
+    </div>
+  );
+}
