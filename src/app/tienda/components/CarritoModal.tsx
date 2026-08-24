@@ -52,9 +52,13 @@ export default function CarritoModal({ carrito, onClose, onEliminar, onEnviar }:
                   key={index}
                   className="flex items-center justify-between rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-4 py-3"
                 >
-                  <div className="pr-3">
-                    <p className="m-0 text-sm font-semibold text-[#12151B]">{p.nombre}</p>
-                    <p className="m-0 mt-1 text-sm font-bold text-[#0E6E55]">${p.precio}</p>
+                <div className="pr-3">
+                    <p className="m-0 text-sm font-semibold text-[#12151B]">
+                      {p.nombre} {p.cantidad > 1 && <span className="text-xs text-[#6B675F]">(x{p.cantidad})</span>}
+                    </p>
+                    <p className="m-0 mt-1 text-sm font-bold text-[#0E6E55]">
+                      ${Number(p.precio) * (p.cantidad || 1)}
+                    </p>
                   </div>
                   <button
                     onClick={() => onEliminar(index)}
