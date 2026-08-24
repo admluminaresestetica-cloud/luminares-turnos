@@ -19,7 +19,7 @@ export default function ListaProductos({
 }: ListaProductosProps) {
   const [busqueda, setBusqueda] = useState("");
   const [modalRestockId, setModalRestockId] = useState<number | string | null>(null);
-  const [cantidadRestock, setCantidadRestock] = useState<number>(1);
+  const [cantidadRestock, setCantidadRestock] = useState<string>("1");
 
   // Buscador por nombre, categoría o precio
   const productosFiltrados = productos.filter((p) => {
