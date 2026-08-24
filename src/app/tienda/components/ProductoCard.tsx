@@ -14,10 +14,18 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
   const itemEnCarrito = carrito.find((item) => item.id === producto.id);
   const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
-  const stockDisponible = producto.stock ?? 0;
+   const stockDisponible = producto.stock ?? 0;
   const estaPausado = producto.activo === false;
   const sinStock = stockDisponible <= 0 || estaPausado;
   const alcanzoLimiteStock = cantidadEnCarrito >= stockDisponible;
+
+  // Número de WhatsApp e ingreso de mensaje automático para reingreso
+  const numeroTelefono = "5493413954355"; // Reemplazá por tu número de WhatsApp real con código de país
+  const mensajeWA = encodeURIComponent(
+    `¡Hola! Quería consultar cuándo vuelve a ingresar el producto: ${producto.nombre}`
+  );
+  const urlWhatsApp = `https://wa.me/${numeroTelefono}?text=${mensajeWA}`;
+
 
   return (
     <div
@@ -80,22 +88,44 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
       </div>
 
       <div style={{ marginTop: '16px' }}>
-        {sinStock ? (
-          <button
-            disabled
-            style={{
-              width: '100%',
-              padding: '8px',
-              backgroundColor: '#d1d5db',
-              color: '#6b7280',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: '600',
-              cursor: 'not-allowed',
-            }}
-          >
-            {estaPausado ? 'Pausado' : 'Agotado'}
-          </button>
+               {sinStock ? (
+          estaPausado ? (
+            <button
+              disabled
+              style={{
+                width: '100%',
+                padding: '8px',
+                backgroundColor: '#d1d5db',
+                color: '#6b7280',
+                border: 'none',
+                borderRadius: '6px',
+                fontWeight: '600',
+                cursor: 'not-allowed',
+              }}
+            >
+              Pausado
+            </button>
+          ) : (
+            <a
+              href={urlWhatsApp}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '8px',
+                backgroundColor: '#25D366',
+                color: '#ffffff',
+                textAlign: 'center',
+                borderRadius: '6px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                boxSizing: 'border-box',
+              }}
+            >
+              Consultar Reingreso 💬
+            </a>
+          )
         ) : cantidadEnCarrito > 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

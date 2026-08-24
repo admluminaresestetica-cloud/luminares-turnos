@@ -19,7 +19,7 @@ export default function ListaProductos({
 }: ListaProductosProps) {
   const [busqueda, setBusqueda] = useState("");
   const [modalRestockId, setModalRestockId] = useState<number | string | null>(null);
-  const [cantidadRestock, setCantidadRestock] = useState<number>(1);
+  const [cantidadRestock, setCantidadRestock] = useState<string>("1");
 
   // Buscador por nombre, categoría o precio
   const productosFiltrados = productos.filter((p) => {
@@ -30,13 +30,14 @@ export default function ListaProductos({
     return coincideNombre || coincideCategoria || coincidePrecio;
   });
 
-  const handleConfirmarRestock = (id: number | string) => {
-    if (cantidadRestock <= 0) return;
+    const handleConfirmarRestock = (id: number | string) => {
+    const num = Number(cantidadRestock);
+    if (num === 0 || isNaN(num)) return;
     if (onRestock) {
-      onRestock(id, cantidadRestock);
+      onRestock(id, num);
     }
     setModalRestockId(null);
-    setCantidadRestock(1);
+    setCantidadRestock("1");
   };
 
   return (
@@ -77,7 +78,7 @@ export default function ListaProductos({
                     <span className="rounded-md bg-white px-2 py-1 text-[11px] font-semibold text-[#6B675F]">
                       {p.categoria || "General"}
                     </span>
-                    
+
                     {/* Botón de Pausa / Activar */}
                     <button
                       onClick={() => onToggleActivo && onToggleActivo(p.id, estaPausado)}
@@ -117,7 +118,7 @@ export default function ListaProductos({
                       </span>
                       <button
                         onClick={() => setModalRestockId(p.id)}
-                        title="Sumar stock"
+                        title="Ajustar stock"
                         className="rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-[#0E6E55] border border-[#E7E5E0] hover:bg-[#E7E5E0]"
                       >
                         + Restock
@@ -147,21 +148,22 @@ export default function ListaProductos({
         </div>
       )}
 
-      {/* Modal de Re-stock */}
+      {/* Modal de Re-stock / Ajuste de Stock */}
       {modalRestockId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-xs rounded-2xl border border-[#E7E5E0] bg-white p-5 shadow-lg">
             <h3 className="m-0 text-sm font-bold text-[#12151B]">
-              ➕ Sumar Unidades de Stock
+              📦 Ajustar Stock
             </h3>
             <p className="mt-1 text-xs text-[#6B675F]">
-              Ingresá cuántas unidades vas a **sumar** al stock remanente:
+              Ingresá el número a sumar (ej. <strong className="text-[#0E6E55]">5</strong>) o a restar (ej. <strong className="text-[#C84343]">-1</strong>):
             </p>
             <input
-              type="number"
-              min="1"
+              type="text"
+              inputMode="numeric"
               value={cantidadRestock}
-              onChange={(e) => setCantidadRestock(Number(e.target.value))}
+              onChange={(e) => setCantidadRestock(e.target.value)}
+              placeholder="Ej: 5 o -1"
               className="mt-3 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-2 text-sm font-bold text-[#12151B] outline-none focus:border-[#0E6E55]"
             />
             <div className="mt-4 flex justify-end gap-2">
@@ -175,7 +177,7 @@ export default function ListaProductos({
                 onClick={() => handleConfirmarRestock(modalRestockId)}
                 className="rounded-lg bg-[#0E6E55] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#0B5743]"
               >
-                Sumar Stock
+                Aplicar Cambio
               </button>
             </div>
           </div>
