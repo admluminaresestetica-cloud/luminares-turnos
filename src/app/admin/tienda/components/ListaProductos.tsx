@@ -147,19 +147,18 @@ export default function ListaProductos({
         </div>
       )}
 
-      {/* Modal de Re-stock */}
+            {/* Modal de Re-stock / Ajuste de Stock */}
       {modalRestockId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-xs rounded-2xl border border-[#E7E5E0] bg-white p-5 shadow-lg">
             <h3 className="m-0 text-sm font-bold text-[#12151B]">
-              ➕ Sumar Unidades de Stock
+              📦 Ajustar Stock
             </h3>
             <p className="mt-1 text-xs text-[#6B675F]">
-              Ingresá cuántas unidades vas a **sumar** al stock remanente:
+              Ingresá el número a sumar (ej. <strong className="text-[#0E6E55]">5</strong>) o a restar (ej. <strong className="text-[#C84343]">-1</strong>):
             </p>
             <input
               type="number"
-              min="1"
               value={cantidadRestock}
               onChange={(e) => setCantidadRestock(Number(e.target.value))}
               className="mt-3 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-2 text-sm font-bold text-[#12151B] outline-none focus:border-[#0E6E55]"
@@ -175,12 +174,9 @@ export default function ListaProductos({
                 onClick={() => handleConfirmarRestock(modalRestockId)}
                 className="rounded-lg bg-[#0E6E55] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#0B5743]"
               >
-                Sumar Stock
+                Aplicar Cambio
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
-  );
-}
