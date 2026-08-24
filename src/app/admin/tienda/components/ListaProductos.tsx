@@ -30,13 +30,14 @@ export default function ListaProductos({
     return coincideNombre || coincideCategoria || coincidePrecio;
   });
 
-  const handleConfirmarRestock = (id: number | string) => {
-    if (cantidadRestock === 0 || isNaN(cantidadRestock)) return;
+    const handleConfirmarRestock = (id: number | string) => {
+    const num = Number(cantidadRestock);
+    if (num === 0 || isNaN(num)) return;
     if (onRestock) {
-      onRestock(id, cantidadRestock);
+      onRestock(id, num);
     }
     setModalRestockId(null);
-    setCantidadRestock(1);
+    setCantidadRestock("1");
   };
 
   return (
