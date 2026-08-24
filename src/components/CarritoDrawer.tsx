@@ -44,8 +44,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
     setGuardandoPedido(true);
 
-        try {
-      // 1. Guardar en Supabase (de forma no bloqueante para no perder la venta)
+    try {
+      // 1. Intentar guardar en Supabase sin bloquear el flujo principal
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
         .insert([
@@ -86,7 +86,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       console.error("Excepción al guardar pedido en Supabase:", err);
     }
 
-    // 3. Redirección a WhatsApp asegurada
+    // 3. Generar mensaje y redirigir a WhatsApp siempre
     let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
     mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
     if (datosEnvio.telefonoCliente) {
@@ -118,7 +118,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     vaciarCarrito();
     setGuardandoPedido(false);
     onClose();
-
+  };
 
   return (
     <div
