@@ -44,8 +44,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
     setGuardandoPedido(true);
 
-    try {
-      // 1. Guardar el pedido en Supabase
+        try {
+      // 1. Guardar en Supabase (de forma no bloqueante para no perder la venta)
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
         .insert([
@@ -62,61 +62,63 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         .select()
         .single();
 
-      if (pedidoError) throw pedidoError;
+      if (pedidoError) {
+        console.error("Detalle error pedidos en Supabase:", pedidoError);
+      } else if (pedidoData) {
+        // 2. Guardar ítems vinculados al pedido
+        const itemsParaInsertar = carrito.map((item) => ({
+          pedido_id: pedidoData.id,
+          producto_id: item.id,
+          nombre_producto: item.nombre,
+          precio_unitario: item.precio,
+          cantidad: item.cantidad,
+        }));
 
-      // 2. Guardar los ítems del pedido
-      const itemsParaInsertar = carrito.map((item) => ({
-        pedido_id: pedidoData.id,
-        producto_id: item.id,
-        nombre_producto: item.nombre,
-        precio_unitario: item.precio,
-        cantidad: item.cantidad,
-      }));
+        const { error: itemsError } = await supabase
+          .from("pedido_items")
+          .insert(itemsParaInsertar);
 
-      const { error: itemsError } = await supabase
-        .from("pedido_items")
-        .insert(itemsParaInsertar);
-
-      if (itemsError) throw itemsError;
-
-      // 3. Armar mensaje de WhatsApp
-      let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
-      mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
-      if (datosEnvio.telefonoCliente) {
-        mensaje += `*Teléfono:* ${datosEnvio.telefonoCliente}\n`;
+        if (itemsError) {
+          console.error("Detalle error pedido_items en Supabase:", itemsError);
+        }
       }
-      mensaje += `*Método:* ${
-        datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"
-      }\n`;
-
-      if (datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion) {
-        mensaje += `*Dirección:* ${datosEnvio.direccion}\n`;
-      }
-
-      if (datosEnvio.notaAdicional) {
-        mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
-      }
-
-      mensaje += `\n*Detalle del pedido:*\n`;
-      carrito.forEach((item) => {
-        mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
-      });
-
-      mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
-      mensaje += `Quedo a la espera de los datos para concretar la compra.`;
-
-      const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-      window.open(url, "_blank");
-
-      vaciarCarrito();
-      onClose();
-    } catch (error: any) {
-      console.error("Error al registrar el pedido:", error);
-      alert("Hubo un problema al procesar el pedido. Por favor intentá nuevamente.");
-    } finally {
-      setGuardandoPedido(false);
+    } catch (err) {
+      console.error("Excepción al guardar pedido en Supabase:", err);
     }
-  };
+
+    // 3. Redirección a WhatsApp asegurada
+    let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
+    mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
+    if (datosEnvio.telefonoCliente) {
+      mensaje += `*Teléfono:* ${datosEnvio.telefonoCliente}\n`;
+    }
+    mensaje += `*Método:* ${
+      datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"
+    }\n`;
+
+    if (datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion) {
+      mensaje += `*Dirección:* ${datosEnvio.direccion}\n`;
+    }
+
+    if (datosEnvio.notaAdicional) {
+      mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
+    }
+
+    mensaje += `\n*Detalle del pedido:*\n`;
+    carrito.forEach((item) => {
+      mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
+    });
+
+    mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
+    mensaje += `Quedo a la espera de los datos para concretar la compra.`;
+
+    const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, "_blank");
+
+    vaciarCarrito();
+    setGuardandoPedido(false);
+    onClose();
+
 
   return (
     <div
