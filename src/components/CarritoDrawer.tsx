@@ -19,8 +19,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   const [telefonoWhatsApp] = useState("5493413954355");
   const [guardandoPedido, setGuardandoPedido] = useState(false);
-  
-  // Estado para controlar el Pop-up de confirmación
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
 
   const [datosEnvio, setDatosEnvio] = useState({
@@ -49,7 +47,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     setGuardandoPedido(true);
 
     try {
-      // 1. Intentar guardar en Supabase sin bloquear el flujo principal
+      // 1. Guardar el pedido en estado 'pendiente' (NO modifica stock)
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
         .insert([
@@ -66,10 +64,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         .select()
         .single();
 
-      if (pedidoError) {
-        console.error("Detalle error pedidos en Supabase:", pedidoError);
-      } else if (pedidoData) {
-        // 2. Guardar ítems vinculados al pedido
+      if (pedidoError) throw pedidoError;
+
+      // 2. Guardar los ítems del pedido
+      if (pedidoData) {
         const itemsParaInsertar = carrito.map((item) => ({
           pedido_id: pedidoData.id,
           producto_id: item.id,
@@ -82,53 +80,54 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           .from("pedido_items")
           .insert(itemsParaInsertar);
 
-        if (itemsError) {
-          console.error("Detalle error pedido_items en Supabase:", itemsError);
-        }
+        if (itemsError) throw itemsError;
       }
+
+      // 3. Redirigir a WhatsApp
+      let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
+      mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
+      if (datosEnvio.telefonoCliente) {
+        mensaje += `*Teléfono:* ${datosEnvio.telefonoCliente}\n`;
+      }
+      mensaje += `*Método:* ${
+        datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"
+      }\n`;
+
+      if (datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion) {
+        mensaje += `*Dirección:* ${datosEnvio.direccion}\n`;
+      }
+
+      if (datosEnvio.notaAdicional) {
+        mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
+      }
+
+      mensaje += `\n*Detalle del pedido:*\n`;
+      carrito.forEach((item) => {
+        mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
+      });
+
+      mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
+      mensaje += `Quedo a la espera de los datos para concretar la compra.`;
+
+      const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+      window.open(url, "_blank");
+
+      // 4. Limpiar carrito y mostrar modal de éxito
+      vaciarCarrito();
+      onClose();
+      setMostrarModalExito(true);
+
     } catch (err) {
-      console.error("Excepción al guardar pedido en Supabase:", err);
+      console.error("Error crítico al guardar en Supabase:", err);
+      alert("Hubo un error al registrar el pedido en la base de datos. Revisa la conexión o intenta nuevamente.");
+    } finally {
+      setGuardandoPedido(false);
     }
-
-    // 3. Generar mensaje y redirigir a WhatsApp
-    let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
-    mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
-    if (datosEnvio.telefonoCliente) {
-      mensaje += `*Teléfono:* ${datosEnvio.telefonoCliente}\n`;
-    }
-    mensaje += `*Método:* ${
-      datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"
-    }\n`;
-
-    if (datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion) {
-      mensaje += `*Dirección:* ${datosEnvio.direccion}\n`;
-    }
-
-    if (datosEnvio.notaAdicional) {
-      mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
-    }
-
-    mensaje += `\n*Detalle del pedido:*\n`;
-    carrito.forEach((item) => {
-      mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
-    });
-
-    mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
-    mensaje += `Quedo a la espera de los datos para concretar la compra.`;
-
-    const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, "_blank");
-
-    // 4. Limpiar datos y mostrar Pop-up
-    vaciarCarrito();
-    setGuardandoPedido(false);
-    onClose(); // Cierra el Drawer
-    setMostrarModalExito(true); // Activa el Pop-up de éxito
   };
 
   return (
     <>
-      {/* POPUP / MODAL DE CONFIRMACIÓN */}
+      {/* MODAL DE ÉXITO */}
       {mostrarModalExito && (
         <div
           style={{
@@ -158,7 +157,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
               ¡Pedido Enviado!
             </h3>
             <p style={{ fontSize: "14px", color: "#4b5563", marginBottom: "20px" }}>
-              Tu pedido fue tomado con éxito y redirigido a WhatsApp. Te responderemos a la brevedad.
+              Tu pedido fue registrado con éxito y redirigido a WhatsApp.
             </p>
             <button
               onClick={() => setMostrarModalExito(false)}
@@ -205,7 +204,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
               overflowY: "auto",
             }}
           >
-            {/* Header */}
             <div>
               <div
                 style={{
@@ -232,7 +230,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                 </button>
               </div>
 
-              {/* Lista de productos */}
               {carrito.length === 0 ? (
                 <p style={{ textAlign: "center", color: "#6b7280", marginTop: "40px" }}>
                   El carrito está vacío.
@@ -311,7 +308,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
               )}
             </div>
 
-            {/* Sección Checkout */}
             {carrito.length > 0 && (
               <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px", marginTop: "16px" }}>
                 <h3 style={{ fontSize: "14px", marginBottom: "8px" }}>Datos del Comprador</h3>
