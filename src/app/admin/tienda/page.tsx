@@ -115,13 +115,13 @@ export default function AdminTiendaPage() {
     else fetchProductos();
   };
 
-  // Handler para sumar unidades al stock (Restock)
-  const handleRestock = async (id: any, cantidadASumar: number) => {
+    // Handler para ajustar el stock (Sumar o Restar sin bajar de 0)
+  const handleRestock = async (id: any, cantidadAjuste: number) => {
     const productoActual = productos.find((p) => p.id === id);
     if (!productoActual) return;
 
     const stockActual = Number(productoActual.stock) || 0;
-    const nuevoStock = stockActual + Number(cantidadASumar);
+    const nuevoStock = Math.max(0, stockActual + Number(cantidadAjuste));
 
     const { error } = await supabase
       .from("productos")
@@ -129,7 +129,7 @@ export default function AdminTiendaPage() {
       .eq("id", id);
 
     if (error) {
-      console.error("Error al sumar stock:", error);
+      console.error("Error al ajustar stock:", error);
       alert("No se pudo actualizar el stock.");
     } else {
       fetchProductos();
