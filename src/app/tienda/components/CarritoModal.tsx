@@ -1,6 +1,9 @@
 "use client";
 export default function CarritoModal({ carrito, onClose, onEliminar, onEnviar }: any) {
-  const total = carrito.reduce((acc: number, p: any) => acc + Number(p.precio), 0);
+    const total = carrito.reduce(
+    (acc: number, p: any) => acc + Number(p.precio) * (p.cantidad || 1),
+    0
+  );
 
   return (
     <div
