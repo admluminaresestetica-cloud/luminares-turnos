@@ -159,9 +159,11 @@ export default function ListaProductos({
               Ingresá el número a sumar (ej. <strong className="text-[#0E6E55]">5</strong>) o a restar (ej. <strong className="text-[#C84343]">-1</strong>):
             </p>
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               value={cantidadRestock}
-              onChange={(e) => setCantidadRestock(Number(e.target.value))}
+              onChange={(e) => setCantidadRestock(e.target.value)}
+              placeholder="Ej: 5 o -1"
               className="mt-3 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-2 text-sm font-bold text-[#12151B] outline-none focus:border-[#0E6E55]"
             />
             <div className="mt-4 flex justify-end gap-2">
