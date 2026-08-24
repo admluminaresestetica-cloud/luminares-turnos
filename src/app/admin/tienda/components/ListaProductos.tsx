@@ -31,7 +31,7 @@ export default function ListaProductos({
   });
 
   const handleConfirmarRestock = (id: number | string) => {
-    if (cantidadRestock <= 0) return;
+    if (cantidadRestock === 0 || isNaN(cantidadRestock))     return;
     if (onRestock) {
       onRestock(id, cantidadRestock);
     }
