@@ -15,7 +15,7 @@ const supabase = createClient(
 export default function AdminTiendaPage() {
   const [activeTab, setActiveTab] = useState<"catalogo" | "pedidos">("catalogo");
   const [mounted, setMounted] = useState(false);
-  
+
   // Estados de datos
   const [productos, setProductos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
@@ -115,7 +115,7 @@ export default function AdminTiendaPage() {
     else fetchProductos();
   };
 
-    // Handler para ajustar el stock (Sumar o Restar sin bajar de 0)
+  // Handler para sumar o restar unidades al stock (Restock/Ajuste)
   const handleRestock = async (id: any, cantidadAjuste: number) => {
     const productoActual = productos.find((p) => p.id === id);
     if (!productoActual) return;
