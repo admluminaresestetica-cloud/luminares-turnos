@@ -11,8 +11,6 @@ const supabase = createClient(
 interface Banner {
   id: string;
   imagen_url: string;
-  titulo?: string;
-  link?: string;
 }
 
 export default function BannerPrincipal() {
@@ -23,14 +21,14 @@ export default function BannerPrincipal() {
   useEffect(() => {
     const fetchBanners = async () => {
       setCargando(true);
-      
-      // Opción A: Obtener imágenes directamente del Bucket
+
+      // Obtenemos los archivos cargados en el bucket bannersprincipaltienda
       const { data: archivos, error } = await supabase.storage
-        .from("banners")
+        .from("bannersprincipaltienda")
         .list("", { sortBy: { column: "created_at", order: "desc" } });
 
       if (error) {
-        console.error("Error al obtener banners del bucket:", error);
+        console.error("Error al obtener banners:", error);
         setCargando(false);
         return;
       }
@@ -39,7 +37,9 @@ export default function BannerPrincipal() {
         const listaBanners = archivos
           .filter((file) => file.name !== ".emptyFolderPlaceholder")
           .map((file) => {
-            const { data } = supabase.storage.from("banners").getPublicUrl(file.name);
+            const { data } = supabase.storage
+              .from("bannersprincipaltienda")
+              .getPublicUrl(file.name);
             return {
               id: file.id || file.name,
               imagen_url: data.publicUrl,
@@ -54,7 +54,7 @@ export default function BannerPrincipal() {
     fetchBanners();
   }, []);
 
-  // Autoplay del carrusel
+  // Transición automática del carrusel cada 5 segundos
   useEffect(() => {
     if (banners.length <= 1) return;
 
@@ -99,7 +99,7 @@ export default function BannerPrincipal() {
         </div>
       ))}
 
-      {/* Flechas de navegación (Solo si hay más de 1 banner) */}
+      {/* Flechas de navegación (se muestran si hay 2 o más imágenes) */}
       {banners.length > 1 && (
         <>
           <button
@@ -115,7 +115,7 @@ export default function BannerPrincipal() {
             ❯
           </button>
 
-          {/* Indicadores / Dots */}
+          {/* Indicadores inferiores (puntos) */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-2">
             {banners.map((_, idx) => (
               <button
