@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import CarritoDrawer from "@/components/CarritoDrawer";
-import BannerPrincipal from "@/components/BannerPrincipal";
+import BannerCarousel from "./components/BannerCarousel";
 import { useCarrito } from "@/context/CarritoContext";
 import { Producto } from "@/types/tienda";
 
@@ -104,8 +104,8 @@ export default function TiendaPage() {
 
       {/* Contenido Principal */}
       <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-4 sm:px-10">
-        {/* Banner Carrusel Promocional (Se eliminó el hero estático superior) */}
-        <BannerPrincipal />
+        {/* Carrusel exclusivo de la Tienda (Tabla: banners_tienda) */}
+        <BannerCarousel />
 
         {/* Buscador y Categorías */}
         <BuscadorYCategorias
