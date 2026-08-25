@@ -19,10 +19,10 @@ export async function POST(request: Request) {
     const PORCENTAJE_RECARGO = 0.10;
 
     const itemsMP = itemsCarrito.map((item: any) => {
-      const precioConRecargo = Math.round(item.precio * (1 + PORCENTAJE_RECARGO));
+      const precioConRecargo = Math.round((Number(item.precio) || 0) * (1 + PORCENTAJE_RECARGO));
       return {
-        id: String(item.id),
-        title: item.nombre || "Producto",
+        id: String(item.id || "prod"),
+        title: String(item.nombre || "Producto"),
         unit_price: precioConRecargo,
         quantity: Number(item.cantidad) || 1,
         currency_id: "ARS",
@@ -44,11 +44,11 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ init_point: result.init_point });
-    } catch (error: any) {
+  } catch (error: any) {
     console.error("Error al crear preferencia de Mercado Pago:", error);
-    // Devolvemos el mensaje exacto de error para verlo en pantalla
     return NextResponse.json(
-      { error: error?.message || JSON.stringify(error) || "Error desconocido" },
+      { error: error?.message || "Error desconocido en el servidor" },
       { status: 500 }
     );
   }
+}
