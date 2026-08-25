@@ -24,7 +24,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const [telefonoWhatsApp] = useState("5493413954355");
   const [guardandoPedido, setGuardandoPedido] = useState(false);
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
-  
+
   // Selección de método de pago: 'whatsapp' (transferencia/alias) o 'mercadopago' (tarjeta/cuotas)
   const [metodoPago, setMetodoPago] = useState<"whatsapp" | "mercadopago">("whatsapp");
 
@@ -40,7 +40,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   // Monto base
   const totalPrecio = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
-  
+
   // Recargo por tarjeta / MP (10%)
   const PORCENTAJE_RECARGO = 0.10;
   const totalConRecargo = Math.round(totalPrecio * (1 + PORCENTAJE_RECARGO));
@@ -146,6 +146,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         body: JSON.stringify({
           itemsCarrito: carrito.map((item) => ({
             id: item.id,
+            nombre: item.nombre,
+            precio: item.precio,
             cantidad: item.cantidad,
           })),
         }),
@@ -185,7 +187,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       {isOpen && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out]">
           <div className="flex h-full w-full max-w-[420px] flex-col justify-between overflow-y-auto bg-white shadow-2xl animate-[slideIn_0.28s_cubic-bezier(0.16,1,0.3,1)]">
-            
+
             {/* Cabecera */}
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E5E0] bg-white/95 px-5 py-4 shadow-sm backdrop-blur-sm">
               <h2 className="text-lg font-bold tracking-tight text-[#12151B]">
@@ -237,13 +239,13 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             {/* Opciones de Pago y Formulario */}
             {carrito.length > 0 && (
               <div className="px-5 pb-5 space-y-4">
-                
+
                 {/* Selector de Método de Pago */}
                 <div className="rounded-2xl border border-[#E7E5E0] p-3 bg-slate-50/60 space-y-2">
                   <label className="text-xs font-bold text-[#12151B] uppercase tracking-wider block">
                     Método de Pago
                   </label>
-                  
+
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
@@ -278,6 +280,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   datosEnvio={datosEnvio}
                   setDatosEnvio={setDatosEnvio}
                   guardandoPedido={guardandoPedido}
+                  metodoPago={metodoPago}
                   onConfirmar={manejarSubmit}
                 />
               </div>
