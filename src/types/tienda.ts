@@ -3,9 +3,11 @@ export interface Producto {
   nombre: string;
   descripcion?: string;
   precio: number;
+  precio_anterior?: number;
   stock: number;
   imagen_url?: string;
   categoria_id?: string;
+  categoria?: string;
   activo?: boolean;
 }
 
