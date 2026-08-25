@@ -13,20 +13,21 @@ export default function TarjetaProducto({
   producto,
   onVerDetalle,
 }: TarjetaProductoProps) {
-  // Extraemos datos del contexto con valor de respaldo en caso de undefined
   const context = useCarrito();
   const agregarAlCarrito = context?.agregarAlCarrito;
   const items = context?.items || context?.carrito || [];
 
-  const sinStock = (producto.stock ?? 0) <= 0;
+  const stockDisponible = producto.stock ?? 0;
+  const sinStock = stockDisponible <= 0;
 
-  // Búsqueda segura dentro del array de items
   const itemEnCarrito = Array.isArray(items) 
     ? items.find((item: any) => item.id === producto.id) 
     : null;
   const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
-  // Formateo seguro para evitar fallos de locale
+  // Verificamos si alcanzó el límite del stock
+  const limiteAlcanzado = cantidadEnCarrito >= stockDisponible;
+
   const precioFormateado = new Intl.NumberFormat("es-AR").format(
     producto.precio || 0
   );
@@ -77,28 +78,33 @@ export default function TarjetaProducto({
           </p>
         </div>
 
-        {/* Botón rápido de agregar al carrito */}
+        {/* Botón adaptativo */}
         <button
           onClick={(e) => {
             e.stopPropagation();
-            if (!sinStock && agregarAlCarrito) {
+            if (!sinStock && !limiteAlcanzado && agregarAlCarrito) {
               agregarAlCarrito({
                 ...producto,
                 cantidad: 1,
               });
             }
           }}
-          disabled={sinStock}
+          disabled={sinStock || limiteAlcanzado}
           className={`w-full py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-            sinStock
-              ? "bg-[#E7E5E0] text-[#6B675F] cursor-not-allowed"
+            sinStock || limiteAlcanzado
+              ? "bg-[#E7E5E0] text-[#6B675F] cursor-not-allowed opacity-80"
               : "bg-[#12151B] text-white hover:bg-[#0E6E55] active:scale-[0.97]"
           }`}
         >
           <span>🛒</span>
-          <span>{sinStock ? "Agotado" : "Agregar"}</span>
+          <span>
+            {sinStock
+              ? "Agotado"
+              : limiteAlcanzado
+              ? "Máximo alcanzado"
+              : "Agregar"}
+          </span>
 
-          {/* Badge con la cantidad agregada */}
           {cantidadEnCarrito > 0 && !sinStock && (
             <span className="ml-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0E6E55] px-1 text-[10px] font-extrabold text-white">
               {cantidadEnCarrito}
