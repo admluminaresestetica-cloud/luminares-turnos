@@ -47,7 +47,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     setGuardandoPedido(true);
 
     try {
-      // 1. Guardar en la tabla 'pedidos' incluyendo el teléfono del cliente
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
         .insert([
@@ -67,7 +66,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         console.error("Error al insertar pedido:", pedidoError);
       }
 
-      // 2. Guardar en 'pedido_items' si el pedido principal se generó con éxito
       if (pedidoData && pedidoData.length > 0) {
         const idPedido = pedidoData[0].id;
         const itemsParaInsertar = carrito.map((item) => ({
@@ -90,7 +88,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       console.error("Excepción:", err);
     }
 
-    // 3. Generar mensaje y abrir WhatsApp
     let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
     mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
     if (datosEnvio.telefonoCliente) {
@@ -119,7 +116,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, "_blank");
 
-    // 4. Limpiar estado y mostrar Pop-up verde de éxito
     vaciarCarrito();
     setGuardandoPedido(false);
     onClose();
@@ -249,31 +245,62 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                           justifyContent: "space-between",
                           alignItems: "center",
                           borderBottom: "1px solid #f3f4f6",
-                          paddingBottom: "8px",
+                          paddingBottom: "10px",
                         }}
                       >
-                        <div>
-                          <strong style={{ fontSize: "14px", color: "#1f2937" }}>
-                            {item.nombre}
-                          </strong>
-                          <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                            ${item.precio} c/u
+                        {/* Miniatura e Información (Paso 3) */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div
+                            style={{
+                              width: "42px",
+                              height: "42px",
+                              borderRadius: "8px",
+                              backgroundColor: "#f7f7f5",
+                              overflow: "hidden",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              border: "1px solid #e7e5e0",
+                            }}
+                          >
+                            {item.imagen_url ? (
+                              <img
+                                src={item.imagen_url}
+                                alt={item.nombre}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                              />
+                            ) : (
+                              <span style={{ fontSize: "18px" }}>🛍️</span>
+                            )}
+                          </div>
+
+                          <div>
+                            <strong style={{ fontSize: "13px", color: "#1f2937", display: "block" }}>
+                              {item.nombre}
+                            </strong>
+                            <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                              ${new Intl.NumberFormat("es-AR").format(item.precio)} c/u
+                            </span>
                           </div>
                         </div>
 
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        {/* Botones - / + / Eliminar */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                           <button
                             onClick={() => restarUnidad(item.id)}
                             style={{
                               padding: "2px 8px",
-                              borderRadius: "4px",
-                              border: "1px solid #ccc",
+                              borderRadius: "6px",
+                              border: "1px solid #e5e7eb",
+                              background: "#fff",
                               cursor: "pointer",
+                              fontWeight: "bold",
                             }}
                           >
                             -
                           </button>
-                          <span style={{ fontWeight: "600", fontSize: "14px" }}>
+                          <span style={{ fontWeight: "700", fontSize: "13px", minWidth: "16px", textAlign: "center" }}>
                             {item.cantidad}
                           </span>
                           <button
@@ -281,10 +308,12 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                             disabled={alcanzoLimite}
                             style={{
                               padding: "2px 8px",
-                              borderRadius: "4px",
-                              border: "1px solid #ccc",
+                              borderRadius: "6px",
+                              border: "1px solid #e5e7eb",
+                              background: "#fff",
                               cursor: alcanzoLimite ? "not-allowed" : "pointer",
-                              opacity: alcanzoLimite ? 0.5 : 1,
+                              opacity: alcanzoLimite ? 0.4 : 1,
+                              fontWeight: "bold",
                             }}
                           >
                             +
@@ -294,9 +323,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                             style={{
                               background: "none",
                               border: "none",
-                              color: "#dc2626",
+                              color: "#ef4444",
                               cursor: "pointer",
                               fontSize: "12px",
+                              marginLeft: "4px",
                             }}
                           >
                             Eliminar
@@ -311,6 +341,28 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
             {carrito.length > 0 && (
               <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px", marginTop: "16px" }}>
+                
+                {/* Resumen del Total a Pagar (Paso 2) */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "12px 14px",
+                    backgroundColor: "#f9fafb",
+                    borderRadius: "10px",
+                    marginBottom: "16px",
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
+                  <span style={{ fontSize: "14px", fontWeight: "600", color: "#374151" }}>
+                    Total a pagar
+                  </span>
+                  <span style={{ fontSize: "18px", fontWeight: "800", color: "#111827" }}>
+                    ${new Intl.NumberFormat("es-AR").format(totalPrecio)}
+                  </span>
+                </div>
+
                 <h3 style={{ fontSize: "14px", marginBottom: "8px" }}>Datos del Comprador</h3>
 
                 <input
