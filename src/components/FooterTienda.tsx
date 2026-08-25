@@ -1,26 +1,20 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { MapPin, Wallet, ShieldCheck } from 'lucide-react';
+import { MapPin, ShieldCheck, CreditCard, Lock } from 'lucide-react';
 
-export default function Footer() {
-  const pathname = usePathname();
+export default function FooterTienda() {
   const anioActual = new Date().getFullYear();
-
-  // Si el usuario está en la tienda, este footer NO se renderiza
-  if (pathname?.startsWith('/tienda')) {
-    return null;
-  }
 
   return (
     <footer className="w-full border-t border-slate-200/80 bg-white/60 backdrop-blur-xs py-6 mt-auto">
       <div className="max-w-md mx-auto px-4 text-center space-y-4">
         
-        {/* Ubicación y Medios de Pago */}
+        {/* Ubicación y Métodos de Pago */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 text-xs font-medium text-slate-600">
+          {/* Abrir Mapa */}
           <a
-            href="https://www.google.com/maps/place//data=!4m2!3m1!1s0x95b6530031ebfef9:0xc7bf7db44f73adf7?entry=gemini&utm_source=gemini&utm_campaign=gem-default" 
+            href="https://maps.google.com" // Reemplazar con la URL exacta de tu mapa
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors bg-white px-3 py-1.5 rounded-full border border-slate-200/80 shadow-2xs"
@@ -29,21 +23,23 @@ export default function Footer() {
             <span>Rosario, Santa Fe · Ver mapa</span>
           </a>
 
+          {/* Métodos de Pago */}
           <div className="inline-flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-slate-200/80 shadow-2xs">
-            <Wallet className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Efectivo · Transferencia</span>
+            <CreditCard className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Efectivo · Mercado Pago · WhatsApp</span>
           </div>
         </div>
 
-        {/* Links de navegación y Políticas */}
-        <div className="flex justify-center items-center gap-3 text-[11px] text-slate-400 font-medium">
-          <Link href="/mis-turnos" className="hover:text-slate-700 transition-colors">
-            Mis Turnos
-          </Link>
+        {/* Banner de Pago Seguro y Envíos */}
+        <div className="flex justify-center items-center gap-3 text-[11px] text-slate-500 font-medium bg-slate-50 py-2 px-3 rounded-lg border border-slate-100">
+          <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold">
+            <Lock className="w-3 h-3 text-emerald-600" />
+            Pago 100% Seguro por Mercado Pago
+          </span>
           <span>•</span>
-          <Link href="/faq" className="hover:text-slate-700 transition-colors inline-flex items-center gap-1">
+          <Link href="/faq" className="hover:text-slate-800 transition-colors inline-flex items-center gap-1">
             <ShieldCheck className="w-3 h-3 text-slate-400" />
-            Políticas y FAQ
+            Envíos y FAQ
           </Link>
         </div>
 
