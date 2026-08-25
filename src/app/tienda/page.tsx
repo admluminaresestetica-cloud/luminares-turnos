@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import CarritoDrawer from "@/components/CarritoDrawer";
+import BannerPrincipal from "@/components/BannerPrincipal";
 import { useCarrito } from "@/context/CarritoContext";
 import { Producto } from "@/types/tienda";
 
@@ -131,6 +132,10 @@ export default function TiendaPage() {
 
       {/* Contenido Principal */}
       <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-6 sm:px-10">
+        {/* Banner Carrusel Promocional */}
+        <BannerPrincipal />
+
+        {/* Buscador y Categorías */}
         <BuscadorYCategorias
           busqueda={busqueda}
           onBusquedaChange={setBusqueda}
