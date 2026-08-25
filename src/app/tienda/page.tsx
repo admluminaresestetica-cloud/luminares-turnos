@@ -27,7 +27,12 @@ export default function TiendaPage() {
   // Estado para el modal de detalle
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
 
-  const { totalItems } = useCarrito();
+  // Cálculo seguro del total de ítems desde el contexto
+  const context = useCarrito();
+  const items = context?.items || context?.carrito || [];
+  const totalItems = Array.isArray(items)
+    ? items.reduce((acc: number, item: any) => acc + (item.cantidad || 1), 0)
+    : 0;
 
   useEffect(() => {
     setMounted(true);
@@ -85,14 +90,14 @@ export default function TiendaPage() {
         >
           🛒 Mi Carrito
           {totalItems > 0 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0E6E55] text-[11px] font-bold text-white">
+            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#0E6E55] px-1 text-[11px] font-extrabold text-white">
               {totalItems}
             </span>
           )}
         </button>
       </nav>
 
-      {/* Hero / Banner */}
+      {/* Hero */}
       <div
         className="relative overflow-hidden px-6 py-12 text-center text-white sm:py-16"
         style={{
@@ -122,7 +127,6 @@ export default function TiendaPage() {
 
       {/* Contenido Principal */}
       <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-6 sm:px-10">
-        {/* Módulo de Búsqueda y Categorías */}
         <BuscadorYCategorias
           busqueda={busqueda}
           onBusquedaChange={setBusqueda}
@@ -131,7 +135,6 @@ export default function TiendaPage() {
           onCategoriaSelect={setCategoriaFiltro}
         />
 
-        {/* Grilla Modular de Productos (2 por fila en móvil) */}
         <GridProductos
           productos={productosFiltrados}
           onVerDetalle={(prod) => setProductoSeleccionado(prod)}
