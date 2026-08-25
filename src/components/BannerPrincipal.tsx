@@ -11,6 +11,7 @@ const supabase = createClient(
 interface Banner {
   id: string;
   imagen_url: string;
+  titulo?: string;
 }
 
 export default function BannerPrincipal() {
@@ -22,32 +23,19 @@ export default function BannerPrincipal() {
     const fetchBanners = async () => {
       setCargando(true);
 
-      // Obtenemos los archivos cargados en el bucket bannersprincipaltienda
-      const { data: archivos, error } = await supabase.storage
-        .from("bannersprincipaltienda")
-        .list("", { sortBy: { column: "created_at", order: "desc" } });
+      // Consulta limpia a la tabla de base de datos
+      const { data, error } = await supabase
+        .from("banners_tienda")
+        .select("id, imagen_url, titulo")
+        .eq("activo", true)
+        .order("orden", { ascending: true });
 
       if (error) {
-        console.error("Error al obtener banners:", error);
-        setCargando(false);
-        return;
+        console.error("Error al obtener banners de la BD:", error);
+      } else if (data) {
+        setBanners(data);
       }
 
-      if (archivos && archivos.length > 0) {
-        const listaBanners = archivos
-          .filter((file) => file.name !== ".emptyFolderPlaceholder")
-          .map((file) => {
-            const { data } = supabase.storage
-              .from("bannersprincipaltienda")
-              .getPublicUrl(file.name);
-            return {
-              id: file.id || file.name,
-              imagen_url: data.publicUrl,
-            };
-          });
-
-        setBanners(listaBanners);
-      }
       setCargando(false);
     };
 
@@ -79,6 +67,7 @@ export default function BannerPrincipal() {
     );
   }
 
+  // Si no hay banners activos, simplemente no muestra nada
   if (banners.length === 0) return null;
 
   return (
@@ -93,13 +82,13 @@ export default function BannerPrincipal() {
         >
           <img
             src={banner.imagen_url}
-            alt={`Promoción ${index + 1}`}
+            alt={banner.titulo || `Promoción ${index + 1}`}
             className="w-full h-full object-cover"
           />
         </div>
       ))}
 
-      {/* Flechas de navegación (se muestran si hay 2 o más imágenes) */}
+      {/* Navegación (si hay 2 o más) */}
       {banners.length > 1 && (
         <>
           <button
@@ -115,7 +104,7 @@ export default function BannerPrincipal() {
             ❯
           </button>
 
-          {/* Indicadores inferiores (puntos) */}
+          {/* Indicadores (Dots) */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-2">
             {banners.map((_, idx) => (
               <button
