@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-import ProductoCard from "@/components/ProductoCard";
 import CarritoDrawer from "@/components/CarritoDrawer";
 import { useCarrito } from "@/context/CarritoContext";
+import { Producto } from "@/types/tienda";
+
+// Nuevos componentes modularizados (Fase 1)
+import BuscadorYCategorias from "./components/BuscadorYCategorias";
+import GridProductos from "./components/GridProductos";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,11 +17,14 @@ const supabase = createClient(
 
 export default function TiendaPage() {
   const [mounted, setMounted] = useState(false);
-  const [productos, setProductos] = useState<any[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<string[]>(["Todos"]);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("Todos");
+
+  // Estado para el modal de detalle (Fase 2)
+  const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
 
   const { totalItems } = useCarrito();
 
@@ -84,9 +91,9 @@ export default function TiendaPage() {
         </button>
       </nav>
 
-      {/* Hero */}
+      {/* Hero / Banner (En Fase 3 se reemplazará por BannerTienda dinámico) */}
       <div
-        className="relative overflow-hidden px-6 py-16 text-center text-white sm:py-20"
+        className="relative overflow-hidden px-6 py-12 text-center text-white sm:py-16"
         style={{
           background: "radial-gradient(circle at 20% 20%, #1B2430 0%, #0B0F14 70%)",
         }}
@@ -100,71 +107,37 @@ export default function TiendaPage() {
           }}
         />
         <div className="relative mx-auto max-w-2xl">
-          <span className="mb-4 inline-block rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-[#D9B87A]">
+          <span className="mb-3 inline-block rounded-full border border-white/20 bg-white/5 px-4 py-1 text-xs font-semibold tracking-wide text-[#D9B87A]">
             CATÁLOGO
           </span>
-          <h1 className="m-0 mb-3 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+          <h1 className="m-0 mb-2 text-2xl font-bold leading-tight tracking-tight sm:text-4xl">
             Encontrá lo que buscás al mejor precio
           </h1>
-          <p className="m-0 text-[15px] leading-relaxed text-white/60">
+          <p className="m-0 text-xs sm:text-sm leading-relaxed text-white/60">
             Explorá nuestro catálogo, armá tu pedido de forma segura y recibilo directo en la puerta de tu casa.
           </p>
         </div>
       </div>
 
-      {/* Contenido principal */}
-      <div className="mx-auto max-w-[1150px] px-6 pb-16 pt-8 sm:px-10">
-        {/* Búsqueda */}
-        <div className="mb-6">
-          <div className="relative">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#A6A29B]">
-              🔍
-            </span>
-            <input
-              type="text"
-              placeholder="Buscar productos por nombre..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full rounded-xl border border-[#E7E5E0] bg-white py-4 pl-11 pr-4 text-[15px] text-[#12151B] outline-none transition-shadow placeholder:text-[#A6A29B] focus:border-[#0E6E55] focus:shadow-[0_0_0_3px_rgba(14,110,85,0.15)]"
-            />
-          </div>
-        </div>
+      {/* Contenido Principal */}
+      <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-6 sm:px-10">
+        {/* Módulo de Búsqueda y Categorías */}
+        <BuscadorYCategorias
+          busqueda={busqueda}
+          onBusquedaChange={setBusqueda}
+          categorias={categorias}
+          categoriaSeleccionada={categoriaFiltro}
+          onCategoriaSelect={setCategoriaFiltro}
+        />
 
-        {/* Filtros de categoría dinámicos */}
-        <div className="mb-8 flex flex-wrap gap-2.5">
-          {categorias.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setCategoriaFiltro(cat)}
-              className={`rounded-full border px-5 py-2 text-sm font-semibold transition-all ${
-                categoriaFiltro === cat
-                  ? "border-[#12151B] bg-[#12151B] text-white shadow-[0_8px_20px_-8px_rgba(11,15,20,0.5)]"
-                  : "border-[#E7E5E0] bg-white text-[#6B675F] hover:border-[#12151B]/30"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Grilla de productos */}
-        {productosFiltrados.length === 0 ? (
-          <div className="rounded-2xl border border-[#E7E5E0] bg-white py-20 text-center">
-            <span className="text-4xl">📦</span>
-            <p className="mt-4 text-[15px] font-medium text-[#6B675F]">
-              No se encontraron productos disponibles con esos filtros.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
-            {productosFiltrados.map((p) => (
-              <ProductoCard key={p.id} producto={p} />
-            ))}
-          </div>
-        )}
+        {/* Grilla Modular de Productos (2 por fila en móvil) */}
+        <GridProductos
+          productos={productosFiltrados}
+          onVerDetalle={(prod) => setProductoSeleccionado(prod)}
+        />
       </div>
 
-      {/* Drawer / Modal del carrito */}
+      {/* Drawer del Carrito */}
       <CarritoDrawer
         isOpen={modalAbierto}
         onClose={() => setModalAbierto(false)}
