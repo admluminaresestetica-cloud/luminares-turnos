@@ -132,12 +132,18 @@ export default function TiendaPage() {
           onCategoriaSelect={setCategoriaFiltro}
         />
 
-        {/* Grilla Modular de Productos (2 por fila en móvil) */}
+                {/* Grilla Modular de Productos (2 por fila en móvil) */}
         <GridProductos
           productos={productosFiltrados}
           onVerDetalle={(prod) => setProductoSeleccionado(prod)}
         />
       </div>
+
+      {/* Modal de Detalle de Producto (Fase 2) */}
+      <ModalDetalleProducto
+        producto={productoSeleccionado}
+        onClose={() => setProductoSeleccionado(null)}
+      />
 
       {/* Drawer del Carrito */}
       <CarritoDrawer
@@ -147,3 +153,4 @@ export default function TiendaPage() {
     </div>
   );
 }
+
