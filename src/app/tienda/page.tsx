@@ -18,6 +18,7 @@ const supabase = createClient(
 
 export default function TiendaPage() {
   const [mounted, setMounted] = useState(false);
+  const [cargando, setCargando] = useState(true);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<string[]>(["Todos"]);
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -38,12 +39,14 @@ export default function TiendaPage() {
     setMounted(true);
 
     const fetchProductos = async () => {
+      setCargando(true);
       const { data, error } = await supabase.from("productos").select("*");
       if (error) {
         console.error("Error al cargar productos:", error);
       } else {
         setProductos(data || []);
       }
+      setCargando(false);
     };
 
     const fetchCategorias = async () => {
@@ -138,6 +141,7 @@ export default function TiendaPage() {
 
         <GridProductos
           productos={productosFiltrados}
+          cargando={cargando}
           onVerDetalle={(prod) => setProductoSeleccionado(prod)}
         />
       </div>
