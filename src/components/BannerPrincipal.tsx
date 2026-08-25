@@ -14,12 +14,11 @@ export default function BannerPrincipal() {
       try {
         const data = await getBannerConfig()
         if (data && data.activo) {
-          // Eliminamos el localStorage para que aparezca SIEMPRE al ingresar
           setBanner(data)
           setIsVisible(true)
         }
       } catch (error) {
-        console.error('Error al cargar el banner público:', error)
+        console.error('Error al cargar el banner público de turnos:', error)
       } finally {
         setLoading(false)
       }
@@ -29,7 +28,6 @@ export default function BannerPrincipal() {
 
   const cerrarBanner = () => {
     setIsVisible(false)
-    // Ya no guardamos nada en localStorage acá
   }
 
   if (loading || !isVisible || !banner) return null
@@ -37,7 +35,7 @@ export default function BannerPrincipal() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 sm:p-6 animate-fadeIn">
       <div className="relative w-full max-w-2xl bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col">
-        {/* Botón X grande y cómodo para cerrar */}
+        {/* Botón de cierre */}
         <button
           onClick={cerrarBanner}
           aria-label="Cerrar banner"
@@ -46,7 +44,7 @@ export default function BannerPrincipal() {
           <X size={20} />
         </button>
 
-        {/* Contenido Visual (Cambiado a object-cover para eliminar los bordes negros) */}
+        {/* Contenido multimedia de Turnos (Tabla: configuracion_banner / Bucket: imagenes-banner) */}
         <div className="w-full relative h-[60vh] sm:h-[70vh] flex items-center justify-center bg-black">
           {banner.tipo === 'video' ? (
             <video
@@ -60,13 +58,13 @@ export default function BannerPrincipal() {
           ) : (
             <img
               src={banner.url_media}
-              alt={banner.titulo || 'Banner de bienvenida'}
+              alt={banner.titulo || 'Aviso de Turnos'}
               className="w-full h-full object-cover"
             />
           )}
         </div>
 
-        {/* Título opcional en la parte inferior del modal */}
+        {/* Mensaje o título promocional del turno */}
         {banner.titulo && (
           <div className="p-4 sm:p-5 bg-slate-900 border-t border-slate-800 text-center">
             <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">
