@@ -153,13 +153,16 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         }),
       });
 
-      const data = await response.json();
+            
+            const data = await response.json();
 
       if (data.init_point) {
         vaciarCarrito();
         window.location.href = data.init_point;
       } else {
-        alert("Error al conectar con la pasarela de Mercado Pago.");
+        alert("Error del servidor: " + (data.error || "Desconocido"));
+      }
+
       }
     } catch (error) {
       console.error("Error al procesar pago:", error);
