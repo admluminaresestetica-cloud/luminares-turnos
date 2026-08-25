@@ -15,6 +15,7 @@ interface FormularioEnvioProps {
   datosEnvio: DatosEnvio;
   setDatosEnvio: React.Dispatch<React.SetStateAction<DatosEnvio>>;
   guardandoPedido: boolean;
+  metodoPago: "whatsapp" | "mercadopago";
   onConfirmar: () => void;
 }
 
@@ -23,6 +24,7 @@ export default function FormularioEnvio({
   datosEnvio,
   setDatosEnvio,
   guardandoPedido,
+  metodoPago,
   onConfirmar,
 }: FormularioEnvioProps) {
   const inputClass =
@@ -40,8 +42,14 @@ export default function FormularioEnvio({
             ${new Intl.NumberFormat("es-AR").format(totalPrecio)}
           </span>
         </div>
-        <span className="rounded-full bg-[#0E6E55]/10 px-2.5 py-1 text-[11px] font-semibold text-[#0E6E55]">
-          Listo para pedir
+        <span
+          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+            metodoPago === "mercadopago"
+              ? "bg-blue-100 text-blue-700"
+              : "bg-[#0E6E55]/10 text-[#0E6E55]"
+          }`}
+        >
+          {metodoPago === "mercadopago" ? "Tarjeta / Cuotas" : "Listo para pedir"}
         </span>
       </div>
 
@@ -120,11 +128,18 @@ export default function FormularioEnvio({
           className={`mt-1 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white shadow-md transition-all ${
             guardandoPedido
               ? "cursor-not-allowed bg-gray-400"
+              : metodoPago === "mercadopago"
+              ? "bg-blue-600 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-lg active:translate-y-0 active:shadow-md"
               : "bg-[#25D366] hover:-translate-y-0.5 hover:bg-[#20bd5a] hover:shadow-lg active:translate-y-0 active:shadow-md"
           }`}
         >
           {guardandoPedido ? (
             "Procesando..."
+          ) : metodoPago === "mercadopago" ? (
+            <>
+              <span className="text-lg leading-none">💳</span>
+              Pagar con Mercado Pago
+            </>
           ) : (
             <>
               <span className="text-lg leading-none">📲</span>
