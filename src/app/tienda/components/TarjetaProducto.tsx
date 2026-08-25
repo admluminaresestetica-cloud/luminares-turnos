@@ -1,0 +1,117 @@
+'use client';
+
+import React from "react";
+import { Producto } from "@/types/tienda";
+import { useCarrito } from "@/context/CarritoContext";
+
+interface TarjetaProductoProps {
+  producto: Producto;
+  onVerDetalle?: (producto: Producto) => void;
+}
+
+export default function TarjetaProducto({
+  producto,
+  onVerDetalle,
+}: TarjetaProductoProps) {
+  const context = useCarrito();
+  const agregarAlCarrito = context?.agregarAlCarrito;
+  const items = context?.items || context?.carrito || [];
+
+  const stockDisponible = producto.stock ?? 0;
+  const sinStock = stockDisponible <= 0;
+
+  const itemEnCarrito = Array.isArray(items) 
+    ? items.find((item: any) => item.id === producto.id) 
+    : null;
+  const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
+
+  // Verificamos si alcanzó el límite del stock
+  const limiteAlcanzado = cantidadEnCarrito >= stockDisponible;
+
+  const precioFormateado = new Intl.NumberFormat("es-AR").format(
+    producto.precio || 0
+  );
+
+  return (
+    <div
+      onClick={() => onVerDetalle && onVerDetalle(producto)}
+      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white p-2.5 sm:p-3.5 shadow-sm transition-all hover:shadow-md cursor-pointer"
+    >
+      {/* Imagen del Producto */}
+      <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[#F7F7F5] flex items-center justify-center">
+        {producto.imagen_url ? (
+          <img
+            src={producto.imagen_url}
+            alt={producto.nombre}
+            className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <span className="text-3xl">🛍️</span>
+        )}
+
+        {sinStock && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+            <span className="rounded-md bg-white/90 px-2 py-1 text-[10px] sm:text-[11px] font-bold text-[#12151B]">
+              Sin Stock
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Información del Producto */}
+      <div className="flex flex-1 flex-col justify-between">
+        <div>
+          <h3 className="line-clamp-2 text-xs sm:text-sm font-semibold text-[#12151B] leading-snug">
+            {producto.nombre}
+          </h3>
+        </div>
+
+        {/* Precios y Stock */}
+        <div className="mt-2 mb-2">
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm sm:text-base font-bold text-[#12151B]">
+              ${precioFormateado}
+            </span>
+          </div>
+          <p className="text-[10px] text-[#A6A29B] mt-0.5">
+            Stock: {producto.stock}
+          </p>
+        </div>
+
+        {/* Botón adaptativo */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!sinStock && !limiteAlcanzado && agregarAlCarrito) {
+              agregarAlCarrito({
+                ...producto,
+                cantidad: 1,
+              });
+            }
+          }}
+          disabled={sinStock || limiteAlcanzado}
+          className={`w-full py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            sinStock || limiteAlcanzado
+              ? "bg-[#E7E5E0] text-[#6B675F] cursor-not-allowed opacity-80"
+              : "bg-[#12151B] text-white hover:bg-[#0E6E55] active:scale-[0.97]"
+          }`}
+        >
+          <span>🛒</span>
+          <span>
+            {sinStock
+              ? "Agotado"
+              : limiteAlcanzado
+              ? "Máximo alcanzado"
+              : "Agregar"}
+          </span>
+
+          {cantidadEnCarrito > 0 && !sinStock && (
+            <span className="ml-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0E6E55] px-1 text-[10px] font-extrabold text-white">
+              {cantidadEnCarrito}
+            </span>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}

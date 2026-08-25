@@ -4,6 +4,10 @@ import React, { useState } from "react";
 import { useCarrito } from "@/context/CarritoContext";
 import { createClient } from "@supabase/supabase-js";
 
+import CarritoItem from "./carrito/CarritoItem";
+import FormularioEnvio from "./carrito/FormularioEnvio";
+import ModalExito from "./carrito/ModalExito";
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -21,6 +25,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const [guardandoPedido, setGuardandoPedido] = useState(false);
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
 
+  // Selección de método de pago: 'whatsapp' (transferencia/alias) o 'mercadopago' (tarjeta/cuotas)
+  const [metodoPago, setMetodoPago] = useState<"whatsapp" | "mercadopago">("whatsapp");
+
   const [datosEnvio, setDatosEnvio] = useState({
     nombreCliente: "",
     telefonoCliente: "",
@@ -31,23 +38,27 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   if (!isOpen && !mostrarModalExito) return null;
 
+  // Monto base
   const totalPrecio = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
 
-  const enviarAWhatsApp = async () => {
+  // Recargo por tarjeta / MP (10%)
+  const PORCENTAJE_RECARGO = 0.10;
+  const totalConRecargo = Math.round(totalPrecio * (1 + PORCENTAJE_RECARGO));
+
+  const validarFormulario = () => {
     if (!datosEnvio.nombreCliente.trim()) {
       alert("Por favor, ingresá tu nombre para continuar.");
-      return;
+      return false;
     }
-
     if (datosEnvio.metodoEnvio === "envio" && !datosEnvio.direccion.trim()) {
       alert("Por favor, ingresá tu dirección de envío.");
-      return;
+      return false;
     }
+    return true;
+  };
 
-    setGuardandoPedido(true);
-
+  const guardarPedidoEnDB = async (montoFinal: number, medioPagoStr: string) => {
     try {
-      // 1. Guardar en la tabla 'pedidos' incluyendo el teléfono del cliente
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
         .insert([
@@ -55,19 +66,16 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             nombre_cliente: datosEnvio.nombreCliente.trim(),
             telefono_cliente: datosEnvio.telefonoCliente.trim() || null,
             metodo_envio: datosEnvio.metodoEnvio,
-            total: totalPrecio,
+            total: montoFinal,
             estado: "pendiente",
             direccion: datosEnvio.metodoEnvio === "envio" ? datosEnvio.direccion.trim() : null,
-            nota_adicional: datosEnvio.notaAdicional.trim() || null,
+            nota_adicional: `${datosEnvio.notaAdicional.trim()} [Pago: ${medioPagoStr}]`.trim(),
           },
         ])
         .select();
 
-      if (pedidoError) {
-        console.error("Error al insertar pedido:", pedidoError);
-      }
+      if (pedidoError) console.error("Error al insertar pedido:", pedidoError);
 
-      // 2. Guardar en 'pedido_items' si el pedido principal se generó con éxito
       if (pedidoData && pedidoData.length > 0) {
         const idPedido = pedidoData[0].id;
         const itemsParaInsertar = carrito.map((item) => ({
@@ -82,330 +90,218 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           .from("pedido_items")
           .insert(itemsParaInsertar);
 
-        if (itemsError) {
-          console.error("Error al insertar items:", itemsError);
-        }
+        if (itemsError) console.error("Error al insertar items:", itemsError);
       }
     } catch (err) {
-      console.error("Excepción:", err);
+      console.error("Excepción en DB:", err);
     }
+  };
 
-    // 3. Generar mensaje y abrir WhatsApp
+  // Procesar flujo de WhatsApp
+  const procesarWhatsApp = async () => {
+    if (!validarFormulario()) return;
+
+    setGuardandoPedido(true);
+    await guardarPedidoEnDB(totalPrecio, "WhatsApp / Transferencia");
+
     let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
     mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
-    if (datosEnvio.telefonoCliente) {
-      mensaje += `*Teléfono:* ${datosEnvio.telefonoCliente}\n`;
-    }
-    mensaje += `*Método:* ${
-      datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"
-    }\n`;
+    if (datosEnvio.telefonoCliente) mensaje += `*Teléfono:* ${datosEnvio.telefonoCliente}\n`;
+    mensaje += `*Método:* ${datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"}\n`;
 
     if (datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion) {
       mensaje += `*Dirección:* ${datosEnvio.direccion}\n`;
     }
 
-    if (datosEnvio.notaAdicional) {
-      mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
-    }
+    if (datosEnvio.notaAdicional) mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
 
     mensaje += `\n*Detalle del pedido:*\n`;
     carrito.forEach((item) => {
       mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
     });
 
-    mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
-    mensaje += `Quedo a la espera de los datos para concretar la compra.`;
+    mensaje += `\n*Total a pagar (Transferencia / Efectivo):* $${totalPrecio}\n\n`;
+    mensaje += `Quedo a la espera del alias para realizar la transferencia.`;
 
     const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, "_blank");
 
-    // 4. Limpiar estado y mostrar Pop-up verde de éxito
     vaciarCarrito();
     setGuardandoPedido(false);
     onClose();
     setMostrarModalExito(true);
   };
 
+  
+            
+    // Procesar flujo de Mercado Pago
+  const procesarMercadoPago = async () => {
+    if (!validarFormulario()) return;
+
+    setGuardandoPedido(true);
+    await guardarPedidoEnDB(totalConRecargo, "Mercado Pago");
+
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemsCarrito: carrito.map((item) => ({
+            id: item.id,
+            nombre: item.nombre,
+            precio: item.precio,
+            cantidad: item.cantidad,
+          })),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.init_point) {
+        vaciarCarrito();
+        window.location.href = data.init_point;
+      } else {
+        alert("Error del servidor: " + (data.error || "Desconocido"));
+      }
+    } catch (error: any) {
+      console.error("Error al procesar pago:", error);
+      alert("Error en la solicitud: " + error.message);
+    } finally {
+      setGuardandoPedido(false);
+    }
+  };
+
+
+  const manejarSubmit = () => {
+    if (metodoPago === "whatsapp") {
+      procesarWhatsApp();
+    } else {
+      procesarMercadoPago();
+    }
+  };
+
   return (
     <>
-      {/* MODAL DE ÉXITO */}
-      {mostrarModalExito && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.6)",
-            zIndex: 60,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px",
-          }}
-        >
-          <div
-            style={{
-              background: "#ffffff",
-              borderRadius: "12px",
-              padding: "24px",
-              maxWidth: "360px",
-              width: "100%",
-              textAlign: "center",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-            }}
-          >
-            <div style={{ fontSize: "40px", marginBottom: "10px" }}>✅</div>
-            <h3 style={{ margin: "0 0 10px 0", fontSize: "18px", color: "#1f2937" }}>
-              ¡Pedido Enviado!
-            </h3>
-            <p style={{ fontSize: "14px", color: "#4b5563", marginBottom: "20px" }}>
-              Tu pedido fue registrado con éxito y redirigido a WhatsApp.
-            </p>
-            <button
-              onClick={() => setMostrarModalExito(false)}
-              style={{
-                width: "100%",
-                background: "#25D366",
-                color: "white",
-                border: "none",
-                padding: "10px",
-                borderRadius: "6px",
-                fontWeight: "600",
-                cursor: "pointer",
-              }}
-            >
-              Aceptar
-            </button>
-          </div>
-        </div>
-      )}
+      <ModalExito
+        mostrar={mostrarModalExito}
+        onAceptar={() => setMostrarModalExito(false)}
+      />
 
-      {/* DRAWER DEL CARRITO */}
       {isOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.4)",
-            zIndex: 50,
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              maxWidth: "420px",
-              height: "100%",
-              background: "#ffffff",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              padding: "20px",
-              boxSizing: "border-box",
-              overflowY: "auto",
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "16px",
-                }}
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out]">
+          <div className="flex h-full w-full max-w-[420px] flex-col justify-between overflow-y-auto bg-white shadow-2xl animate-[slideIn_0.28s_cubic-bezier(0.16,1,0.3,1)]">
+
+            {/* Cabecera */}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E5E0] bg-white/95 px-5 py-4 shadow-sm backdrop-blur-sm">
+              <h2 className="text-lg font-bold tracking-tight text-[#12151B]">
+                Tu Carrito
+                {carrito.length > 0 && (
+                  <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#12151B] px-1.5 text-xs font-semibold text-white">
+                    {carrito.length}
+                  </span>
+                )}
+              </h2>
+              <button
+                onClick={onClose}
+                aria-label="Cerrar carrito"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-[#F7F7F5] hover:text-[#12151B] active:scale-90"
               >
-                <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "700" }}>
-                  Tu Carrito
-                </h2>
-                <button
-                  onClick={onClose}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    fontSize: "20px",
-                    cursor: "pointer",
-                    color: "#6b7280",
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
+                <span className="text-lg leading-none">✕</span>
+              </button>
+            </div>
 
+            {/* Lista de Productos */}
+            <div className="flex-1 px-5 py-4">
               {carrito.length === 0 ? (
-                <p style={{ textAlign: "center", color: "#6b7280", marginTop: "40px" }}>
-                  El carrito está vacío.
-                </p>
+                <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#F7F7F5] text-4xl">
+                    🛒
+                  </div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Tu carrito está vacío
+                  </p>
+                  <p className="max-w-[220px] text-xs text-gray-400">
+                    Agregá productos para verlos reflejados acá.
+                  </p>
+                </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  {carrito.map((item) => {
-                    const stockDisponible = item.stock ?? 0;
-                    const alcanzoLimite = item.cantidad >= stockDisponible;
-
-                    return (
-                      <div
-                        key={item.id}
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          borderBottom: "1px solid #f3f4f6",
-                          paddingBottom: "8px",
-                        }}
-                      >
-                        <div>
-                          <strong style={{ fontSize: "14px", color: "#1f2937" }}>
-                            {item.nombre}
-                          </strong>
-                          <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                            ${item.precio} c/u
-                          </div>
-                        </div>
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <button
-                            onClick={() => restarUnidad(item.id)}
-                            style={{
-                              padding: "2px 8px",
-                              borderRadius: "4px",
-                              border: "1px solid #ccc",
-                              cursor: "pointer",
-                            }}
-                          >
-                            -
-                          </button>
-                          <span style={{ fontWeight: "600", fontSize: "14px" }}>
-                            {item.cantidad}
-                          </span>
-                          <button
-                            onClick={() => agregarAlCarrito(item)}
-                            disabled={alcanzoLimite}
-                            style={{
-                              padding: "2px 8px",
-                              borderRadius: "4px",
-                              border: "1px solid #ccc",
-                              cursor: alcanzoLimite ? "not-allowed" : "pointer",
-                              opacity: alcanzoLimite ? 0.5 : 1,
-                            }}
-                          >
-                            +
-                          </button>
-                          <button
-                            onClick={() => eliminarDelCarrito(item.id)}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              color: "#dc2626",
-                              cursor: "pointer",
-                              fontSize: "12px",
-                            }}
-                          >
-                            Eliminar
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="flex flex-col gap-3">
+                  {carrito.map((item) => (
+                    <CarritoItem
+                      key={item.id}
+                      item={item}
+                      onRestar={restarUnidad}
+                      onAgregar={agregarAlCarrito}
+                      onEliminar={eliminarDelCarrito}
+                    />
+                  ))}
                 </div>
               )}
             </div>
 
+            {/* Opciones de Pago y Formulario */}
             {carrito.length > 0 && (
-              <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px", marginTop: "16px" }}>
-                <h3 style={{ fontSize: "14px", marginBottom: "8px" }}>Datos del Comprador</h3>
+              <div className="px-5 pb-5 space-y-4">
 
-                <input
-                  type="text"
-                  placeholder="Tu Nombre completo *"
-                  value={datosEnvio.nombreCliente}
-                  onChange={(e) => setDatosEnvio({ ...datosEnvio, nombreCliente: e.target.value })}
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    marginBottom: "8px",
-                    borderRadius: "6px",
-                    border: "1px solid #ccc",
-                    boxSizing: "border-box",
-                  }}
-                />
-
-                <input
-                  type="text"
-                  placeholder="Tu Teléfono / WhatsApp"
-                  value={datosEnvio.telefonoCliente}
-                  onChange={(e) => setDatosEnvio({ ...datosEnvio, telefonoCliente: e.target.value })}
-                  style={{
-                    width: "100%",
-                    padding: "8px",
-                    marginBottom: "8px",
-                    borderRadius: "6px",
-                    border: "1px solid #ccc",
-                    boxSizing: "border-box",
-                  }}
-                />
-
-                <div style={{ display: "flex", gap: "10px", marginBottom: "8px" }}>
-                  <label style={{ fontSize: "13px" }}>
-                    <input
-                      type="radio"
-                      name="metodoEnvio"
-                      value="retiro"
-                      checked={datosEnvio.metodoEnvio === "retiro"}
-                      onChange={() => setDatosEnvio({ ...datosEnvio, metodoEnvio: "retiro" })}
-                    />{" "}
-                    Retiro en Local
+                {/* Selector de Método de Pago */}
+                <div className="rounded-2xl border border-[#E7E5E0] p-3 bg-slate-50/60 space-y-2">
+                  <label className="text-xs font-bold text-[#12151B] uppercase tracking-wider block">
+                    Método de Pago
                   </label>
-                  <label style={{ fontSize: "13px" }}>
-                    <input
-                      type="radio"
-                      name="metodoEnvio"
-                      value="envio"
-                      checked={datosEnvio.metodoEnvio === "envio"}
-                      onChange={() => setDatosEnvio({ ...datosEnvio, metodoEnvio: "envio" })}
-                    />{" "}
-                    Envío a Domicilio
-                  </label>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMetodoPago("whatsapp")}
+                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                        metodoPago === "whatsapp"
+                          ? "border-[#0E6E55] bg-[#0E6E55]/10 text-[#0E6E55] shadow-sm"
+                          : "border-[#E7E5E0] bg-white text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>💬 WhatsApp</span>
+                      <span className="text-[10px] font-normal text-gray-500">Transferencia / Alias</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setMetodoPago("mercadopago")}
+                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                        metodoPago === "mercadopago"
+                          ? "border-blue-600 bg-blue-50 text-blue-600 shadow-sm"
+                          : "border-[#E7E5E0] bg-white text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>💳 Mercado Pago</span>
+                      <span className="text-[10px] font-normal text-gray-500">Tarjetas / Cuotas (+10%)</span>
+                    </button>
+                  </div>
                 </div>
 
-                {datosEnvio.metodoEnvio === "envio" && (
-                  <input
-                    type="text"
-                    placeholder="Dirección de envío *"
-                    value={datosEnvio.direccion}
-                    onChange={(e) => setDatosEnvio({ ...datosEnvio, direccion: e.target.value })}
-                    style={{
-                      width: "100%",
-                      padding: "8px",
-                      marginBottom: "8px",
-                      borderRadius: "6px",
-                      border: "1px solid #ccc",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                )}
-
-                <button
-                  onClick={enviarAWhatsApp}
-                  disabled={guardandoPedido}
-                  style={{
-                    width: "100%",
-                    background: guardandoPedido ? "#9ca3af" : "#25D366",
-                    color: "white",
-                    border: "none",
-                    padding: "12px",
-                    borderRadius: "8px",
-                    fontWeight: "700",
-                    fontSize: "15px",
-                    cursor: guardandoPedido ? "not-allowed" : "pointer",
-                    marginTop: "10px",
-                  }}
-                >
-                  {guardandoPedido ? "Procesando..." : "Confirmar Pedido por WhatsApp"}
-                </button>
+                <FormularioEnvio
+                  totalPrecio={metodoPago === "mercadopago" ? totalConRecargo : totalPrecio}
+                  datosEnvio={datosEnvio}
+                  setDatosEnvio={setDatosEnvio}
+                  guardandoPedido={guardandoPedido}
+                  metodoPago={metodoPago}
+                  onConfirmar={manejarSubmit}
+                />
               </div>
             )}
           </div>
         </div>
       )}
+
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideIn {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
     </>
   );
 }
