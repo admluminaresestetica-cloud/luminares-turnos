@@ -6,6 +6,7 @@ import ListaProductos from "./components/ListaProductos";
 import PedidosTab, { Pedido } from "./components/PedidosTab";
 import MetricasHeader from "./components/MetricasHeader";
 import CategoriasTab from "./components/CategoriasTab";
+import BannersTab from "./components/BannersTab";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,7 +14,7 @@ const supabase = createClient(
 );
 
 export default function AdminTiendaPage() {
-  const [activeTab, setActiveTab] = useState<"catalogo" | "pedidos">("catalogo");
+  const [activeTab, setActiveTab] = useState<"catalogo" | "pedidos" | "banners">("catalogo");
   const [mounted, setMounted] = useState(false);
 
   // Estados de datos
@@ -138,7 +139,7 @@ export default function AdminTiendaPage() {
 
   // Handler para alternar entre Activo y Pausado
   const handleToggleActivo = async (id: any, estaPausado: boolean) => {
-    const nuevoEstado = estaPausado; // Si estaba pausado (activo === false), pasa a true y viceversa
+    const nuevoEstado = estaPausado;
 
     const { error } = await supabase
       .from("productos")
@@ -244,6 +245,16 @@ export default function AdminTiendaPage() {
           >
             📋 Historial de Pedidos {pedidosPendientes > 0 && `(${pedidosPendientes})`}
           </button>
+          <button
+            onClick={() => setActiveTab("banners")}
+            className={`pb-3 text-sm font-bold transition-colors ${
+              activeTab === "banners"
+                ? "border-b-2 border-[#0E6E55] text-[#0E6E55]"
+                : "text-[#6B675F] hover:text-[#12151B]"
+            }`}
+          >
+            🖼️ Banners Promocionales
+          </button>
         </div>
 
         {/* Tab 1: Catálogo y Stock */}
@@ -288,6 +299,9 @@ export default function AdminTiendaPage() {
             onCancelarPedido={handleCancelarPedido}
           />
         )}
+
+        {/* Tab 3: Banners Promocionales */}
+        {activeTab === "banners" && <BannersTab />}
       </div>
     </div>
   );
