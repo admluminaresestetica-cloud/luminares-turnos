@@ -13,165 +13,159 @@ export default function ModalDetalleProducto({
   producto,
   onClose,
 }: ModalDetalleProductoProps) {
-  const { agregarAlCarrito } = useCarrito();
   const [cantidad, setCantidad] = useState(1);
+  const context = useCarrito();
+  const agregarAlCarrito = context?.agregarAlCarrito;
+  const items = context?.items || context?.carrito || [];
 
-  // Reiniciar la cantidad cada vez que cambia el producto
+  // Calcular cuántas unidades ya están en el carrito
+  const itemEnCarrito = Array.isArray(items) && producto
+    ? items.find((item: any) => item.id === producto.id)
+    : null;
+  const yaEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
+
+  // Stock total real restante para sumar
+  const stockTotal = producto?.stock ?? 0;
+  const disponibleParaAgregar = Math.max(0, stockTotal - yaEnCarrito);
+
+  // Resetea el contador al abrir o cambiar de producto
   useEffect(() => {
-    setCantidad(1);
-  }, [producto]);
+    if (producto) {
+      setCantidad(disponibleParaAgregar > 0 ? 1 : 0);
+    }
+  }, [producto, yaEnCarrito]);
 
   if (!producto) return null;
 
-  const sinStock = (producto.stock ?? 0) <= 0;
-  const tieneDescuento =
-    Boolean(producto.precio_anterior) &&
-    (producto.precio_anterior ?? 0) > producto.precio;
+  const precioFormateado = new Intl.NumberFormat("es-AR").format(
+    producto.precio || 0
+  );
+
+  const decrementar = () => {
+    if (cantidad > 1) setCantidad(cantidad - 1);
+  };
+
+  const incrementar = () => {
+    if (cantidad < disponibleParaAgregar) setCantidad(cantidad + 1);
+  };
 
   const handleAgregar = () => {
-    if (sinStock) return;
-    
-    // Agregamos al carrito la cantidad seleccionada
-    for (let i = 0; i < cantidad; i++) {
+    if (disponibleParaAgregar > 0 && agregarAlCarrito && cantidad > 0) {
       agregarAlCarrito({
         ...producto,
-        cantidad: 1,
+        cantidad: cantidad,
       });
+      onClose();
     }
-    onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 transition-opacity">
-      {/* Overlay para cerrar al hacer clic afuera */}
-      <div className="absolute inset-0" onClick={onClose} />
-
-      {/* Contenido del Modal */}
-      <div className="relative z-10 w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
-        
-        {/* Botón de cierre */}
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center p-0 sm:p-4 transition-opacity">
+      <div 
+        className="relative w-full max-w-lg rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl max-h-[90vh] overflow-y-auto animate-in fade-in slide-in-from-bottom duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Botón cerrar */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#F7F7F5] text-sm text-[#6B675F] hover:bg-[#E7E5E0] hover:text-[#12151B] transition-colors"
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#F7F7F5] text-xs font-bold text-[#12151B] transition-colors hover:bg-[#E7E5E0]"
         >
           ✕
         </button>
 
-        {/* Imagen Ampliada */}
-        <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-2xl bg-[#F7F7F5] flex items-center justify-center">
+        {/* Imagen */}
+        <div className="mb-4 aspect-square w-full overflow-hidden rounded-2xl bg-[#F7F7F5] flex items-center justify-center">
           {producto.imagen_url ? (
             <img
               src={producto.imagen_url}
               alt={producto.nombre}
-              className="h-full w-full object-cover object-center"
+              className="h-full w-full object-cover"
             />
           ) : (
-            <span className="text-6xl">🛍️</span>
-          )}
-
-          {tieneDescuento && (
-            <span className="absolute top-3 left-3 z-10 rounded-md bg-[#DC2626] px-2 py-1 text-xs font-bold text-white uppercase tracking-wider shadow">
-              Oferta
-            </span>
-          )}
-
-          {sinStock && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[1px]">
-              <span className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-bold text-[#12151B] shadow">
-                Sin Stock Disponible
-              </span>
-            </div>
+            <span className="text-5xl">🛍️</span>
           )}
         </div>
 
-        {/* Info y Categoría */}
-        <div className="space-y-3">
-          {producto.categoria && (
-            <span className="inline-block rounded-md bg-[#F7F7F5] px-2.5 py-1 text-[11px] font-semibold text-[#6B675F] uppercase tracking-wider">
-              {producto.categoria}
-            </span>
-          )}
+        {/* Categoria & Nombre */}
+        {producto.categoria && (
+          <span className="inline-block rounded-full bg-[#F7F7F5] px-2.5 py-1 text-[10px] font-bold tracking-wider text-[#6B675F] uppercase mb-1">
+            {producto.categoria}
+          </span>
+        )}
+        <h2 className="text-xl font-bold text-[#12151B] leading-snug">
+          {producto.nombre}
+        </h2>
+        <p className="mt-1 text-2xl font-extrabold text-[#12151B]">
+          ${precioFormateado}
+        </p>
 
-          <h2 className="text-lg sm:text-xl font-bold text-[#12151B] leading-snug">
-            {producto.nombre}
-          </h2>
-
-          {/* Precios */}
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-[#12151B]">
-              ${producto.precio.toLocaleString("es-AR")}
-            </span>
-            {tieneDescuento && (
-              <span className="text-sm text-[#A6A29B] line-through">
-                ${producto.precio_anterior?.toLocaleString("es-AR")}
-              </span>
-            )}
-          </div>
-
-          {/* Descripción Completa */}
-          {producto.descripcion ? (
-            <div className="pt-2 border-t border-[#E7E5E0]">
-              <h4 className="text-xs font-bold text-[#6B675F] uppercase tracking-wider mb-1">
-                Descripción
-              </h4>
-              <p className="text-sm text-[#6B675F] leading-relaxed whitespace-pre-line">
-                {producto.descripcion}
-              </p>
-            </div>
-          ) : (
-            <p className="text-xs text-[#A6A29B] italic pt-1">
-              Sin descripción adicional disponible.
+        {/* Descripción */}
+        {producto.descripcion && (
+          <div className="mt-4 border-t border-[#E7E5E0] pt-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#A6A29B]">
+              Descripción
+            </h4>
+            <p className="mt-1 text-xs text-[#6B675F] leading-relaxed">
+              {producto.descripcion}
             </p>
-          )}
-
-          {/* Selector de Cantidad y Botón de Carrito */}
-          <div className="pt-4 border-t border-[#E7E5E0] space-y-3">
-            {!sinStock && (
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#12151B]">
-                  Cantidad (Disponible: {producto.stock})
-                </span>
-                <div className="flex items-center gap-3 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-1">
-                  <button
-                    onClick={() => setCantidad((prev) => Math.max(1, prev - 1))}
-                    disabled={cantidad <= 1}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-white font-bold text-[#12151B] shadow-sm disabled:opacity-40"
-                  >
-                    -
-                  </button>
-                  <span className="text-sm font-bold text-[#12151B] min-w-[20px] text-center">
-                    {cantidad}
-                  </span>
-                  <button
-                    onClick={() => setCantidad((prev) => Math.min(producto.stock, prev + 1))}
-                    disabled={cantidad >= producto.stock}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-white font-bold text-[#12151B] shadow-sm disabled:opacity-40"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={handleAgregar}
-              disabled={sinStock}
-              className={`w-full py-3.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-sm ${
-                sinStock
-                  ? "bg-[#E7E5E0] text-[#6B675F] cursor-not-allowed"
-                  : "bg-[#12151B] text-white hover:bg-[#0E6E55] active:scale-[0.98]"
-              }`}
-            >
-              <span>🛒</span>
-              <span>
-                {sinStock
-                  ? "Producto Agotado"
-                  : `Agregar ${cantidad} al Carrito • $${(
-                      producto.precio * cantidad
-                    ).toLocaleString("es-AR")}`}
-              </span>
-            </button>
           </div>
+        )}
+
+        {/* Selector de cantidad y Stock */}
+        <div className="mt-6 border-t border-[#E7E5E0] pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-xs font-semibold text-[#12151B]">
+                Disponible para agregar: {disponibleParaAgregar}
+              </p>
+              {yaEnCarrito > 0 && (
+                <p className="text-[11px] font-bold text-[#0E6E55] mt-0.5">
+                  (Ya tenés {yaEnCarrito} en tu carrito)
+                </p>
+              )}
+            </div>
+
+            {/* Selector - / + */}
+            <div className="flex items-center gap-3 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-1">
+              <button
+                onClick={decrementar}
+                disabled={cantidad <= 1 || disponibleParaAgregar === 0}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-sm font-bold shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                -
+              </button>
+              <span className="w-6 text-center text-xs font-bold">
+                {disponibleParaAgregar === 0 ? 0 : cantidad}
+              </span>
+              <button
+                onClick={incrementar}
+                disabled={cantidad >= disponibleParaAgregar || disponibleParaAgregar === 0}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-sm font-bold shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Botón de Confirmación */}
+          <button
+            onClick={handleAgregar}
+            disabled={disponibleParaAgregar === 0}
+            className={`w-full py-3.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+              disponibleParaAgregar === 0
+                ? "bg-[#E7E5E0] text-[#6B675F] cursor-not-allowed opacity-80"
+                : "bg-[#12151B] text-white hover:bg-[#0E6E55] active:scale-[0.98]"
+            }`}
+          >
+            <span>🛒</span>
+            <span>
+              {disponibleParaAgregar === 0
+                ? "Máximo disponible alcanzado"
+                : `Agregar ${cantidad} al Carrito • $${new Intl.NumberFormat(
+                    "es-AR"
+                  ).format((producto.precio || 0) * cantidad)}`}
+            </span>
+          </button>
         </div>
       </div>
     </div>
