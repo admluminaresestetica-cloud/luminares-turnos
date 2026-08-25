@@ -12,6 +12,7 @@ interface Banner {
   id: string;
   imagen_url: string;
   titulo?: string;
+  activo?: boolean;
 }
 
 export default function BannerCarousel() {
@@ -20,21 +21,23 @@ export default function BannerCarousel() {
 
   useEffect(() => {
     const fetchBanners = async () => {
+      // Consulta exclusivamente a la tabla de la tienda
       const { data, error } = await supabase
         .from("banners_tienda")
-        .select("id, imagen_url, titulo")
-        .eq("activo", true)
-        .order("orden", { ascending: true });
+        .select("id, imagen_url, titulo, activo")
+        .eq("activo", true);
 
       if (!error && data) {
         setBanners(data);
+      } else if (error) {
+        console.error("Error al cargar los banners de la tienda:", error.message);
       }
     };
 
     fetchBanners();
   }, []);
 
-  // Autoplay cada 5 segundos si hay más de 1 banner
+  // Autoplay cada 5 segundos si hay más de 1 banner activo
   useEffect(() => {
     if (banners.length <= 1) return;
     const interval = setInterval(() => {
@@ -46,7 +49,7 @@ export default function BannerCarousel() {
   if (banners.length === 0) return null;
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl shadow-sm my-4">
+    <div className="relative w-full overflow-hidden rounded-2xl shadow-sm my-4 bg-slate-100">
       <div
         className="flex transition-transform duration-500 ease-out"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -55,7 +58,7 @@ export default function BannerCarousel() {
           <div key={b.id} className="min-w-full flex-shrink-0">
             <img
               src={b.imagen_url}
-              alt={b.titulo || "Banner"}
+              alt={b.titulo || "Banner promocional"}
               className="w-full h-auto max-h-[350px] object-cover rounded-2xl"
             />
           </div>
@@ -69,8 +72,9 @@ export default function BannerCarousel() {
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
+              aria-label={`Ir al banner ${idx + 1}`}
               className={`h-2 rounded-full transition-all ${
-                currentIndex === idx ? "w-6 bg-white" : "w-2 bg-white/50"
+                currentIndex === idx ? "w-6 bg-white shadow-sm" : "w-2 bg-white/60"
               }`}
             />
           ))}
