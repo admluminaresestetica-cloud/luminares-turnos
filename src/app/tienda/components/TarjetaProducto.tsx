@@ -13,14 +13,20 @@ export default function TarjetaProducto({
   producto,
   onVerDetalle,
 }: TarjetaProductoProps) {
-  const { agregarAlCarrito, items } = useCarrito();
+  // Extraemos datos del contexto con valor de respaldo en caso de undefined
+  const context = useCarrito();
+  const agregarAlCarrito = context?.agregarAlCarrito;
+  const items = context?.items || context?.carrito || [];
+
   const sinStock = (producto.stock ?? 0) <= 0;
 
-  // Buscar si este producto ya está en el carrito y cuántas unidades van
-  const itemEnCarrito = items.find((item) => item.id === producto.id);
+  // Búsqueda segura dentro del array de items
+  const itemEnCarrito = Array.isArray(items) 
+    ? items.find((item: any) => item.id === producto.id) 
+    : null;
   const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
-  // Formateo seguro para evitar fallos de locale en prerrenderizado
+  // Formateo seguro para evitar fallos de locale
   const precioFormateado = new Intl.NumberFormat("es-AR").format(
     producto.precio || 0
   );
@@ -71,11 +77,11 @@ export default function TarjetaProducto({
           </p>
         </div>
 
-        {/* Botón rápido de agregar al carrito con indicador numérico */}
+        {/* Botón rápido de agregar al carrito */}
         <button
           onClick={(e) => {
-            e.stopPropagation(); // Evita abrir el modal al tocar el botón
-            if (!sinStock) {
+            e.stopPropagation();
+            if (!sinStock && agregarAlCarrito) {
               agregarAlCarrito({
                 ...producto,
                 cantidad: 1,
@@ -92,7 +98,7 @@ export default function TarjetaProducto({
           <span>🛒</span>
           <span>{sinStock ? "Agotado" : "Agregar"}</span>
 
-          {/* Badge con la cantidad actual agregada de este producto */}
+          {/* Badge con la cantidad agregada */}
           {cantidadEnCarrito > 0 && !sinStock && (
             <span className="ml-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0E6E55] px-1 text-[10px] font-extrabold text-white">
               {cantidadEnCarrito}
