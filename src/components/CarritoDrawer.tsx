@@ -132,7 +132,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     setMostrarModalExito(true);
   };
 
-  // Procesar flujo de Mercado Pago
+  
+            
+    // Procesar flujo de Mercado Pago
   const procesarMercadoPago = async () => {
     if (!validarFormulario()) return;
 
@@ -153,8 +155,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         }),
       });
 
-            
-            const data = await response.json();
+      const data = await response.json();
 
       if (data.init_point) {
         vaciarCarrito();
@@ -162,15 +163,14 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       } else {
         alert("Error del servidor: " + (data.error || "Desconocido"));
       }
-
-      }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al procesar pago:", error);
-      alert("Hubo un problema procesando la solicitud.");
+      alert("Error en la solicitud: " + error.message);
     } finally {
       setGuardandoPedido(false);
     }
   };
+
 
   const manejarSubmit = () => {
     if (metodoPago === "whatsapp") {
