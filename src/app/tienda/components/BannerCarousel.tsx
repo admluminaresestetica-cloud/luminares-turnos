@@ -21,7 +21,6 @@ export default function BannerCarousel() {
 
   useEffect(() => {
     const fetchBanners = async () => {
-      // Consulta exclusivamente a la tabla de la tienda
       const { data, error } = await supabase
         .from("banners_tienda")
         .select("id, imagen_url, titulo, activo")
@@ -30,14 +29,13 @@ export default function BannerCarousel() {
       if (!error && data) {
         setBanners(data);
       } else if (error) {
-        console.error("Error al cargar los banners de la tienda:", error.message);
+        console.error("Error al cargar banners de la tienda:", error.message);
       }
     };
 
     fetchBanners();
   }, []);
 
-  // Autoplay cada 5 segundos si hay más de 1 banner activo
   useEffect(() => {
     if (banners.length <= 1) return;
     const interval = setInterval(() => {
@@ -49,7 +47,7 @@ export default function BannerCarousel() {
   if (banners.length === 0) return null;
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl shadow-sm my-4 bg-slate-100">
+    <div className="relative w-full overflow-hidden rounded-3xl shadow-sm my-4 bg-slate-100">
       <div
         className="flex transition-transform duration-500 ease-out"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -59,7 +57,7 @@ export default function BannerCarousel() {
             <img
               src={b.imagen_url}
               alt={b.titulo || "Banner promocional"}
-              className="w-full h-auto aspect-[1080/450] object-contain rounded-2xl"
+              className="w-full h-44 sm:h-64 md:h-80 object-cover object-center rounded-3xl"
             />
           </div>
         ))}
@@ -67,14 +65,14 @@ export default function BannerCarousel() {
 
       {/* Indicadores / Puntos */}
       {banners.length > 1 && (
-        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2">
+        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
           {banners.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
               aria-label={`Ir al banner ${idx + 1}`}
-              className={`h-2 rounded-full transition-all ${
-                currentIndex === idx ? "w-6 bg-white shadow-sm" : "w-2 bg-white/60"
+              className={`h-2 rounded-full transition-all duration-300 ${
+                currentIndex === idx ? "w-6 bg-white shadow-md" : "w-2 bg-white/60"
               }`}
             />
           ))}
