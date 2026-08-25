@@ -9,6 +9,8 @@ import { Producto } from "@/types/tienda";
 // Nuevos componentes modularizados (Fase 1)
 import BuscadorYCategorias from "./components/BuscadorYCategorias";
 import GridProductos from "./components/GridProductos";
+import ModalDetalleProducto from "./components/ModalDetalleProducto";
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
