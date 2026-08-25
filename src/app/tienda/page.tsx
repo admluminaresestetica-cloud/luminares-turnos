@@ -84,7 +84,7 @@ export default function TiendaPage() {
             🛍️
           </span>
           <h2 className="m-0 text-lg font-bold tracking-tight text-[#12151B]">
-            Tienda Oficial
+            Luminares Tienda Oficial
           </h2>
         </div>
 
