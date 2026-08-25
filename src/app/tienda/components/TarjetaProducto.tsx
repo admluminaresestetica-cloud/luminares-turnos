@@ -13,8 +13,12 @@ export default function TarjetaProducto({
   producto,
   onVerDetalle,
 }: TarjetaProductoProps) {
-  const { agregarAlCarrito } = useCarrito();
+  const { agregarAlCarrito, items } = useCarrito();
   const sinStock = (producto.stock ?? 0) <= 0;
+
+  // Buscar si este producto ya está en el carrito y cuántas unidades van
+  const itemEnCarrito = items.find((item) => item.id === producto.id);
+  const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
   // Formateo seguro para evitar fallos de locale en prerrenderizado
   const precioFormateado = new Intl.NumberFormat("es-AR").format(
@@ -67,7 +71,7 @@ export default function TarjetaProducto({
           </p>
         </div>
 
-        {/* Botón rápido de agregar al carrito */}
+        {/* Botón rápido de agregar al carrito con indicador numérico */}
         <button
           onClick={(e) => {
             e.stopPropagation(); // Evita abrir el modal al tocar el botón
@@ -79,7 +83,7 @@ export default function TarjetaProducto({
             }
           }}
           disabled={sinStock}
-          className={`w-full py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+          className={`w-full py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
             sinStock
               ? "bg-[#E7E5E0] text-[#6B675F] cursor-not-allowed"
               : "bg-[#12151B] text-white hover:bg-[#0E6E55] active:scale-[0.97]"
@@ -87,6 +91,13 @@ export default function TarjetaProducto({
         >
           <span>🛒</span>
           <span>{sinStock ? "Agotado" : "Agregar"}</span>
+
+          {/* Badge con la cantidad actual agregada de este producto */}
+          {cantidadEnCarrito > 0 && !sinStock && (
+            <span className="ml-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0E6E55] px-1 text-[10px] font-extrabold text-white">
+              {cantidadEnCarrito}
+            </span>
+          )}
         </button>
       </div>
     </div>
