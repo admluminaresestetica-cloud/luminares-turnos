@@ -125,61 +125,45 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
       {isOpen && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.4)",
-            zIndex: 50,
-            display: "flex",
-            justifyContent: "flex-end",
-          }}
+          className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out]"
         >
           <div
-            style={{
-              width: "100%",
-              maxWidth: "420px",
-              height: "100%",
-              background: "#ffffff",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              padding: "20px",
-              boxSizing: "border-box",
-              overflowY: "auto",
-            }}
+            className="flex h-full w-full max-w-[420px] flex-col justify-between overflow-y-auto bg-white shadow-2xl animate-[slideIn_0.28s_cubic-bezier(0.16,1,0.3,1)]"
           >
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "16px",
-                }}
+            {/* Cabecera fija */}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E5E0] bg-white/95 px-5 py-4 shadow-sm backdrop-blur-sm">
+              <h2 className="text-lg font-bold tracking-tight text-[#12151B]">
+                Tu Carrito
+                {carrito.length > 0 && (
+                  <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#12151B] px-1.5 text-xs font-semibold text-white">
+                    {carrito.length}
+                  </span>
+                )}
+              </h2>
+              <button
+                onClick={onClose}
+                aria-label="Cerrar carrito"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-[#F7F7F5] hover:text-[#12151B] active:scale-90"
               >
-                <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "700" }}>
-                  Tu Carrito
-                </h2>
-                <button
-                  onClick={onClose}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    fontSize: "20px",
-                    cursor: "pointer",
-                    color: "#6b7280",
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
+                <span className="text-lg leading-none">✕</span>
+              </button>
+            </div>
 
+            <div className="flex-1 px-5 py-4">
               {carrito.length === 0 ? (
-                <p style={{ textAlign: "center", color: "#6b7280", marginTop: "40px" }}>
-                  El carrito está vacío.
-                </p>
+                <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#F7F7F5] text-4xl">
+                    🛒
+                  </div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Tu carrito está vacío
+                  </p>
+                  <p className="max-w-[220px] text-xs text-gray-400">
+                    Agregá productos para verlos reflejados acá.
+                  </p>
+                </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div className="flex flex-col gap-3">
                   {carrito.map((item) => (
                     <CarritoItem
                       key={item.id}
@@ -194,17 +178,30 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             </div>
 
             {carrito.length > 0 && (
-              <FormularioEnvio
-                totalPrecio={totalPrecio}
-                datosEnvio={datosEnvio}
-                setDatosEnvio={setDatosEnvio}
-                guardandoPedido={guardandoPedido}
-                onConfirmar={enviarAWhatsApp}
-              />
+              <div className="px-5 pb-5">
+                <FormularioEnvio
+                  totalPrecio={totalPrecio}
+                  datosEnvio={datosEnvio}
+                  setDatosEnvio={setDatosEnvio}
+                  guardandoPedido={guardandoPedido}
+                  onConfirmar={enviarAWhatsApp}
+                />
+              </div>
             )}
           </div>
         </div>
       )}
+
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideIn {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+      `}</style>
     </>
   );
 }
