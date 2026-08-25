@@ -19,9 +19,8 @@ export default function BuscadorYCategorias({
 }: BuscadorYCategoriasProps) {
   return (
     <div className="mb-6 space-y-4">
-      {/* Input de Búsqueda Profesional */}
+      {/* Input de Búsqueda */}
       <div className="relative flex items-center">
-        {/* Ícono SVG de Lupa Estilizado */}
         <div className="pointer-events-none absolute left-4 text-[#8C8881]">
           <svg
             className="h-4 w-4"
@@ -45,7 +44,6 @@ export default function BuscadorYCategorias({
           className="w-full rounded-2xl border border-[#E7E5E0] bg-white py-3 pl-11 pr-10 text-sm font-medium text-[#12151B] placeholder-[#9E9A92] shadow-sm transition-all outline-none focus:border-[#12151B] focus:ring-1 focus:ring-[#12151B]"
         />
 
-        {/* Botón para limpiar búsqueda cuando hay texto */}
         {busqueda && (
           <button
             onClick={() => onBusquedaChange("")}
@@ -65,18 +63,18 @@ export default function BuscadorYCategorias({
         )}
       </div>
 
-      {/* Lista de Categorías en Chips con Scroll Horizontal */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar scroll-smooth">
+      {/* Lista de Categorías Elegante (Sin barra de scroll ploma visible) */}
+      <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {categorias.map((cat) => {
           const esSeleccionado = categoriaSeleccionada === cat;
           return (
             <button
               key={cat}
               onClick={() => onCategoriaSelect(cat)}
-              className={`shrink-0 rounded-full border px-4 py-2 text-xs sm:text-sm font-medium transition-all duration-200 ${
+              className={`shrink-0 rounded-full px-4 py-2 text-xs sm:text-sm font-semibold tracking-wide transition-all duration-200 ${
                 esSeleccionado
-                  ? "border-[#12151B] bg-[#12151B] text-white shadow-sm"
-                  : "border-[#E7E5E0] bg-white text-[#6B675F] hover:border-[#12151B]/30 hover:text-[#12151B]"
+                  ? "bg-[#12151B] text-white shadow-md scale-[1.02]"
+                  : "bg-white text-[#524F4A] border border-[#E7E5E0] hover:border-[#12151B]/30 hover:text-[#12151B] hover:bg-slate-50"
               }`}
             >
               {cat}
@@ -87,5 +85,3 @@ export default function BuscadorYCategorias({
     </div>
   );
 }
-
-          
