@@ -1,125 +1,80 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-interface Banner {
-  id: string;
-  imagen_url: string;
-  titulo?: string;
-}
+import { useState, useEffect } from 'react'
+import { X } from 'lucide-react'
+import { getBannerConfig, BannerConfig } from '@/lib/supabase/banner'
 
 export default function BannerPrincipal() {
-  const [banners, setBanners] = useState<Banner[]>([]);
-  const [actual, setActual] = useState(0);
-  const [cargando, setCargando] = useState(true);
+  const [banner, setBanner] = useState<BannerConfig | null>(null)
+  const [isVisible, setIsVisible] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchBanners = async () => {
-      setCargando(true);
-
-      // Consulta limpia a la tabla de base de datos
-      const { data, error } = await supabase
-        .from("banners_tienda")
-        .select("id, imagen_url, titulo")
-        .eq("activo", true)
-        .order("orden", { ascending: true });
-
-      if (error) {
-        console.error("Error al obtener banners de la BD:", error);
-      } else if (data) {
-        setBanners(data);
+    async function cargarBanner() {
+      try {
+        const data = await getBannerConfig()
+        if (data && data.activo) {
+          // Eliminamos el localStorage para que aparezca SIEMPRE al ingresar
+          setBanner(data)
+          setIsVisible(true)
+        }
+      } catch (error) {
+        console.error('Error al cargar el banner público:', error)
+      } finally {
+        setLoading(false)
       }
+    }
+    cargarBanner()
+  }, [])
 
-      setCargando(false);
-    };
-
-    fetchBanners();
-  }, []);
-
-  // Transición automática del carrusel cada 5 segundos
-  useEffect(() => {
-    if (banners.length <= 1) return;
-
-    const interval = setInterval(() => {
-      setActual((prev) => (prev + 1) % banners.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [banners.length]);
-
-  const anterior = () => {
-    setActual((prev) => (prev === 0 ? banners.length - 1 : prev - 1));
-  };
-
-  const siguiente = () => {
-    setActual((prev) => (prev + 1) % banners.length);
-  };
-
-  if (cargando) {
-    return (
-      <div className="w-full h-[180px] sm:h-[280px] bg-[#E7E5E0] animate-pulse rounded-2xl mb-6" />
-    );
+  const cerrarBanner = () => {
+    setIsVisible(false)
+    // Ya no guardamos nada en localStorage acá
   }
 
-  // Si no hay banners activos, simplemente no muestra nada
-  if (banners.length === 0) return null;
+  if (loading || !isVisible || !banner) return null
 
   return (
-    <div className="relative w-full h-[180px] sm:h-[280px] overflow-hidden rounded-2xl mb-6 shadow-sm group bg-[#12151B]">
-      {/* Slides */}
-      {banners.map((banner, index) => (
-        <div
-          key={banner.id}
-          className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-            index === actual ? "opacity-100 z-10" : "opacity-0 z-0"
-          }`}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 sm:p-6 animate-fadeIn">
+      <div className="relative w-full max-w-2xl bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col">
+        {/* Botón X grande y cómodo para cerrar */}
+        <button
+          onClick={cerrarBanner}
+          aria-label="Cerrar banner"
+          className="absolute top-4 right-4 z-30 p-2.5 bg-black/70 hover:bg-black text-white rounded-full transition-all backdrop-blur-sm shadow-lg hover:scale-105"
         >
-          <img
-            src={banner.imagen_url}
-            alt={banner.titulo || `Promoción ${index + 1}`}
-            className="w-full h-full object-cover"
-          />
+          <X size={20} />
+        </button>
+
+        {/* Contenido Visual (Cambiado a object-cover para eliminar los bordes negros) */}
+        <div className="w-full relative h-[60vh] sm:h-[70vh] flex items-center justify-center bg-black">
+          {banner.tipo === 'video' ? (
+            <video
+              src={banner.url_media}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img
+              src={banner.url_media}
+              alt={banner.titulo || 'Banner de bienvenida'}
+              className="w-full h-full object-cover"
+            />
+          )}
         </div>
-      ))}
 
-      {/* Navegación (si hay 2 o más) */}
-      {banners.length > 1 && (
-        <>
-          <button
-            onClick={anterior}
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-[#12151B] backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
-          >
-            ❮
-          </button>
-          <button
-            onClick={siguiente}
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-[#12151B] backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
-          >
-            ❯
-          </button>
-
-          {/* Indicadores (Dots) */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-            {banners.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setActual(idx)}
-                className={`h-2 rounded-full transition-all ${
-                  idx === actual
-                    ? "w-6 bg-white"
-                    : "w-2 bg-white/50 hover:bg-white/80"
-                }`}
-              />
-            ))}
+        {/* Título opcional en la parte inferior del modal */}
+        {banner.titulo && (
+          <div className="p-4 sm:p-5 bg-slate-900 border-t border-slate-800 text-center">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">
+              {banner.titulo}
+            </h2>
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
-  );
+  )
 }
