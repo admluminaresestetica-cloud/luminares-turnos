@@ -6,11 +6,10 @@ import CarritoDrawer from "@/components/CarritoDrawer";
 import { useCarrito } from "@/context/CarritoContext";
 import { Producto } from "@/types/tienda";
 
-// Nuevos componentes modularizados (Fase 1)
+// Componentes modularizados
 import BuscadorYCategorias from "./components/BuscadorYCategorias";
 import GridProductos from "./components/GridProductos";
 import ModalDetalleProducto from "./components/ModalDetalleProducto";
-
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,7 +24,7 @@ export default function TiendaPage() {
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("Todos");
 
-  // Estado para el modal de detalle (Fase 2)
+  // Estado para el modal de detalle
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
 
   const { totalItems } = useCarrito();
@@ -93,7 +92,7 @@ export default function TiendaPage() {
         </button>
       </nav>
 
-      {/* Hero / Banner (En Fase 3 se reemplazará por BannerTienda dinámico) */}
+      {/* Hero / Banner */}
       <div
         className="relative overflow-hidden px-6 py-12 text-center text-white sm:py-16"
         style={{
@@ -132,14 +131,14 @@ export default function TiendaPage() {
           onCategoriaSelect={setCategoriaFiltro}
         />
 
-                {/* Grilla Modular de Productos (2 por fila en móvil) */}
+        {/* Grilla Modular de Productos (2 por fila en móvil) */}
         <GridProductos
           productos={productosFiltrados}
           onVerDetalle={(prod) => setProductoSeleccionado(prod)}
         />
       </div>
 
-      {/* Modal de Detalle de Producto (Fase 2) */}
+      {/* Modal de Detalle de Producto */}
       <ModalDetalleProducto
         producto={productoSeleccionado}
         onClose={() => setProductoSeleccionado(null)}
@@ -153,4 +152,3 @@ export default function TiendaPage() {
     </div>
   );
 }
-
