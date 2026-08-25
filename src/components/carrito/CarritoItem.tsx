@@ -26,93 +26,55 @@ export default function CarritoItem({
   const alcanzoLimite = item.cantidad >= stockDisponible;
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        borderBottom: "1px solid #f3f4f6",
-        paddingBottom: "10px",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <div
-          style={{
-            width: "42px",
-            height: "42px",
-            borderRadius: "8px",
-            backgroundColor: "#f7f7f5",
-            overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            border: "1px solid #e7e5e0",
-          }}
-        >
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#E7E5E0] bg-white p-3 shadow-sm transition-shadow hover:shadow-md">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E7E5E0] bg-[#F7F7F5]">
           {item.imagen_url ? (
             <img
               src={item.imagen_url}
               alt={item.nombre}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              className="h-full w-full object-cover"
             />
           ) : (
-            <span style={{ fontSize: "18px" }}>🛍️</span>
+            <span className="text-xl">🛍️</span>
           )}
         </div>
 
-        <div>
-          <strong style={{ fontSize: "13px", color: "#1f2937", display: "block" }}>
+        <div className="min-w-0">
+          <strong className="block truncate text-sm font-semibold text-[#12151B]">
             {item.nombre}
           </strong>
-          <span style={{ fontSize: "12px", color: "#6b7280" }}>
-            ${new Intl.NumberFormat("es-AR").format(item.precio)} c/u
+          <span className="text-xs font-bold text-[#0E6E55]">
+            ${new Intl.NumberFormat("es-AR").format(item.precio)}
           </span>
+          <span className="ml-1 text-xs text-gray-400">c/u</span>
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-        <button
-          onClick={() => onRestar(item.id)}
-          style={{
-            padding: "2px 8px",
-            borderRadius: "6px",
-            border: "1px solid #e5e7eb",
-            background: "#fff",
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          -
-        </button>
-        <span style={{ fontWeight: "700", fontSize: "13px", minWidth: "16px", textAlign: "center" }}>
-          {item.cantidad}
-        </span>
-        <button
-          onClick={() => onAgregar(item)}
-          disabled={alcanzoLimite}
-          style={{
-            padding: "2px 8px",
-            borderRadius: "6px",
-            border: "1px solid #e5e7eb",
-            background: "#fff",
-            cursor: alcanzoLimite ? "not-allowed" : "pointer",
-            opacity: alcanzoLimite ? 0.4 : 1,
-            fontWeight: "bold",
-          }}
-        >
-          +
-        </button>
+      <div className="flex flex-shrink-0 flex-col items-end gap-1.5">
+        <div className="flex items-center gap-0.5 rounded-full border border-[#E7E5E0] bg-[#F7F7F5] p-0.5">
+          <button
+            onClick={() => onRestar(item.id)}
+            aria-label="Quitar unidad"
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm font-bold text-[#12151B] shadow-sm transition-transform hover:bg-white active:scale-90"
+          >
+            −
+          </button>
+          <span className="min-w-[22px] text-center text-sm font-bold text-[#12151B]">
+            {item.cantidad}
+          </span>
+          <button
+            onClick={() => onAgregar(item)}
+            disabled={alcanzoLimite}
+            aria-label="Agregar unidad"
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm font-bold text-[#12151B] shadow-sm transition-transform enabled:hover:bg-white enabled:active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            +
+          </button>
+        </div>
         <button
           onClick={() => onEliminar(item.id)}
-          style={{
-            background: "none",
-            border: "none",
-            color: "#ef4444",
-            cursor: "pointer",
-            fontSize: "12px",
-            marginLeft: "4px",
-          }}
+          className="text-[11px] font-medium text-gray-400 transition-colors hover:text-red-500"
         >
           Eliminar
         </button>
