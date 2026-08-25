@@ -1,4 +1,4 @@
-'use client';
+3'use client';
 
 import React, { useState } from "react";
 import { useCarrito } from "@/context/CarritoContext";
@@ -24,6 +24,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const [telefonoWhatsApp] = useState("5493413954355");
   const [guardandoPedido, setGuardandoPedido] = useState(false);
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
+  
+  // Selección de método de pago: 'whatsapp' (transferencia/alias) o 'mercadopago' (tarjeta/cuotas)
+  const [metodoPago, setMetodoPago] = useState<"whatsapp" | "mercadopago">("whatsapp");
 
   const [datosEnvio, setDatosEnvio] = useState({
     nombreCliente: "",
@@ -35,21 +38,26 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   if (!isOpen && !mostrarModalExito) return null;
 
+  // Monto base
   const totalPrecio = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+  
+  // Recargo por tarjeta / MP (10%)
+  const PORCENTAJE_RECARGO = 0.10;
+  const totalConRecargo = Math.round(totalPrecio * (1 + PORCENTAJE_RECARGO));
 
-  const enviarAWhatsApp = async () => {
+  const validarFormulario = () => {
     if (!datosEnvio.nombreCliente.trim()) {
       alert("Por favor, ingresá tu nombre para continuar.");
-      return;
+      return false;
     }
-
     if (datosEnvio.metodoEnvio === "envio" && !datosEnvio.direccion.trim()) {
       alert("Por favor, ingresá tu dirección de envío.");
-      return;
+      return false;
     }
+    return true;
+  };
 
-    setGuardandoPedido(true);
-
+  const guardarPedidoEnDB = async (montoFinal: number, medioPagoStr: string) => {
     try {
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
@@ -58,10 +66,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             nombre_cliente: datosEnvio.nombreCliente.trim(),
             telefono_cliente: datosEnvio.telefonoCliente.trim() || null,
             metodo_envio: datosEnvio.metodoEnvio,
-            total: totalPrecio,
+            total: montoFinal,
             estado: "pendiente",
             direccion: datosEnvio.metodoEnvio === "envio" ? datosEnvio.direccion.trim() : null,
-            nota_adicional: datosEnvio.notaAdicional.trim() || null,
+            nota_adicional: `${datosEnvio.notaAdicional.trim()} [Pago: ${medioPagoStr}]`.trim(),
           },
         ])
         .select();
@@ -85,8 +93,16 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         if (itemsError) console.error("Error al insertar items:", itemsError);
       }
     } catch (err) {
-      console.error("Excepción:", err);
+      console.error("Excepción en DB:", err);
     }
+  };
+
+  // Procesar flujo de WhatsApp
+  const procesarWhatsApp = async () => {
+    if (!validarFormulario()) return;
+
+    setGuardandoPedido(true);
+    await guardarPedidoEnDB(totalPrecio, "WhatsApp / Transferencia");
 
     let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
     mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
@@ -104,8 +120,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
     });
 
-    mensaje += `\n*Total a pagar:* $${totalPrecio}\n\n`;
-    mensaje += `Quedo a la espera de los datos para concretar la compra.`;
+    mensaje += `\n*Total a pagar (Transferencia / Efectivo):* $${totalPrecio}\n\n`;
+    mensaje += `Quedo a la espera del alias para realizar la transferencia.`;
 
     const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
     window.open(url, "_blank");
@@ -116,6 +132,49 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     setMostrarModalExito(true);
   };
 
+  // Procesar flujo de Mercado Pago
+  const procesarMercadoPago = async () => {
+    if (!validarFormulario()) return;
+
+    setGuardandoPedido(true);
+    await guardarPedidoEnDB(totalConRecargo, "Mercado Pago");
+
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemsCarrito: carrito.map((item) => ({
+            id: item.id,
+            cantidad: item.cantidad,
+          })),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.init_point) {
+        vaciarCarrito();
+        window.location.href = data.init_point;
+      } else {
+        alert("Error al conectar con la pasarela de Mercado Pago.");
+      }
+    } catch (error) {
+      console.error("Error al procesar pago:", error);
+      alert("Hubo un problema procesando la solicitud.");
+    } finally {
+      setGuardandoPedido(false);
+    }
+  };
+
+  const manejarSubmit = () => {
+    if (metodoPago === "whatsapp") {
+      procesarWhatsApp();
+    } else {
+      procesarMercadoPago();
+    }
+  };
+
   return (
     <>
       <ModalExito
@@ -124,13 +183,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       />
 
       {isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out]"
-        >
-          <div
-            className="flex h-full w-full max-w-[420px] flex-col justify-between overflow-y-auto bg-white shadow-2xl animate-[slideIn_0.28s_cubic-bezier(0.16,1,0.3,1)]"
-          >
-            {/* Cabecera fija */}
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out]">
+          <div className="flex h-full w-full max-w-[420px] flex-col justify-between overflow-y-auto bg-white shadow-2xl animate-[slideIn_0.28s_cubic-bezier(0.16,1,0.3,1)]">
+            
+            {/* Cabecera */}
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E5E0] bg-white/95 px-5 py-4 shadow-sm backdrop-blur-sm">
               <h2 className="text-lg font-bold tracking-tight text-[#12151B]">
                 Tu Carrito
@@ -149,6 +205,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
               </button>
             </div>
 
+            {/* Lista de Productos */}
             <div className="flex-1 px-5 py-4">
               {carrito.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
@@ -177,14 +234,51 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
               )}
             </div>
 
+            {/* Opciones de Pago y Formulario */}
             {carrito.length > 0 && (
-              <div className="px-5 pb-5">
+              <div className="px-5 pb-5 space-y-4">
+                
+                {/* Selector de Método de Pago */}
+                <div className="rounded-2xl border border-[#E7E5E0] p-3 bg-slate-50/60 space-y-2">
+                  <label className="text-xs font-bold text-[#12151B] uppercase tracking-wider block">
+                    Método de Pago
+                  </label>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setMetodoPago("whatsapp")}
+                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                        metodoPago === "whatsapp"
+                          ? "border-[#0E6E55] bg-[#0E6E55]/10 text-[#0E6E55] shadow-sm"
+                          : "border-[#E7E5E0] bg-white text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>💬 WhatsApp</span>
+                      <span className="text-[10px] font-normal text-gray-500">Transferencia / Alias</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setMetodoPago("mercadopago")}
+                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                        metodoPago === "mercadopago"
+                          ? "border-blue-600 bg-blue-50 text-blue-600 shadow-sm"
+                          : "border-[#E7E5E0] bg-white text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      <span>💳 Mercado Pago</span>
+                      <span className="text-[10px] font-normal text-gray-500">Tarjetas / Cuotas (+10%)</span>
+                    </button>
+                  </div>
+                </div>
+
                 <FormularioEnvio
-                  totalPrecio={totalPrecio}
+                  totalPrecio={metodoPago === "mercadopago" ? totalConRecargo : totalPrecio}
                   datosEnvio={datosEnvio}
                   setDatosEnvio={setDatosEnvio}
                   guardandoPedido={guardandoPedido}
-                  onConfirmar={enviarAWhatsApp}
+                  onConfirmar={manejarSubmit}
                 />
               </div>
             )}
