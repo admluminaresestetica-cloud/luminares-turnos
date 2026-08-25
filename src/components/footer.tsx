@@ -1,7 +1,11 @@
 import Link from 'next/link';
-import { MapPin, Wallet, ShieldCheck } from 'lucide-react';
+import { MapPin, Wallet, ShieldCheck, ShoppingBag } from 'lucide-react';
 
-export default function Footer() {
+interface FooterProps {
+  tipo?: 'reserva' | 'tienda';
+}
+
+export default function Footer({ tipo = 'reserva' }: FooterProps) {
   const anioActual = new Date().getFullYear();
 
   return (
@@ -22,20 +26,38 @@ export default function Footer() {
 
           <div className="inline-flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-slate-200/80 shadow-2xs">
             <Wallet className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Efectivo · Transferencia</span>
+            <span>
+              {tipo === 'tienda' ? 'Efectivo · Mercado Pago' : 'Efectivo · Transferencia'}
+            </span>
           </div>
         </div>
 
         {/* Links de navegación y Políticas */}
         <div className="flex justify-center items-center gap-3 text-[11px] text-slate-400 font-medium">
-          <Link href="/mis-turnos" className="hover:text-slate-700 transition-colors">
-            Mis Turnos
-          </Link>
-          <span>•</span>
-          <Link href="/faq" className="hover:text-slate-700 transition-colors inline-flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3 text-slate-400" />
-            Políticas y FAQ
-          </Link>
+          {tipo === 'reserva' ? (
+            <>
+              <Link href="/mis-turnos" className="hover:text-slate-700 transition-colors">
+                Mis Turnos
+              </Link>
+              <span>•</span>
+              <Link href="/faq" className="hover:text-slate-700 transition-colors inline-flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-slate-400" />
+                Políticas y FAQ
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/" className="hover:text-slate-700 transition-colors inline-flex items-center gap-1">
+                <ShoppingBag className="w-3 h-3 text-slate-400" />
+                Reservar Turno
+              </Link>
+              <span>•</span>
+              <Link href="/faq" className="hover:text-slate-700 transition-colors inline-flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-slate-400" />
+                Envíos y FAQ
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Copyright */}

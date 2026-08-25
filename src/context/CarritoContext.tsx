@@ -27,6 +27,7 @@ export interface DatosEnvio {
 
 interface CarritoContextType {
   carrito: CarritoItem[];
+  items: CarritoItem[];
   datosEnvio: DatosEnvio;
   setDatosEnvio: React.Dispatch<React.SetStateAction<DatosEnvio>>;
   agregarAlCarrito: (producto: Producto) => void;
@@ -124,6 +125,7 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
     <CarritoContext.Provider
       value={{
         carrito,
+        items: carrito,
         datosEnvio,
         setDatosEnvio,
         agregarAlCarrito,

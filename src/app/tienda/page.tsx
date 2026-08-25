@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import CarritoDrawer from "@/components/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
+import Footer from "@/components/footer";
 import { useCarrito } from "@/context/CarritoContext";
 import { Producto } from "@/types/tienda";
 
@@ -76,7 +77,7 @@ export default function TiendaPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] text-[#12151B]">
+    <div className="min-h-screen bg-[#F7F7F5] text-[#12151B] flex flex-col">
       {/* Navbar */}
       <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-[#E7E5E0] bg-white/90 px-6 py-4 backdrop-blur-md sm:px-10">
         <div className="flex items-center gap-2.5">
@@ -103,8 +104,8 @@ export default function TiendaPage() {
       </nav>
 
       {/* Contenido Principal */}
-      <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-4 sm:px-10">
-        {/* Carrusel exclusivo de la Tienda (Tabla: banners_tienda) */}
+      <div className="mx-auto max-w-[1150px] w-full px-4 pb-16 pt-4 sm:px-10 flex-1">
+        {/* Carrusel exclusivo de la Tienda */}
         <BannerCarousel />
 
         {/* Buscador y Categorías */}
@@ -134,6 +135,9 @@ export default function TiendaPage() {
         isOpen={modalAbierto}
         onClose={() => setModalAbierto(false)}
       />
+
+      {/* Footer adaptable de la Tienda */}
+      <Footer tipo="tienda" />
     </div>
   );
 }
