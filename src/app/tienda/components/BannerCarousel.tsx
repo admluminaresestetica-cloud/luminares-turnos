@@ -59,7 +59,7 @@ export default function BannerCarousel() {
             <img
               src={b.imagen_url}
               alt={b.titulo || "Banner promocional"}
-              className="w-full h-auto max-h-[350px] object-cover rounded-2xl"
+              className="w-full h-auto aspect-[1080/450] object-contain rounded-2xl"
             />
           </div>
         ))}
