@@ -44,11 +44,11 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ init_point: result.init_point });
-  } catch (error: any) {
+    } catch (error: any) {
     console.error("Error al crear preferencia de Mercado Pago:", error);
+    // Devolvemos el mensaje exacto de error para verlo en pantalla
     return NextResponse.json(
-      { error: error.message || "Error al procesar el pago" },
+      { error: error?.message || JSON.stringify(error) || "Error desconocido" },
       { status: 500 }
     );
   }
-}
