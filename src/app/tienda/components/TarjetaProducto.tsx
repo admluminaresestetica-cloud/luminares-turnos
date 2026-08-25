@@ -16,6 +16,11 @@ export default function TarjetaProducto({
   const { agregarAlCarrito } = useCarrito();
   const sinStock = (producto.stock ?? 0) <= 0;
 
+  // Formateo seguro para evitar fallos de locale en prerrenderizado
+  const precioFormateado = new Intl.NumberFormat("es-AR").format(
+    producto.precio || 0
+  );
+
   return (
     <div
       onClick={() => onVerDetalle && onVerDetalle(producto)}
@@ -54,7 +59,7 @@ export default function TarjetaProducto({
         <div className="mt-2 mb-2">
           <div className="flex items-baseline gap-1">
             <span className="text-sm sm:text-base font-bold text-[#12151B]">
-              ${producto.precio.toLocaleString("es-AR")}
+              ${precioFormateado}
             </span>
           </div>
           <p className="text-[10px] text-[#A6A29B] mt-0.5">
