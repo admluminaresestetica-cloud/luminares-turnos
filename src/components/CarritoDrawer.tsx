@@ -1,4 +1,4 @@
-3'use client';
+'use client';
 
 import React, { useState } from "react";
 import { useCarrito } from "@/context/CarritoContext";
