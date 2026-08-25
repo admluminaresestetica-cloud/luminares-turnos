@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import CarritoDrawer from "@/components/CarritoDrawer";
+import BannerCarousel from "./components/BannerCarousel";
 import { useCarrito } from "@/context/CarritoContext";
 import { Producto } from "@/types/tienda";
 
@@ -79,11 +80,11 @@ export default function TiendaPage() {
       {/* Navbar */}
       <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-[#E7E5E0] bg-white/90 px-6 py-4 backdrop-blur-md sm:px-10">
         <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#12151B] text-base text-white">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#12151B] text-base text-[#FFFFFF]">
             🛍️
           </span>
           <h2 className="m-0 text-lg font-bold tracking-tight text-[#12151B]">
-            Tienda Oficial
+            Luminares Tienda Oficial
           </h2>
         </div>
 
@@ -101,36 +102,12 @@ export default function TiendaPage() {
         </button>
       </nav>
 
-      {/* Hero */}
-      <div
-        className="relative overflow-hidden px-6 py-12 text-center text-white sm:py-16"
-        style={{
-          background: "radial-gradient(circle at 20% 20%, #1B2430 0%, #0B0F14 70%)",
-        }}
-      >
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.15]"
-          style={{
-            backgroundImage:
-              "radial-gradient(rgba(255,255,255,0.6) 1px, transparent 1px)",
-            backgroundSize: "22px 22px",
-          }}
-        />
-        <div className="relative mx-auto max-w-2xl">
-          <span className="mb-3 inline-block rounded-full border border-white/20 bg-white/5 px-4 py-1 text-xs font-semibold tracking-wide text-[#D9B87A]">
-            CATÁLOGO
-          </span>
-          <h1 className="m-0 mb-2 text-2xl font-bold leading-tight tracking-tight sm:text-4xl">
-            Encontrá lo que buscás al mejor precio
-          </h1>
-          <p className="m-0 text-xs sm:text-sm leading-relaxed text-white/60">
-            Explorá nuestro catálogo, armá tu pedido de forma segura y recibilo directo en la puerta de tu casa.
-          </p>
-        </div>
-      </div>
-
       {/* Contenido Principal */}
-      <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-6 sm:px-10">
+      <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-4 sm:px-10">
+        {/* Carrusel exclusivo de la Tienda (Tabla: banners_tienda) */}
+        <BannerCarousel />
+
+        {/* Buscador y Categorías */}
         <BuscadorYCategorias
           busqueda={busqueda}
           onBusquedaChange={setBusqueda}
