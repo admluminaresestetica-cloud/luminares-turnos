@@ -86,11 +86,12 @@ export default function TiendaPage() {
 
         <button
           onClick={() => setModalAbierto(true)}
-          className="relative flex items-center gap-2 rounded-full border border-[#E7E5E0] bg-white px-5 py-2.5 text-sm font-semibold text-[#12151B] transition-colors hover:border-[#12151B]"
+          className="relative flex items-center justify-center gap-2 rounded-full border border-[#E7E5E0] bg-white px-4 py-2.5 text-sm font-semibold text-[#12151B] transition-colors hover:border-[#12151B]"
         >
-          🛒 Mi Carrito
+          <span>🛒</span>
+          <span>Mi Carrito</span>
           {totalItems > 0 && (
-            <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#0E6E55] px-1 text-[11px] font-extrabold text-white">
+            <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#0E6E55] px-1 text-[11px] font-extrabold text-white">
               {totalItems}
             </span>
           )}
