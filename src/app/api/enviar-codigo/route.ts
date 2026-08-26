@@ -1,24 +1,42 @@
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
-import { supabase } from '@/lib/supabase' // O tu cliente de supabase del server si usas service_role
+import { createClient } from '@supabase/supabase-js'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+// Cliente de Supabase para servidor (usando las variables públicas o de servicio)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json()
+    const { email, password } = await request.json()
 
-    // 1. Generar un código aleatorio de 6 dígitos
+    const supabaseServer = createClient(supabaseUrl, supabaseKey)
+
+    // 1. Validar las credenciales contra Supabase antes de enviar nada
+    const { data: authData, error: authError } = await supabaseServer.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (authError || !authData.session) {
+      return NextResponse.json({ error: 'Correo o contraseña incorrectos.' }, { status: 401 })
+    }
+
+    // Inmediatamente cerramos la sesión temporal del servidor para que no quede activa
+    await supabaseServer.auth.signOut()
+
+    // 2. Generar un código aleatorio de 6 dígitos
     const codigo = Math.floor(100000 + Math.random() * 900000).toString()
-
-    // 2. Definir expiración (10 minutos a partir de ahora)
+    
+    // 3. Definir expiración (10 minutos)
     const expiraAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
-    // 3. Guardar el código en la tabla codigos_admin
-    // (Borramos códigos previos de este email para que quede solo el activo)
-    await supabase.from('codigos_admin').delete().eq('email', email)
-
-    const { error: dbError } = await supabase.from('codigos_admin').insert([
+    // 4. Guardar el código en la tabla codigos_admin
+    await supabaseServer.from('codigos_admin').delete().eq('email', email)
+    
+    const { error: dbError } = await supabaseServer.from('codigos_admin').insert([
       { email, codigo, expira_at: expiraAt }
     ])
 
@@ -26,8 +44,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Error al generar el código en la base de datos' }, { status: 500 })
     }
 
-    // 4. Enviar el correo usando Resend
-    // Nota: Si usas el dominio gratuito de prueba de Resend, recuerda que suele enviar a tu propio correo registrado.
+    // 5. Enviar el correo usando Resend
     const { error: mailError } = await resend.emails.send({
       from: 'Luminares Admin <onboarding@resend.dev>',
       to: [email],
