@@ -131,16 +131,27 @@ export default function FormularioEnvio({
           </label>
         </div>
 
+        {/* Campo de dirección + Cartel informativo de envío */}
         {datosEnvio.metodoEnvio === "envio" && (
-          <div className="relative animate-[fadeIn_0.2s_ease-out]">
-            <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
-            <input
-              type="text"
-              placeholder="Dirección de envío *"
-              value={datosEnvio.direccion}
-              onChange={(e) => setDatosEnvio({ ...datosEnvio, direccion: e.target.value })}
-              className={inputClass}
-            />
+          <div className="flex flex-col gap-2 animate-[fadeIn_0.2s_ease-out]">
+            <div className="relative">
+              <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
+              <input
+                type="text"
+                placeholder="Dirección de envío *"
+                value={datosEnvio.direccion}
+                onChange={(e) => setDatosEnvio({ ...datosEnvio, direccion: e.target.value })}
+                className={inputClass}
+              />
+            </div>
+
+            {/* Aviso de zonas de envío */}
+            <div className="flex items-start gap-2.5 rounded-xl border border-amber-200/70 bg-amber-50/80 p-3 text-xs text-amber-900 shadow-2xs">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={2} />
+              <p className="m-0 leading-relaxed">
+                <strong className="font-semibold text-amber-950">Envío bonificado</strong> en zonas cercanas a nuestro local. Por otras distancias, consultanos por WhatsApp.
+              </p>
+            </div>
           </div>
         )}
 
