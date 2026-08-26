@@ -1,6 +1,7 @@
 'use client';
 
 import React from "react";
+import { Store, Truck, User, Phone, MapPin, MessageCircle, CreditCard, Loader2 } from "lucide-react";
 
 interface DatosEnvio {
   nombreCliente: string;
@@ -28,7 +29,7 @@ export default function FormularioEnvio({
   onConfirmar,
 }: FormularioEnvioProps) {
   const inputClass =
-    "w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-3.5 py-2.5 text-sm text-[#12151B] placeholder:text-gray-400 outline-none transition-all focus:border-[#12151B] focus:bg-white focus:ring-2 focus:ring-[#12151B]/10";
+    "w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] py-2.5 pl-10 pr-3.5 text-sm text-[#12151B] placeholder:text-gray-400 outline-none transition-all duration-200 focus:border-[#12151B] focus:bg-white focus:ring-4 focus:ring-[#12151B]/[0.06]";
 
   return (
     <div className="border-t border-[#E7E5E0] pt-4">
@@ -43,13 +44,23 @@ export default function FormularioEnvio({
           </span>
         </div>
         <span
-          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
             metodoPago === "mercadopago"
-              ? "bg-blue-100 text-blue-700"
+              ? "bg-blue-50 text-blue-700"
               : "bg-[#0E6E55]/10 text-[#0E6E55]"
           }`}
         >
-          {metodoPago === "mercadopago" ? "Tarjeta / Cuotas" : "Listo para pedir"}
+          {metodoPago === "mercadopago" ? (
+            <>
+              <CreditCard className="h-3 w-3" strokeWidth={2.4} />
+              Tarjeta / Cuotas
+            </>
+          ) : (
+            <>
+              <MessageCircle className="h-3 w-3" strokeWidth={2.4} />
+              Listo para pedir
+            </>
+          )}
         </span>
       </div>
 
@@ -58,29 +69,35 @@ export default function FormularioEnvio({
       </h3>
 
       <div className="flex flex-col gap-2.5">
-        <input
-          type="text"
-          placeholder="Tu Nombre completo *"
-          value={datosEnvio.nombreCliente}
-          onChange={(e) => setDatosEnvio({ ...datosEnvio, nombreCliente: e.target.value })}
-          className={inputClass}
-        />
+        <div className="relative">
+          <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
+          <input
+            type="text"
+            placeholder="Tu Nombre completo *"
+            value={datosEnvio.nombreCliente}
+            onChange={(e) => setDatosEnvio({ ...datosEnvio, nombreCliente: e.target.value })}
+            className={inputClass}
+          />
+        </div>
 
-        <input
-          type="text"
-          placeholder="Tu Teléfono / WhatsApp"
-          value={datosEnvio.telefonoCliente}
-          onChange={(e) => setDatosEnvio({ ...datosEnvio, telefonoCliente: e.target.value })}
-          className={inputClass}
-        />
+        <div className="relative">
+          <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
+          <input
+            type="text"
+            placeholder="Tu Teléfono / WhatsApp"
+            value={datosEnvio.telefonoCliente}
+            onChange={(e) => setDatosEnvio({ ...datosEnvio, telefonoCliente: e.target.value })}
+            className={inputClass}
+          />
+        </div>
 
         {/* Selector de método de envío tipo tarjeta */}
         <div className="grid grid-cols-2 gap-2.5">
           <label
-            className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
+            className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
               datosEnvio.metodoEnvio === "retiro"
                 ? "border-[#12151B] bg-[#12151B] text-white shadow-sm"
-                : "border-[#E7E5E0] bg-white text-[#12151B] hover:border-[#12151B]/40"
+                : "border-[#E7E5E0] bg-white text-[#12151B] hover:border-[#12151B]/40 hover:bg-[#F7F7F5]"
             }`}
           >
             <input
@@ -91,13 +108,14 @@ export default function FormularioEnvio({
               onChange={() => setDatosEnvio({ ...datosEnvio, metodoEnvio: "retiro" })}
               className="sr-only"
             />
-            🏬 Retiro
+            <Store className="h-4 w-4 shrink-0" strokeWidth={2} />
+            Retiro
           </label>
           <label
-            className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all ${
+            className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
               datosEnvio.metodoEnvio === "envio"
                 ? "border-[#12151B] bg-[#12151B] text-white shadow-sm"
-                : "border-[#E7E5E0] bg-white text-[#12151B] hover:border-[#12151B]/40"
+                : "border-[#E7E5E0] bg-white text-[#12151B] hover:border-[#12151B]/40 hover:bg-[#F7F7F5]"
             }`}
           >
             <input
@@ -108,41 +126,48 @@ export default function FormularioEnvio({
               onChange={() => setDatosEnvio({ ...datosEnvio, metodoEnvio: "envio" })}
               className="sr-only"
             />
-            🚚 Envío
+            <Truck className="h-4 w-4 shrink-0" strokeWidth={2} />
+            Envío
           </label>
         </div>
 
         {datosEnvio.metodoEnvio === "envio" && (
-          <input
-            type="text"
-            placeholder="Dirección de envío *"
-            value={datosEnvio.direccion}
-            onChange={(e) => setDatosEnvio({ ...datosEnvio, direccion: e.target.value })}
-            className={`${inputClass} animate-[fadeIn_0.2s_ease-out]`}
-          />
+          <div className="relative animate-[fadeIn_0.2s_ease-out]">
+            <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
+            <input
+              type="text"
+              placeholder="Dirección de envío *"
+              value={datosEnvio.direccion}
+              onChange={(e) => setDatosEnvio({ ...datosEnvio, direccion: e.target.value })}
+              className={inputClass}
+            />
+          </div>
         )}
 
         <button
           onClick={onConfirmar}
           disabled={guardandoPedido}
-          className={`mt-1 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white shadow-md transition-all ${
+          className={`mt-1 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white shadow-md transition-all duration-200 ${
             guardandoPedido
               ? "cursor-not-allowed bg-gray-400"
               : metodoPago === "mercadopago"
-              ? "bg-blue-600 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-lg active:translate-y-0 active:shadow-md"
-              : "bg-[#25D366] hover:-translate-y-0.5 hover:bg-[#20bd5a] hover:shadow-lg active:translate-y-0 active:shadow-md"
+              ? "bg-[#0B3B78] hover:-translate-y-0.5 hover:bg-[#0A346B] hover:shadow-lg active:translate-y-0 active:shadow-md"
+              : "bg-[#0E6E55] hover:-translate-y-0.5 hover:bg-[#0B5C47] hover:shadow-lg active:translate-y-0 active:shadow-md"
           }`}
         >
           {guardandoPedido ? (
-            "Procesando..."
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.4} />
+              Procesando...
+            </>
           ) : metodoPago === "mercadopago" ? (
             <>
-              <span className="text-lg leading-none">💳</span>
+              <CreditCard className="h-[18px] w-[18px]" strokeWidth={2.2} />
               Pagar con Mercado Pago
             </>
           ) : (
             <>
-              <span className="text-lg leading-none">📲</span>
+              <MessageCircle className="h-[18px] w-[18px]" strokeWidth={2.2} />
               Confirmar Pedido por WhatsApp
             </>
           )}
