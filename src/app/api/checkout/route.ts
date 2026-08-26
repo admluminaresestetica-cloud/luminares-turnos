@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         cliente_telefono: cliente?.telefono || "",
         total: totalPedido,
         estado: "pendiente",
-        items: itemsCarrito, // Mantenemos esto como respaldo
+        items: itemsCarrito,
       })
       .select()
       .single();
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2.1 NUEVO: Guardamos los ítems en la tabla relacional 'pedido_items' para el detalle
+    // 2.1 Guardamos los ítems en la tabla relacional 'pedido_items' para el detalle
     const itemsParaInsertar = itemsCarrito.map((item: any) => {
       const precioUnitario = Math.round((Number(item.precio) || 0) * (1 + PORCENTAJE_RECARGO));
       return {
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
     const result = await preference.create({
       body: {
         items: itemsMP,
-        external_reference: pedido.id, // Enlazamos el ID de Supabase
+        external_reference: pedido.id,
         back_urls: {
           success: `${baseUrl}/?status=success`,
           failure: `${baseUrl}/?status=failure`,
@@ -102,13 +102,13 @@ export async function POST(request: Request) {
       },
     });
 
-    // 4. Actualizamos el pedido con el preference_id
+    // 4. Actualizamos el pedido con el preference_id usando aserción si hace falta
     await supabase
       .from("pedidos")
-      .update({ preference_id: result.id })
+      .update({ preference_id: (result as any).id })
       .eq("id", pedido.id);
 
-    return NextResponse.json({ init_point: result.init_point });
+    return NextResponse.json({ init_point: (result as any).init_point });
   } catch (error: any) {
     console.error("Error al crear preferencia de Mercado Pago:", error);
     return NextResponse.json(
