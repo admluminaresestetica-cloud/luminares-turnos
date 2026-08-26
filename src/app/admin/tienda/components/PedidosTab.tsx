@@ -73,16 +73,57 @@ export default function PedidosTab({
     return true;
   });
 
+  // Función para exportar los pedidos filtrados a CSV (compatible con Excel)
+  const exportarACSV = () => {
+    if (pedidosFiltrados.length === 0) {
+      alert("No hay pedidos para exportar con los filtros actuales.");
+      return;
+    }
+
+    const encabezados = ["ID", "Fecha", "Cliente", "Método Envío", "Dirección", "Estado", "Total"];
+    const filas = pedidosFiltrados.map((p) => [
+      p.id,
+      new Date(p.created_at).toLocaleString("es-AR"),
+      `"${p.nombre_cliente || ''}"`,
+      p.metodo_envio,
+      `"${p.direccion || ''}"`,
+      p.estado,
+      p.total
+    ]);
+
+    const contenidoCSV = [encabezados.join(";"), ...filas.map((f) => f.join(";"))].join("\n");
+    const blob = new Blob(["\ufeff" + contenidoCSV], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `pedidos_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-sm">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="m-0 text-lg font-bold text-[#12151B]">📋 Pedidos Recibidos</h2>
-        <button
-          onClick={onFetchPedidos}
-          className="self-start rounded-xl border border-[#E7E5E0] px-4 py-2 text-xs font-semibold text-[#12151B] transition-colors hover:bg-[#F7F7F5] sm:self-auto"
-        >
-          🔄 Actualizar lista
-        </button>
+        
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {/* Botón Exportar CSV */}
+          <button
+            onClick={exportarACSV}
+            className="rounded-xl border border-[#0E6E55] bg-[#0E6E55]/10 px-4 py-2 text-xs font-semibold text-[#0E6E55] transition-colors hover:bg-[#0E6E55]/20"
+          >
+            📊 Exportar CSV
+          </button>
+
+          {/* Botón Actualizar */}
+          <button
+            onClick={onFetchPedidos}
+            className="rounded-xl border border-[#E7E5E0] px-4 py-2 text-xs font-semibold text-[#12151B] transition-colors hover:bg-[#F7F7F5]"
+          >
+            🔄 Actualizar lista
+          </button>
+        </div>
       </div>
 
       {/* Barra de Filtros */}
