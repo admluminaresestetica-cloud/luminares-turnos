@@ -10,14 +10,14 @@ export async function POST(request: Request) {
 
     // 1. Generar un código aleatorio de 6 dígitos
     const codigo = Math.floor(100000 + Math.random() * 900000).toString()
-    
+
     // 2. Definir expiración (10 minutos a partir de ahora)
     const expiraAt = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
     // 3. Guardar el código en la tabla codigos_admin
     // (Borramos códigos previos de este email para que quede solo el activo)
     await supabase.from('codigos_admin').delete().eq('email', email)
-    
+
     const { error: dbError } = await supabase.from('codigos_admin').insert([
       { email, codigo, expira_at: expiraAt }
     ])
