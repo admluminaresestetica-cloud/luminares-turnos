@@ -6,7 +6,6 @@ const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN || "",
 });
 
-// Inicializamos Supabase con la Service Role Key para operaciones del backend
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -24,8 +23,6 @@ export async function POST(request: Request) {
     }
 
     const PORCENTAJE_RECARGO = 0.10;
-
-    // 1. Mapeamos los ítems con recargo para Mercado Pago y calculamos el total del pedido
     let totalPedido = 0;
 
     const itemsMP = itemsCarrito.map((item: any) => {
@@ -43,16 +40,19 @@ export async function POST(request: Request) {
       };
     });
 
-    // 2. Guardamos el pedido inicial en Supabase con estado 'pendiente'
+    // Inserción adaptada a la estructura exacta de la tabla pedidos
     const { data: pedido, error: errorPedido } = await supabase
       .from("pedidos")
       .insert({
-        cliente_nombre: cliente?.nombre || "Cliente Tienda",
+        nombre_cliente: cliente?.nombre || "Cliente Tienda",
+        telefono_cliente: cliente?.telefono || "",
         cliente_email: cliente?.email || "",
-        cliente_telefono: cliente?.telefono || "",
+        direccion: cliente?.direccion || "",
+        metodo_envio: cliente?.metodoEnvio || "Retiro",
+        nota_adicional: cliente?.nota || "",
         total: totalPedido,
         estado: "pendiente",
-        items: itemsCarrito, // Guardamos la lista de ítems comprados
+        items: itemsCarrito,
       })
       .select()
       .single();
@@ -65,14 +65,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Creamos la preferencia en Mercado Pago asociando el ID del pedido
     const preference = new Preference(client);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
 
     const result = await preference.create({
       body: {
         items: itemsMP,
-        external_reference: pedido.id, // Enlazamos el ID de Supabase
+        external_reference: pedido.id,
         back_urls: {
           success: `${baseUrl}/?status=success`,
           failure: `${baseUrl}/?status=failure`,
@@ -83,7 +82,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // 4. Actualizamos el pedido con el preference_id
     await supabase
       .from("pedidos")
       .update({ preference_id: result.id })
