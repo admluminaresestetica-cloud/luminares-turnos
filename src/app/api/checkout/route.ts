@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     }
 
     const PORCENTAJE_RECARGO = 0.10;
+
     let totalPedido = 0;
 
     const itemsMP = itemsCarrito.map((item: any) => {
@@ -40,16 +41,12 @@ export async function POST(request: Request) {
       };
     });
 
-    // Inserción adaptada a la estructura exacta de la tabla pedidos
     const { data: pedido, error: errorPedido } = await supabase
       .from("pedidos")
       .insert({
-        nombre_cliente: cliente?.nombre || "Cliente Tienda",
-        telefono_cliente: cliente?.telefono || "",
+        cliente_nombre: cliente?.nombre || "Cliente Tienda",
         cliente_email: cliente?.email || "",
-        direccion: cliente?.direccion || "",
-        metodo_envio: cliente?.metodoEnvio || "Retiro",
-        nota_adicional: cliente?.nota || "",
+        cliente_telefono: cliente?.telefono || "",
         total: totalPedido,
         estado: "pendiente",
         items: itemsCarrito,
@@ -65,14 +62,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2.1 Guardamos los ítems en la tabla relacional 'pedido_items' para el detalle
     const itemsParaInsertar = itemsCarrito.map((item: any) => {
       const precioUnitario = Math.round((Number(item.precio) || 0) * (1 + PORCENTAJE_RECARGO));
       return {
         pedido_id: pedido.id,
         nombre_producto: String(item.nombre || "Producto"),
         cantidad: Number(item.cantidad) || 1,
-        precio: precioUnitario,
+        precio_unitario: precioUnitario,
       };
     });
 
@@ -84,7 +80,6 @@ export async function POST(request: Request) {
       console.error("Error al registrar los ítems del pedido en pedido_items:", errorItems);
     }
 
-    // 3. Creamos la preferencia en Mercado Pago asociando el ID del pedido
     const preference = new Preference(client);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
 
@@ -102,7 +97,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // 4. Actualizamos el pedido con el preference_id usando aserción si hace falta
     await supabase
       .from("pedidos")
       .update({ preference_id: (result as any).id })

@@ -18,7 +18,8 @@ export interface Pedido {
   nota_adicional: string | null;
   total: number;
   estado: string;
-  pedido_items: PedidoItem[];
+  pedido_items?: PedidoItem[];
+  items?: any[];
 }
 
 interface PedidosTabProps {
@@ -143,48 +144,48 @@ export default function PedidosTab({
               className="rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-5 transition-all"
             >
               <div className="mb-3 flex items-start justify-between">
-  <div>
-    <div className="flex items-center gap-2 mb-1">
-      <span className="rounded-md bg-white border border-[#E7E5E0] px-2 py-0.5 font-mono text-[11px] font-bold text-[#12151B] shadow-xs">
-        #{pedido.id.slice(0, 6).toUpperCase()}
-      </span>
-      <h3 className="m-0 text-base font-bold text-[#12151B]">
-        {pedido.nombre_cliente}
-      </h3>
-    </div>
-    <p className="m-0 mt-0.5 text-xs text-[#6B675F]">
-      {new Date(pedido.created_at).toLocaleString("es-AR")}
-    </p>
-  </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="rounded-md bg-white border border-[#E7E5E0] px-2 py-0.5 font-mono text-[11px] font-bold text-[#12151B] shadow-xs">
+                      #{pedido.id.slice(0, 6).toUpperCase()}
+                    </span>
+                    <h3 className="m-0 text-base font-bold text-[#12151B]">
+                      {pedido.nombre_cliente}
+                    </h3>
+                  </div>
+                  <p className="m-0 mt-0.5 text-xs text-[#6B675F]">
+                    {new Date(pedido.created_at).toLocaleString("es-AR")}
+                  </p>
+                </div>
 
-  {/* CONTENEDOR DE ESTADO + BOTÓN ELIMINAR */}
-  <div className="flex items-center gap-2">
-    <span
-      className={`rounded-lg px-3 py-1 text-xs font-bold uppercase ${
-        pedido.estado === "completado"
-          ? "bg-[#D1FAE5] text-[#065F46]"
-          : pedido.estado === "cancelado"
-          ? "bg-[#FEE2E2] text-[#991B1B]"
-          : "bg-[#FEF3C7] text-[#92400E]"
-      }`}
-    >
-      {pedido.estado}
-    </span>
+                {/* CONTENEDOR DE ESTADO + BOTÓN ELIMINAR */}
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-lg px-3 py-1 text-xs font-bold uppercase ${
+                      pedido.estado === "completado"
+                        ? "bg-[#D1FAE5] text-[#065F46]"
+                        : pedido.estado === "cancelado"
+                        ? "bg-[#FEE2E2] text-[#991B1B]"
+                        : "bg-[#FEF3C7] text-[#92400E]"
+                    }`}
+                  >
+                    {pedido.estado}
+                  </span>
 
-    {/* Botón de eliminar con una X */}
-    <button
-      onClick={() => {
-        if (window.confirm("¿Estás seguro de eliminar este pedido de prueba?")) {
-          onEliminarPedido(pedido.id);
-        }
-      }}
-      title="Eliminar pedido"
-      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#E7E5E0] bg-white text-xs font-bold text-gray-400 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition-colors"
-    >
-      ✕
-    </button>
-  </div>
-</div>
+                  {/* Botón de eliminar con una X */}
+                  <button
+                    onClick={() => {
+                      if (window.confirm("¿Estás seguro de eliminar este pedido de prueba?")) {
+                        onEliminarPedido(pedido.id);
+                      }
+                    }}
+                    title="Eliminar pedido"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#E7E5E0] bg-white text-xs font-bold text-gray-400 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
 
               <div className="mb-3 text-xs text-[#12151B]">
                 <strong>Método:</strong>{" "}
@@ -202,8 +203,16 @@ export default function PedidosTab({
               <div className="border-t border-[#E7E5E0] pt-3">
                 <p className="m-0 text-xs font-bold text-[#6B675F]">Detalle del pedido:</p>
                 <ul className="my-2 list-disc pl-5 text-xs text-[#12151B]">
-                  {pedido.pedido_items.map((item) => (
-                    <li key={item.id}>
+                  {(pedido.pedido_items && pedido.pedido_items.length > 0
+                    ? pedido.pedido_items
+                    : (pedido.items || []).map((i: any) => ({
+                        id: i.id || Math.random(),
+                        nombre_producto: i.nombre || i.title || "Producto",
+                        cantidad: i.cantidad || 1,
+                        precio_unitario: i.precio || i.unit_price || 0,
+                      }))
+                  ).map((item, idx) => (
+                    <li key={item.id || idx}>
                       {item.cantidad}x {item.nombre_producto} - ${item.precio_unitario} c/u
                     </li>
                   ))}
