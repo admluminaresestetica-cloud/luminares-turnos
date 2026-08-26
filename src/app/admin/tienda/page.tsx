@@ -254,16 +254,23 @@ export default function AdminTiendaPage() {
           >
             📦 Catálogo y Stock
           </button>
+          
           <button
             onClick={() => setActiveTab("pedidos")}
-            className={`pb-3 text-sm font-bold transition-colors ${
+            className={`flex items-center gap-2 pb-3 text-sm font-bold transition-colors ${
               activeTab === "pedidos"
                 ? "border-b-2 border-[#0E6E55] text-[#0E6E55]"
                 : "text-[#6B675F] hover:text-[#12151B]"
             }`}
           >
-            📋 Historial de Pedidos {pedidosPendientes > 0 && `(${pedidosPendientes})`}
+            <span>📋 Historial de Pedidos</span>
+            {pedidosPendientes > 0 && (
+              <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#C84343] px-1.5 text-[11px] font-extrabold text-white animate-pulse">
+                {pedidosPendientes}
+              </span>
+            )}
           </button>
+
           <button
             onClick={() => setActiveTab("banners")}
             className={`pb-3 text-sm font-bold transition-colors ${

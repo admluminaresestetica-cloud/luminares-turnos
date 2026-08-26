@@ -18,7 +18,8 @@ export interface Pedido {
   nota_adicional: string | null;
   total: number;
   estado: string;
-  pedido_items: PedidoItem[];
+  pedido_items?: PedidoItem[];
+  items?: any[];
 }
 
 interface PedidosTabProps {
@@ -72,16 +73,57 @@ export default function PedidosTab({
     return true;
   });
 
+  // Función para exportar los pedidos filtrados a CSV (compatible con Excel)
+  const exportarACSV = () => {
+    if (pedidosFiltrados.length === 0) {
+      alert("No hay pedidos para exportar con los filtros actuales.");
+      return;
+    }
+
+    const encabezados = ["ID", "Fecha", "Cliente", "Método Envío", "Dirección", "Estado", "Total"];
+    const filas = pedidosFiltrados.map((p) => [
+      p.id,
+      new Date(p.created_at).toLocaleString("es-AR"),
+      `"${p.nombre_cliente || ''}"`,
+      p.metodo_envio,
+      `"${p.direccion || ''}"`,
+      p.estado,
+      p.total
+    ]);
+
+    const contenidoCSV = [encabezados.join(";"), ...filas.map((f) => f.join(";"))].join("\n");
+    const blob = new Blob(["\ufeff" + contenidoCSV], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `pedidos_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-sm">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="m-0 text-lg font-bold text-[#12151B]">📋 Pedidos Recibidos</h2>
-        <button
-          onClick={onFetchPedidos}
-          className="self-start rounded-xl border border-[#E7E5E0] px-4 py-2 text-xs font-semibold text-[#12151B] transition-colors hover:bg-[#F7F7F5] sm:self-auto"
-        >
-          🔄 Actualizar lista
-        </button>
+        
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {/* Botón Exportar CSV */}
+          <button
+            onClick={exportarACSV}
+            className="rounded-xl border border-[#0E6E55] bg-[#0E6E55]/10 px-4 py-2 text-xs font-semibold text-[#0E6E55] transition-colors hover:bg-[#0E6E55]/20"
+          >
+            📊 Exportar CSV
+          </button>
+
+          {/* Botón Actualizar */}
+          <button
+            onClick={onFetchPedidos}
+            className="rounded-xl border border-[#E7E5E0] px-4 py-2 text-xs font-semibold text-[#12151B] transition-colors hover:bg-[#F7F7F5]"
+          >
+            🔄 Actualizar lista
+          </button>
+        </div>
       </div>
 
       {/* Barra de Filtros */}
@@ -143,48 +185,48 @@ export default function PedidosTab({
               className="rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-5 transition-all"
             >
               <div className="mb-3 flex items-start justify-between">
-  <div>
-    <div className="flex items-center gap-2 mb-1">
-      <span className="rounded-md bg-white border border-[#E7E5E0] px-2 py-0.5 font-mono text-[11px] font-bold text-[#12151B] shadow-xs">
-        #{pedido.id.slice(0, 6).toUpperCase()}
-      </span>
-      <h3 className="m-0 text-base font-bold text-[#12151B]">
-        {pedido.nombre_cliente}
-      </h3>
-    </div>
-    <p className="m-0 mt-0.5 text-xs text-[#6B675F]">
-      {new Date(pedido.created_at).toLocaleString("es-AR")}
-    </p>
-  </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="rounded-md bg-white border border-[#E7E5E0] px-2 py-0.5 font-mono text-[11px] font-bold text-[#12151B] shadow-xs">
+                      #{pedido.id.slice(0, 6).toUpperCase()}
+                    </span>
+                    <h3 className="m-0 text-base font-bold text-[#12151B]">
+                      {pedido.nombre_cliente}
+                    </h3>
+                  </div>
+                  <p className="m-0 mt-0.5 text-xs text-[#6B675F]">
+                    {new Date(pedido.created_at).toLocaleString("es-AR")}
+                  </p>
+                </div>
 
-  {/* CONTENEDOR DE ESTADO + BOTÓN ELIMINAR */}
-  <div className="flex items-center gap-2">
-    <span
-      className={`rounded-lg px-3 py-1 text-xs font-bold uppercase ${
-        pedido.estado === "completado"
-          ? "bg-[#D1FAE5] text-[#065F46]"
-          : pedido.estado === "cancelado"
-          ? "bg-[#FEE2E2] text-[#991B1B]"
-          : "bg-[#FEF3C7] text-[#92400E]"
-      }`}
-    >
-      {pedido.estado}
-    </span>
+                {/* CONTENEDOR DE ESTADO + BOTÓN ELIMINAR */}
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-lg px-3 py-1 text-xs font-bold uppercase ${
+                      pedido.estado === "completado"
+                        ? "bg-[#D1FAE5] text-[#065F46]"
+                        : pedido.estado === "cancelado"
+                        ? "bg-[#FEE2E2] text-[#991B1B]"
+                        : "bg-[#FEF3C7] text-[#92400E]"
+                    }`}
+                  >
+                    {pedido.estado}
+                  </span>
 
-    {/* Botón de eliminar con una X */}
-    <button
-      onClick={() => {
-        if (window.confirm("¿Estás seguro de eliminar este pedido de prueba?")) {
-          onEliminarPedido(pedido.id);
-        }
-      }}
-      title="Eliminar pedido"
-      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#E7E5E0] bg-white text-xs font-bold text-gray-400 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition-colors"
-    >
-      ✕
-    </button>
-  </div>
-</div>
+                  {/* Botón de eliminar con una X */}
+                  <button
+                    onClick={() => {
+                      if (window.confirm("¿Estás seguro de eliminar este pedido de prueba?")) {
+                        onEliminarPedido(pedido.id);
+                      }
+                    }}
+                    title="Eliminar pedido"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#E7E5E0] bg-white text-xs font-bold text-gray-400 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
 
               <div className="mb-3 text-xs text-[#12151B]">
                 <strong>Método:</strong>{" "}
@@ -202,8 +244,16 @@ export default function PedidosTab({
               <div className="border-t border-[#E7E5E0] pt-3">
                 <p className="m-0 text-xs font-bold text-[#6B675F]">Detalle del pedido:</p>
                 <ul className="my-2 list-disc pl-5 text-xs text-[#12151B]">
-                  {pedido.pedido_items.map((item) => (
-                    <li key={item.id}>
+                  {(pedido.pedido_items && pedido.pedido_items.length > 0
+                    ? pedido.pedido_items
+                    : (pedido.items || []).map((i: any) => ({
+                        id: i.id || Math.random(),
+                        nombre_producto: i.nombre || i.title || "Producto",
+                        cantidad: i.cantidad || 1,
+                        precio_unitario: i.precio || i.unit_price || 0,
+                      }))
+                  ).map((item, idx) => (
+                    <li key={item.id || idx}>
                       {item.cantidad}x {item.nombre_producto} - ${item.precio_unitario} c/u
                     </li>
                   ))}
