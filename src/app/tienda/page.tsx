@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { ShoppingBag } from "lucide-react";
 import CarritoDrawer from "@/components/CarritoDrawer";
@@ -78,13 +79,22 @@ export default function TiendaPage() {
     return coincideBusqueda && coincideCategoria;
   });
 
+  const resetearFiltros = () => {
+    setBusqueda("");
+    setCategoriaFiltro("Todos");
+  };
+
   return (
     <div className="min-h-screen bg-[#F7F7F5] text-[#12151B] flex flex-col justify-between">
       <div>
         {/* Navbar */}
         <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0] bg-white/90 px-4 py-3 backdrop-blur-md sm:px-10 sm:py-4">
-          {/* Logo y Título */}
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          {/* Logo y Título con enlace al inicio */}
+          <Link
+            href="https://www.mireservalumin.com.ar/tienda"
+            onClick={resetearFiltros}
+            className="flex min-w-0 items-center gap-2 sm:gap-3 cursor-pointer transition-opacity hover:opacity-80 active:scale-[0.98]"
+          >
             <div className="relative flex h-9 w-9 shrink-0 items-center justify-center sm:h-12 sm:w-12">
               <Image
                 src="/logotiendanegro.svg"
@@ -104,7 +114,7 @@ export default function TiendaPage() {
                 Tienda Oficial
               </span>
             </div>
-          </div>
+          </Link>
 
           {/* Botón del Carrito */}
           <button
@@ -124,7 +134,7 @@ export default function TiendaPage() {
 
         {/* Contenido Principal */}
         <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-4 sm:px-10">
-          {/* Carrusel exclusivo de la Tienda (Tabla: banners_tienda) */}
+          {/* Carrusel exclusivo de la Tienda */}
           <BannerCarousel />
 
           {/* Buscador y Categorías */}
