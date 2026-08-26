@@ -190,6 +190,25 @@ export default function AdminTiendaPage() {
     setProcesandoPedidoId(null);
   };
 
+  // NUEVO: Handler para eliminar pedidos definitivamente de la base de datos
+  const handleEliminarPedido = async (pedidoId: string) => {
+    try {
+      // 1. Borrar los ítems asociados primero por la relación de llave foránea
+      await supabase.from("pedido_items").delete().eq("pedido_id", pedidoId);
+
+      // 2. Borrar el pedido principal
+      const { error } = await supabase.from("pedidos").delete().eq("id", pedidoId);
+
+      if (error) throw error;
+
+      // 3. Actualizar la lista localmente
+      setPedidos(pedidos.filter((p) => p.id !== pedidoId));
+    } catch (error) {
+      console.error("Error al eliminar el pedido:", error);
+      alert("Hubo un error al intentar eliminar el pedido.");
+    }
+  };
+
   // Cálculo de Métricas
   const totalProductos = productos.length;
   const stockTotal = productos.reduce((acc, p) => acc + (Number(p.stock) || 0), 0);
@@ -297,6 +316,7 @@ export default function AdminTiendaPage() {
             onFetchPedidos={fetchPedidos}
             onAprobarPedido={handleAprobarPedido}
             onCancelarPedido={handleCancelarPedido}
+            onEliminarPedido={handleEliminarPedido}
           />
         )}
 

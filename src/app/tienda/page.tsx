@@ -45,7 +45,11 @@ export default function TiendaPage() {
 
     const fetchProductos = async () => {
       setCargando(true);
-      const { data, error } = await supabase.from("productos").select("*");
+      const { data, error } = await supabase
+        .from("productos")
+        .select("*")
+        .eq("activo", true);
+        
       if (error) {
         console.error("Error al cargar productos:", error);
       } else {
