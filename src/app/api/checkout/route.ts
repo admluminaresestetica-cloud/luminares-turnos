@@ -87,7 +87,11 @@ export async function POST(request: Request) {
       .update({ preference_id: result.id })
       .eq("id", pedido.id);
 
-    return NextResponse.json({ init_point: result.init_point });
+    // Retornamos ambos endpoints (web y móvil)
+    return NextResponse.json({ 
+      init_point: result.init_point,
+      mobile_search_url: result.mobile_search_url || result.init_point,
+    });
   } catch (error: any) {
     console.error("Error al crear preferencia de Mercado Pago:", error);
     return NextResponse.json(

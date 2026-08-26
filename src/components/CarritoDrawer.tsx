@@ -134,7 +134,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   
             
-    // Procesar flujo de Mercado Pago
+// Procesar flujo de Mercado Pago
   const procesarMercadoPago = async () => {
     if (!validarFormulario()) return;
 
@@ -152,6 +152,13 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             precio: item.precio,
             cantidad: item.cantidad,
           })),
+          cliente: {
+            nombre: datosEnvio.nombreCliente.trim(),
+            telefono: datosEnvio.telefonoCliente.trim(),
+            direccion: datosEnvio.direccion.trim(),
+            metodoEnvio: datosEnvio.metodoEnvio,
+            nota: datosEnvio.notaAdicional.trim(),
+          },
         }),
       });
 
@@ -159,7 +166,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
       if (data.init_point) {
         vaciarCarrito();
-        window.location.href = data.init_point;
+        
+        // Si el backend devuelve mobile_search_url, intenta abrir la App de Mercado Pago
+        const checkoutUrl = data.mobile_search_url || data.init_point;
+        window.location.href = checkoutUrl;
       } else {
         alert("Error del servidor: " + (data.error || "Desconocido"));
       }
