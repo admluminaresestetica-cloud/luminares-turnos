@@ -1,8 +1,17 @@
+"use client";
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { MapPin, Wallet, ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
+  const pathname = usePathname();
   const anioActual = new Date().getFullYear();
+
+  // Si el usuario está en la tienda, este footer NO se renderiza
+  if (pathname?.startsWith('/tienda')) {
+    return null;
+  }
 
   return (
     <footer className="w-full border-t border-slate-200/80 bg-white/60 backdrop-blur-xs py-6 mt-auto">
