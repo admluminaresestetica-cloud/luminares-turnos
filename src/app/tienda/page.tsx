@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
+import { ShoppingBag } from "lucide-react";
 import CarritoDrawer from "@/components/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
 import FooterTienda from "@/components/FooterTienda";
@@ -81,39 +82,45 @@ export default function TiendaPage() {
     <div className="min-h-screen bg-[#F7F7F5] text-[#12151B] flex flex-col justify-between">
       <div>
         {/* Navbar */}
-<nav className="sticky top-0 z-50 flex items-center justify-between border-b border-[#E7E5E0] bg-white/90 px-6 py-4 backdrop-blur-md sm:px-10">
-  <div className="flex items-center gap-3">
-    
-    {/* Logo SVG sin fondo negro y de mayor tamaño */}
-    <div className="relative flex h-12 w-12 items-center justify-center">
-      <Image
-        src="/logotiendanegro.svg"
-        alt="Logo Luminares"
-        width={48}
-        height={48}
-        className="h-full w-full object-contain"
-        priority
-      />
-    </div>
+        <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0] bg-white/90 px-4 py-3 backdrop-blur-md sm:px-10 sm:py-4">
+          {/* Logo y Título */}
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center sm:h-12 sm:w-12">
+              <Image
+                src="/logotiendanegro.svg"
+                alt="Logo Luminares"
+                width={48}
+                height={48}
+                className="h-full w-full object-contain"
+                priority
+              />
+            </div>
 
-    <h2 className="m-0 text-lg font-bold tracking-tight text-[#12151B]">
-      Luminares Tienda Oficial
-    </h2>
-  </div>
+            <div className="flex min-w-0 flex-col leading-tight">
+              <h2 className="m-0 truncate text-base font-bold tracking-tight text-[#12151B] sm:text-lg">
+                Luminares
+              </h2>
+              <span className="hidden truncate text-[11px] font-medium text-[#6B675F] sm:block sm:text-sm">
+                Tienda Oficial
+              </span>
+            </div>
+          </div>
 
-  <button
-    onClick={() => setModalAbierto(true)}
-    className="relative flex items-center justify-center gap-2 rounded-full border border-[#E7E5E0] bg-white px-4 py-2.5 text-sm font-semibold text-[#12151B] transition-colors hover:border-[#12151B]"
-  >
-    <span>🛒</span>
-    <span>Mi Carrito</span>
-    {totalItems > 0 && (
-      <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#0E6E55] px-1 text-[11px] font-extrabold text-white">
-        {totalItems}
-      </span>
-    )}
-  </button>
-</nav>
+          {/* Botón del Carrito */}
+          <button
+            onClick={() => setModalAbierto(true)}
+            className="relative flex shrink-0 items-center justify-center gap-2 rounded-full border border-[#E7E5E0] bg-white p-2.5 text-sm font-semibold text-[#12151B] transition-all duration-200 hover:border-[#12151B]/40 hover:shadow-sm active:scale-95 sm:px-4 sm:py-2.5"
+          >
+            <ShoppingBag className="h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4" strokeWidth={2} />
+            <span className="hidden sm:inline">Mi Carrito</span>
+
+            {totalItems > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-[#0E6E55] px-1 text-[10px] font-extrabold leading-none text-white shadow-sm sm:static sm:ml-1 sm:h-5 sm:min-w-[20px] sm:border-0 sm:text-[11px]">
+                {totalItems}
+              </span>
+            )}
+          </button>
+        </nav>
 
         {/* Contenido Principal */}
         <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-4 sm:px-10">

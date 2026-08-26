@@ -1,6 +1,7 @@
 'use client';
 
 import React from "react";
+import { ShoppingBag, Minus, Plus, Trash2 } from "lucide-react";
 
 interface CarritoItemProps {
   item: {
@@ -26,7 +27,7 @@ export default function CarritoItem({
   const alcanzoLimite = item.cantidad >= stockDisponible;
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#E7E5E0] bg-white p-3 shadow-sm transition-shadow hover:shadow-md">
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#E7E5E0] bg-white p-3 shadow-xs transition-all duration-200 hover:border-[#D8D5CE] hover:shadow-md">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#E7E5E0] bg-[#F7F7F5]">
           {item.imagen_url ? (
@@ -36,7 +37,7 @@ export default function CarritoItem({
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="text-xl">🛍️</span>
+            <ShoppingBag className="h-5 w-5 text-[#C7C3BB]" strokeWidth={1.7} />
           )}
         </div>
 
@@ -56,9 +57,9 @@ export default function CarritoItem({
           <button
             onClick={() => onRestar(item.id)}
             aria-label="Quitar unidad"
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm font-bold text-[#12151B] shadow-sm transition-transform hover:bg-white active:scale-90"
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#12151B] shadow-xs transition-transform duration-150 active:scale-90"
           >
-            −
+            <Minus className="h-3 w-3" strokeWidth={2.6} />
           </button>
           <span className="min-w-[22px] text-center text-sm font-bold text-[#12151B]">
             {item.cantidad}
@@ -67,15 +68,16 @@ export default function CarritoItem({
             onClick={() => onAgregar(item)}
             disabled={alcanzoLimite}
             aria-label="Agregar unidad"
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm font-bold text-[#12151B] shadow-sm transition-transform enabled:hover:bg-white enabled:active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#12151B] shadow-xs transition-transform duration-150 enabled:active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            +
+            <Plus className="h-3 w-3" strokeWidth={2.6} />
           </button>
         </div>
         <button
           onClick={() => onEliminar(item.id)}
-          className="text-[11px] font-medium text-gray-400 transition-colors hover:text-red-500"
+          className="flex items-center gap-1 text-[11px] font-medium text-gray-400 transition-colors duration-200 hover:text-red-500"
         >
+          <Trash2 className="h-3 w-3" strokeWidth={2} />
           Eliminar
         </button>
       </div>
