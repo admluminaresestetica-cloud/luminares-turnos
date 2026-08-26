@@ -13,45 +13,28 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  // PASO 1: Validar Contraseña y Enviar Código
+  // PASO 1: Enviar credenciales a la API para verificar y mandar el código por mail
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
-      // Validamos usuario y contraseña primero con Supabase Auth
-      const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (supabaseError) {
-        setError(`Credenciales incorrectas: ${supabaseError.message}`)
-        setLoading(false)
-        return
-      }
-
-      // Si las credenciales son correctas, cerramos sesión temporalmente 
-      // hasta que confirme el código (o guardamos la sesión al final)
-      await supabase.auth.signOut()
-
-      // Solicitamos generar y enviar el código por correo
       const res = await fetch('/api/enviar-codigo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password }),
       })
 
       const dataRes = await res.json()
 
       if (!res.ok) {
-        setError(dataRes.error || 'No se pudo enviar el código de verificación.')
+        setError(dataRes.error || 'Credenciales incorrectas o error al enviar el código.')
         setLoading(false)
         return
       }
 
-      // Pasamos a la pantalla donde se ingresa el código de 6 dígitos
+      // Si todo sale bien, pasamos a la pantalla del código y guardamos la contraseña temporalmente en memoria para el paso final
       setStep('otp')
       setLoading(false)
     } catch (err: any) {
@@ -60,14 +43,14 @@ export default function AdminLogin() {
     }
   }
 
-  // PASO 2: Verificar el código ingresado
+  // PASO 2: Verificar el código de 6 dígitos e iniciar sesión definitivamente
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
-      // Buscamos el código en la tabla codigos_admin
+      // 1. Validar el código en la tabla codigos_admin
       const { data: registros, error: dbError } = await supabase
         .from('codigos_admin')
         .select('*')
@@ -81,7 +64,7 @@ export default function AdminLogin() {
         return
       }
 
-      // Validar si el código expiró
+      // 2. Validar si el código expiró
       if (new Date() > new Date(registros.expira_at)) {
         setError('El código ha expirado. Volvé a iniciar sesión.')
         setLoading(false)
@@ -89,22 +72,23 @@ export default function AdminLogin() {
         return
       }
 
-      // Si el código es correcto, volvemos a iniciar sesión de verdad en Supabase
+      // 3. Si el código es correcto, iniciamos sesión de verdad en Supabase
       const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (loginError || !data?.session) {
-        setError('Error al iniciar sesión final.')
+        setError('Error al iniciar sesión final. Verificá tus datos.')
         setLoading(false)
+        setStep('credentials')
         return
       }
 
-      // Limpiamos el código usado de la base de datos
+      // 4. Limpiar el código usado de la base de datos
       await supabase.from('codigos_admin').delete().eq('email', email)
 
-      // Guardamos cookies y redirigimos al panel
+      // 5. Guardar cookies y redirigir al panel
       const maxAge = 60 * 60 * 24 * 7 // 7 días
       document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`
       document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=${maxAge}; SameSite=Lax`
@@ -182,7 +166,7 @@ export default function AdminLogin() {
               disabled={loading}
               className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white font-medium text-sm rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm"
             >
-              {loading ? 'Verificando credenciales...' : 'Continuar'}
+              {loading ? 'Verificando y enviando código...' : 'Continuar'}
             </button>
           </form>
         ) : (
