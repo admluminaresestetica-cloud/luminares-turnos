@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         cliente_telefono: cliente?.telefono || "",
         total: totalPedido,
         estado: "pendiente",
-        items: itemsCarrito, // Guardamos la lista de ítems comprados
+        items: itemsCarrito, // Mantenemos esto como respaldo
       })
       .select()
       .single();
@@ -63,6 +63,25 @@ export async function POST(request: Request) {
         { error: "No se pudo registrar el pedido en la base de datos" },
         { status: 500 }
       );
+    }
+
+    // 2.1 NUEVO: Guardamos los ítems en la tabla relacional 'pedido_items' para el detalle
+    const itemsParaInsertar = itemsCarrito.map((item: any) => {
+      const precioUnitario = Math.round((Number(item.precio) || 0) * (1 + PORCENTAJE_RECARGO));
+      return {
+        pedido_id: pedido.id,
+        nombre_producto: String(item.nombre || "Producto"),
+        cantidad: Number(item.cantidad) || 1,
+        precio: precioUnitario,
+      };
+    });
+
+    const { error: errorItems } = await supabase
+      .from("pedido_items")
+      .insert(itemsParaInsertar);
+
+    if (errorItems) {
+      console.error("Error al registrar los ítems del pedido en pedido_items:", errorItems);
     }
 
     // 3. Creamos la preferencia en Mercado Pago asociando el ID del pedido

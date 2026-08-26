@@ -6,9 +6,10 @@ import { CheckCircle2 } from "lucide-react";
 interface ModalExitoProps {
   mostrar: boolean;
   onAceptar: () => void;
+  esMercadoPago?: boolean; // Nueva prop opcional
 }
 
-export default function ModalExito({ mostrar, onAceptar }: ModalExitoProps) {
+export default function ModalExito({ mostrar, onAceptar, esMercadoPago = false }: ModalExitoProps) {
   if (!mostrar) return null;
 
   return (
@@ -21,10 +22,12 @@ export default function ModalExito({ mostrar, onAceptar }: ModalExitoProps) {
             <CheckCircle2 className="h-9 w-9 text-[#0E6E55]" strokeWidth={1.8} />
           </div>
           <h3 className="mt-4 text-lg font-bold text-[#12151B]">
-            ¡Pedido enviado!
+            {esMercadoPago ? "¡Pago aprobado! 🎉" : "¡Pedido enviado!"}
           </h3>
           <p className="mt-1.5 text-[13px] leading-relaxed text-[#6B675F]">
-            Tu pedido fue registrado con éxito y te redirigimos a WhatsApp para confirmarlo.
+            {esMercadoPago
+              ? "Tu pago a través de Mercado Pago se procesó correctamente y ya registramos tu pedido."
+              : "Tu pedido fue registrado con éxito y te redirigimos a WhatsApp para confirmarlo."}
           </p>
         </div>
 

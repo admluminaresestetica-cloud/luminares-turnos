@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useCarrito } from "@/context/CarritoContext";
 import { createClient } from "@supabase/supabase-js";
 
@@ -20,12 +21,23 @@ interface CarritoDrawerProps {
 
 export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const { carrito, agregarAlCarrito, restarUnidad, eliminarDelCarrito, vaciarCarrito } = useCarrito();
+  const searchParams = useSearchParams();
 
   const [telefonoWhatsApp] = useState("5493413954355");
   const [guardandoPedido, setGuardandoPedido] = useState(false);
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
 
-  // Selección de método de pago: 'whatsapp' (transferencia/alias) o 'mercadopago' (tarjeta/cuotas)
+  // Detecta el retorno de Mercado Pago en la URL
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (status === "success") {
+      setMostrarModalExito(true);
+      // Limpia los parámetros de la URL para evitar que se reabra al recargar
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [searchParams]);
+
+  // Selección de método de pago: 'whatsapp' o 'mercadopago'
   const [metodoPago, setMetodoPago] = useState<"whatsapp" | "mercadopago">("whatsapp");
 
   const [datosEnvio, setDatosEnvio] = useState({
@@ -132,9 +144,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     setMostrarModalExito(true);
   };
 
-  
-            
-    // Procesar flujo de Mercado Pago
+  // Procesar flujo de Mercado Pago
   const procesarMercadoPago = async () => {
     if (!validarFormulario()) return;
 
@@ -152,6 +162,13 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             precio: item.precio,
             cantidad: item.cantidad,
           })),
+          cliente: {
+            nombre: datosEnvio.nombreCliente.trim(),
+            telefono: datosEnvio.telefonoCliente.trim(),
+            direccion: datosEnvio.direccion.trim(),
+            metodoEnvio: datosEnvio.metodoEnvio,
+            nota: datosEnvio.notaAdicional.trim(),
+          },
         }),
       });
 
@@ -159,7 +176,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
       if (data.init_point) {
         vaciarCarrito();
-        window.location.href = data.init_point;
+        const checkoutUrl = data.mobile_search_url || data.init_point;
+        window.location.href = checkoutUrl;
       } else {
         alert("Error del servidor: " + (data.error || "Desconocido"));
       }
@@ -170,7 +188,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       setGuardandoPedido(false);
     }
   };
-
 
   const manejarSubmit = () => {
     if (metodoPago === "whatsapp") {

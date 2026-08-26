@@ -28,6 +28,7 @@ interface PedidosTabProps {
   onFetchPedidos: () => void;
   onAprobarPedido: (id: string) => void;
   onCancelarPedido: (id: string) => void;
+  onEliminarPedido: (id: string) => void;
 }
 
 export default function PedidosTab({
@@ -37,6 +38,7 @@ export default function PedidosTab({
   onFetchPedidos,
   onAprobarPedido,
   onCancelarPedido,
+  onEliminarPedido,
 }: PedidosTabProps) {
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
@@ -87,7 +89,7 @@ export default function PedidosTab({
         {/* Buscador */}
         <input
           type="text"
-          placeholder="Buscar cliente..."
+          placeholder="Buscar cliente o código..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           className="flex-1 min-w-[180px] rounded-lg border border-[#E7E5E0] bg-white px-3 py-1.5 text-xs text-[#12151B] outline-none focus:border-[#0E6E55]"
@@ -103,6 +105,7 @@ export default function PedidosTab({
           <option value="pendiente">Pendiente</option>
           <option value="completado">Completado</option>
           <option value="cancelado">Cancelado</option>
+          <option value="aprobado">Aprobado</option>
         </select>
 
         {/* Filtro Fecha */}
@@ -140,27 +143,48 @@ export default function PedidosTab({
               className="rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-5 transition-all"
             >
               <div className="mb-3 flex items-start justify-between">
-                <div>
-                  <h3 className="m-0 text-base font-bold text-[#12151B]">
-                    {pedido.nombre_cliente}
-                  </h3>
-                  <p className="m-0 mt-0.5 text-xs text-[#6B675F]">
-                    {new Date(pedido.created_at).toLocaleString("es-AR")}
-                  </p>
-                </div>
+  <div>
+    <div className="flex items-center gap-2 mb-1">
+      <span className="rounded-md bg-white border border-[#E7E5E0] px-2 py-0.5 font-mono text-[11px] font-bold text-[#12151B] shadow-xs">
+        #{pedido.id.slice(0, 6).toUpperCase()}
+      </span>
+      <h3 className="m-0 text-base font-bold text-[#12151B]">
+        {pedido.nombre_cliente}
+      </h3>
+    </div>
+    <p className="m-0 mt-0.5 text-xs text-[#6B675F]">
+      {new Date(pedido.created_at).toLocaleString("es-AR")}
+    </p>
+  </div>
 
-                <span
-                  className={`rounded-lg px-3 py-1 text-xs font-bold uppercase ${
-                    pedido.estado === "completado"
-                      ? "bg-[#D1FAE5] text-[#065F46]"
-                      : pedido.estado === "cancelado"
-                      ? "bg-[#FEE2E2] text-[#991B1B]"
-                      : "bg-[#FEF3C7] text-[#92400E]"
-                  }`}
-                >
-                  {pedido.estado}
-                </span>
-              </div>
+  {/* CONTENEDOR DE ESTADO + BOTÓN ELIMINAR */}
+  <div className="flex items-center gap-2">
+    <span
+      className={`rounded-lg px-3 py-1 text-xs font-bold uppercase ${
+        pedido.estado === "completado"
+          ? "bg-[#D1FAE5] text-[#065F46]"
+          : pedido.estado === "cancelado"
+          ? "bg-[#FEE2E2] text-[#991B1B]"
+          : "bg-[#FEF3C7] text-[#92400E]"
+      }`}
+    >
+      {pedido.estado}
+    </span>
+
+    {/* Botón de eliminar con una X */}
+    <button
+      onClick={() => {
+        if (window.confirm("¿Estás seguro de eliminar este pedido de prueba?")) {
+          onEliminarPedido(pedido.id);
+        }
+      }}
+      title="Eliminar pedido"
+      className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#E7E5E0] bg-white text-xs font-bold text-gray-400 hover:border-red-300 hover:bg-red-50 hover:text-red-600 transition-colors"
+    >
+      ✕
+    </button>
+  </div>
+</div>
 
               <div className="mb-3 text-xs text-[#12151B]">
                 <strong>Método:</strong>{" "}
