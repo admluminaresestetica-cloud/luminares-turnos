@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
 import CarritoDrawer from "@/components/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
+import FooterTienda from "@/components/FooterTienda";
 import { useCarrito } from "@/context/CarritoContext";
 import { Producto } from "@/types/tienda";
 
@@ -76,64 +78,79 @@ export default function TiendaPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5] text-[#12151B]">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-[#E7E5E0] bg-white/90 px-6 py-4 backdrop-blur-md sm:px-10">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#12151B] text-base text-[#FFFFFF]">
-            🛍️
-          </span>
-          <h2 className="m-0 text-lg font-bold tracking-tight text-[#12151B]">
-            Luminares Tienda Oficial
-          </h2>
+    <div className="min-h-screen bg-[#F7F7F5] text-[#12151B] flex flex-col justify-between">
+      <div>
+        {/* Navbar */}
+<nav className="sticky top-0 z-50 flex items-center justify-between border-b border-[#E7E5E0] bg-white/90 px-6 py-4 backdrop-blur-md sm:px-10">
+  <div className="flex items-center gap-3">
+    
+    {/* Logo SVG sin fondo negro y de mayor tamaño */}
+    <div className="relative flex h-12 w-12 items-center justify-center">
+      <Image
+        src="/logoluminares1.svg"
+        alt="Logo Luminares"
+        width={48}
+        height={48}
+        className="h-full w-full object-contain"
+        priority
+      />
+    </div>
+
+    <h2 className="m-0 text-lg font-bold tracking-tight text-[#12151B]">
+      Luminares Tienda Oficial
+    </h2>
+  </div>
+
+  <button
+    onClick={() => setModalAbierto(true)}
+    className="relative flex items-center justify-center gap-2 rounded-full border border-[#E7E5E0] bg-white px-4 py-2.5 text-sm font-semibold text-[#12151B] transition-colors hover:border-[#12151B]"
+  >
+    <span>🛒</span>
+    <span>Mi Carrito</span>
+    {totalItems > 0 && (
+      <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#0E6E55] px-1 text-[11px] font-extrabold text-white">
+        {totalItems}
+      </span>
+    )}
+  </button>
+</nav>
+
+        {/* Contenido Principal */}
+        <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-4 sm:px-10">
+          {/* Carrusel exclusivo de la Tienda (Tabla: banners_tienda) */}
+          <BannerCarousel />
+
+          {/* Buscador y Categorías */}
+          <BuscadorYCategorias
+            busqueda={busqueda}
+            onBusquedaChange={setBusqueda}
+            categorias={categorias}
+            categoriaSeleccionada={categoriaFiltro}
+            onCategoriaSelect={setCategoriaFiltro}
+          />
+
+          <GridProductos
+            productos={productosFiltrados}
+            cargando={cargando}
+            onVerDetalle={(prod) => setProductoSeleccionado(prod)}
+          />
         </div>
 
-        <button
-          onClick={() => setModalAbierto(true)}
-          className="relative flex items-center justify-center gap-2 rounded-full border border-[#E7E5E0] bg-white px-4 py-2.5 text-sm font-semibold text-[#12151B] transition-colors hover:border-[#12151B]"
-        >
-          <span>🛒</span>
-          <span>Mi Carrito</span>
-          {totalItems > 0 && (
-            <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#0E6E55] px-1 text-[11px] font-extrabold text-white">
-              {totalItems}
-            </span>
-          )}
-        </button>
-      </nav>
-
-      {/* Contenido Principal */}
-      <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-4 sm:px-10">
-        {/* Carrusel exclusivo de la Tienda (Tabla: banners_tienda) */}
-        <BannerCarousel />
-
-        {/* Buscador y Categorías */}
-        <BuscadorYCategorias
-          busqueda={busqueda}
-          onBusquedaChange={setBusqueda}
-          categorias={categorias}
-          categoriaSeleccionada={categoriaFiltro}
-          onCategoriaSelect={setCategoriaFiltro}
+        {/* Modal de Detalle de Producto */}
+        <ModalDetalleProducto
+          producto={productoSeleccionado}
+          onClose={() => setProductoSeleccionado(null)}
         />
 
-        <GridProductos
-          productos={productosFiltrados}
-          cargando={cargando}
-          onVerDetalle={(prod) => setProductoSeleccionado(prod)}
+        {/* Drawer del Carrito */}
+        <CarritoDrawer
+          isOpen={modalAbierto}
+          onClose={() => setModalAbierto(false)}
         />
       </div>
 
-      {/* Modal de Detalle de Producto */}
-      <ModalDetalleProducto
-        producto={productoSeleccionado}
-        onClose={() => setProductoSeleccionado(null)}
-      />
-
-      {/* Drawer del Carrito */}
-      <CarritoDrawer
-        isOpen={modalAbierto}
-        onClose={() => setModalAbierto(false)}
-      />
+      {/* Footer exclusivo de la Tienda */}
+      <FooterTienda />
     </div>
   );
 }
