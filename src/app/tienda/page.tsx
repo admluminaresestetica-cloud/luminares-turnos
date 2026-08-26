@@ -80,17 +80,17 @@ export default function TiendaPage() {
   return (
     <div className="min-h-screen bg-[#F7F7F5] text-[#12151B] flex flex-col justify-between">
       <div>
-        {/* Navbar */}
-<nav className="sticky top-0 z-50 flex items-center justify-between border-b border-[#E7E5E0] bg-white/90 px-6 py-4 backdrop-blur-md sm:px-10">
+       {/* Navbar */}
+<nav className="sticky top-0 z-50 flex items-center justify-between border-b border-[#E7E5E0] bg-white/90 px-6 py-2 backdrop-blur-md sm:px-10">
   <div className="flex items-center gap-3">
     
-    {/* Logo SVG sin fondo negro y de mayor tamaño */}
-    <div className="relative flex h-12 w-12 items-center justify-center">
+    {/* Logo SVG maximizado */}
+    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
       <Image
-        src="/logoluminares1.svg"
+        src="/logotiendanegro.svg"
         alt="Logo Luminares"
-        width={48}
-        height={48}
+        width={64}
+        height={64}
         className="h-full w-full object-contain"
         priority
       />
