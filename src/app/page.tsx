@@ -45,15 +45,15 @@ const ACCESOS = [
   },
 ];
 
-// Componente interno que maneja el parámetro de administración
-function AdminRedirectHandler() {
+function AdminCheck() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get("admin") === "true";
 
   useEffect(() => {
     if (isAdmin) {
-      router.push("/admin");
+      // Reemplazamos la ruta para forzar el acceso al panel
+      router.replace("/admin");
     }
   }, [isAdmin, router]);
 
@@ -74,9 +74,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 md:p-12">
-      {/* Suspense obligatorio para usar useSearchParams en Next.js */}
       <Suspense fallback={null}>
-        <AdminRedirectHandler />
+        <AdminCheck />
       </Suspense>
 
       <BannerPrincipal />
@@ -126,7 +125,6 @@ export default function Home() {
           })}
         </nav>
 
-        {/* Botón de WhatsApp integrado al final */}
         <div className="mt-8 text-center">
           <a
             href={whatsappUrl}
