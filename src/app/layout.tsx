@@ -18,6 +18,7 @@ const geistMono = localFont({
 export const metadata = {
   title: "Luminares - Estética",
   description: "Servicios de estética y tienda online",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
