@@ -4,8 +4,8 @@
   "description": "Panel de administración y turnos de Luminares Estética",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F9F8F6",
-  "theme_color": "#1c1917",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "/icon-192.png",
