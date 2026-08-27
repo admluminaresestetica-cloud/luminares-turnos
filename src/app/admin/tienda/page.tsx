@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import FormularioProducto from "./components/FormularioProducto";
 import ListaProductos from "./components/ListaProductos";
@@ -227,9 +228,17 @@ export default function AdminTiendaPage() {
               Gestión de Tienda
             </h1>
           </div>
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#12151B] text-lg text-white">
-            🛍️
-          </span>
+          <div className="flex items-center gap-3">
+            <Link 
+              href="/admin" 
+              className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-xl text-sm transition-colors shadow-sm inline-flex items-center gap-2 border border-[#E7E5E0]"
+            >
+              ← Volver al Panel
+            </Link>
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#12151B] text-lg text-white">
+              🛍️
+            </span>
+          </div>
         </div>
       </header>
 
@@ -333,4 +342,3 @@ export default function AdminTiendaPage() {
     </div>
   );
 }
- // Handlers Categorías 
