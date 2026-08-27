@@ -1,4 +1,3 @@
-
 'use client'
 
 import { useState } from 'react'
@@ -8,36 +7,95 @@ import { supabase } from '@/lib/supabase'
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [codigo, setCodigo] = useState('')
+  const [step, setStep] = useState<'credentials' | 'otp'>('credentials')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  // PASO 1: Enviar credenciales a la API para verificar y mandar el código por mail
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
-      const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const res = await fetch('/api/enviar-codigo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       })
 
-      if (supabaseError) {
-        setError(`Error: ${supabaseError.message}`)
+      const dataRes = await res.json()
+
+      if (!res.ok) {
+        setError(dataRes.error || 'Credenciales incorrectas o error al enviar el código.')
         setLoading(false)
         return
       }
 
-      if (data?.session) {
-        const maxAge = 60 * 60 * 24 * 7 // 7 días
-        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`
-        document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=${maxAge}; SameSite=Lax`
-
-        window.location.href = '/admin'
-      }
+      // Si todo sale bien, pasamos a la pantalla del código y guardamos la contraseña temporalmente en memoria para el paso final
+      setStep('otp')
+      setLoading(false)
     } catch (err: any) {
       setError(`Error inesperado: ${err.message || 'Desconocido'}`)
+      setLoading(false)
+    }
+  }
+
+  // PASO 2: Verificar el código de 6 dígitos e iniciar sesión definitivamente
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    try {
+      // 1. Validar el código en la tabla codigos_admin
+      const { data: registros, error: dbError } = await supabase
+        .from('codigos_admin')
+        .select('*')
+        .eq('email', email)
+        .eq('codigo', codigo)
+        .single()
+
+      if (dbError || !registros) {
+        setError('El código ingresado es incorrecto.')
+        setLoading(false)
+        return
+      }
+
+      // 2. Validar si el código expiró
+      if (new Date() > new Date(registros.expira_at)) {
+        setError('El código ha expirado. Volvé a iniciar sesión.')
+        setLoading(false)
+        setStep('credentials')
+        return
+      }
+
+      // 3. Si el código es correcto, iniciamos sesión de verdad en Supabase
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (loginError || !data?.session) {
+        setError('Error al iniciar sesión final. Verificá tus datos.')
+        setLoading(false)
+        setStep('credentials')
+        return
+      }
+
+      // 4. Limpiar el código usado de la base de datos
+      await supabase.from('codigos_admin').delete().eq('email', email)
+
+      // 5. Guardar cookies y redirigir al panel
+      const maxAge = 60 * 60 * 24 * 7 // 7 días
+      document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`
+      document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=${maxAge}; SameSite=Lax`
+
+      window.location.href = '/admin'
+    } catch (err: any) {
+      setError(`Error al verificar: ${err.message || 'Desconocido'}`)
       setLoading(false)
     }
   }
@@ -59,56 +117,100 @@ export default function AdminLogin() {
             Luminares Admin
           </h2>
           <p className="mt-2 text-sm text-stone-500">
-            Ingresá tus datos para acceder al sistema
+            {step === 'credentials' 
+              ? 'Ingresá tus datos para acceder al sistema' 
+              : `Hemos enviado un código de 6 dígitos a ${email}`}
           </p>
         </div>
 
-        <form className="mt-8 space-y-5" onSubmit={handleLogin}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-xl">
-              {error}
-            </div>
-          )}
+        {step === 'credentials' ? (
+          <form className="mt-8 space-y-5" onSubmit={handleLogin}>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-xl">
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-4">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-stone-700 mb-1.5">
+                  Correo Electrónico
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-stone-900 text-sm focus:ring-2 focus:ring-stone-900 focus:outline-none transition"
+                  placeholder="admin@luminares.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-stone-700 mb-1.5">
+                  Contraseña
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-stone-900 text-sm focus:ring-2 focus:ring-stone-900 focus:outline-none transition"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white font-medium text-sm rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm"
+            >
+              {loading ? 'Verificando y enviando código...' : 'Continuar'}
+            </button>
+          </form>
+        ) : (
+          <form className="mt-8 space-y-5" onSubmit={handleVerifyCode}>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-xl">
+                {error}
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-medium text-stone-700 mb-1.5">
-                Correo Electrónico
+                Código de verificación (6 dígitos)
               </label>
               <input
-                type="email"
+                type="text"
+                maxLength={6}
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-stone-900 text-sm focus:ring-2 focus:ring-stone-900 focus:outline-none transition"
-                placeholder="admin@luminares.com"
+                value={codigo}
+                onChange={(e) => setCodigo(e.target.value)}
+                className="w-full text-center tracking-widest text-lg px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-stone-900 focus:outline-none transition"
+                placeholder="123456"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-stone-700 mb-1.5">
-                Contraseña
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-stone-900 text-sm focus:ring-2 focus:ring-stone-900 focus:outline-none transition"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white font-medium text-sm rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm"
+            >
+              {loading ? 'Validando código...' : 'Ingresar al Panel'}
+            </button>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white font-medium text-sm rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm"
-          >
-            {loading ? 'Ingresando...' : 'Iniciar Sesión'}
-          </button>
-        </form>
+            <button
+              type="button"
+              onClick={() => setStep('credentials')}
+              className="w-full text-center text-xs text-stone-500 hover:text-stone-800 mt-2"
+            >
+              Volver atrás
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )
+  
 }
