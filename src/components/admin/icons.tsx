@@ -43,6 +43,15 @@ export function ArrowLeftIcon({ className = base }: IconProps) {
   )
 }
 
+export function MailIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
+      <rect x="3" y="5" width="18" height="14" rx="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 7l7.4 5.2a1 1 0 0 0 1.2 0L20 7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export function ChevronRightIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className={className}>
