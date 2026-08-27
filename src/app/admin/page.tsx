@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
 import AdminHeader from '@/components/admin/AdminHeader'
@@ -1007,6 +1008,16 @@ const turnosFiltrados = turnos.filter((t) => {
           totalGenerales={serviciosGenerales.length}
         />
 
+        {/* Botón de acceso directo a la Tienda */}
+        <div className="mt-3 flex justify-end">
+          <Link 
+            href="/admin/tienda" 
+            className="bg-black hover:bg-gray-800 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors shadow-sm inline-flex items-center gap-2"
+          >
+            🛒 Ir a la Tienda
+          </Link>
+        </div>
+
         {activeTab === 'overview' && (
           <OverviewTab
             totalReservas={totalReservas}
@@ -1100,6 +1111,7 @@ const turnosFiltrados = turnos.filter((t) => {
         {activeTab === 'referidos' && <ReferidosTab />}
 
         {activeTab === 'faq' && <FaqTab />}
+        
       </div>
 
       {/* MODALES */}
