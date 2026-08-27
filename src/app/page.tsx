@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from 'next/link';
 import { Zap, Sparkles, Calendar, HelpCircle, ChevronRight, MessageCircle } from 'lucide-react';
@@ -45,7 +45,8 @@ const ACCESOS = [
   },
 ];
 
-export default function Home() {
+// Componente interno que maneja el parámetro de administración
+function AdminRedirectHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get("admin") === "true";
@@ -56,21 +57,28 @@ export default function Home() {
     }
   }, [isAdmin, router]);
 
-  // Si detecta el parámetro admin, muestra una pantalla de transición breve
   if (isAdmin) {
     return (
-      <div className="min-h-screen bg-[#024128] flex flex-col items-center justify-center text-white">
+      <div className="fixed inset-0 z-50 bg-[#024128] flex flex-col items-center justify-center text-white">
         <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin mb-4"></div>
         <p className="text-sm font-light tracking-widest uppercase">Entrando al panel de administración...</p>
       </div>
     );
   }
 
-  // Número de teléfono configurado
+  return null;
+}
+
+export default function Home() {
   const whatsappUrl = "https://wa.me/5493413954355?text=Hola!%20Tengo%20una%20consulta.";
 
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 md:p-12">
+      {/* Suspense obligatorio para usar useSearchParams en Next.js */}
+      <Suspense fallback={null}>
+        <AdminRedirectHandler />
+      </Suspense>
+
       <BannerPrincipal />
 
       <div className="max-w-lg w-full mt-6">
