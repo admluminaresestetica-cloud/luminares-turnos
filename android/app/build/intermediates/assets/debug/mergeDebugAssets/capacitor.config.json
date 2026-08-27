@@ -1,0 +1,9 @@
+{
+	"appId": "com.luminares.admin",
+	"appName": "Luminares Admin",
+	"webDir": "public",
+	"server": {
+		"url": "https://mireservalumin.com.ar/admin",
+		"cleartext": true
+	}
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Luminares Estética",
+  "short_name": "Luminares",
+  "description": "Panel de administración y turnos de Luminares Estética",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#024128",
+  "theme_color": "#024128",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
