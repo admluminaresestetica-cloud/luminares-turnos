@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useAdminLogout } from '@/hooks/admin/useAdminLogout'
-import { CalendarIcon, ShoppingBagIcon, LogOutIcon, ChevronRightIcon } from '@/components/admin/icons'
+import { CalendarIcon, ShoppingBagIcon, MailIcon, LogOutIcon, ChevronRightIcon } from '@/components/admin/icons'
 
 export default function AdminHubPage() {
   const router = useRouter()
