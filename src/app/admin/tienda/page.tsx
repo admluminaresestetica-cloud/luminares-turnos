@@ -7,6 +7,8 @@ import { useCatalogo } from '@/hooks/admin/useCatalogo'
 import { useAdminLogout } from '@/hooks/admin/useAdminLogout'
 
 import AdminHeader from '@/components/admin/AdminHeader'
+import SegmentedTabs from '@/components/admin/SegmentedTabs'
+import { ArrowLeftIcon } from '@/components/admin/icons'
 import PreciosTab from '@/components/admin/tabs/PreciosTab'
 import GeneralesTab from '@/components/admin/tabs/GeneralesTab'
 import HorariosTab from '@/components/admin/tabs/HorariosTab'
@@ -37,95 +39,94 @@ export default function TiendaPage() {
   const c = useCatalogo()
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans text-gray-900">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <AdminHeader onLogout={handleLogout} />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
-        <button
-          onClick={() => router.push('/admin')}
-          className="mb-4 text-sm text-gray-500 hover:text-gray-800 transition"
-        >
-          ← Volver al inicio
-        </button>
+      <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+        {/* Volver + título de sección */}
+        <div className="mb-6 flex flex-col gap-4">
+          <button
+            onClick={() => router.push('/admin')}
+            className="flex w-fit items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+            Inicio
+          </button>
 
-        {/* Barra de pestañas local (Tienda) */}
-        <div className="flex flex-wrap gap-2 border-b border-gray-200 mb-4">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
-                activeTab === tab.key
-                  ? 'border-gray-900 text-gray-900'
-                  : 'border-transparent text-gray-500 hover:text-gray-800'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Tienda y Productos</h1>
+            <p className="mt-0.5 text-sm text-slate-500">Precios, promociones, horarios y contenido</p>
+          </div>
+
+          <div className="overflow-x-auto pb-1">
+            <SegmentedTabs<TiendaTab> accent="rose" active={activeTab} onChange={setActiveTab} tabs={TABS} />
+          </div>
         </div>
 
-        {activeTab === 'precios' && (
-          <PreciosTab
-            loadingPrecios={c.loadingPrecios}
-            servicios={c.servicios}
-            promos={c.promos}
-            seccionPrecios={c.seccionPrecios}
-            setSeccionPrecios={c.setSeccionPrecios}
-            onNuevaZona={() => c.abrirModalServicio()}
-            onEditarZona={(s) => c.abrirModalServicio(s)}
-            onToggleActivoZona={c.toggleActivoServicio}
-            onEliminarZona={c.eliminarServicio}
-            onNuevaPromo={() => c.abrirModalPromo()}
-            onEditarPromo={(p) => c.abrirModalPromo(p)}
-            onToggleActivoPromo={c.toggleActivoPromo}
-            onEliminarPromo={c.eliminarPromo}
-          />
-        )}
+        {/* Contenido */}
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">
+          {activeTab === 'precios' && (
+            <PreciosTab
+              loadingPrecios={c.loadingPrecios}
+              servicios={c.servicios}
+              promos={c.promos}
+              seccionPrecios={c.seccionPrecios}
+              setSeccionPrecios={c.setSeccionPrecios}
+              onNuevaZona={() => c.abrirModalServicio()}
+              onEditarZona={(s) => c.abrirModalServicio(s)}
+              onToggleActivoZona={c.toggleActivoServicio}
+              onEliminarZona={c.eliminarServicio}
+              onNuevaPromo={() => c.abrirModalPromo()}
+              onEditarPromo={(p) => c.abrirModalPromo(p)}
+              onToggleActivoPromo={c.toggleActivoPromo}
+              onEliminarPromo={c.eliminarPromo}
+            />
+          )}
 
-        {activeTab === 'generales' && (
-          <GeneralesTab
-            loadingGenerales={c.loadingGenerales}
-            serviciosGenerales={c.serviciosGenerales}
-            onNuevoServicio={() => c.abrirModalGeneral()}
-            onEditarServicio={(s) => c.abrirModalGeneral(s)}
-            onToggleActivo={c.toggleActivoGeneral}
-            onEliminarServicio={c.eliminarServicioGeneral}
-            referidosActivo={c.referidosActivo}
-            setReferidosActivo={c.setReferidosActivo}
-            referidosTipoDescuento={c.referidosTipoDescuento}
-            setReferidosTipoDescuento={c.setReferidosTipoDescuento}
-            referidosValorDescuento={c.referidosValorDescuento}
-            setReferidosValorDescuento={c.setReferidosValorDescuento}
-          />
-        )}
+          {activeTab === 'generales' && (
+            <GeneralesTab
+              loadingGenerales={c.loadingGenerales}
+              serviciosGenerales={c.serviciosGenerales}
+              onNuevoServicio={() => c.abrirModalGeneral()}
+              onEditarServicio={(s) => c.abrirModalGeneral(s)}
+              onToggleActivo={c.toggleActivoGeneral}
+              onEliminarServicio={c.eliminarServicioGeneral}
+              referidosActivo={c.referidosActivo}
+              setReferidosActivo={c.setReferidosActivo}
+              referidosTipoDescuento={c.referidosTipoDescuento}
+              setReferidosTipoDescuento={c.setReferidosTipoDescuento}
+              referidosValorDescuento={c.referidosValorDescuento}
+              setReferidosValorDescuento={c.setReferidosValorDescuento}
+            />
+          )}
 
-        {activeTab === 'horarios' && (
-          <HorariosTab
-            loadingHorarios={c.loadingHorarios}
-            configLaser={c.configLaser}
-            guardandoLaser={c.guardandoLaser}
-            nuevaFechaLaser={c.nuevaFechaLaser}
-            setNuevaFechaLaser={c.setNuevaFechaLaser}
-            onActualizarRangoLaser={c.actualizarRangoLaser}
-            onAgregarFechaLaser={c.agregarFechaLaser}
-            onQuitarFechaLaser={c.quitarFechaLaser}
-            onGuardarConfigLaser={c.guardarConfigLaser}
-            configGeneral={c.configGeneral}
-            guardandoGeneral={c.guardandoGeneral}
-            nuevaExcepcionGeneral={c.nuevaExcepcionGeneral}
-            setNuevaExcepcionGeneral={c.setNuevaExcepcionGeneral}
-            onToggleDiaGeneral={c.toggleDiaGeneral}
-            onActualizarHorarioGeneral={c.actualizarHorarioGeneral}
-            onAgregarExcepcionGeneral={c.agregarExcepcionGeneral}
-            onQuitarExcepcionGeneral={c.quitarExcepcionGeneral}
-            onGuardarConfigGeneral={c.guardarConfigGeneral}
-          />
-        )}
+          {activeTab === 'horarios' && (
+            <HorariosTab
+              loadingHorarios={c.loadingHorarios}
+              configLaser={c.configLaser}
+              guardandoLaser={c.guardandoLaser}
+              nuevaFechaLaser={c.nuevaFechaLaser}
+              setNuevaFechaLaser={c.setNuevaFechaLaser}
+              onActualizarRangoLaser={c.actualizarRangoLaser}
+              onAgregarFechaLaser={c.agregarFechaLaser}
+              onQuitarFechaLaser={c.quitarFechaLaser}
+              onGuardarConfigLaser={c.guardarConfigLaser}
+              configGeneral={c.configGeneral}
+              guardandoGeneral={c.guardandoGeneral}
+              nuevaExcepcionGeneral={c.nuevaExcepcionGeneral}
+              setNuevaExcepcionGeneral={c.setNuevaExcepcionGeneral}
+              onToggleDiaGeneral={c.toggleDiaGeneral}
+              onActualizarHorarioGeneral={c.actualizarHorarioGeneral}
+              onAgregarExcepcionGeneral={c.agregarExcepcionGeneral}
+              onQuitarExcepcionGeneral={c.quitarExcepcionGeneral}
+              onGuardarConfigGeneral={c.guardarConfigGeneral}
+            />
+          )}
 
-        {activeTab === 'banner' && <BannerTab />}
-        {activeTab === 'referidos' && <ReferidosTab />}
-        {activeTab === 'faq' && <FaqTab />}
+          {activeTab === 'banner' && <BannerTab />}
+          {activeTab === 'referidos' && <ReferidosTab />}
+          {activeTab === 'faq' && <FaqTab />}
+        </div>
       </div>
 
       {/* MODALES */}
