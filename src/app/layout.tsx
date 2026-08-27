@@ -19,6 +19,11 @@ export const metadata = {
   title: "Luminares - Estética",
   description: "Servicios de estética y tienda online",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon-192.png",
+    shortcut: "/icon-192.png",
+    apple: "/icon-192.png",
+  },
 };
 
 export default function RootLayout({
