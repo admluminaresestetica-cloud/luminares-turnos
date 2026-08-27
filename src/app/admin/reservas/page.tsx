@@ -7,6 +7,8 @@ import { useReservas } from '@/hooks/admin/useReservas'
 import { useAdminLogout } from '@/hooks/admin/useAdminLogout'
 
 import AdminHeader from '@/components/admin/AdminHeader'
+import SegmentedTabs from '@/components/admin/SegmentedTabs'
+import { ArrowLeftIcon } from '@/components/admin/icons'
 import OverviewTab from '@/components/admin/tabs/OverviewTab'
 import AgendaTab from '@/components/admin/tabs/AgendaTab'
 import ModalCobro from '@/components/admin/modals/ModalCobro'
@@ -23,69 +25,68 @@ export default function ReservasPage() {
   const r = useReservas()
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans text-gray-900">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <AdminHeader onLogout={handleLogout} />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
-        {/* Volver al Hub */}
-        <button
-          onClick={() => router.push('/admin')}
-          className="mb-4 text-sm text-gray-500 hover:text-gray-800 transition"
-        >
-          ← Volver al inicio
-        </button>
+      <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+        {/* Volver + título de sección */}
+        <div className="mb-6 flex flex-col gap-4">
+          <button
+            onClick={() => router.push('/admin')}
+            className="flex w-fit items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+            Inicio
+          </button>
 
-        {/* Barra de pestañas local (Reservas) */}
-        <div className="flex gap-2 border-b border-gray-200 mb-4">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
-              activeTab === 'overview'
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
-            }`}
-          >
-            Resumen
-          </button>
-          <button
-            onClick={() => setActiveTab('agenda')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
-              activeTab === 'agenda'
-                ? 'border-gray-900 text-gray-900'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
-            }`}
-          >
-            Agenda ({r.turnos.length})
-          </button>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Agenda y Turnos</h1>
+              <p className="mt-0.5 text-sm text-slate-500">Gestioná reservas, estados y cobros</p>
+            </div>
+
+            <SegmentedTabs<ReservasTab>
+              accent="teal"
+              active={activeTab}
+              onChange={setActiveTab}
+              tabs={[
+                { key: 'overview', label: 'Resumen' },
+                { key: 'agenda', label: 'Agenda', count: r.turnos.length }
+              ]}
+            />
+          </div>
         </div>
 
-        {activeTab === 'overview' && (
-          <OverviewTab
-            totalReservas={r.totalReservas}
-            ingresosCobrados={r.ingresosCobrados}
-            ingresosPendientes={r.ingresosPendientes}
-          />
-        )}
+        {/* Contenido */}
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-6">
+          {activeTab === 'overview' && (
+            <OverviewTab
+              totalReservas={r.totalReservas}
+              ingresosCobrados={r.ingresosCobrados}
+              ingresosPendientes={r.ingresosPendientes}
+            />
+          )}
 
-        {activeTab === 'agenda' && (
-          <AgendaTab
-            loading={r.loading}
-            turnosFiltrados={r.turnosFiltrados}
-            turnosAgendaResumen={r.turnosAgendaResumen}
-            esFechaAgendaPasada={r.esFechaAgendaPasada}
-            busqueda={r.busqueda}
-            setBusqueda={r.setBusqueda}
-            filtroFechaTipo={r.filtroFechaTipo}
-            setFiltroFechaTipo={r.setFiltroFechaTipo}
-            fechaEspecifica={r.fechaEspecifica}
-            setFechaEspecifica={r.setFechaEspecifica}
-            filtroEstado={r.filtroEstado}
-            setFiltroEstado={r.setFiltroEstado}
-            onNuevoTurno={r.abrirModalNuevoTurno}
-            onEditarTurno={r.abrirModalEditarTurno}
-            onActualizarEstado={r.actualizarEstado}
-          />
-        )}
+          {activeTab === 'agenda' && (
+            <AgendaTab
+              loading={r.loading}
+              turnosFiltrados={r.turnosFiltrados}
+              turnosAgendaResumen={r.turnosAgendaResumen}
+              esFechaAgendaPasada={r.esFechaAgendaPasada}
+              busqueda={r.busqueda}
+              setBusqueda={r.setBusqueda}
+              filtroFechaTipo={r.filtroFechaTipo}
+              setFiltroFechaTipo={r.setFiltroFechaTipo}
+              fechaEspecifica={r.fechaEspecifica}
+              setFechaEspecifica={r.setFechaEspecifica}
+              filtroEstado={r.filtroEstado}
+              setFiltroEstado={r.setFiltroEstado}
+              onNuevoTurno={r.abrirModalNuevoTurno}
+              onEditarTurno={r.abrirModalEditarTurno}
+              onActualizarEstado={r.actualizarEstado}
+            />
+          )}
+        </div>
       </div>
 
       {/* MODALES */}
