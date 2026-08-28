@@ -1,180 +1,225 @@
+// src/components/admin/tabs/BannerTab.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Image as ImageIcon, Video, Save, CheckCircle2, Upload } from 'lucide-react'
-import { getBannerConfig, guardarBannerConfig, subirArchivoBanner, BannerConfig } from '@/lib/supabase/banner'
+import React, { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+import { ImagePlus, Trash2, Pause, Play } from 'lucide-react'
+
+interface Banner {
+  id: string
+  imagen_url: string
+  titulo?: string
+  activo: boolean
+  orden: number
+}
 
 export default function BannerTab() {
-  const [loading, setLoading] = useState(true)
-  const [guardando, setGuardando] = useState(false)
-  const [mensaje, setMensaje] = useState('')
-  const [archivoSeleccionado, setArchivoSeleccionado] = useState<File | null>(null)
-  
-  const [banner, setBanner] = useState<BannerConfig>({
-    tipo: 'imagen',
-    url_media: '',
-    activo: true,
-    titulo: '',
-    enlace: ''
-  })
+  const [banners, setBanners] = useState<Banner[]>([])
+  const [cargando, setCargando] = useState(true)
+  const [subiendo, setSubiendo] = useState(false)
+  const [titulo, setTitulo] = useState('')
+  const [archivo, setArchivo] = useState<File | null>(null)
+
+  const cargarBanners = async () => {
+    setCargando(true)
+    const { data, error } = await supabase
+      .from('banners_tienda')
+      .select('*')
+      .order('orden', { ascending: true })
+
+    if (error) {
+      console.error('Error al obtener banners:', error)
+    } else {
+      setBanners(data || [])
+    }
+    setCargando(false)
+  }
 
   useEffect(() => {
-    async function cargarBanner() {
-      setLoading(true)
-      const data = await getBannerConfig()
-      if (data) {
-        setBanner(data)
-      }
-      setLoading(false)
-    }
-    cargarBanner()
+    cargarBanners()
   }, [])
 
-  const handleGuardar = async (e: React.FormEvent) => {
+  const handleSubirBanner = async (e: React.FormEvent) => {
     e.preventDefault()
-    setGuardando(true)
-    setMensaje('')
+    if (!archivo) return alert('Por favor seleccioná una imagen.')
+
+    setSubiendo(true)
+
     try {
-      let urlFinal = banner.url_media
+      const fileExt = archivo.name.split('.').pop()
+      const fileName = `${Date.now()}.${fileExt}`
 
-      // Si seleccionó un archivo nuevo de la PC, lo subimos primero al bucket
-      if (archivoSeleccionado) {
-        urlFinal = await subirArchivoBanner(archivoSeleccionado)
-      }
+      const { error: uploadError } = await supabase.storage
+        .from('bannersprincipaltienda')
+        .upload(fileName, archivo)
 
-      const bannerAActualizar = {
-        ...banner,
-        url_media: urlFinal
-      }
+      if (uploadError) throw uploadError
 
-      await guardarBannerConfig(bannerAActualizar)
-      setBanner(bannerAActualizar)
-      setArchivoSeleccionado(null)
-      setMensaje('¡Banner guardado con éxito!')
-      setTimeout(() => setMensaje(''), 4000)
-    } catch (error) {
-      console.error(error)
-      setMensaje('Error al guardar el banner.')
+      const { data: publicUrlData } = supabase.storage
+        .from('bannersprincipaltienda')
+        .getPublicUrl(fileName)
+
+      const { error: dbError } = await supabase.from('banners_tienda').insert([
+        {
+          imagen_url: publicUrlData.publicUrl,
+          titulo: titulo || 'Banner Promocional',
+          activo: true,
+          orden: banners.length + 1,
+        },
+      ])
+
+      if (dbError) throw dbError
+
+      setTitulo('')
+      setArchivo(null)
+      await cargarBanners()
+    } catch (err: any) {
+      console.error('Error al subir el banner:', err)
+      alert('Hubo un error al guardar el banner.')
     } finally {
-      setGuardando(false)
+      setSubiendo(false)
     }
   }
 
-  if (loading) {
-    return <div className="py-12 text-center text-gray-400 text-xs font-medium">Cargando configuración del banner...</div>
+  const toggleEstado = async (id: string, estadoActual: boolean) => {
+    const { error } = await supabase
+      .from('banners_tienda')
+      .update({ activo: !estadoActual })
+      .eq('id', id)
+
+    if (!error) {
+      setBanners((prev) =>
+        prev.map((b) => (b.id === id ? { ...b, activo: !estadoActual } : b))
+      )
+    }
+  }
+
+  const eliminarBanner = async (id: string, imagenUrl: string) => {
+    if (!confirm('¿Seguro que querés eliminar este banner?')) return
+
+    try {
+      const fileName = imagenUrl.split('/').pop()
+      if (fileName) {
+        await supabase.storage.from('bannersprincipaltienda').remove([fileName])
+      }
+
+      const { error } = await supabase
+        .from('banners_tienda')
+        .delete()
+        .eq('id', id)
+
+      if (!error) {
+        setBanners((prev) => prev.filter((b) => b.id !== id))
+      }
+    } catch (err) {
+      console.error('Error al eliminar banner:', err)
+    }
   }
 
   return (
-    <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-6 transition-all max-w-2xl">
-      <div className="mb-6">
-        <h2 className="text-base font-bold text-gray-900">Gestión del Banner Principal</h2>
-        <p className="text-xs text-gray-500 mt-1">Sube la imagen o video que aparecerá al ingresar a la página principal.</p>
-      </div>
+    <div className="space-y-6">
+      {/* Formulario de Carga */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <ImagePlus className="w-4 h-4 text-rose-500" />
+          Añadir Nuevo Banner
+        </h3>
 
-      {mensaje && (
-        <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-          {mensaje}
-        </div>
-      )}
-
-      <form onSubmit={handleGuardar} className="space-y-4 text-xs">
-        {/* Tipo de Media */}
-        <div>
-          <label className="block font-bold text-gray-700 mb-1">Tipo de contenido</label>
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={() => setBanner({ ...banner, tipo: 'imagen' })}
-              className={`flex-1 py-2.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2 border transition-all ${
-                banner.tipo === 'imagen'
-                  ? 'bg-black text-white border-black'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
-              }`}
-            >
-              <ImageIcon className="w-4 h-4" /> Imagen
-            </button>
-            <button
-              type="button"
-              onClick={() => setBanner({ ...banner, tipo: 'video' })}
-              className={`flex-1 py-2.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2 border transition-all ${
-                banner.tipo === 'video'
-                  ? 'bg-black text-white border-black'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
-              }`}
-            >
-              <Video className="w-4 h-4" /> Video
-            </button>
-          </div>
-        </div>
-
-        {/* Subir archivo desde la PC */}
-        <div>
-          <label className="block font-bold text-gray-700 mb-1">Archivo de Imagen o Video</label>
-          
-          {banner.url_media && !archivoSeleccionado && (
-            <div className="mb-2 text-gray-500 flex items-center gap-2">
-              <span>Archivo actual cargado correctamente.</span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-3">
-            <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-200 rounded-xl hover:border-black cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all text-gray-600 font-bold">
-              <Upload className="w-4 h-4" />
-              <span>{archivoSeleccionado ? archivoSeleccionado.name : 'Seleccionar archivo de la PC'}</span>
-              <input
-                type="file"
-                accept={banner.tipo === 'video' ? 'video/*' : 'image/*'}
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    setArchivoSeleccionado(e.target.files[0])
-                  }
-                }}
-              />
+        <form onSubmit={handleSubirBanner} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Título Promocional (Opcional)
             </label>
+            <input
+              type="text"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Ej: 20% OFF en Cremas"
+              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-300 transition"
+            />
           </div>
-          <span className="text-[11px] text-gray-400 mt-1 block">Se subirá automáticamente al bucket "imagenes-banner" al guardar.</span>
-        </div>
 
-        {/* Título opcional */}
-        <div>
-          <label className="block font-bold text-gray-700 mb-1">Título o Mensaje (Opcional)</label>
-          <input
-            type="text"
-            placeholder="Ej: ¡Descuento de temporada!"
-            value={banner.titulo || ''}
-            onChange={(e) => setBanner({ ...banner, titulo: e.target.value })}
-            className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-black/5"
-          />
-        </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Imagen del Banner
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setArchivo(e.target.files?.[0] || null)}
+              className="w-full text-sm text-gray-500 file:mr-4 file:rounded-xl file:border-0 file:bg-gray-900 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-black file:transition-colors file:cursor-pointer"
+            />
+          </div>
 
-        {/* Estado Activo */}
-        <div className="flex items-center gap-2 pt-2">
-          <input
-            type="checkbox"
-            id="activo"
-            checked={banner.activo}
-            onChange={(e) => setBanner({ ...banner, activo: e.target.checked })}
-            className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
-          />
-          <label htmlFor="activo" className="font-bold text-gray-700 cursor-pointer">
-            Mostrar banner activo en la página principal
-          </label>
-        </div>
-
-        {/* Botón Guardar */}
-        <div className="pt-4">
           <button
             type="submit"
-            disabled={guardando}
-            className="w-full sm:w-auto px-6 py-2.5 bg-black text-white rounded-xl hover:bg-gray-800 transition-all font-bold flex items-center justify-center gap-2 shadow-sm"
+            disabled={subiendo || !archivo}
+            className="w-full sm:w-auto rounded-xl bg-rose-500 px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-rose-600 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save className="w-4 h-4" />
-            {guardando ? 'Subiendo y guardando...' : 'Guardar Cambios del Banner'}
+            {subiendo ? 'Subiendo...' : 'Guardar Banner'}
           </button>
-        </div>
-      </form>
+        </form>
+      </div>
+
+      {/* Lista de Banners */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <h3 className="text-base font-semibold text-gray-900 mb-4">
+          Banners Registrados {banners.length > 0 && <span className="text-gray-400 font-normal">({banners.length})</span>}
+        </h3>
+
+        {cargando ? (
+          <p className="text-sm text-gray-500">Cargando banners...</p>
+        ) : banners.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">No hay banners configurados todavía.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            {banners.map((b) => (
+              <div
+                key={b.id}
+                className="relative overflow-hidden rounded-2xl border border-gray-100 bg-gray-50/60 p-3 hover:shadow-sm transition-shadow"
+              >
+                <div className="relative h-32 w-full overflow-hidden rounded-xl bg-gray-200">
+                  <img
+                    src={b.imagen_url}
+                    alt={b.titulo}
+                    className="h-full w-full object-cover"
+                  />
+                  <span
+                    className={`absolute right-2 top-2 rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm ${
+                      b.activo ? 'bg-emerald-500' : 'bg-gray-500'
+                    }`}
+                  >
+                    {b.activo ? 'ACTIVO' : 'PAUSADO'}
+                  </span>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <span className="truncate text-sm font-semibold text-gray-900">
+                    {b.titulo || 'Sin título'}
+                  </span>
+
+                  <div className="flex gap-1.5 shrink-0">
+                    <button
+                      onClick={() => toggleEstado(b.id, b.activo)}
+                      title={b.activo ? 'Pausar' : 'Activar'}
+                      className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      {b.activo ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                    </button>
+                    <button
+                      onClick={() => eliminarBanner(b.id, b.imagen_url)}
+                      title="Eliminar"
+                      className="flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

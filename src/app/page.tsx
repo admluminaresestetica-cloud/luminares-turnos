@@ -45,39 +45,30 @@ const ACCESOS = [
   },
 ];
 
-function AdminCheck() {
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get("admin") === "true";
 
   useEffect(() => {
     if (isAdmin) {
-      // Reemplazamos la ruta para forzar el acceso al panel
-      router.replace("/admin");
+      router.push("/admin");
     }
   }, [isAdmin, router]);
 
   if (isAdmin) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#024128] flex flex-col items-center justify-center text-white">
+      <div className="min-h-screen bg-[#024128] flex flex-col items-center justify-center text-white">
         <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin mb-4"></div>
         <p className="text-sm font-light tracking-widest uppercase">Entrando al panel de administración...</p>
       </div>
     );
   }
 
-  return null;
-}
-
-export default function Home() {
   const whatsappUrl = "https://wa.me/5493413954355?text=Hola!%20Tengo%20una%20consulta.";
 
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 md:p-12">
-      <Suspense fallback={null}>
-        <AdminCheck />
-      </Suspense>
-
       <BannerPrincipal />
 
       <div className="max-w-lg w-full mt-6">
@@ -142,5 +133,17 @@ export default function Home() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#024128]/20 border-t-[#024128] rounded-full animate-spin"></div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

@@ -1,7 +1,9 @@
+// src/components/admin/AdminHeader.tsx
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { LogOut, Calendar, User } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 interface AdminHeaderProps {
   onLogout: () => void
@@ -11,9 +13,18 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({
   onLogout,
-  userEmail = 'Admin',
+  userEmail,
   logoUrl = '/logo.jpg',
 }: AdminHeaderProps) {
+  const [email, setEmail] = useState<string>(userEmail || 'Admin')
+
+  useEffect(() => {
+    if (userEmail) return
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.email) setEmail(data.user.email)
+    })
+  }, [userEmail])
+
   const hoy = new Date().toLocaleDateString('es-AR', {
     weekday: 'long',
     day: 'numeric',
@@ -25,17 +36,17 @@ export default function AdminHeader({
   return (
     <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-30 px-6 py-4 transition-all">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        
+
         {/* Lado Izquierdo: Logo, Título y Fecha */}
         <div className="flex items-center gap-4">
           {logoUrl ? (
             <img
               src={logoUrl}
               alt="Luminares Logo"
-              className="h-10 w-auto object-contain"
+              className="h-10 w-auto object-contain transition-transform duration-300 hover:scale-105"
             />
           ) : (
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-rose-100">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-400 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-rose-100 transition-transform duration-300 hover:scale-105">
               L
             </div>
           )}
@@ -53,7 +64,7 @@ export default function AdminHeader({
 
         {/* Lado Derecho: Avatar de Usuario y Acción */}
         <div className="flex items-center justify-between md:justify-end gap-3 border-t md:border-t-0 pt-3 md:pt-0 border-gray-100">
-          
+
           {/* Avatar / Usuario */}
           <div className="flex items-center gap-3 bg-gray-50/80 px-3 py-1.5 rounded-full border border-gray-100">
             <div className="relative">
@@ -64,7 +75,7 @@ export default function AdminHeader({
             </div>
             <div className="text-left pr-1">
               <p className="text-xs font-semibold text-gray-700 truncate max-w-[120px] sm:max-w-[180px]">
-                {userEmail}
+                {email}
               </p>
               <p className="text-[10px] text-gray-400 font-medium">Administrador</p>
             </div>
@@ -73,7 +84,7 @@ export default function AdminHeader({
           {/* Botón Salir */}
           <button
             onClick={onLogout}
-            className="flex items-center gap-2 text-xs font-medium text-gray-500 hover:text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-xl transition-all duration-200 border border-transparent hover:border-rose-100"
+            className="flex items-center gap-2 text-xs font-medium text-gray-500 hover:text-rose-600 hover:bg-rose-50 active:scale-95 px-3 py-2 rounded-xl transition-all duration-200 border border-transparent hover:border-rose-100"
             title="Cerrar sesión"
           >
             <LogOut className="w-4 h-4" />

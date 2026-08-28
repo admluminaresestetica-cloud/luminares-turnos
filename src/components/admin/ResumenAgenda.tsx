@@ -1,3 +1,4 @@
+// src/components/admin/ResumenAgenda.tsx
 'use client'
 
 import { DollarSign, ClockCheck, TrendingUp } from 'lucide-react'
@@ -13,7 +14,6 @@ interface ResumenAgendaProps {
 }
 
 export default function ResumenAgenda({ turnos, esFechaPasada }: ResumenAgendaProps) {
-  // .toLowerCase() para evitar fallos si viene 'Completado' o 'completado'
   const recaudacionReal = turnos
     .filter((t) => t.estado?.toLowerCase() === 'completado')
     .reduce((acc, t) => acc + (Number(t.precio_total) || 0), 0)
@@ -28,9 +28,9 @@ export default function ResumenAgenda({ turnos, esFechaPasada }: ResumenAgendaPr
   return (
     <div className="p-4 bg-gray-50/50 border border-gray-100 mb-6 rounded-2xl">
       <div className={`grid gap-3 ${esFechaPasada ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-        
+
         {/* Recaudación Real */}
-        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
           <div>
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">
               {esFechaPasada ? 'Recaudación Real del Período' : 'Recaudación Real (Completados)'}
@@ -46,7 +46,7 @@ export default function ResumenAgenda({ turnos, esFechaPasada }: ResumenAgendaPr
 
         {/* Pendiente / Estimado */}
         {!esFechaPasada && (
-          <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+          <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
             <div>
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">
                 Pendiente / Estimado
