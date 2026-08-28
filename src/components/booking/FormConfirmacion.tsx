@@ -177,7 +177,7 @@ export default function FormConfirmacion({
             <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="tel"
-              placeholder="Ej: 3411234567"
+              placeholder="Ej: 3413954355"
               value={celular}
               onChange={(e) => onCelularChange(e.target.value)}
               className={`w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${styles.focusRing}`}

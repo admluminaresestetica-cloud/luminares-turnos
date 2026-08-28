@@ -60,7 +60,8 @@ export async function POST(request: Request) {
           email: clienteEmail || "cliente@reserva.com",
         },
         back_urls: {
-          success: `${baseUrl}/reserva-confirmada?reserva_id=${reservaId}`,
+          // Cambiado para redirigir a la nueva pantalla /reserva-exitosa
+          success: `${baseUrl}/reserva-exitosa?reserva_id=${reservaId}`,
           failure: `${baseUrl}/?status=failure`,
           pending: `${baseUrl}/?status=pending`,
         },
