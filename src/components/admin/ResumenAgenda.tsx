@@ -58,3 +58,10 @@ export default function ResumenAgenda({ turnos, esFechaPasada }: ResumenAgendaPr
             <div className="p-3 bg-blue-50 rounded-xl text-blue-600 shrink-0">
               <ClockCheck className="w-5 h-5" />
             </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  )
+}
