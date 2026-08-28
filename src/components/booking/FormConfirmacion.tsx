@@ -16,7 +16,7 @@ import {
 import { calcularMontoSena } from '@/lib/whatsapp';
 import { formatFechaDisplay } from '@/lib/calendario/slots';
 
-interface Props {
+export interface FormConfirmacionProps {
   servicioDetalle: string;
   precioTotal: number;
   duracionTotal: number;
@@ -36,6 +36,7 @@ interface Props {
   confirmando?: boolean;
   error?: string | null;
   colorAccent?: 'violet' | 'indigo' | 'rose';
+  // Props de Mercado Pago explicítamente declaradas:
   onPagarMercadoPago?: (montoAPagar: number) => void;
   cargandoMP?: boolean;
 }
@@ -58,29 +59,31 @@ const COLOR_ACCENTS = {
   },
 };
 
-export default function FormConfirmacion({
-  servicioDetalle,
-  precioTotal,
-  duracionTotal,
-  fecha,
-  hora,
-  porcentajeSena,
-  nombre,
-  celular,
-  codigoReferidoUsado = '',
-  descuentoMonto = 0,
-  referidoValido = null,
-  mensajeReferido = null,
-  onNombreChange,
-  onCelularChange,
-  onCodigoReferidoChange,
-  onConfirmar,
-  confirmando,
-  error,
-  colorAccent = 'violet',
-  onPagarMercadoPago,
-  cargandoMP = false,
-}: Props) {
+export default function FormConfirmacion(props: FormConfirmacionProps) {
+  const {
+    servicioDetalle,
+    precioTotal,
+    duracionTotal,
+    fecha,
+    hora,
+    porcentajeSena,
+    nombre,
+    celular,
+    codigoReferidoUsado = '',
+    descuentoMonto = 0,
+    referidoValido = null,
+    mensajeReferido = null,
+    onNombreChange,
+    onCelularChange,
+    onCodigoReferidoChange,
+    onConfirmar,
+    confirmando,
+    error,
+    colorAccent = 'violet',
+    onPagarMercadoPago,
+    cargandoMP = false,
+  } = props;
+
   const precioFinal = Math.max(0, precioTotal - descuentoMonto);
   const montoSenaCalculado = calcularMontoSena(precioFinal, porcentajeSena);
   const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
@@ -232,9 +235,9 @@ export default function FormConfirmacion({
         )}
       </div>
 
-      {/* BLOQUE MERCADO PAGO */}
+      {/* BLOQUE Y BOTÓN DE MERCADO PAGO */}
       {onPagarMercadoPago && (
-        <div className="bg-sky-50/50 border border-sky-200/80 rounded-2xl p-4 space-y-3">
+        <div className="bg-sky-50/70 border border-sky-200/80 rounded-2xl p-4 space-y-3">
           <div className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-sky-600" />
             <span className="text-xs font-bold text-slate-900">Pagar online con Mercado Pago</span>
@@ -246,8 +249,8 @@ export default function FormConfirmacion({
               onClick={() => handleCambioTipoPago('sena')}
               className={`p-2 rounded-xl border text-center text-xs transition-all ${
                 tipoPago === 'sena'
-                  ? 'bg-sky-600 text-white font-bold border-sky-600'
-                  : 'bg-white text-slate-700 border-slate-200'
+                  ? 'bg-sky-600 text-white font-bold border-sky-600 shadow-sm'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
               }`}
             >
               Seña (${montoSenaCalculado.toLocaleString('es-AR')})
@@ -257,8 +260,8 @@ export default function FormConfirmacion({
               onClick={() => handleCambioTipoPago('total')}
               className={`p-2 rounded-xl border text-center text-xs transition-all ${
                 tipoPago === 'total'
-                  ? 'bg-sky-600 text-white font-bold border-sky-600'
-                  : 'bg-white text-slate-700 border-slate-200'
+                  ? 'bg-sky-600 text-white font-bold border-sky-600 shadow-sm'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
               }`}
             >
               Total (${precioFinal.toLocaleString('es-AR')})
@@ -268,8 +271,8 @@ export default function FormConfirmacion({
               onClick={() => handleCambioTipoPago('custom')}
               className={`p-2 rounded-xl border text-center text-xs transition-all ${
                 tipoPago === 'custom'
-                  ? 'bg-sky-600 text-white font-bold border-sky-600'
-                  : 'bg-white text-slate-700 border-slate-200'
+                  ? 'bg-sky-600 text-white font-bold border-sky-600 shadow-sm'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
               }`}
             >
               Otro monto
@@ -283,11 +286,12 @@ export default function FormConfirmacion({
                 type="number"
                 value={montoSeleccionado}
                 onChange={(e) => setMontoSeleccionado(Math.max(1, Number(e.target.value)))}
-                className="w-full p-2 text-sm bg-white border border-slate-200 rounded-xl outline-none"
+                className="w-full p-2 text-sm bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"
               />
             </div>
           )}
 
+          {/* BOTÓN AZUL MERCADO PAGO */}
           <button
             type="button"
             disabled={!puedeConfirmar || cargandoMP || confirmando}
@@ -297,7 +301,7 @@ export default function FormConfirmacion({
             {cargandoMP ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Generando pago MP...</span>
+                <span>Generando pago Mercado Pago...</span>
               </>
             ) : (
               <>
