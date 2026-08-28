@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from 'next/link';
 import { Zap, Sparkles, Calendar, HelpCircle, ChevronRight, MessageCircle } from 'lucide-react';
@@ -45,7 +45,7 @@ const ACCESOS = [
   },
 ];
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get("admin") === "true";
@@ -136,5 +136,17 @@ export default function Home() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#024128]/20 border-t-[#024128] rounded-full animate-spin"></div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
