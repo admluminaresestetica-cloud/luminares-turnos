@@ -18,7 +18,7 @@ import { calcularMontoSena } from '@/lib/whatsapp';
 import { formatFechaDisplay } from '@/lib/calendario/slots';
 import { Dispatch, SetStateAction } from 'react';
 
-export type OpcionPago = 'sena' | 'total' | 'mp_sena' | 'mp_total' | 'whatsapp';
+export type OpcionPago = 'sena' | 'total';
 
 interface Props {
   servicioDetalle: string;
@@ -93,7 +93,6 @@ export default function FormConfirmacion({
   const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
 
   const puedeConfirmar = nombre.trim().length >= 2 && celular.replace(/\D/g, '').length >= 8;
-
   const montoAPagar = opcionPago === 'sena' ? montoSena : precioFinal;
 
   return (
@@ -201,37 +200,35 @@ export default function FormConfirmacion({
         </div>
 
         {/* Input Opcional: Código de Recomendada */}
-        {onCodigoReferidoChange && (
-          <div>
-            <label htmlFor="codigoReferido" className="block text-xs font-bold text-slate-800 mb-1">
-              ¿Tenés un código de recomendada? <span className="text-slate-400 font-normal">(Opcional)</span>
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <Gift className="w-4 h-4 text-violet-500" />
-              </div>
-              <input
-                id="codigoReferido"
-                type="text"
-                value={codigoReferidoUsado}
-                onChange={(e) => onCodigoReferidoChange(e.target.value.toUpperCase())}
-                placeholder="Ej: MARIA-A8F2"
-                className={`w-full pl-10 pr-3.5 py-3 text-base sm:text-sm bg-white border border-slate-200/80 rounded-xl text-slate-900 uppercase placeholder:normal-case placeholder:text-slate-400 transition-all outline-none ${styles.focusRing}`}
-              />
+        <div>
+          <label htmlFor="codigoReferido" className="block text-xs font-bold text-slate-800 mb-1">
+            ¿Tenés un código de recomendada? <span className="text-slate-400 font-normal">(Opcional)</span>
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <Gift className="w-4 h-4 text-violet-500" />
             </div>
-            
-            {mensajeReferido && (
-              <div className={`mt-1.5 flex items-center gap-1.5 text-xs font-medium ${referidoValido ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {referidoValido ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                ) : (
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                )}
-                <span>{mensajeReferido}</span>
-              </div>
-            )}
+            <input
+              id="codigoReferido"
+              type="text"
+              value={codigoReferidoUsado}
+              onChange={(e) => onCodigoReferidoChange(e.target.value.toUpperCase())}
+              placeholder="Ej: MARIA-A8F2"
+              className={`w-full pl-10 pr-3.5 py-3 text-base sm:text-sm bg-white border border-slate-200/80 rounded-xl text-slate-900 uppercase placeholder:normal-case placeholder:text-slate-400 transition-all outline-none ${styles.focusRing}`}
+            />
           </div>
-        )}
+          
+          {mensajeReferido && (
+            <div className={`mt-1.5 flex items-center gap-1.5 text-xs font-medium ${referidoValido ? 'text-emerald-600' : 'text-amber-600'}`}>
+              {referidoValido ? (
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              ) : (
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              )}
+              <span>{mensajeReferido}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* SECCIÓN DE OPCIÓN DE PAGO (MERCADO PAGO) */}
