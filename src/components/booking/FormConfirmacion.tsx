@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { 
   User, 
   Phone, 
@@ -11,7 +12,8 @@ import {
   MessageCircle,
   Gift,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  CreditCard
 } from 'lucide-react';
 import { calcularMontoSena } from '@/lib/whatsapp';
 import { formatFechaDisplay } from '@/lib/calendario/slots';
@@ -36,6 +38,10 @@ interface Props {
   confirmando?: boolean;
   error?: string | null;
   colorAccent?: 'violet' | 'indigo' | 'rose';
+
+  // --- PROPS PARA MERCADO PAGO ---
+  onPagarMercadoPago?: (montoAPagar: number) => void;
+  cargandoMP?: boolean;
 }
 
 const COLOR_ACCENTS = {
@@ -76,12 +82,24 @@ export default function FormConfirmacion({
   confirmando,
   error,
   colorAccent = 'violet',
+  onPagarMercadoPago,
+  cargandoMP = false,
 }: Props) {
   const precioFinal = Math.max(0, precioTotal - descuentoMonto);
-  const montoSena = calcularMontoSena(precioFinal, porcentajeSena);
+  const montoSenaCalculado = calcularMontoSena(precioFinal, porcentajeSena);
   const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
 
+  // Estado para controlar cuánto quiere abonar el cliente (por defecto la seña)
+  const [montoSeleccionado, setMontoSeleccionado] = useState<number>(montoSenaCalculado);
+  const [tipoPago, setTipoPago] = useState<'sena' | 'total' | 'custom'>('sena');
+
   const puedeConfirmar = nombre.trim().length >= 2 && celular.replace(/\D/g, '').length >= 8;
+
+  const handleCambioTipoPago = (tipo: 'sena' | 'total' | 'custom') => {
+    setTipoPago(tipo);
+    if (tipo === 'sena') setMontoSeleccionado(montoSenaCalculado);
+    if (tipo === 'total') setMontoSeleccionado(precioFinal);
+  };
 
   return (
     <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-200">
@@ -141,7 +159,7 @@ export default function FormConfirmacion({
               Seña ({porcentajeSena}%)
             </p>
             <p className="text-xs sm:text-sm font-bold">
-              ${montoSena.toLocaleString('es-AR')}
+              ${montoSenaCalculado.toLocaleString('es-AR')}
             </p>
           </div>
         </div>
@@ -222,6 +240,83 @@ export default function FormConfirmacion({
         )}
       </div>
 
+      {/* BLOQUE OPCIONAL: SELECCIÓN DE MONTO Y PAGAR CON MERCADO PAGO */}
+      {onPagarMercadoPago && (
+        <div className="bg-sky-50/50 border border-sky-200/80 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-sky-600" />
+            <span className="text-xs font-bold text-slate-900">Pagar online con Mercado Pago</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handleCambioTipoPago('sena')}
+              className={`p-2 rounded-xl border text-center text-xs transition-all ${
+                tipoPago === 'sena'
+                  ? 'bg-sky-600 text-white font-bold border-sky-600'
+                  : 'bg-white text-slate-700 border-slate-200'
+              }`}
+            >
+              Seña (${montoSenaCalculado.toLocaleString('es-AR')})
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCambioTipoPago('total')}
+              className={`p-2 rounded-xl border text-center text-xs transition-all ${
+                tipoPago === 'total'
+                  ? 'bg-sky-600 text-white font-bold border-sky-600'
+                  : 'bg-white text-slate-700 border-slate-200'
+              }`}
+            >
+              Total (${precioFinal.toLocaleString('es-AR')})
+            </button>
+            <button
+              type="button"
+              onClick={() => handleCambioTipoPago('custom')}
+              className={`p-2 rounded-xl border text-center text-xs transition-all ${
+                tipoPago === 'custom'
+                  ? 'bg-sky-600 text-white font-bold border-sky-600'
+                  : 'bg-white text-slate-700 border-slate-200'
+              }`}
+            >
+              Otro monto
+            </button>
+          </div>
+
+          {tipoPago === 'custom' && (
+            <div>
+              <label className="block text-[11px] text-slate-500 mb-1">Monto a abonar ($):</label>
+              <input
+                type="number"
+                value={montoSeleccionado}
+                onChange={(e) => setMontoSeleccionado(Math.max(1, Number(e.target.value)))}
+                className="w-full p-2 text-sm bg-white border border-slate-200 rounded-xl outline-none"
+              />
+            </div>
+          )}
+
+          <button
+            type="button"
+            disabled={!puedeConfirmar || cargandoMP || confirmando}
+            onClick={() => onPagarMercadoPago(montoSeleccionado)}
+            className="w-full bg-[#009EE3] hover:bg-[#008AC7] active:scale-[0.98] text-white font-bold py-3.5 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {cargandoMP ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Generando pago MP...</span>
+              </>
+            ) : (
+              <>
+                <CreditCard className="w-4 h-4" />
+                <span>Pagar ${montoSeleccionado.toLocaleString('es-AR')} con Mercado Pago</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       {/* Mensaje de Error General */}
       {error && (
         <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200/80 rounded-xl p-3 font-medium">
@@ -229,11 +324,11 @@ export default function FormConfirmacion({
         </div>
       )}
 
-      {/* Botón de Confirmación */}
+      {/* Botón de Confirmar por WhatsApp (Tradicional) */}
       <button
         type="button"
         onClick={onConfirmar}
-        disabled={!puedeConfirmar || confirmando}
+        disabled={!puedeConfirmar || confirmando || cargandoMP}
         className={`w-full font-bold py-3.5 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed ${styles.button}`}
       >
         {confirmando ? (
@@ -244,7 +339,7 @@ export default function FormConfirmacion({
         ) : (
           <>
             <MessageCircle className="w-4 h-4 fill-current" />
-            <span>Confirmar y enviar por WhatsApp</span>
+            <span>Confirmar y coordinar pago por WhatsApp</span>
           </>
         )}
       </button>
@@ -252,7 +347,7 @@ export default function FormConfirmacion({
       {/* Disclaimer */}
       <div className="flex items-center justify-center gap-1.5 text-[10px] sm:text-[11px] text-slate-400 font-medium text-center">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-        <span>Se redirigirá a WhatsApp para coordinar el pago de la seña.</span>
+        <span>Tus datos están protegidos y la reserva se confirma al momento.</span>
       </div>
 
     </div>
