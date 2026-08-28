@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import SelectorFecha from '@/components/booking/SelectorFecha';
 import SelectorHorario from '@/components/booking/SelectorHorario';
-import FormConfirmacion from '@/components/booking/FormConfirmacion';
+import FormConfirmacion, { OpcionPago } from '@/components/booking/FormConfirmacion';
 import { calcularSlotsDisponibles } from '@/lib/calendario/slots';
 import { getConfiguracionCalendario, getConfiguracionSistema } from '@/lib/supabase/configuracion';
 import { crearReserva, getReservasPorFecha } from '@/lib/supabase/reservas';
@@ -31,7 +31,6 @@ import type { ConfiguracionCalendario, ConfiguracionSistema, TipoServicio } from
 import type { DetalleReservaGeneral, DetalleReservaLaser } from '@/lib/types';
 
 type Paso = 'agenda' | 'confirmacion';
-export type OpcionPago = 'whatsapp' | 'mp_sena' | 'mp_total';
 
 interface Props {
   tipo: TipoServicio;
@@ -104,8 +103,8 @@ export default function FlujoAgendaConfirmacion({
   const [celular, setCelular] = useState('');
   const [codigoReferidoUsado, setCodigoReferidoUsado] = useState('');
   
-  // Estado para la modalidad de pago elegida
-  const [opcionPago, setOpcionPago] = useState<OpcionPago>('whatsapp');
+  // Estado para la modalidad de pago elegida (sincronizado con FormConfirmacion)
+  const [opcionPago, setOpcionPago] = useState<OpcionPago>('sena');
 
   // Estados para validación de referido
   const [descuentoMonto, setDescuentoMonto] = useState(0);
@@ -290,72 +289,32 @@ export default function FlujoAgendaConfirmacion({
         return;
       }
 
-      // 4. BIFURCACIÓN DE FLUJO SEGÚN EL MÉTODO DE PAGO
-
-      if (opcionPago === 'whatsapp') {
-        // --- FLUJO WHATSAPP / EFECTIVO ---
-        const datosExito: DatosReservaExitosa = {
-          codigo: reserva.codigo_unico,
-          codigoReferidoPropio,
-          detalle: detalleTexto,
-          fecha,
-          hora,
-        };
-
-        sessionStorage.setItem('reserva-exitosa', JSON.stringify(datosExito));
-        setReservaExitosa(datosExito);
-        setConfirmando(false);
-
-        let mensaje = buildMensajeReserva({
-          codigo: reserva.codigo_unico,
+      // 4. FLUJO MERCADO PAGO (SEÑA O TOTAL)
+      const esSena = opcionPago === 'sena';
+      const montoBase = esSena ? montoSena : precioFinal;
+      
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          origen: 'reserva',
+          reservaId: reserva.id,
+          codigoReserva: reserva.codigo_unico,
+          titulo: `${detalleTexto} (${esSena ? `Seña ${configSistema.porcentaje_sena}%` : 'Pago Total 100%'})`,
+          monto: montoBase,
           clienteNombre: nombreLimpio,
-          servicioDetalle: detalleTexto,
-          fecha,
-          hora,
-          precioTotal: precioFinal,
-          montoSena,
-        });
+          clienteCelular: celularLimpio,
+          tipoPago: esSena ? 'sena' : 'total',
+        }),
+      });
 
-        if (descuentoMonto > 0) {
-          mensaje += `\n🎟️ *Descuento aplicado:* -$${descuentoMonto.toLocaleString('es-AR')} (Ref: ${codigoUsadoLimpio})`;
-        }
+      const data = await response.json();
 
-        mensaje += `\n\n🎁 *Tu código de recomendada:* ${codigoReferidoPropio}`;
-
-        const urlWhatsapp = buildWhatsAppUrl('5493413954355', mensaje);
-        window.open(urlWhatsapp, '_blank') || (window.location.href = urlWhatsapp);
-
+      if (data.init_point) {
+        window.location.href = data.init_point;
       } else {
-        // --- FLUJO MERCADO PAGO (SEÑA O TOTAL) ---
-        const esSena = opcionPago === 'mp_sena';
-        const montoBase = esSena ? montoSena : precioFinal;
-        
-        // Recargo opcional del 10% por servicio de tarjeta/MP
-        const montoConRecargo = Math.round(montoBase * 1.10);
-
-        const response = await fetch('/api/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            origen: 'reserva',
-            reservaId: reserva.id,
-            codigoReserva: reserva.codigo_unico,
-            titulo: `${detalleTexto} (${esSena ? 'Seña 30%' : 'Pago Total 100%'})`,
-            monto: montoConRecargo,
-            clienteNombre: nombreLimpio,
-            clienteCelular: celularLimpio,
-            tipoPago: esSena ? 'sena' : 'total',
-          }),
-        });
-
-        const data = await response.json();
-
-        if (data.init_point) {
-          window.location.href = data.init_point;
-        } else {
-          setConfirmando(false);
-          setError('Ocurrió un error al conectar con Mercado Pago. Intentá abonar por WhatsApp.');
-        }
+        setConfirmando(false);
+        setError('Ocurrió un error al conectar con Mercado Pago. Intentá de nuevo.');
       }
 
     } catch (e) {
@@ -571,7 +530,7 @@ export default function FlujoAgendaConfirmacion({
         </div>
       </div>
 
-      {/* MODAL POP-UP DE RESERVA EXITOSA (WHATSAPP) */}
+      {/* MODAL POP-UP DE RESERVA EXITOSA */}
       {reservaExitosa && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
           <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-sm w-full text-center shadow-2xl border border-slate-100">
@@ -627,10 +586,6 @@ export default function FlujoAgendaConfirmacion({
                 </div>
               </div>
             )}
-
-            <p className="text-[10px] sm:text-[11px] text-slate-400 mb-4 sm:mb-5 leading-tight">
-              Si fuiste redirigido a WhatsApp, asegurate de enviar el mensaje para finalizar la coordinación.
-            </p>
 
             <button
               type="button"
