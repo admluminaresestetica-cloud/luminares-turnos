@@ -353,3 +353,4 @@ export default function FormConfirmacion({
     </div>
   );
 }
+{/* Disclaimer */}
