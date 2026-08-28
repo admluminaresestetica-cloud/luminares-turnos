@@ -129,6 +129,7 @@ export default function FlujoAgendaConfirmacion({
 
   const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
 
+  // Carga inicial de datos de configuración
   useEffect(() => {
     async function cargar() {
       setCargandoConfig(true);
@@ -142,6 +143,17 @@ export default function FlujoAgendaConfirmacion({
     }
     cargar();
   }, [tipo]);
+
+  // Si el usuario regresa a la pantalla mediante el botón "Atrás" del navegador descongela los botones
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      setCargandoMP(false);
+      setConfirmando(false);
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   // Validar el código de referido en tiempo real
   useEffect(() => {
@@ -213,7 +225,7 @@ export default function FlujoAgendaConfirmacion({
     }
   }, [fecha, configCalendario, cargarSlots]);
 
-  // Función auxiliar para registrar cliente y referidos
+  // Función auxiliar para registrar cliente y referidos en DB
   const prepararReservaBase = async () => {
     if (!fecha || !hora || !configSistema) return null;
 
@@ -582,6 +594,7 @@ export default function FlujoAgendaConfirmacion({
                 colorAccent={colorAccent}
                 onPagarMercadoPago={handlePagarMercadoPago}
                 cargandoMP={cargandoMP}
+                onCancelarMP={() => setCargandoMP(false)}
               />
             </div>
           )}
