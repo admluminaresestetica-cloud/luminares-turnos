@@ -12,13 +12,14 @@ import {
   CheckCircle2,
   AlertCircle,
   CreditCard,
+  MessageCircle,
   Check
 } from 'lucide-react';
 import { calcularMontoSena } from '@/lib/whatsapp';
 import { formatFechaDisplay } from '@/lib/calendario/slots';
 import { Dispatch, SetStateAction } from 'react';
 
-export type OpcionPago = 'sena' | 'total';
+export type OpcionPago = 'whatsapp' | 'mp_sena' | 'mp_total';
 
 interface Props {
   servicioDetalle: string;
@@ -48,19 +49,22 @@ const COLOR_ACCENTS = {
   violet: {
     badgeSena: 'bg-violet-50 text-violet-700 border-violet-200/80',
     focusRing: 'focus:ring-violet-500/20 focus:border-violet-600',
-    button: 'bg-violet-600 hover:bg-violet-500 text-white shadow-sm',
+    buttonMp: 'bg-violet-600 hover:bg-violet-500 text-white shadow-sm',
+    buttonWp: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm',
     borderSelected: 'border-violet-600 bg-violet-50/40 text-violet-900',
   },
   indigo: {
     badgeSena: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
     focusRing: 'focus:ring-indigo-500/20 focus:border-indigo-600',
-    button: 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm',
+    buttonMp: 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm',
+    buttonWp: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm',
     borderSelected: 'border-indigo-600 bg-indigo-50/40 text-indigo-900',
   },
   rose: {
     badgeSena: 'bg-rose-50 text-rose-700 border-rose-200/80',
     focusRing: 'focus:ring-rose-500/20 focus:border-rose-600',
-    button: 'bg-rose-500 hover:bg-rose-400 text-white shadow-sm',
+    buttonMp: 'bg-rose-500 hover:bg-rose-400 text-white shadow-sm',
+    buttonWp: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm',
     borderSelected: 'border-rose-500 bg-rose-50/40 text-rose-900',
   },
 };
@@ -93,7 +97,10 @@ export default function FormConfirmacion({
   const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
 
   const puedeConfirmar = nombre.trim().length >= 2 && celular.replace(/\D/g, '').length >= 8;
-  const montoAPagar = opcionPago === 'sena' ? montoSena : precioFinal;
+
+  const handleAccion = (tipo: OpcionPago) => {
+    onOpcionPagoChange(tipo);
+  };
 
   return (
     <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-200">
@@ -231,54 +238,6 @@ export default function FormConfirmacion({
         </div>
       </div>
 
-      {/* SECCIÓN DE OPCIÓN DE PAGO (MERCADO PAGO) */}
-      <div className="space-y-2 pt-2">
-        <label className="block text-xs font-bold text-slate-800">
-          ¿Cuánto querés abonar ahora por Mercado Pago?
-        </label>
-        <div className="grid grid-cols-2 gap-2.5">
-          {/* Opción 1: Seña */}
-          <button
-            type="button"
-            onClick={() => onOpcionPagoChange('sena')}
-            className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
-              opcionPago === 'sena'
-                ? styles.borderSelected
-                : 'border-slate-200/80 bg-white hover:border-slate-300 text-slate-700'
-            }`}
-          >
-            <div className="flex items-center justify-between w-full mb-1">
-              <span className="text-xs font-bold">Pagar Seña ({porcentajeSena}%)</span>
-              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${opcionPago === 'sena' ? 'border-violet-600 bg-violet-600 text-white' : 'border-slate-300'}`}>
-                {opcionPago === 'sena' && <Check className="w-3 h-3 stroke-[3]" />}
-              </div>
-            </div>
-            <span className="text-sm font-black text-slate-900">${montoSena.toLocaleString('es-AR')}</span>
-            <span className="text-[10px] text-slate-400 mt-0.5">Saldo restante en el local</span>
-          </button>
-
-          {/* Opción 2: Total 100% */}
-          <button
-            type="button"
-            onClick={() => onOpcionPagoChange('total')}
-            className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
-              opcionPago === 'total'
-                ? styles.borderSelected
-                : 'border-slate-200/80 bg-white hover:border-slate-300 text-slate-700'
-            }`}
-          >
-            <div className="flex items-center justify-between w-full mb-1">
-              <span className="text-xs font-bold">Pago Total (100%)</span>
-              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${opcionPago === 'total' ? 'border-violet-600 bg-violet-600 text-white' : 'border-slate-300'}`}>
-                {opcionPago === 'total' && <Check className="w-3 h-3 stroke-[3]" />}
-              </div>
-            </div>
-            <span className="text-sm font-black text-slate-900">${precioFinal.toLocaleString('es-AR')}</span>
-            <span className="text-[10px] text-slate-400 mt-0.5">Sin saldo pendiente</span>
-          </button>
-        </div>
-      </div>
-
       {/* Mensaje de Error General */}
       {error && (
         <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200/80 rounded-xl p-3 font-medium">
@@ -286,30 +245,84 @@ export default function FormConfirmacion({
         </div>
       )}
 
-      {/* Botón de Confirmación y Pago */}
-      <button
-        type="button"
-        onClick={onConfirmar}
-        disabled={!puedeConfirmar || confirmando}
-        className={`w-full font-bold py-3.5 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed ${styles.button}`}
-      >
-        {confirmando ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Generando pago...</span>
-          </>
-        ) : (
-          <>
-            <CreditCard className="w-4 h-4" />
-            <span>Pagar ${montoAPagar.toLocaleString('es-AR')} con Mercado Pago</span>
-          </>
-        )}
-      </button>
+      {/* BOTONES DE ACCIÓN: WHATSAPP O MERCADO PAGO */}
+      <div className="space-y-2.5 pt-2">
+        
+        {/* Opción A: Pagar por WhatsApp */}
+        <button
+          type="button"
+          onClick={() => {
+            handleAccion('whatsapp');
+            onConfirmar();
+          }}
+          disabled={!puedeConfirmar || confirmando}
+          className={`w-full font-bold py-3.5 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed ${styles.buttonWp}`}
+        >
+          {confirmando && opcionPago === 'whatsapp' ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Abriendo WhatsApp...</span>
+            </>
+          ) : (
+            <>
+              <MessageCircle className="w-4 h-4" />
+              <span>Confirmar y enviar por WhatsApp</span>
+            </>
+          )}
+        </button>
+
+        {/* Opción B: Pagar Seña por Mercado Pago */}
+        <button
+          type="button"
+          onClick={() => {
+            handleAccion('mp_sena');
+            onConfirmar();
+          }}
+          disabled={!puedeConfirmar || confirmando}
+          className={`w-full font-bold py-3.5 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed ${styles.buttonMp}`}
+        >
+          {confirmando && opcionPago === 'mp_sena' ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Generando seña...</span>
+            </>
+          ) : (
+            <>
+              <CreditCard className="w-4 h-4" />
+              <span>Pagar Seña (${montoSena.toLocaleString('es-AR')}) con Mercado Pago</span>
+            </>
+          )}
+        </button>
+
+        {/* Opción C: Pagar Total por Mercado Pago */}
+        <button
+          type="button"
+          onClick={() => {
+            handleAccion('mp_total');
+            onConfirmar();
+          }}
+          disabled={!puedeConfirmar || confirmando}
+          className={`w-full font-bold py-3 rounded-xl transition-all text-xs flex items-center justify-center gap-2 border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          {confirmando && opcionPago === 'mp_total' ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Generando pago total...</span>
+            </>
+          ) : (
+            <>
+              <CreditCard className="w-4 h-4 text-slate-500" />
+              <span>Pagar Total (${precioFinal.toLocaleString('es-AR')}) con Mercado Pago</span>
+            </>
+          )}
+        </button>
+
+      </div>
 
       {/* Disclaimer */}
-      <div className="flex items-center justify-center gap-1.5 text-[10px] sm:text-[11px] text-slate-400 font-medium text-center">
+      <div className="flex items-center justify-center gap-1.5 text-[10px] sm:text-[11px] text-slate-400 font-medium text-center pt-1">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-        <span>Serás redirigido de forma segura a Mercado Pago.</span>
+        <span>Pagos seguros procesados mediante Mercado Pago o WhatsApp.</span>
       </div>
 
     </div>

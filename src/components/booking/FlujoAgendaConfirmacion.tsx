@@ -104,7 +104,7 @@ export default function FlujoAgendaConfirmacion({
   const [codigoReferidoUsado, setCodigoReferidoUsado] = useState('');
   
   // Estado para la modalidad de pago elegida (sincronizado con FormConfirmacion)
-  const [opcionPago, setOpcionPago] = useState<OpcionPago>('sena');
+  const [opcionPago, setOpcionPago] = useState<OpcionPago>('mp_sena'); // ✅ FUNCIONA
 
   // Estados para validación de referido
   const [descuentoMonto, setDescuentoMonto] = useState(0);
@@ -288,9 +288,8 @@ export default function FlujoAgendaConfirmacion({
         setError('No pudimos crear la reserva. Intentá de nuevo.');
         return;
       }
-
-      // 4. FLUJO MERCADO PAGO (SEÑA O TOTAL)
-      const esSena = opcionPago === 'sena';
+// 4. FLUJO MERCADO PAGO (SEÑA O TOTAL)
+      const esSena = opcionPago === 'mp_sena';
       const montoBase = esSena ? montoSena : precioFinal;
       
       const response = await fetch('/api/checkout', {
@@ -307,7 +306,6 @@ export default function FlujoAgendaConfirmacion({
           tipoPago: esSena ? 'sena' : 'total',
         }),
       });
-
       const data = await response.json();
 
       if (data.init_point) {
