@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { 
   User, 
@@ -38,8 +36,6 @@ interface Props {
   confirmando?: boolean;
   error?: string | null;
   colorAccent?: 'violet' | 'indigo' | 'rose';
-
-  // --- PROPS PARA MERCADO PAGO ---
   onPagarMercadoPago?: (montoAPagar: number) => void;
   cargandoMP?: boolean;
 }
@@ -89,7 +85,6 @@ export default function FormConfirmacion({
   const montoSenaCalculado = calcularMontoSena(precioFinal, porcentajeSena);
   const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
 
-  // Estado para controlar cuánto quiere abonar el cliente (por defecto la seña)
   const [montoSeleccionado, setMontoSeleccionado] = useState<number>(montoSenaCalculado);
   const [tipoPago, setTipoPago] = useState<'sena' | 'total' | 'custom'>('sena');
 
@@ -136,7 +131,6 @@ export default function FormConfirmacion({
           </div>
         </div>
 
-        {/* Desglose de Precios */}
         <div className="pt-2 flex items-center justify-between gap-2">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -205,7 +199,6 @@ export default function FormConfirmacion({
           </div>
         </div>
 
-        {/* Input Opcional: Código de Recomendada / Referida */}
         {onCodigoReferidoChange && (
           <div>
             <label htmlFor="codigoReferido" className="block text-xs font-bold text-slate-800 mb-1">
@@ -225,7 +218,6 @@ export default function FormConfirmacion({
               />
             </div>
             
-            {/* Feedback del código */}
             {mensajeReferido && (
               <div className={`mt-1.5 flex items-center gap-1.5 text-xs font-medium ${referidoValido ? 'text-emerald-600' : 'text-amber-600'}`}>
                 {referidoValido ? (
@@ -240,7 +232,7 @@ export default function FormConfirmacion({
         )}
       </div>
 
-      {/* BLOQUE OPCIONAL: SELECCIÓN DE MONTO Y PAGAR CON MERCADO PAGO */}
+      {/* BLOQUE MERCADO PAGO */}
       {onPagarMercadoPago && (
         <div className="bg-sky-50/50 border border-sky-200/80 rounded-2xl p-4 space-y-3">
           <div className="flex items-center gap-2">
@@ -317,14 +309,13 @@ export default function FormConfirmacion({
         </div>
       )}
 
-      {/* Mensaje de Error General */}
       {error && (
         <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200/80 rounded-xl p-3 font-medium">
           {error}
         </div>
       )}
 
-      {/* Botón de Confirmar por WhatsApp (Tradicional) */}
+      {/* Botón WhatsApp */}
       <button
         type="button"
         onClick={onConfirmar}
@@ -344,7 +335,6 @@ export default function FormConfirmacion({
         )}
       </button>
 
-      {/* Disclaimer */}
       <div className="flex items-center justify-center gap-1.5 text-[10px] sm:text-[11px] text-slate-400 font-medium text-center">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
         <span>Tus datos están protegidos y la reserva se confirma al momento.</span>
@@ -353,4 +343,3 @@ export default function FormConfirmacion({
     </div>
   );
 }
-{/* Disclaimer */}
