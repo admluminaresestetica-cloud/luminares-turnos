@@ -288,7 +288,36 @@ export default function FlujoAgendaConfirmacion({
         setError('No pudimos crear la reserva. Intentá de nuevo.');
         return;
       }
-// 4. FLUJO MERCADO PAGO (SEÑA O TOTAL)
+// 4. EVALUAR SI ELIGIÓ WHATSAPP O MERCADO PAGO
+      if (opcionPago === 'whatsapp') {
+        const telefonoNegocio = configSistema.whatsapp_numero || '5491100000000';
+        const mensajeWp = buildMensajeReserva({
+          codigo: reserva.codigo_unico,
+          clienteNombre: nombreLimpio,
+          servicioDetalle: detalleTexto,
+          fecha,
+          hora,
+          precioTotal: precioFinal,
+          montoSena,
+        });
+        const urlWp = buildWhatsAppUrl(telefonoNegocio, mensajeWp);
+        
+        const datosExito = {
+          codigo: reserva.codigo_unico,
+          codigoReferidoPropio: codigoReferidoPropio,
+          detalle: detalleTexto,
+          fecha: fecha,
+          hora: hora,
+        };
+        sessionStorage.setItem('reserva-exitosa', JSON.stringify(datosExito));
+        setReservaExitosa(datosExito);
+        
+        setConfirmando(false);
+        window.location.href = urlWp;
+        return;
+      }
+
+      // 5. FLUJO MERCADO PAGO (SEÑA O TOTAL)
       const esSena = opcionPago === 'mp_sena';
       const montoBase = esSena ? montoSena : precioFinal;
       
@@ -306,9 +335,20 @@ export default function FlujoAgendaConfirmacion({
           tipoPago: esSena ? 'sena' : 'total',
         }),
       });
+      
       const data = await response.json();
 
       if (data.init_point) {
+        const datosExito = {
+          codigo: reserva.codigo_unico,
+          codigoReferidoPropio: codigoReferidoPropio,
+          detalle: detalleTexto,
+          fecha: fecha,
+          hora: hora,
+        };
+        sessionStorage.setItem('reserva-exitosa', JSON.stringify(datosExito));
+        setReservaExitosa(datosExito);
+
         window.location.href = data.init_point;
       } else {
         setConfirmando(false);
