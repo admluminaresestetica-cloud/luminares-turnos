@@ -22,21 +22,55 @@ export async function POST(request: Request) {
       const paymentData = await payment.get({ id: dataId });
 
       if (paymentData.status === "approved") {
-        const pedidoId = paymentData.external_reference;
+        const externalRef = paymentData.external_reference;
 
-        if (pedidoId) {
-          // 1. Marcar el pedido como aprobado
-          const { data: pedido } = await supabase
+        if (externalRef) {
+          const montoAbonado = paymentData.transaction_amount || 0;
+
+          // -------------------------------------------------------------
+          // INTENTO 1: Verificar y actualizar si pertenece a una RESERVA
+          // -------------------------------------------------------------
+          const { data: reservaActualizada, error: errorReserva } = await supabase
+            .from("reservas")
+            .update({
+              estado: "confirmado",
+              estado_pago: "pagado",
+              tipo_pago_elegido: "mercadopago",
+              monto_abonado: montoAbonado,
+              mp_payment_id: String(dataId),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", externalRef)
+            .select()
+            .maybeSingle();
+
+          if (errorReserva) {
+            console.error("Error intentando actualizar reserva en webhook:", errorReserva);
+          }
+
+          // Si afectó una fila en 'reservas', cortamos aquí la ejecución exitosa
+          if (reservaActualizada) {
+            return NextResponse.json({ received: true, type: "reserva" }, { status: 200 });
+          }
+
+          // -------------------------------------------------------------
+          // INTENTO 2: Si no fue reserva, actualizar en la TIENDA (pedidos)
+          // -------------------------------------------------------------
+          const { data: pedido, error: errorPedido } = await supabase
             .from("pedidos")
             .update({
               estado: "aprobado",
               payment_id: String(dataId),
             })
-            .eq("id", pedidoId)
+            .eq("id", externalRef)
             .select()
-            .single();
+            .maybeSingle();
 
-          // 2. Descontar stock de los productos comprados
+          if (errorPedido) {
+            console.error("Error intentando actualizar pedido en webhook:", errorPedido);
+          }
+
+          // Descontar stock de los productos comprados si aplica
           if (pedido && pedido.items) {
             for (const item of pedido.items) {
               if (item.id) {

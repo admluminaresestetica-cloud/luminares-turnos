@@ -1,92 +1,66 @@
 import { NextResponse } from "next/server";
+import { MercadoPagoConfig, Preference } from "mercadopago";
 import { createClient } from "@supabase/supabase-js";
-import { Preference, MercadoPagoConfig } from "mercadopago";
 
-// 1. Desactiva la evaluación estática previa en tiempo de build
 export const dynamic = "force-dynamic";
 
-// Inicializar cliente de Mercado Pago
 const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN || "",
 });
 
 export async function POST(request: Request) {
   try {
-    // 2. Traer credenciales e instanciar Supabase DENTRO del handler POST
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey =
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(
-        { error: "Faltan configurar las credenciales de Supabase en el servidor" },
+        { error: "Faltan configurar las credenciales de Supabase" },
         { status: 500 }
       );
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { 
-      clienteNombre, 
-      clienteEmail, 
-      clienteTelefono, 
-      servicioDetalle, 
-      fecha, 
-      hora, 
-      montoAPagar, 
-      tipoPago 
+    const {
+      reservaId,
+      clienteNombre,
+      clienteEmail,
+      servicioDetalle,
+      montoAPagar,
+      tipoPago, // 'sena' | 'total'
     } = await request.json();
 
-    if (!montoAPagar || montoAPagar <= 0) {
+    if (!reservaId || !montoAPagar || montoAPagar <= 0) {
       return NextResponse.json(
-        { error: "Monto inválido para el pago" },
+        { error: "Faltan datos requeridos para procesar la reserva (reservaId, montoAPagar)" },
         { status: 400 }
       );
     }
 
-    // 1. Guardar la reserva pendiente en Supabase
-    const { data: reserva, error: errorReserva } = await supabase
-      .from("turnos")
-      .insert({
-        cliente_nombre: clienteNombre,
-        cliente_email: clienteEmail || "",
-        cliente_telefono: clienteTelefono || "",
-        servicio_detalle: servicioDetalle,
-        fecha,
-        hora,
-        monto_pagado: montoAPagar,
-        tipo_pago: tipoPago,
-        estado: "pendiente_pago",
-      })
-      .select()
-      .single();
-
-    if (errorReserva || !reserva) {
-      console.error("Error al registrar reserva:", errorReserva);
-      return NextResponse.json(
-        { error: "No se pudo registrar la reserva" },
-        { status: 500 }
-      );
-    }
-
-    // 2. Crear Preferencia en Mercado Pago
     const preference = new Preference(client);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
 
+    // Crear la preferencia en Mercado Pago usando el reservaId como external_reference
     const result = await preference.create({
       body: {
         items: [
           {
-            id: String(reserva.id),
-            title: `Reserva ${tipoPago === 'sena' ? 'Seña' : 'Total'}: ${servicioDetalle}`,
+            id: String(reservaId),
+            title: `Reserva ${tipoPago === "sena" ? "Seña" : "Total"}: ${servicioDetalle || "Servicio Estética"}`,
             unit_price: Number(montoAPagar),
             quantity: 1,
             currency_id: "ARS",
           },
         ],
-        external_reference: String(reserva.id),
+        external_reference: String(reservaId),
+        payer: {
+          name: clienteNombre || "Cliente",
+          email: clienteEmail || "cliente@reserva.com",
+        },
         back_urls: {
-          success: `${baseUrl}/reserva-confirmada?reserva_id=${reserva.id}`,
+          success: `${baseUrl}/reserva-confirmada?reserva_id=${reservaId}`,
           failure: `${baseUrl}/?status=failure`,
           pending: `${baseUrl}/?status=pending`,
         },
@@ -94,6 +68,17 @@ export async function POST(request: Request) {
         notification_url: `${baseUrl}/api/webhooks/mercadopago`,
       },
     });
+
+    // Opcional: Actualizamos el mp_preference_id en la reserva existente
+    if (result.id) {
+      await supabase
+        .from("reservas")
+        .update({
+          mp_preference_id: String(result.id),
+          tipo_pago_elegido: "mercadopago",
+        })
+        .eq("id", reservaId);
+    }
 
     return NextResponse.json({ init_point: result.init_point });
   } catch (error: any) {
