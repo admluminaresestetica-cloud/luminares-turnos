@@ -606,3 +606,4 @@ export default function FlujoAgendaConfirmacion({
     </main>
   );
 }
+ {/* CAJA DEL CÓDIGO DE RECOMENDADA (CÓDIGO PROPIO) */}
