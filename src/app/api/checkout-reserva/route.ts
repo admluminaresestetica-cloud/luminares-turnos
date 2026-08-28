@@ -1,18 +1,31 @@
 import { NextResponse } from "next/server";
-import { MercadoPagoConfig, Preference } from "mercadopago";
 import { createClient } from "@supabase/supabase-js";
+import { Preference, MercadoPagoConfig } from "mercadopago";
 
+// 1. Desactiva la evaluación estática previa en tiempo de build
+export const dynamic = "force-dynamic";
+
+// Inicializar cliente de Mercado Pago
 const client = new MercadoPagoConfig({
   accessToken: process.env.MP_ACCESS_TOKEN || "",
 });
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function POST(request: Request) {
   try {
+    // 2. Traer credenciales e instanciar Supabase DENTRO del handler POST
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json(
+        { error: "Faltan configurar las credenciales de Supabase en el servidor" },
+        { status: 500 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
     const { 
       clienteNombre, 
       clienteEmail, 
@@ -20,8 +33,8 @@ export async function POST(request: Request) {
       servicioDetalle, 
       fecha, 
       hora, 
-      montoAPagar, // Seña o Total
-      tipoPago // "sena" | "total"
+      montoAPagar, 
+      tipoPago 
     } = await request.json();
 
     if (!montoAPagar || montoAPagar <= 0) {
