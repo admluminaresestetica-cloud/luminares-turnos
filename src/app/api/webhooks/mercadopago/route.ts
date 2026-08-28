@@ -36,6 +36,7 @@ export async function POST(request: Request) {
               estado: "confirmado",
               estado_pago: "pagado",
               tipo_pago_elegido: "mercadopago",
+              medio_pago: "mercadopago", // <--- AGREGADO AQUÍ
               monto_abonado: montoAbonado,
               mp_payment_id: String(dataId),
               updated_at: new Date().toISOString(),
