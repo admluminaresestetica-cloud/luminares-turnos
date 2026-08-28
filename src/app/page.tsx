@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from 'next/link';
 import { Zap, Sparkles, Calendar, HelpCircle, ChevronRight, MessageCircle } from 'lucide-react';
 import BannerPrincipal from '@/components/BannerPrincipal';
+import ReservaSuccessModal from '@/components/ReservaSuccessModal';
 
 const ACCESOS = [
   {
@@ -132,6 +133,9 @@ function HomeContent() {
           Sin registro · Confirmación por WhatsApp
         </p>
       </div>
+
+      {/* Modal de confirmación tras volver de Mercado Pago */}
+      <ReservaSuccessModal />
     </main>
   );
 }

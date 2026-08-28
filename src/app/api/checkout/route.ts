@@ -13,7 +13,76 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { itemsCarrito, cliente } = await request.json();
+    const body = await request.json();
+
+    // =========================================================================
+    // CASO 1: CHECKOUT DE RESERVA DE TURNOS (Seña 30% o Total 100%)
+    // =========================================================================
+    if (body.origen === "reserva" || body.reservaId) {
+      const {
+        reservaId,
+        codigoReserva,
+        titulo,
+        monto,
+        clienteNombre,
+        tipoPago, // 'sena' | 'total'
+      } = body;
+
+      if (!reservaId || !monto) {
+        return NextResponse.json(
+          { error: "Faltan datos obligatorios para procesar la reserva." },
+          { status: 400 }
+        );
+      }
+
+      const preference = new Preference(client);
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
+
+      const result = await preference.create({
+        body: {
+          items: [
+            {
+              id: String(codigoReserva || reservaId),
+              title: String(titulo || "Reserva de Turno"),
+              unit_price: Number(monto),
+              quantity: 1,
+              currency_id: "ARS",
+            },
+          ],
+          external_reference: String(reservaId),
+          payer: {
+            name: String(clienteNombre || "Cliente Turno"),
+          },
+          metadata: {
+            origen: "reserva",
+            reserva_id: String(reservaId),
+          },
+          back_urls: {
+            success: `${baseUrl}/?status=success_reserva&codigo=${codigoReserva || ""}`,
+            failure: `${baseUrl}/?status=failure_reserva`,
+            pending: `${baseUrl}/?status=pending_reserva`,
+          },
+          auto_return: "approved",
+          notification_url: `${baseUrl}/api/webhooks/mercadopago`,
+        },
+      });
+
+      // Guardar preference_id y la modalidad de pago en la tabla 'reservas'
+      await supabase
+        .from("reservas")
+        .update({
+          preference_id: (result as any).id,
+          tipo_pago_elegido: tipoPago || "sena",
+        })
+        .eq("id", reservaId);
+
+      return NextResponse.json({ init_point: (result as any).init_point });
+    }
+
+    // =========================================================================
+    // CASO 2: CHECKOUT DE TIENDA ONLINE (100% de la compra)
+    // =========================================================================
+    const { itemsCarrito, cliente } = body;
 
     if (!itemsCarrito || itemsCarrito.length === 0) {
       return NextResponse.json(
@@ -23,7 +92,6 @@ export async function POST(request: Request) {
     }
 
     const PORCENTAJE_RECARGO = 0.10;
-
     let totalPedido = 0;
 
     const itemsMP = itemsCarrito.map((item: any) => {
@@ -86,7 +154,11 @@ export async function POST(request: Request) {
     const result = await preference.create({
       body: {
         items: itemsMP,
-        external_reference: pedido.id,
+        external_reference: String(pedido.id),
+        metadata: {
+          origen: "tienda",
+          pedido_id: String(pedido.id),
+        },
         back_urls: {
           success: `${baseUrl}/?status=success`,
           failure: `${baseUrl}/?status=failure`,

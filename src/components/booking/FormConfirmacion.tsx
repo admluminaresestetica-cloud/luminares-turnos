@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { calcularMontoSena } from '@/lib/whatsapp';
 import { formatFechaDisplay } from '@/lib/calendario/slots';
+import type { OpcionPago } from '@/components/booking/FlujoAgendaConfirmacion';
 
 interface Props {
   servicioDetalle: string;
@@ -25,16 +26,18 @@ interface Props {
   porcentajeSena: number;
   nombre: string;
   celular: string;
-  codigoReferidoUsado?: string;
-  descuentoMonto?: number;
-  referidoValido?: boolean | null;
-  mensajeReferido?: string | null;
-  onNombreChange: (v: string) => void;
-  onCelularChange: (v: string) => void;
-  onCodigoReferidoChange?: (v: string) => void;
+  codigoReferidoUsado: string;
+  descuentoMonto: number;
+  referidoValido: boolean | null;
+  mensajeReferido: string | null;
+  opcionPago: OpcionPago; // <-- Agregar esta línea
+  onNombreChange: (val: string) => void;
+  onCelularChange: (val: string) => void;
+  onCodigoReferidoChange: (val: string) => void;
+  onOpcionPagoChange: (val: OpcionPago) => void; // <-- Agregar esta línea
   onConfirmar: () => void;
-  confirmando?: boolean;
-  error?: string | null;
+  confirmando: boolean;
+  error: string | null;
   colorAccent?: 'violet' | 'indigo' | 'rose';
 }
 
@@ -65,13 +68,15 @@ export default function FormConfirmacion({
   porcentajeSena,
   nombre,
   celular,
-  codigoReferidoUsado = '',
-  descuentoMonto = 0,
-  referidoValido = null,
-  mensajeReferido = null,
+  codigoReferidoUsado,
+  descuentoMonto,
+  referidoValido,
+  mensajeReferido,
+  opcionPago,
   onNombreChange,
   onCelularChange,
   onCodigoReferidoChange,
+  onOpcionPagoChange,
   onConfirmar,
   confirmando,
   error,

@@ -31,6 +31,7 @@ import type { ConfiguracionCalendario, ConfiguracionSistema, TipoServicio } from
 import type { DetalleReservaGeneral, DetalleReservaLaser } from '@/lib/types';
 
 type Paso = 'agenda' | 'confirmacion';
+export type OpcionPago = 'whatsapp' | 'mp_sena' | 'mp_total';
 
 interface Props {
   tipo: TipoServicio;
@@ -87,7 +88,7 @@ export default function FlujoAgendaConfirmacion({
   onVolver,
   volverLabel = 'Modificar selección',
   colorAccent = 'violet',
-  titulo = 'Agenda tu turno',
+  titulo = 'Agendá tu turno',
 }: Props) {
   const [paso, setPaso] = useState<Paso>('agenda');
   const [configCalendario, setConfigCalendario] = useState<ConfiguracionCalendario | null>(null);
@@ -103,6 +104,9 @@ export default function FlujoAgendaConfirmacion({
   const [celular, setCelular] = useState('');
   const [codigoReferidoUsado, setCodigoReferidoUsado] = useState('');
   
+  // Estado para la modalidad de pago elegida
+  const [opcionPago, setOpcionPago] = useState<OpcionPago>('whatsapp');
+
   // Estados para validación de referido
   const [descuentoMonto, setDescuentoMonto] = useState(0);
   const [referidoValido, setReferidoValido] = useState<boolean | null>(null);
@@ -161,10 +165,8 @@ export default function FlujoAgendaConfirmacion({
         return;
       }
 
-      // Valor por defecto seguro si viene undefined desde Supabase
       const valorDescuento = configSistema.referidos_valor_descuento ?? 0;
 
-      // Verificar si existe el cliente con ese código
       const { data: dueno } = await supabase
         .from('clientes')
         .select('id, nombre')
@@ -178,7 +180,6 @@ export default function FlujoAgendaConfirmacion({
         return;
       }
 
-      // Calcular monto de descuento sin riesgos de undefined
       let desc = 0;
       if (configSistema.referidos_tipo_descuento === 'porcentaje') {
         desc = Math.round((precioTotal * valorDescuento) / 100);
@@ -246,7 +247,7 @@ export default function FlujoAgendaConfirmacion({
         ]);
       }
 
-      // 2. ACREDITAR BENEFICIO A LA AMIGA SI SE INGRESÓ UN CÓDIGO VÁLIDO
+      // 2. ACREDITAR BENEFICIO A LA AMIGA SI USÓ CÓDIGO VÁLIDO
       const codigoUsadoLimpio = codigoReferidoUsado.trim().toUpperCase();
       if (codigoUsadoLimpio && referidoValido) {
         const { data: duenoCodigo } = await supabase
@@ -264,58 +265,98 @@ export default function FlujoAgendaConfirmacion({
       }
 
       const precioFinal = Math.max(0, precioTotal - descuentoMonto);
+      const montoSena = calcularMontoSena(precioFinal, configSistema.porcentaje_sena);
 
-      // 3. CREAR LA RESERVA
+      // 3. CREAR LA RESERVA EN LA BASE DE DATOS
       const fechaHoraInicio = new Date(`${fecha}T${hora}:00`).toISOString();
       const reserva = await crearReserva({
         cliente_nombre: nombreLimpio,
         cliente_celular: celularLimpio,
         codigo_referido_usado: (referidoValido && codigoUsadoLimpio) ? codigoUsadoLimpio : null,
         servicio_tipo: tipo,
-        detalle_reserva: { ...detalleReserva, detalle_texto: detalleTexto },
+        detalle_reserva: { 
+          ...detalleReserva, 
+          detalle_texto: detalleTexto,
+          opcion_pago: opcionPago 
+        },
         precio_total: precioFinal,
         duracion_total: duracionTotal,
         fecha_hora_inicio: fechaHoraInicio,
       });
 
-      setConfirmando(false);
-
       if (!reserva) {
+        setConfirmando(false);
         setError('No pudimos crear la reserva. Intentá de nuevo.');
         return;
       }
 
-      const datosExito: DatosReservaExitosa = {
-        codigo: reserva.codigo_unico,
-        codigoReferidoPropio,
-        detalle: detalleTexto,
-        fecha,
-        hora,
-      };
+      // 4. BIFURCACIÓN DE FLUJO SEGÚN EL MÉTODO DE PAGO
 
-      sessionStorage.setItem('reserva-exitosa', JSON.stringify(datosExito));
-      setReservaExitosa(datosExito);
+      if (opcionPago === 'whatsapp') {
+        // --- FLUJO WHATSAPP / EFECTIVO ---
+        const datosExito: DatosReservaExitosa = {
+          codigo: reserva.codigo_unico,
+          codigoReferidoPropio,
+          detalle: detalleTexto,
+          fecha,
+          hora,
+        };
 
-      // 4. MENSAJE DE WHATSAPP
-      const montoSena = calcularMontoSena(precioFinal, configSistema.porcentaje_sena);
-      let mensaje = buildMensajeReserva({
-        codigo: reserva.codigo_unico,
-        clienteNombre: nombreLimpio,
-        servicioDetalle: detalleTexto,
-        fecha,
-        hora,
-        precioTotal: precioFinal,
-        montoSena,
-      });
+        sessionStorage.setItem('reserva-exitosa', JSON.stringify(datosExito));
+        setReservaExitosa(datosExito);
+        setConfirmando(false);
 
-      if (descuentoMonto > 0) {
-        mensaje += `\n🎟️ *Descuento aplicado:* -$${descuentoMonto.toLocaleString('es-AR')} (Ref: ${codigoUsadoLimpio})`;
+        let mensaje = buildMensajeReserva({
+          codigo: reserva.codigo_unico,
+          clienteNombre: nombreLimpio,
+          servicioDetalle: detalleTexto,
+          fecha,
+          hora,
+          precioTotal: precioFinal,
+          montoSena,
+        });
+
+        if (descuentoMonto > 0) {
+          mensaje += `\n🎟️ *Descuento aplicado:* -$${descuentoMonto.toLocaleString('es-AR')} (Ref: ${codigoUsadoLimpio})`;
+        }
+
+        mensaje += `\n\n🎁 *Tu código de recomendada:* ${codigoReferidoPropio}`;
+
+        const urlWhatsapp = buildWhatsAppUrl('5493413954355', mensaje);
+        window.open(urlWhatsapp, '_blank') || (window.location.href = urlWhatsapp);
+
+      } else {
+        // --- FLUJO MERCADO PAGO (SEÑA O TOTAL) ---
+        const esSena = opcionPago === 'mp_sena';
+        const montoBase = esSena ? montoSena : precioFinal;
+        
+        // Recargo opcional del 10% por servicio de tarjeta/MP
+        const montoConRecargo = Math.round(montoBase * 1.10);
+
+        const response = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            origen: 'reserva',
+            reservaId: reserva.id,
+            codigoReserva: reserva.codigo_unico,
+            titulo: `${detalleTexto} (${esSena ? 'Seña 30%' : 'Pago Total 100%'})`,
+            monto: montoConRecargo,
+            clienteNombre: nombreLimpio,
+            clienteCelular: celularLimpio,
+            tipoPago: esSena ? 'sena' : 'total',
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.init_point) {
+          window.location.href = data.init_point;
+        } else {
+          setConfirmando(false);
+          setError('Ocurrió un error al conectar con Mercado Pago. Intentá abonar por WhatsApp.');
+        }
       }
-
-      mensaje += `\n\n🎁 *Tu código de recomendada:* ${codigoReferidoPropio}`;
-
-      const urlWhatsapp = buildWhatsAppUrl('5493413954355', mensaje);
-      window.open(urlWhatsapp, '_blank') || (window.location.href = urlWhatsapp);
 
     } catch (e) {
       console.error(e);
@@ -515,9 +556,11 @@ export default function FlujoAgendaConfirmacion({
                 descuentoMonto={descuentoMonto}
                 referidoValido={referidoValido}
                 mensajeReferido={mensajeReferido}
+                opcionPago={opcionPago}
                 onNombreChange={setNombre}
                 onCelularChange={setCelular}
                 onCodigoReferidoChange={setCodigoReferidoUsado}
+                onOpcionPagoChange={setOpcionPago}
                 onConfirmar={handleConfirmar}
                 confirmando={confirmando}
                 error={error}
@@ -528,7 +571,7 @@ export default function FlujoAgendaConfirmacion({
         </div>
       </div>
 
-      {/* MODAL POP-UP DE RESERVA EXITOSA */}
+      {/* MODAL POP-UP DE RESERVA EXITOSA (WHATSAPP) */}
       {reservaExitosa && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in">
           <div className="bg-white rounded-2xl p-5 sm:p-6 max-w-sm w-full text-center shadow-2xl border border-slate-100">
@@ -560,7 +603,6 @@ export default function FlujoAgendaConfirmacion({
               </div>
             </div>
 
-            {/* CAJA DEL CÓDIGO DE RECOMENDADA (CÓDIGO PROPIO) */}
             {reservaExitosa.codigoReferidoPropio && (
               <div className="bg-violet-50/70 border border-violet-100 p-3 rounded-xl mb-4 text-left">
                 <div className="flex items-center gap-1.5 text-violet-800 mb-1">

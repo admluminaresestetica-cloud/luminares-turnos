@@ -8,6 +8,7 @@ export type TipoJornada = 'laser' | 'general';
 export type EstadoReserva = 'pendiente_sena' | 'confirmado' | 'cancelado';
 export type EstadoAsistencia = 'pendiente' | 'asistio' | 'no_asistio' | 'cancelado';
 export type MedioPago = 'efectivo' | 'transferencia' | 'qr' | 'tarjeta' | 'otro';
+export type OpcionPago = 'sena' | 'total';
 
 export interface ServicioLaser {
   id: string;
@@ -57,6 +58,9 @@ export interface ConfiguracionSistema {
   porcentaje_sena: number;
   ventana_horas_cancelacion: number;
   whatsapp_numero: string;
+  referidos_activo?: boolean;
+  referidos_tipo_descuento?: 'porcentaje' | 'monto_fijo';
+  referidos_valor_descuento?: number;
 }
 
 export interface DetalleReservaLaser {
@@ -67,11 +71,13 @@ export interface DetalleReservaLaser {
   zonas_extra_ids?: string[];
   descuento_extra_pct?: number;
   detalle_texto?: string;
+  opcion_pago?: OpcionPago | string; // <-- Campo agregado
 }
 
 export interface DetalleReservaGeneral {
-  servicios: { id: string; subtipo: string; precio: number; duracion_minutos: number }[];
+  servicios?: { id: string; subtipo: string; precio: number; duracion_minutos: number }[];
   detalle_texto?: string;
+  opcion_pago?: OpcionPago | string; // <-- Campo agregado
 }
 
 export interface Reserva {
@@ -110,11 +116,4 @@ export interface CrearReservaInput {
   precio_total: number;
   duracion_total: number;
   fecha_hora_inicio: string;
-}
-
-export interface ConfiguracionSistema {
-  // ... tus campos existentes ...
-  referidos_activo?: boolean;
-  referidos_tipo_descuento?: 'porcentaje' | 'monto_fijo';
-  referidos_valor_descuento?: number;
 }
