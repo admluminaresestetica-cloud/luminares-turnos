@@ -1,4 +1,3 @@
-// src/app/admin/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -56,22 +55,28 @@ export default function AdminDashboard() {
       <AdminHeader onLogout={handleLogout} />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
+        {/* Encabezado superior del Panel con acceso directo a Admin Tienda */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Panel de Control</h1>
+            <p className="text-xs text-gray-500">Gestión integral de turnos, agenda y productos</p>
+          </div>
+          
+          <Link 
+            href="/admin/tienda" 
+            className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-all shadow-xs hover:shadow flex items-center justify-center gap-2 shrink-0"
+          >
+            <span>🛒</span>
+            <span>Admin Tienda</span>
+          </Link>
+        </div>
+
         <AdminTabs
           activeTab={activeTab}
           onChange={setActiveTab}
           totalTurnos={agenda.turnos.length}
           totalGenerales={generales.serviciosGenerales.length}
         />
-
-        {/* Botón de acceso directo a la Tienda */}
-        <div className="mt-3 flex justify-end">
-          <Link 
-            href="/admin/tienda" 
-            className="bg-black hover:bg-gray-800 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors shadow-sm inline-flex items-center gap-2"
-          >
-            🛒 Ir a la Tienda
-          </Link>
-        </div>
 
         {activeTab === 'overview' && (
           <OverviewTab
