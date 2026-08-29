@@ -173,10 +173,10 @@ export default function AgendaTab({
                           {t.estado || 'pendiente'}
                         </span>
 
-                        {t.estado === 'completado' && t.medio_pago && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-600 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-md capitalize">
+                        {(t.medio_pago || t.tipo_pago_elegido) && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize">
                             <CreditCard className="w-3 h-3" />
-                            {t.medio_pago}
+                            {t.medio_pago || t.tipo_pago_elegido}
                           </span>
                         )}
                       </div>
