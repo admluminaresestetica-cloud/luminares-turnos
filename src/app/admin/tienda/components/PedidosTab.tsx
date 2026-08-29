@@ -148,7 +148,6 @@ export default function PedidosTab({
           <option value="completado">Completado</option>
           <option value="cancelado">Cancelado</option>
           <option value="aprobado">Aprobado</option>
-          <option value="completado">mercadopago</option>
         </select>
 
         {/* Filtro Fecha */}

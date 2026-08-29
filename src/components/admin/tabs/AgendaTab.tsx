@@ -1,6 +1,7 @@
 // src/components/admin/tabs/AgendaTab.tsx
 'use client'
 
+import { useState } from 'react'
 import { Search, CalendarDays, Plus, Gift, CreditCard } from 'lucide-react'
 import ResumenAgenda from '@/components/admin/ResumenAgenda'
 import { Reserva, renderDetalle, renderFechaHora } from '../types'
@@ -42,6 +43,33 @@ export default function AgendaTab({
   onEditarTurno,
   onActualizarEstado
 }: AgendaTabProps) {
+  // Estado local para filtrar por Medio de Pago
+  const [filtroMedioPago, setFiltroMedioPago] = useState<string>('todos')
+
+  // Filtro tolerante a variantes de escritura (mercado_pago, mp, etc.)
+  const turnosConFiltroMedioPago = turnosFiltrados.filter((t) => {
+    if (filtroMedioPago === 'todos') return true
+
+    const medioRaw = String(t.medio_pago || t.tipo_pago_elegido || '').toLowerCase().trim()
+
+    if (filtroMedioPago === 'mercadopago') {
+      return (
+        medioRaw.includes('mercadopago') ||
+        medioRaw.includes('mercado_pago') ||
+        medioRaw.includes('mercado pago') ||
+        medioRaw.includes('mp') ||
+        medioRaw.includes('transferencia')
+      )
+    }
+    if (filtroMedioPago === 'efectivo') {
+      return medioRaw.includes('efectivo') || medioRaw.includes('cash')
+    }
+    if (filtroMedioPago === 'whatsapp') {
+      return medioRaw.includes('whatsapp') || medioRaw.includes('wa')
+    }
+    return true
+  })
+
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 overflow-hidden transition-all">
       {/* Barra de filtros */}
@@ -58,6 +86,7 @@ export default function AgendaTab({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {/* Filtro Fecha */}
           <select
             value={filtroFechaTipo}
             onChange={(e) => setFiltroFechaTipo(e.target.value as any)}
@@ -77,6 +106,7 @@ export default function AgendaTab({
             />
           )}
 
+          {/* Filtro Estado del Turno */}
           <select
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
@@ -87,7 +117,18 @@ export default function AgendaTab({
             <option value="confirmado">Confirmado</option>
             <option value="completado">Completado</option>
             <option value="cancelado">Cancelado</option>
-            <option value="mercadopago">mercadopago</option>
+          </select>
+
+          {/* Filtro Medio de Pago */}
+          <select
+            value={filtroMedioPago}
+            onChange={(e) => setFiltroMedioPago(e.target.value)}
+            className="border border-blue-200 bg-blue-50/50 text-blue-900 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+          >
+            <option value="todos">Todos los medios de pago</option>
+            <option value="mercadopago">💳 Mercado Pago</option>
+            <option value="efectivo">💵 Efectivo</option>
+            <option value="whatsapp">💬 WhatsApp</option>
           </select>
 
           <button
@@ -106,10 +147,10 @@ export default function AgendaTab({
         <div className="p-12 text-center text-gray-400 text-xs font-medium animate-pulse">
           Cargando turnos...
         </div>
-      ) : turnosFiltrados.length === 0 ? (
+      ) : turnosConFiltroMedioPago.length === 0 ? (
         <div className="p-12 text-center">
           <CalendarDays className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-          <p className="text-gray-400 text-sm font-medium">No se encontraron reservas.</p>
+          <p className="text-gray-400 text-sm font-medium">No se encontraron reservas con los filtros aplicados.</p>
         </div>
       ) : (
         <div className="overflow-x-auto -mx-4 sm:mx-0">
@@ -122,12 +163,12 @@ export default function AgendaTab({
                   <th className="px-4 sm:px-6 py-3.5">Fecha y Hora</th>
                   <th className="px-4 sm:px-6 py-3.5">Detalle / Zonas</th>
                   <th className="px-4 sm:px-6 py-3.5">Monto</th>
-                  <th className="px-4 sm:px-6 py-3.5">Estado</th>
+                  <th className="px-4 sm:px-6 py-3.5">Estado / Medio Pago</th>
                   <th className="px-4 sm:px-6 py-3.5 text-right rounded-r-xl">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {turnosFiltrados.map((t) => (
+                {turnosConFiltroMedioPago.map((t) => (
                   <tr key={t.id} className="hover:bg-gray-50/60 transition-colors">
                     <td className="px-4 sm:px-6 py-4 font-mono text-xs text-gray-400 whitespace-nowrap">
                       {t.codigo_unico || '-'}
