@@ -102,14 +102,14 @@ export default function ModalServicioLaser({
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
               <Folder className="w-3.5 h-3.5 text-gray-400" />
-              Categoría
+              Tamaño
             </label>
             <input
               type="text"
               value={servicioEdit.categoria_zona || ''}
               onChange={(e) => setServicioEdit({ ...servicioEdit, categoria_zona: e.target.value })}
               className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm"
-              placeholder="Ej: Rostro, Torso, Extremidades"
+              placeholder="Ej: chica, media, grande"
             />
           </div>
 
