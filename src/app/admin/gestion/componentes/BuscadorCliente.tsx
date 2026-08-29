@@ -27,7 +27,7 @@ export default function BuscadorCliente({ onClienteSeleccionado }: BuscadorClien
     const { data, error } = await supabase
       .from('clientes')
       .select('*')
-      .or(`nombre_completo.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%,email.ilike.%${busqueda}%`)
+      .or(`nombre.ilike.%${busqueda}%,telefono.ilike.%${busqueda}%,email.ilike.%${busqueda}%`)
       .limit(10);
 
     if (error) {
@@ -68,7 +68,7 @@ export default function BuscadorCliente({ onClienteSeleccionado }: BuscadorClien
               className="p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors"
             >
               <div>
-                <p className="font-medium text-slate-900">{cliente.nombre_completo}</p>
+                <p className="font-medium text-slate-900">{cliente.nombre || cliente.nombre_completo}</p>
                 <p className="text-xs text-slate-500">{cliente.telefono} {cliente.email ? `• ${cliente.email}` : ''}</p>
               </div>
               <span className="text-xs font-semibold px-2 py-1 bg-slate-100 text-slate-700 rounded">

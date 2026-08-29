@@ -48,7 +48,7 @@ export default function RecepcionPage() {
     setGuardando(false);
   };
 
-  // Crear cliente de prueba en Supabase
+  // Crear cliente en Supabase usando 'nombre'
   const handleCrearCliente = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nombreNuevo.trim() || !telefonoNuevo.trim()) return;
@@ -58,7 +58,7 @@ export default function RecepcionPage() {
     const { data, error } = await supabase
       .from('clientes')
       .insert({
-        nombre_completo: nombreNuevo,
+        nombre: nombreNuevo, // Cambiado de 'nombre_completo' a 'nombre'
         telefono: telefonoNuevo
       })
       .select()
@@ -66,10 +66,10 @@ export default function RecepcionPage() {
 
     if (error) {
       console.error('Error al crear cliente:', error);
-      alert('❌ Hubo un error al guardar el cliente.');
+      alert(`❌ Error al guardar el cliente: ${error.message}`);
     } else {
       alert('✅ ¡Cliente creado con éxito en Supabase!');
-      setClienteSeleccionado(data); // Lo selecciona automáticamente
+      setClienteSeleccionado(data);
       setMostrarModalNuevo(false);
       setNombreNuevo('');
       setTelefonoNuevo('');
@@ -93,10 +93,8 @@ export default function RecepcionPage() {
         </button>
       </div>
 
-      {/* Buscador existente */}
       <BuscadorCliente onClienteSeleccionado={(cliente) => setClienteSeleccionado(cliente)} />
 
-      {/* Tarjeta de cliente seleccionado */}
       {clienteSeleccionado && (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
           <div className="flex justify-between items-start border-b border-slate-100 pb-4">
@@ -104,7 +102,9 @@ export default function RecepcionPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
                 Cliente Seleccionado
               </span>
-              <h3 className="text-xl font-bold text-slate-800 mt-1">{clienteSeleccionado.nombre_completo}</h3>
+              <h3 className="text-xl font-bold text-slate-800 mt-1">
+                {clienteSeleccionado.nombre || clienteSeleccionado.nombre_completo}
+              </h3>
               <p className="text-sm text-slate-500">{clienteSeleccionado.telefono}</p>
             </div>
             <button
@@ -140,7 +140,6 @@ export default function RecepcionPage() {
         </div>
       )}
 
-      {/* Modal / Formulario para alta rápida de cliente */}
       {mostrarModalNuevo && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-md w-full p-6 space-y-4">
