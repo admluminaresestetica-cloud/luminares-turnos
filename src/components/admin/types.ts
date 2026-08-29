@@ -6,6 +6,7 @@ export interface Reserva {
   codigo_unico?: string
   cliente_nombre?: string
   cliente_celular?: string
+  codigo_referido_usado?: string | null
   servicio_tipo?: string
   detalle_reserva?: any
   precio_total?: number
@@ -13,6 +14,11 @@ export interface Reserva {
   fecha_hora_inicio?: string
   estado?: string
   medio_pago?: string
+  // Campos de Mercado Pago y Pagos
+  monto_abonado?: number
+  mp_payment_id?: string
+  tipo_pago_elegido?: string
+  estado_pago?: string
 }
 
 export interface ServicioLaser {

@@ -109,6 +109,7 @@ export default function FlujoAgendaConfirmacion({
   const [mensajeReferido, setMensajeReferido] = useState<string | null>(null);
 
   const [confirmando, setConfirmando] = useState(false);
+  const [cargandoMP, setCargandoMP] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
 
@@ -128,6 +129,7 @@ export default function FlujoAgendaConfirmacion({
 
   const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
 
+  // Carga inicial de datos de configuración
   useEffect(() => {
     async function cargar() {
       setCargandoConfig(true);
@@ -141,6 +143,17 @@ export default function FlujoAgendaConfirmacion({
     }
     cargar();
   }, [tipo]);
+
+  // Si el usuario regresa a la pantalla mediante el botón "Atrás" del navegador descongela los botones
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      setCargandoMP(false);
+      setConfirmando(false);
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   // Validar el código de referido en tiempo real
   useEffect(() => {
@@ -161,10 +174,8 @@ export default function FlujoAgendaConfirmacion({
         return;
       }
 
-      // Valor por defecto seguro si viene undefined desde Supabase
       const valorDescuento = configSistema.referidos_valor_descuento ?? 0;
 
-      // Verificar si existe el cliente con ese código
       const { data: dueno } = await supabase
         .from('clientes')
         .select('id, nombre')
@@ -178,7 +189,6 @@ export default function FlujoAgendaConfirmacion({
         return;
       }
 
-      // Calcular monto de descuento sin riesgos de undefined
       let desc = 0;
       if (configSistema.referidos_tipo_descuento === 'porcentaje') {
         desc = Math.round((precioTotal * valorDescuento) / 100);
@@ -215,95 +225,111 @@ export default function FlujoAgendaConfirmacion({
     }
   }, [fecha, configCalendario, cargarSlots]);
 
+  // Función auxiliar para registrar cliente y referidos en DB
+  const prepararReservaBase = async () => {
+    if (!fecha || !hora || !configSistema) return null;
+
+    const celularLimpio = celular.replace(/\D/g, '');
+    const nombreLimpio = nombre.trim();
+    let codigoReferidoPropio = '';
+
+    // 1. Gestión de cliente
+    const { data: clienteExistente } = await supabase
+      .from('clientes')
+      .select('codigo_referido')
+      .eq('celular', celularLimpio)
+      .maybeSingle();
+
+    if (clienteExistente) {
+      codigoReferidoPropio = clienteExistente.codigo_referido;
+    } else {
+      codigoReferidoPropio = generarCodigoReferido(nombreLimpio);
+      await supabase.from('clientes').insert([
+        {
+          celular: celularLimpio,
+          nombre: nombreLimpio,
+          codigo_referido: codigoReferidoPropio,
+          descuentos_disponibles: 0,
+        },
+      ]);
+    }
+
+    // 2. Beneficio de referidos
+    const codigoUsadoLimpio = codigoReferidoUsado.trim().toUpperCase();
+    if (codigoUsadoLimpio && referidoValido) {
+      const { data: duenoCodigo } = await supabase
+        .from('clientes')
+        .select('id, descuentos_disponibles')
+        .eq('codigo_referido', codigoUsadoLimpio)
+        .maybeSingle();
+
+      if (duenoCodigo) {
+        await supabase
+          .from('clientes')
+          .update({ descuentos_disponibles: (duenoCodigo.descuentos_disponibles || 0) + 1 })
+          .eq('id', duenoCodigo.id);
+      }
+    }
+
+    const precioFinal = Math.max(0, precioTotal - descuentoMonto);
+    const fechaHoraInicio = new Date(`${fecha}T${hora}:00`).toISOString();
+
+    // 3. Crear reserva en DB
+    const reserva = await crearReserva({
+      cliente_nombre: nombreLimpio,
+      cliente_celular: celularLimpio,
+      codigo_referido_usado: (referidoValido && codigoUsadoLimpio) ? codigoUsadoLimpio : null,
+      servicio_tipo: tipo,
+      detalle_reserva: { ...detalleReserva, detalle_texto: detalleTexto },
+      precio_total: precioFinal,
+      duracion_total: duracionTotal,
+      fecha_hora_inicio: fechaHoraInicio,
+    });
+
+    return {
+      reserva,
+      nombreLimpio,
+      celularLimpio,
+      precioFinal,
+      codigoReferidoPropio,
+      codigoUsadoLimpio,
+    };
+  };
+
+  // CONFIRMAR POR WHATSAPP
   const handleConfirmar = async () => {
-    if (!fecha || !hora || !configSistema) return;
     setConfirmando(true);
     setError(null);
 
     try {
-      const celularLimpio = celular.replace(/\D/g, '');
-      const nombreLimpio = nombre.trim();
-      let codigoReferidoPropio = '';
-
-      // 1. GESTIÓN DE CLIENTE Y CÓDIGO DE REFERIDO PROPIO
-      const { data: clienteExistente } = await supabase
-        .from('clientes')
-        .select('codigo_referido')
-        .eq('celular', celularLimpio)
-        .maybeSingle();
-
-      if (clienteExistente) {
-        codigoReferidoPropio = clienteExistente.codigo_referido;
-      } else {
-        codigoReferidoPropio = generarCodigoReferido(nombreLimpio);
-        await supabase.from('clientes').insert([
-          {
-            celular: celularLimpio,
-            nombre: nombreLimpio,
-            codigo_referido: codigoReferidoPropio,
-            descuentos_disponibles: 0,
-          },
-        ]);
-      }
-
-      // 2. ACREDITAR BENEFICIO A LA AMIGA SI SE INGRESÓ UN CÓDIGO VÁLIDO
-      const codigoUsadoLimpio = codigoReferidoUsado.trim().toUpperCase();
-      if (codigoUsadoLimpio && referidoValido) {
-        const { data: duenoCodigo } = await supabase
-          .from('clientes')
-          .select('id, descuentos_disponibles')
-          .eq('codigo_referido', codigoUsadoLimpio)
-          .maybeSingle();
-
-        if (duenoCodigo) {
-          await supabase
-            .from('clientes')
-            .update({ descuentos_disponibles: (duenoCodigo.descuentos_disponibles || 0) + 1 })
-            .eq('id', duenoCodigo.id);
-        }
-      }
-
-      const precioFinal = Math.max(0, precioTotal - descuentoMonto);
-
-      // 3. CREAR LA RESERVA
-      const fechaHoraInicio = new Date(`${fecha}T${hora}:00`).toISOString();
-      const reserva = await crearReserva({
-        cliente_nombre: nombreLimpio,
-        cliente_celular: celularLimpio,
-        codigo_referido_usado: (referidoValido && codigoUsadoLimpio) ? codigoUsadoLimpio : null,
-        servicio_tipo: tipo,
-        detalle_reserva: { ...detalleReserva, detalle_texto: detalleTexto },
-        precio_total: precioFinal,
-        duracion_total: duracionTotal,
-        fecha_hora_inicio: fechaHoraInicio,
-      });
-
+      const base = await prepararReservaBase();
       setConfirmando(false);
 
-      if (!reserva) {
+      if (!base || !base.reserva) {
         setError('No pudimos crear la reserva. Intentá de nuevo.');
         return;
       }
+
+      const { reserva, nombreLimpio, precioFinal, codigoReferidoPropio, codigoUsadoLimpio } = base;
 
       const datosExito: DatosReservaExitosa = {
         codigo: reserva.codigo_unico,
         codigoReferidoPropio,
         detalle: detalleTexto,
-        fecha,
-        hora,
+        fecha: fecha!,
+        hora: hora!,
       };
 
       sessionStorage.setItem('reserva-exitosa', JSON.stringify(datosExito));
       setReservaExitosa(datosExito);
 
-      // 4. MENSAJE DE WHATSAPP
-      const montoSena = calcularMontoSena(precioFinal, configSistema.porcentaje_sena);
+      const montoSena = calcularMontoSena(precioFinal, configSistema!.porcentaje_sena);
       let mensaje = buildMensajeReserva({
         codigo: reserva.codigo_unico,
         clienteNombre: nombreLimpio,
         servicioDetalle: detalleTexto,
-        fecha,
-        hora,
+        fecha: fecha!,
+        hora: hora!,
         precioTotal: precioFinal,
         montoSena,
       });
@@ -321,6 +347,50 @@ export default function FlujoAgendaConfirmacion({
       console.error(e);
       setConfirmando(false);
       setError('Ocurrió un error al procesar la reserva.');
+    }
+  };
+
+  // PAGAR CON MERCADO PAGO
+  const handlePagarMercadoPago = async (montoAPagar: number) => {
+    setCargandoMP(true);
+    setError(null);
+
+    try {
+      const base = await prepararReservaBase();
+
+      if (!base || !base.reserva) {
+        setCargandoMP(false);
+        setError('No pudimos registrar la reserva antes del pago. Intentá de nuevo.');
+        return;
+      }
+
+      const { reserva, nombreLimpio } = base;
+
+      // Llamada a la API de checkout de reserva
+      const response = await fetch('/api/checkout-reserva', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reservaId: reserva.id,
+          clienteNombre: nombreLimpio,
+          servicioDetalle: detalleTexto,
+          montoAPagar,
+          tipoPago: 'sena',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        setCargandoMP(false);
+        setError(data.error || 'No se pudo generar la preferencia de pago.');
+      }
+    } catch (e) {
+      console.error(e);
+      setCargandoMP(false);
+      setError('Ocurrió un error de conexión con Mercado Pago.');
     }
   };
 
@@ -522,6 +592,9 @@ export default function FlujoAgendaConfirmacion({
                 confirmando={confirmando}
                 error={error}
                 colorAccent={colorAccent}
+                onPagarMercadoPago={handlePagarMercadoPago}
+                cargandoMP={cargandoMP}
+                onCancelarMP={() => setCargandoMP(false)}
               />
             </div>
           )}
@@ -560,7 +633,7 @@ export default function FlujoAgendaConfirmacion({
               </div>
             </div>
 
-            {/* CAJA DEL CÓDIGO DE RECOMENDADA (CÓDIGO PROPIO) */}
+            {/* CAJA DEL CÓDIGO DE RECOMENDADA */}
             {reservaExitosa.codigoReferidoPropio && (
               <div className="bg-violet-50/70 border border-violet-100 p-3 rounded-xl mb-4 text-left">
                 <div className="flex items-center gap-1.5 text-violet-800 mb-1">
