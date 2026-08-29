@@ -87,6 +87,7 @@ export default function AgendaTab({
             <option value="confirmado">Confirmado</option>
             <option value="completado">Completado</option>
             <option value="cancelado">Cancelado</option>
+            <option value="mercadopago">mercadopago</option>
           </select>
 
           <button
