@@ -25,6 +25,16 @@ export default function SelectorGenero({ genero, onSelect }: Props) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
       {OPCIONES.map((op) => {
         const activo = genero === op.valor;
+
+        // Función para definir el color de la línea superior por género
+        const getColorAcento = (valor: GeneroLaser) => {
+          if (valor === 'femenino') return 'bg-rose-500'; // Rosa para femenino
+          if (valor === 'masculino') return 'bg-blue-500'; // Azul para masculino
+          return 'bg-slate-900'; // Default de seguridad
+        };
+
+        const colorAcento = getColorAcento(op.valor);
+
         return (
           <button
             key={op.valor}
@@ -44,9 +54,9 @@ export default function SelectorGenero({ genero, onSelect }: Props) {
               }`}
             />
 
-            {/* Barra de acento superior */}
+            {/* Barra de acento superior (Ahora con colores por género) */}
             <div
-              className={`absolute top-0 left-0 h-1 rounded-full bg-slate-900 transition-all duration-300 ease-out ${
+              className={`absolute top-0 left-0 h-1 rounded-full transition-all duration-300 ease-out ${colorAcento} ${
                 activo ? 'w-full' : 'w-0 group-hover:w-8'
               }`}
             />
