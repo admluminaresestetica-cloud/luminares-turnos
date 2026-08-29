@@ -49,7 +49,7 @@ export function usePreciosLaser() {
       setServicioEdit({
         genero: 'femenino',
         nombre_zona: '',
-        categoria_zona: 'Cuerpo',
+        categoria_zona: 'chica,media o media',
         precio_lista: 0,
         duracion_minutos: 15,
         activo: true
