@@ -8,7 +8,7 @@ import { Reserva, renderDetalle, renderFechaHora } from '../types'
 
 interface AgendaTabProps {
   loading: boolean
-  turnosFiltrados: Reserva[]
+  turnosFiltrados: Reserva[] // Se reciben todos los turnos base
   turnosAgendaResumen: Reserva[]
   esFechaAgendaPasada: boolean
 
@@ -43,30 +43,56 @@ export default function AgendaTab({
   onEditarTurno,
   onActualizarEstado
 }: AgendaTabProps) {
-  // Estado local para filtrar por Medio de Pago
+  // Estado local para el Medio de Pago
   const [filtroMedioPago, setFiltroMedioPago] = useState<string>('todos')
 
-  // Filtro tolerante a variantes de escritura (mercado_pago, mp, etc.)
-  const turnosConFiltroMedioPago = turnosFiltrados.filter((t) => {
-    if (filtroMedioPago === 'todos') return true
+  // FILTRADO UNIFICADO Y SEGURO DE TODAS LAS CONDICIONES
+  const turnosFinales = turnosFiltrados.filter((t) => {
+    // 1. Filtro por Búsqueda de Texto (Cliente, Teléfono, Código)
+    if (busqueda.trim()) {
+      const q = busqueda.toLowerCase().trim()
+      const matchNombre = (t.cliente_nombre || '').toLowerCase().includes(q)
+      const matchTel = (t.cliente_celular || '').toLowerCase().includes(q)
+      const matchCodigo = (t.codigo_unico || '').toLowerCase().includes(q)
+      if (!matchNombre && !matchTel && !matchCodigo) return false
+    }
 
-    const medioRaw = String(t.medio_pago || t.tipo_pago_elegido || '').toLowerCase().trim()
+    // 2. Filtro por Estado (Tolerante a variantes de 'pendiente_sena')
+    if (filtroEstado !== 'todos') {
+      const estadoActual = String(t.estado || '').toLowerCase().trim()
+      const estadoBuscado = filtroEstado.toLowerCase().trim()
 
-    if (filtroMedioPago === 'mercadopago') {
-      return (
-        medioRaw.includes('mercadopago') ||
-        medioRaw.includes('mercado_pago') ||
-        medioRaw.includes('mercado pago') ||
-        medioRaw.includes('mp') ||
-        medioRaw.includes('transferencia')
-      )
+      if (estadoBuscado === 'pendiente_sena') {
+        const esPendienteSena =
+          estadoActual.includes('sena') ||
+          estadoActual.includes('seña') ||
+          estadoActual === 'pendiente' ||
+          estadoActual === 'pendiente_sena'
+        if (!esPendienteSena) return false
+      } else {
+        if (estadoActual !== estadoBuscado) return false
+      }
     }
-    if (filtroMedioPago === 'efectivo') {
-      return medioRaw.includes('efectivo') || medioRaw.includes('cash')
+
+    // 3. Filtro por Medio de Pago (Tolerante a variantes de Mercado Pago, Wa, Cash)
+    if (filtroMedioPago !== 'todos') {
+      const medioRaw = String(t.medio_pago || t.tipo_pago_elegido || '').toLowerCase().trim()
+
+      if (filtroMedioPago === 'mercadopago') {
+        const esMP =
+          medioRaw.includes('mercadopago') ||
+          medioRaw.includes('mercado_pago') ||
+          medioRaw.includes('mercado pago') ||
+          medioRaw.includes('mp') ||
+          medioRaw.includes('transferencia')
+        if (!esMP) return false
+      } else if (filtroMedioPago === 'efectivo') {
+        if (!medioRaw.includes('efectivo') && !medioRaw.includes('cash')) return false
+      } else if (filtroMedioPago === 'whatsapp') {
+        if (!medioRaw.includes('whatsapp') && !medioRaw.includes('wa')) return false
+      }
     }
-    if (filtroMedioPago === 'whatsapp') {
-      return medioRaw.includes('whatsapp') || medioRaw.includes('wa')
-    }
+
     return true
   })
 
@@ -113,10 +139,10 @@ export default function AgendaTab({
             className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50"
           >
             <option value="todos">Todos los estados</option>
-            <option value="Pendiente_sena">Pendiente Seña</option>
-            <option value="confirmado">Confirmado</option>
-            <option value="completado">Completado</option>
-            <option value="cancelado">Cancelado</option>
+            <option value="pendiente_sena">⏳ Pendiente Seña</option>
+            <option value="confirmado">✅ Confirmado</option>
+            <option value="completado">🎉 Completado</option>
+            <option value="cancelado">❌ Cancelado</option>
           </select>
 
           {/* Filtro Medio de Pago */}
@@ -147,7 +173,7 @@ export default function AgendaTab({
         <div className="p-12 text-center text-gray-400 text-xs font-medium animate-pulse">
           Cargando turnos...
         </div>
-      ) : turnosConFiltroMedioPago.length === 0 ? (
+      ) : turnosFinales.length === 0 ? (
         <div className="p-12 text-center">
           <CalendarDays className="w-8 h-8 text-gray-300 mx-auto mb-2" />
           <p className="text-gray-400 text-sm font-medium">No se encontraron reservas con los filtros aplicados.</p>
@@ -168,7 +194,7 @@ export default function AgendaTab({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {turnosConFiltroMedioPago.map((t) => (
+                {turnosFinales.map((t) => (
                   <tr key={t.id} className="hover:bg-gray-50/60 transition-colors">
                     <td className="px-4 sm:px-6 py-4 font-mono text-xs text-gray-400 whitespace-nowrap">
                       {t.codigo_unico || '-'}
