@@ -1,7 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { User, Phone, Gift, ShieldCheck, MessageCircle, AlertCircle, Loader2, CreditCard } from 'lucide-react';
+import { 
+  User, 
+  Phone, 
+  Calendar, 
+  Clock, 
+  Sparkles, 
+  ShieldCheck, 
+  Loader2, 
+  MessageCircle,
+  Gift,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
+import { calcularMontoSena } from '@/lib/whatsapp';
+import { formatFechaDisplay } from '@/lib/calendario/slots';
 
 interface Props {
   servicioDetalle: string;
@@ -12,39 +25,40 @@ interface Props {
   porcentajeSena: number;
   nombre: string;
   celular: string;
-  codigoReferidoUsado: string;
-  descuentoMonto: number;
-  referidoValido: boolean | null;
-  mensajeReferido: string | null;
-  onNombreChange: (val: string) => void;
-  onCelularChange: (val: string) => void;
-  onCodigoReferidoChange: (val: string) => void;
+  codigoReferidoUsado?: string;
+  descuentoMonto?: number;
+  referidoValido?: boolean | null;
+  mensajeReferido?: string | null;
+  onNombreChange: (v: string) => void;
+  onCelularChange: (v: string) => void;
+  onCodigoReferidoChange?: (v: string) => void;
   onConfirmar: () => void;
-  confirmando: boolean;
-  error: string | null;
+  confirmando?: boolean;
+  error?: string | null;
   colorAccent?: 'violet' | 'indigo' | 'rose';
-  onPagarMercadoPago?: (montoAPagar: number) => void;
-  cargandoMP?: boolean;
-  onCancelarMP?: () => void;
 }
 
-const ACCENT_STYLES = {
+const COLOR_ACCENTS = {
   violet: {
-    badge: 'bg-violet-50 text-violet-700 border-violet-200/80',
-    button: 'bg-emerald-600 hover:bg-emerald-500 text-white',
-    focusRing: 'focus:border-violet-500 focus:ring-violet-500/20',
+    badgeSena: 'bg-violet-50 text-violet-700 border-violet-200/80',
+    focusRing: 'focus:ring-violet-500/15 focus:border-violet-500',
+    button: 'bg-violet-600 hover:bg-violet-500 active:bg-violet-700 shadow-violet-600/25',
+    iconChip: 'bg-violet-50 text-violet-600',
+    dot: 'bg-violet-600',
   },
   indigo: {
-    badge: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
-    badgeSecondary: 'bg-slate-100 text-slate-700 border-slate-200/80',
-    button: 'bg-emerald-600 hover:bg-emerald-500 text-white',
-    focusRing: 'focus:border-indigo-500 focus:ring-indigo-500/20',
+    badgeSena: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
+    focusRing: 'focus:ring-indigo-500/15 focus:border-indigo-500',
+    button: 'bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 shadow-indigo-600/25',
+    iconChip: 'bg-indigo-50 text-indigo-600',
+    dot: 'bg-indigo-600',
   },
   rose: {
-    badge: 'bg-rose-50 text-rose-700 border-rose-200/80',
-    badgeSecondary: 'bg-slate-100 text-slate-700 border-slate-200/80',
-    button: 'bg-emerald-600 hover:bg-emerald-500 text-white',
-    focusRing: 'focus:border-rose-500 focus:ring-rose-500/20',
+    badgeSena: 'bg-rose-50 text-rose-700 border-rose-200/80',
+    focusRing: 'focus:ring-rose-500/15 focus:border-rose-500',
+    button: 'bg-rose-500 hover:bg-rose-400 active:bg-rose-600 shadow-rose-500/25',
+    iconChip: 'bg-rose-50 text-rose-600',
+    dot: 'bg-rose-500',
   },
 };
 
@@ -57,10 +71,10 @@ export default function FormConfirmacion({
   porcentajeSena,
   nombre,
   celular,
-  codigoReferidoUsado,
-  descuentoMonto,
-  referidoValido,
-  mensajeReferido,
+  codigoReferidoUsado = '',
+  descuentoMonto = 0,
+  referidoValido = null,
+  mensajeReferido = null,
   onNombreChange,
   onCelularChange,
   onCodigoReferidoChange,
@@ -68,248 +82,196 @@ export default function FormConfirmacion({
   confirmando,
   error,
   colorAccent = 'violet',
-  onPagarMercadoPago,
-  cargandoMP = false,
-  onCancelarMP,
 }: Props) {
-  const [opcionMP, setOpcionMP] = useState<'sena' | 'total'>('sena');
+  const precioFinal = Math.max(0, precioTotal - descuentoMonto);
+  const montoSena = calcularMontoSena(precioFinal, porcentajeSena);
+  const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
 
-  const styles = ACCENT_STYLES[colorAccent] || ACCENT_STYLES.violet;
-
-  // Formatear fecha para mostrar limpia
-  const [year, month, day] = fecha.split('-');
-  const fechaObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
-
-  // Cálculos base
-  const precioFinalCalculado = Math.max(0, precioTotal - descuentoMonto);
-  const montoSenaBase = Math.round((precioFinalCalculado * porcentajeSena) / 100);
-
-  // Cálculos de Mercado Pago con el 10% de recargo por servicio
-  const montoSenaMP = Math.round(montoSenaBase * 1.10);
-  const montoTotalMP = Math.round(precioFinalCalculado * 1.10);
-
-  const montoSeleccionadoMP = opcionMP === 'sena' ? montoSenaMP : montoTotalMP;
-  const montoSinRecargoMP = opcionMP === 'sena' ? montoSenaBase : precioFinalCalculado;
-  const recargoCalculadoMP = montoSeleccionadoMP - montoSinRecargoMP;
-
-  const formValido = nombre.trim().length >= 3 && celular.replace(/\D/g, '').length >= 8;
+  const puedeConfirmar = nombre.trim().length >= 2 && celular.replace(/\D/g, '').length >= 8;
 
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
-      {/* TARJETA DE RESUMEN DEL TURNO */}
-      <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 sm:p-5 space-y-3">
-        <div className="flex justify-between items-start gap-2">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-              Servicio Seleccionado
-            </span>
-            <p className="text-xs sm:text-sm font-bold text-slate-900 leading-tight mt-0.5">
-              {servicioDetalle}
-            </p>
-          </div>
-          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border shrink-0 ${styles.badge}`}>
-            {duracionTotal} min
-          </span>
-        </div>
 
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200/60">
-          <span className="capitalize">{fechaFormateada}</span>
-          <span className="text-slate-300">•</span>
-          <span>{hora} hs</span>
-        </div>
-
-        {/* DESGLOSE DE PRECIOS */}
-        <div className="pt-2 border-t border-slate-200/60 space-y-1.5 text-xs">
-          {descuentoMonto > 0 && (
-            <div className="flex justify-between items-center text-slate-500">
-              <span>Precio original:</span>
-              <span className="line-through">${precioTotal.toLocaleString('es-AR')}</span>
+      {/* Resumen de la Reserva — estilo "boarding pass" */}
+      <div className="relative">
+        <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm shadow-slate-200/60">
+          {/* Encabezado */}
+          <div className="flex items-start justify-between gap-3 p-4 sm:p-5">
+            <div className="space-y-1 min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                Tu reserva
+              </span>
+              <p className="text-sm font-bold text-slate-900 leading-snug truncate">
+                {servicioDetalle}
+              </p>
             </div>
-          )}
-
-          {descuentoMonto > 0 && (
-            <div className="flex justify-between items-center text-emerald-600 font-medium">
-              <span>Descuento por referido:</span>
-              <span>-${descuentoMonto.toLocaleString('es-AR')}</span>
+            <div className={`p-2.5 rounded-2xl shrink-0 ${styles.iconChip}`}>
+              <Sparkles className="w-4 h-4" />
             </div>
-          )}
-
-          <div className="flex justify-between items-center text-slate-900 font-bold pt-1">
-            <span>Total del servicio:</span>
-            <span className="text-sm">${precioFinalCalculado.toLocaleString('es-AR')}</span>
           </div>
 
-          <div className="flex justify-between items-center text-slate-500 text-[11px]">
-            <span>Seña sugerida para congelar turno ({porcentajeSena}%):</span>
-            <span className="font-semibold text-slate-700">${montoSenaBase.toLocaleString('es-AR')}</span>
+          {/* Línea perforada (efecto ticket) */}
+          <div className="relative flex items-center px-4 sm:px-5">
+            <div className="absolute left-[-14px] w-6 h-6 rounded-full bg-slate-50" />
+            <div className="w-full border-t border-dashed border-slate-200" />
+            <div className="absolute right-[-14px] w-6 h-6 rounded-full bg-slate-50" />
+          </div>
+
+          {/* Fecha / hora */}
+          <div className="grid grid-cols-2 gap-2 p-4 sm:p-5">
+            <div className="flex items-center gap-2 text-slate-700 bg-slate-50 p-3 rounded-2xl">
+              <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="text-xs font-bold truncate">
+                {formatFechaDisplay(fecha)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-700 bg-slate-50 p-3 rounded-2xl">
+              <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="text-xs font-bold">
+                {hora} hs <span className="text-slate-400 font-medium">· {duracionTotal}m</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Precio y seña */}
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-5 pb-4 sm:pb-5">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">
+                Total a pagar
+              </p>
+              <div className="flex items-baseline gap-1.5">
+                <p className="text-xl font-black text-slate-900 tracking-tight">
+                  ${precioFinal.toLocaleString('es-AR')}
+                </p>
+                {descuentoMonto > 0 && (
+                  <span className="text-xs text-slate-400 line-through font-medium">
+                    ${precioTotal.toLocaleString('es-AR')}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className={`px-3 py-2 rounded-2xl border ${styles.badgeSena} text-right`}>
+              <p className="text-[9px] uppercase font-bold tracking-[0.1em] opacity-80">
+                Seña · {porcentajeSena}%
+              </p>
+              <p className="text-sm font-black">
+                ${montoSena.toLocaleString('es-AR')}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* FORMULARIO DE DATOS DEL CLIENTE */}
-      <div className="space-y-3.5">
+      {/* Formulario de Datos */}
+      <div className="space-y-3">
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Nombre y Apellido *
+          <label htmlFor="nombre" className="block text-xs font-bold text-slate-800 mb-1.5 ml-1">
+            Nombre completo
           </label>
           <div className="relative">
-            <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+              <User className="w-4 h-4" />
+            </div>
             <input
+              id="nombre"
               type="text"
-              placeholder="Ej: María González"
               value={nombre}
               onChange={(e) => onNombreChange(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${styles.focusRing}`}
+              placeholder="Ej: María García"
+              className={`w-full pl-11 pr-4 py-3.5 text-[15px] sm:text-sm bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder:text-slate-400 transition-all duration-150 outline-none focus:ring-4 ${styles.focusRing}`}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Celular (WhatsApp) *
+          <label htmlFor="celular" className="block text-xs font-bold text-slate-800 mb-1.5 ml-1">
+            Celular (WhatsApp)
           </label>
           <div className="relative">
-            <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+              <Phone className="w-4 h-4" />
+            </div>
             <input
+              id="celular"
               type="tel"
-              placeholder="Ej: 3413954355"
               value={celular}
               onChange={(e) => onCelularChange(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${styles.focusRing}`}
+              placeholder="Ej: 11 2345-6789"
+              className={`w-full pl-11 pr-4 py-3.5 text-[15px] sm:text-sm bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder:text-slate-400 transition-all duration-150 outline-none focus:ring-4 ${styles.focusRing}`}
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            ¿Tenés un código de recomendada? <span className="text-slate-400 font-normal lowercase">(opcional)</span>
-          </label>
-          <div className="relative">
-            <Gift className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Ej: MARIA-A8F2"
-              value={codigoReferidoUsado}
-              onChange={(e) => onCodigoReferidoChange(e.target.value.toUpperCase())}
-              className={`w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 uppercase tracking-wider placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all ${styles.focusRing}`}
-            />
+        {/* Input Opcional: Código de Recomendada / Referida */}
+        {onCodigoReferidoChange && (
+          <div>
+            <label htmlFor="codigoReferido" className="block text-xs font-bold text-slate-800 mb-1.5 ml-1">
+              ¿Tenés un código de recomendada? <span className="text-slate-400 font-medium">(Opcional)</span>
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                <Gift className="w-4 h-4 text-violet-500" />
+              </div>
+              <input
+                id="codigoReferido"
+                type="text"
+                value={codigoReferidoUsado}
+                onChange={(e) => onCodigoReferidoChange(e.target.value.toUpperCase())}
+                placeholder="Ej: MARIA-A8F2"
+                className={`w-full pl-11 pr-4 py-3.5 text-[15px] sm:text-sm bg-white border border-slate-200 rounded-2xl text-slate-900 uppercase placeholder:normal-case placeholder:text-slate-400 transition-all duration-150 outline-none focus:ring-4 ${styles.focusRing}`}
+              />
+            </div>
+
+            {/* Feedback del código */}
+            {mensajeReferido && (
+              <div className={`mt-2 ml-1 flex items-center gap-1.5 text-xs font-semibold animate-in fade-in slide-in-from-top-1 duration-200 ${referidoValido ? 'text-emerald-600' : 'text-amber-600'}`}>
+                {referidoValido ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                )}
+                <span>{mensajeReferido}</span>
+              </div>
+            )}
           </div>
-          {mensajeReferido && (
-            <p className={`text-xs mt-1.5 font-medium ${referidoValido ? 'text-emerald-600' : 'text-rose-500'}`}>
-              {mensajeReferido}
-            </p>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* MENSAJE DE ERROR */}
+      {/* Mensaje de Error General */}
       {error && (
-        <div className="p-3 bg-rose-50 border border-rose-200/80 rounded-xl flex items-start gap-2 text-rose-700 text-xs font-medium animate-in fade-in">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+        <div className="flex items-start gap-2 text-xs text-rose-700 bg-rose-50 border border-rose-200/80 rounded-2xl p-3.5 font-semibold animate-in fade-in slide-in-from-top-1 duration-200">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-px" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* OPCIONES DE PAGO Y CONFIRMACIÓN */}
-      <div className="space-y-3 pt-2">
-        {/* BLOQUE OPCIONAL DE MERCADO PAGO */}
-        {onPagarMercadoPago && (
-          <div className="bg-sky-50/60 border border-sky-100 rounded-2xl p-3.5 sm:p-4 space-y-3">
-            <div className="flex items-center gap-2 text-sky-900 font-bold text-xs sm:text-sm">
-              <CreditCard className="w-4 h-4 text-sky-600" />
-              <span>Pagar online con Mercado Pago</span>
-            </div>
-
-            {/* Selector de Monto (Seña o Total) */}
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setOpcionMP('sena')}
-                className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all text-center ${
-                  opcionMP === 'sena'
-                    ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                }`}
-              >
-                Seña (${montoSenaMP.toLocaleString('es-AR')})
-              </button>
-              <button
-                type="button"
-                onClick={() => setOpcionMP('total')}
-                className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all text-center ${
-                  opcionMP === 'total'
-                    ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                }`}
-              >
-                Total (${montoTotalMP.toLocaleString('es-AR')})
-              </button>
-            </div>
-
-            {/* Leyenda aclaratoria del recargo */}
-            <p className="text-[11px] text-slate-500 font-medium leading-tight">
-              * Los pagos con Mercado Pago incluyen un <strong>10% de recargo por servicio</strong> (${recargoCalculadoMP.toLocaleString('es-AR')}).
-            </p>
-
-            <button
-              type="button"
-              disabled={!formValido || confirmando || cargandoMP}
-              onClick={() => onPagarMercadoPago(montoSeleccionadoMP)}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3.5 rounded-xl shadow-xs text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
-            >
-              {cargandoMP ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Generando pago Mercado Pago...
-                </span>
-              ) : (
-                <span>Pagar con Mercado Pago (${montoSeleccionadoMP.toLocaleString('es-AR')})</span>
-              )}
-            </button>
-
-            {/* Opción de cancelar la carga manual */}
-            {cargandoMP && onCancelarMP && (
-              <button
-                type="button"
-                onClick={onCancelarMP}
-                className="w-full text-center text-[11px] text-slate-500 hover:text-slate-800 underline transition-colors pt-0.5 block"
-              >
-                Cancelar y elegir otro medio
-              </button>
-            )}
-          </div>
+      {/* Botón de Confirmación */}
+      <button
+        type="button"
+        onClick={onConfirmar}
+        disabled={!puedeConfirmar || confirmando}
+        className={`w-full font-bold py-4 rounded-2xl transition-all duration-150 text-sm text-white flex items-center justify-center gap-2 active:scale-[0.97] disabled:opacity-40 disabled:shadow-none disabled:bg-slate-300 disabled:cursor-not-allowed shadow-lg ${styles.button}`}
+      >
+        {confirmando ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Confirmando reserva...</span>
+          </>
+        ) : (
+          <>
+            <MessageCircle className="w-4 h-4 fill-current" />
+            <span>Confirmar y enviar por WhatsApp</span>
+          </>
         )}
+      </button>
 
-        {/* BOTÓN PRINCIPAL DE WHATSAPP / SEÑAR LUEGO */}
-        <button
-          type="button"
-          disabled={!formValido || confirmando || cargandoMP}
-          onClick={onConfirmar}
-          className={`w-full font-bold py-3.5 rounded-xl shadow-xs text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 ${styles.button}`}
-        >
-          {confirmando ? (
-            <span className="flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Procesando reserva...
-            </span>
-          ) : (
-            <span className="flex items-center gap-2">
-              <MessageCircle className="w-4 h-4 fill-white" />
-              Confirmar reserva por WhatsApp
-            </span>
-          )}
-        </button>
-
-        <p className="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1">
-          <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
-          <span>Tus datos se encuentran protegidos</span>
-        </p>
+      {/* Disclaimer */}
+      <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 font-medium text-center px-4">
+        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+        <span>Se redirigirá a WhatsApp para coordinar el pago de la seña.</span>
       </div>
+
     </div>
   );
 }
