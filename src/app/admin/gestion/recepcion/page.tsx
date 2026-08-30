@@ -43,39 +43,51 @@ export default function RecepcionPage() {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
-  // Extraer zonas automáticamente del objeto o string de la reserva
+// Extraer zonas automáticamente del objeto jsonb de la reserva
   const extraerZonasDeReserva = (reserva: any): string[] => {
-    if (!reserva) return [];
+    if (!reserva) return []
 
-    let detalle = reserva.detalle_reserva;
+    let detalle = reserva.detalle_reserva
 
-    // Si viene como string o JSON
+    if (!detalle) {
+      if (reserva.servicio_tipo) return [reserva.servicio_tipo]
+      return []
+    }
+
+    // 1. Si detalle_reserva viene como texto (JSON serializado)
     if (typeof detalle === 'string') {
       try {
-        detalle = JSON.parse(detalle);
+        detalle = JSON.parse(detalle)
       } catch (e) {
-        // Si no es un JSON válido, parsear por separadores comunes
-        return detalle.split(/[,+\-/]/).map((z: string) => z.trim()).filter(Boolean);
+        return detalle.split(/[,+\-/]/).map((z: string) => z.trim()).filter(Boolean)
       }
     }
 
+    // 2. Si detalle_reserva es directamente un Array (JSONB array)
     if (Array.isArray(detalle)) {
       return detalle
-        .map((item: any) => (typeof item === 'string' ? item : item.nombre || item.nombre_zona || item.zona))
-        .filter(Boolean);
+        .map((item: any) => {
+          if (typeof item === 'string') return item
+          return item.nombre_zona || item.nombre || item.zona || item.titulo || ''
+        })
+        .filter(Boolean)
     }
 
-    if (detalle && typeof detalle === 'object') {
-      if (Array.isArray(detalle.zonas)) return detalle.zonas;
-      if (detalle.nombre) return [detalle.nombre];
+    // 3. Si detalle_reserva es un Objeto (JSONB object)
+    if (typeof detalle === 'object') {
+      if (Array.isArray(detalle.zonas)) {
+        return detalle.zonas.map((z: any) => (typeof z === 'string' ? z : z.nombre_zona || z.nombre))
+      }
+      if (Array.isArray(detalle.zonas_seleccionadas)) {
+        return detalle.zonas_seleccionadas
+      }
+      if (detalle.nombre_zona) return [detalle.nombre_zona]
+      if (detalle.nombre) return [detalle.nombre]
+      if (detalle.servicio) return [detalle.servicio]
     }
 
-    if (reserva.servicio_tipo) {
-      return [reserva.servicio_tipo];
-    }
-
-    return [];
-  };
+    return []
+  }
 
   const handleClienteSeleccionado = (data: { pacienteFicha: any; reservaHoy: any }) => {
     setMensaje(null);
