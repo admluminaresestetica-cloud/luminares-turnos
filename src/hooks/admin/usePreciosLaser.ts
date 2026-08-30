@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { PromoLaser, ServicioLaser } from '@/components/admin/types'
+import { PromoLaser, ServicioLaser } from '@/app/admin/turnos/components/types'
 
 export function usePreciosLaser() {
   const [servicios, setServicios] = useState<ServicioLaser[]>([])

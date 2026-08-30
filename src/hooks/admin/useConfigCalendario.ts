@@ -6,7 +6,7 @@ import {
   ConfigCalendario,
   HorariosSemana,
   horariosSemanaDefault
-} from '@/components/admin/types'
+} from '@/app/admin/turnos/components/types'
 
 export function useConfigCalendario() {
   const [configLaser, setConfigLaser] = useState<ConfigCalendario>({

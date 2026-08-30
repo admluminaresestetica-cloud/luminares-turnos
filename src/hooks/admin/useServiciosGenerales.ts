@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { ServicioGeneral } from '@/components/admin/types'
+import { ServicioGeneral } from '@/app/admin/turnos/components/types'
 
 export function useServiciosGenerales() {
   const [serviciosGenerales, setServiciosGenerales] = useState<ServicioGeneral[]>([])

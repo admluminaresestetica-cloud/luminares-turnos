@@ -9,7 +9,7 @@ import {
   TurnoForm,
   turnoFormVacio,
   datetimeLocalToIso
-} from '@/components/admin/types'
+} from '@/app/admin/turnos/components/types'
 
 interface UseNuevoTurnoParams {
   servicios: ServicioLaser[]

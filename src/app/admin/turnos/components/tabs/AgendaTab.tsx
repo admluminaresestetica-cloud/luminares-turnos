@@ -3,8 +3,8 @@
 
 import { useState } from 'react'
 import { Search, CalendarDays, Plus, Gift, CreditCard } from 'lucide-react'
-import ResumenAgenda from '@/components/admin/ResumenAgenda'
-import { Reserva, renderDetalle, renderFechaHora } from '../types'
+import ResumenAgenda from '@/app/admin/turnos/components/ResumenAgenda'
+import { Reserva, renderDetalle, renderFechaHora } from '@/app/admin/turnos/components/types';
 
 interface AgendaTabProps {
   loading: boolean

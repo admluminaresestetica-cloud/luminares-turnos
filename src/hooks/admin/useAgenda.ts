@@ -8,7 +8,7 @@ import {
   isoToDatetimeLocal,
   datetimeLocalToIso,
   renderDetalle
-} from '@/components/admin/types'
+} from '@/app/admin/turnos/components/types'
 
 export function useAgenda() {
   const [turnos, setTurnos] = useState<Reserva[]>([])
