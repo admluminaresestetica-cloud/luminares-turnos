@@ -43,9 +43,47 @@ export default function RecepcionPage() {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
+  // Extraer zonas automáticamente del objeto o string de la reserva
+  const extraerZonasDeReserva = (reserva: any): string[] => {
+    if (!reserva) return [];
+
+    let detalle = reserva.detalle_reserva;
+
+    // Si viene como string o JSON
+    if (typeof detalle === 'string') {
+      try {
+        detalle = JSON.parse(detalle);
+      } catch (e) {
+        // Si no es un JSON válido, parsear por separadores comunes
+        return detalle.split(/[,+\-/]/).map((z: string) => z.trim()).filter(Boolean);
+      }
+    }
+
+    if (Array.isArray(detalle)) {
+      return detalle
+        .map((item: any) => (typeof item === 'string' ? item : item.nombre || item.nombre_zona || item.zona))
+        .filter(Boolean);
+    }
+
+    if (detalle && typeof detalle === 'object') {
+      if (Array.isArray(detalle.zonas)) return detalle.zonas;
+      if (detalle.nombre) return [detalle.nombre];
+    }
+
+    if (reserva.servicio_tipo) {
+      return [reserva.servicio_tipo];
+    }
+
+    return [];
+  };
+
   const handleClienteSeleccionado = (data: { pacienteFicha: any; reservaHoy: any }) => {
     setMensaje(null);
     setReservaHoy(data.reservaHoy);
+
+    // Auto-preseleccionar zonas contratadas en la reserva
+    const zonasPrecalculadas = extraerZonasDeReserva(data.reservaHoy);
+    setZonasSeleccionadas(zonasPrecalculadas);
 
     if (data.pacienteFicha) {
       setPacienteFicha(data.pacienteFicha);
@@ -75,7 +113,7 @@ export default function RecepcionPage() {
 
   const handleEnviarAGabinete = async () => {
     if (zonasSeleccionadas.length === 0) {
-      setMensaje('⚠️ Selecciona al menos una zona para realizar hoy.');
+      setMensaje('⚠️ Seleccioná al menos una zona para realizar hoy.');
       return;
     }
 
@@ -85,7 +123,6 @@ export default function RecepcionPage() {
     try {
       let pacienteId = pacienteFicha?.id;
 
-      // 1. Guardar o Actualizar Ficha de Paciente
       if (esNuevo || !pacienteId) {
         const { data: nuevo, error: errFicha } = await supabase
           .from('pacientes_ficha')
@@ -113,9 +150,8 @@ export default function RecepcionPage() {
           .eq('id', pacienteId);
       }
 
-      // 2. Crear Registro en Sesiones Gabinete (estado: en_espera)
-      const precioTotal = Number(reservaHoy?.precio_total || reservaHoy?.monto_total || 0);
-      const montoAbonado = Number(reservaHoy?.monto_abonado || reservaHoy?.sena || 0);
+      const precioTotal = Number(reservaHoy?.precio_total || 0);
+      const montoAbonado = Number(reservaHoy?.monto_abonado || reservaHoy?.monto_sena || 0);
       const saldoRestante = Math.max(0, precioTotal - montoAbonado);
 
       const { error: errSesion } = await supabase.from('sesiones_gabinete').insert({
