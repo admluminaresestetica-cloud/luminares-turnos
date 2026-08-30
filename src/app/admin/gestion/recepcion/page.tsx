@@ -18,7 +18,7 @@ export default function RecepcionPage() {
   // Estado para el formulario de Nuevo Cliente
   const [mostrarModalNuevo, setMostrarModalNuevo] = useState(false);
   const [nombreNuevo, setNombreNuevo] = useState('');
-  const [telefonoNuevo, setTelefonoNuevo] = useState('');
+  const [celularNuevo, setCelularNuevo] = useState('');
   const [creandoCliente, setCreandoCliente] = useState(false);
 
   // Enviar paciente a la sala de espera
@@ -48,18 +48,18 @@ export default function RecepcionPage() {
     setGuardando(false);
   };
 
-  // Crear cliente en Supabase usando 'nombre'
+  // Crear cliente usando 'nombre' y 'celular'
   const handleCrearCliente = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nombreNuevo.trim() || !telefonoNuevo.trim()) return;
+    if (!nombreNuevo.trim() || !celularNuevo.trim()) return;
 
     setCreandoCliente(true);
 
     const { data, error } = await supabase
       .from('clientes')
       .insert({
-        nombre: nombreNuevo, // Cambiado de 'nombre_completo' a 'nombre'
-        telefono: telefonoNuevo
+        nombre: nombreNuevo,
+        celular: celularNuevo
       })
       .select()
       .single();
@@ -72,7 +72,7 @@ export default function RecepcionPage() {
       setClienteSeleccionado(data);
       setMostrarModalNuevo(false);
       setNombreNuevo('');
-      setTelefonoNuevo('');
+      setCelularNuevo('');
     }
 
     setCreandoCliente(false);
@@ -102,10 +102,8 @@ export default function RecepcionPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
                 Cliente Seleccionado
               </span>
-              <h3 className="text-xl font-bold text-slate-800 mt-1">
-                {clienteSeleccionado.nombre || clienteSeleccionado.nombre_completo}
-              </h3>
-              <p className="text-sm text-slate-500">{clienteSeleccionado.telefono}</p>
+              <h3 className="text-xl font-bold text-slate-800 mt-1">{clienteSeleccionado.nombre}</h3>
+              <p className="text-sm text-slate-500">{clienteSeleccionado.celular}</p>
             </div>
             <button
               onClick={() => setClienteSeleccionado(null)}
@@ -162,9 +160,9 @@ export default function RecepcionPage() {
                 <input
                   type="text"
                   required
-                  value={telefonoNuevo}
-                  onChange={(e) => setTelefonoNuevo(e.target.value)}
-                  placeholder="Ej: +54 9 11 1234 5678"
+                  value={celularNuevo}
+                  onChange={(e) => setCelularNuevo(e.target.value)}
+                  placeholder="Ej: 3412983734"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
                 />
               </div>

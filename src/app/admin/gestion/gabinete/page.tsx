@@ -24,7 +24,7 @@ export default function GabinetePage() {
     setCargando(true);
     const { data, error } = await supabase
       .from('sesiones_gabinete')
-      .select('*, clientes(nombre_completo, telefono)')
+      .select('*, clientes(nombre, celular)')
       .eq('estado', 'en_espera')
       .order('created_at', { ascending: true });
 
@@ -104,8 +104,8 @@ export default function GabinetePage() {
                   className="p-4 border border-slate-200 rounded-lg hover:border-slate-400 transition-all bg-slate-50 flex justify-between items-center"
                 >
                   <div>
-                    <p className="font-bold text-slate-900">{sesion.clientes?.nombre_completo || 'Cliente'}</p>
-                    <p className="text-xs text-slate-500">Tel: {sesion.clientes?.telefono || '-'}</p>
+                    <p className="font-bold text-slate-900">{sesion.clientes?.nombre || 'Cliente'}</p>
+                    <p className="text-xs text-slate-500">Cel: {sesion.clientes?.celular || '-'}</p>
                     {sesion.observaciones_recepcion && (
                       <p className="text-xs text-amber-700 mt-1 bg-amber-50 p-1 rounded border border-amber-200">
                         Nota Recepción: {sesion.observaciones_recepcion}
@@ -130,7 +130,7 @@ export default function GabinetePage() {
               <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded">
                 Sesión en Curso
               </span>
-              <h2 className="text-2xl font-bold text-slate-900 mt-1">{sesionActiva.clientes?.nombre_completo}</h2>
+              <h2 className="text-2xl font-bold text-slate-900 mt-1">{sesionActiva.clientes?.nombre}</h2>
             </div>
             <button
               onClick={() => setSesionActiva(null)}
@@ -140,7 +140,6 @@ export default function GabinetePage() {
             </button>
           </div>
 
-          {/* Formulario Técnico */}
           <div className="space-y-4">
             <h3 className="font-semibold text-slate-800">Parámetros del Equipo</h3>
             <div className="grid grid-cols-2 gap-4">
