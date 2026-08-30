@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, ShoppingBag, Clock, Settings, ArrowRight } from 'lucide-react';
+import { Calendar, ShoppingBag, Clock, ArrowRight } from 'lucide-react';
 
 export default function AdminHubPage() {
   const modulos = [
@@ -19,7 +19,13 @@ export default function AdminHubPage() {
       ruta: '/admin/tienda',
       color: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900',
     },
-    // Aquí podrás agregar fácilmente más módulos en el futuro (como Gestión/Gabinete)
+    {
+      titulo: 'Gestión y Atención',
+      descripcion: 'Recepción, check-in, control de gabinete y sesiones en vivo.',
+      icono: Clock,
+      ruta: '/admin/gestion/recepcion',
+      color: 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900',
+    },
   ];
 
   return (
