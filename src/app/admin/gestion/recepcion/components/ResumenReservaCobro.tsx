@@ -14,14 +14,48 @@ export default function ResumenReservaCobro({
   if (!reserva) return null;
 
   const precioTotal = Number(reserva.precio_total || reserva.monto_total || 0);
-  const montoAbonadoWeb = Number(reserva.monto_abonado || reserva.sena || 0);
+  const montoAbonadoWeb = Number(reserva.monto_abonado || reserva.monto_sena || reserva.sena || 0);
   const saldoPendiente = Math.max(0, precioTotal - montoAbonadoWeb);
 
   const obtenerDetalleReservaTexto = (r: any) => {
-    if (typeof r.detalle_reserva === 'string') return r.detalle_reserva;
-    if (Array.isArray(r.detalle_reserva)) {
-      return r.detalle_reserva.map((z: any) => z.nombre || z.zona || z).join(', ');
+    let detalle = r.detalle_reserva;
+
+    if (!detalle) {
+      return r.servicio_tipo || 'Reserva estándar';
     }
+
+    // Si viene como string
+    if (typeof detalle === 'string') {
+      try {
+        detalle = JSON.parse(detalle);
+      } catch (e) {
+        return detalle; // Es un texto simple como "promo M1 (axilas + espalda completa)"
+      }
+    }
+
+    // Si es un Array de zonas o promos
+    if (Array.isArray(detalle)) {
+      return detalle
+        .map((z: any) => {
+          if (typeof z === 'string') return z;
+          return z.nombre_promo || z.nombre_zona || z.nombre || z.zona || z.titulo || '';
+        })
+        .filter(Boolean)
+        .join(', ');
+    }
+
+    // Si es un Objeto JSONB
+    if (typeof detalle === 'object') {
+      if (detalle.nombre_promo) return detalle.nombre_promo;
+      if (detalle.nombre_zona) return detalle.nombre_zona;
+      if (detalle.titulo) return detalle.titulo;
+      if (detalle.nombre) return detalle.nombre;
+      if (detalle.descripcion) return detalle.descripcion;
+      if (Array.isArray(detalle.zonas)) {
+        return detalle.zonas.map((z: any) => (typeof z === 'string' ? z : z.nombre || z.nombre_zona)).join(', ');
+      }
+    }
+
     return r.servicio_tipo || 'Reserva estándar';
   };
 

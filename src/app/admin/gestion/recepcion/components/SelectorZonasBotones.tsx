@@ -1,54 +1,59 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
+interface ZonaItem {
+  nombre_zona: string;
+  genero: string;
+}
 
 interface SelectorProps {
-  zonasSeleccionadas: string[]
-  setZonasSeleccionadas: (zonas: string[]) => void
+  zonasSeleccionadas: string[];
+  setZonasSeleccionadas: (zonas: string[]) => void;
 }
 
 export default function SelectorZonasBotones({
   zonasSeleccionadas,
   setZonasSeleccionadas,
 }: SelectorProps) {
-  const [listaZonas, setListaZonas] = useState<string[]>([])
-  const [cargando, setCargando] = useState(true)
+  const [listaZonas, setListaZonas] = useState<ZonaItem[]>([]);
+  const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
     const cargarZonas = async () => {
       try {
         const { data, error } = await supabase
           .from('servicios_laser')
-          .select('nombre_zona')
+          .select('nombre_zona, genero')
           .eq('activo', true)
-          .order('nombre_zona', { ascending: true })
+          .order('nombre_zona', { ascending: true });
 
-        if (error) throw error
+        if (error) throw error;
 
         if (data) {
-          setListaZonas(data.map((z) => z.nombre_zona))
+          setListaZonas(data);
         }
       } catch (err) {
-        console.error('Error al cargar zonas de servicios_laser:', err)
+        console.error('Error al cargar zonas de servicios_laser:', err);
       } finally {
-        setCargando(false)
+        setCargando(false);
       }
-    }
+    };
 
-    cargarZonas()
-  }, [])
+    cargarZonas();
+  }, []);
 
-  const toggleZona = (zona: string) => {
-    if (zonasSeleccionadas.includes(zona)) {
-      setZonasSeleccionadas(zonasSeleccionadas.filter((z) => z !== zona))
+  const toggleZona = (zonaNombre: string) => {
+    if (zonasSeleccionadas.includes(zonaNombre)) {
+      setZonasSeleccionadas(zonasSeleccionadas.filter((z) => z !== zonaNombre));
     } else {
-      setZonasSeleccionadas([...zonasSeleccionadas, zona])
+      setZonasSeleccionadas([...zonasSeleccionadas, zonaNombre]);
     }
-  }
+  };
 
   if (cargando) {
-    return <div className="text-xs text-slate-400">Cargando zonas de la base de datos...</div>
+    return <div className="text-xs text-slate-400">Cargando zonas de la base de datos...</div>;
   }
 
   return (
@@ -57,25 +62,36 @@ export default function SelectorZonasBotones({
         ✂️ Zonas a Realizar Hoy (Clic para seleccionar)
       </label>
       <div className="flex flex-wrap gap-2">
-        {listaZonas.map((zona) => {
-          const seleccionada = zonasSeleccionadas.includes(zona)
+        {listaZonas.map((item) => {
+          const seleccionada = zonasSeleccionadas.includes(item.nombre_zona);
+          const esMasculino = (item.genero || '').toLowerCase().includes('masculino');
+
+          // Clases por género: Azul para masculino, Rosa para femenino
+          let estiloColor = '';
+
+          if (esMasculino) {
+            estiloColor = seleccionada
+              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+              : 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100';
+          } else {
+            estiloColor = seleccionada
+              ? 'bg-pink-600 text-white border-pink-600 shadow-sm'
+              : 'bg-pink-50 text-pink-800 border-pink-200 hover:bg-pink-100';
+          }
+
           return (
             <button
-              key={zona}
+              key={item.nombre_zona}
               type="button"
-              onClick={() => toggleZona(zona)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                seleccionada
-                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                  : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
-              }`}
+              onClick={() => toggleZona(item.nombre_zona)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${estiloColor}`}
             >
               {seleccionada ? '✓ ' : '+ '}
-              {zona}
+              {item.nombre_zona}
             </button>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
