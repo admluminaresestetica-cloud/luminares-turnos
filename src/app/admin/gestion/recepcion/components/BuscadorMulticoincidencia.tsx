@@ -1,148 +1,193 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { Search, Phone, CheckCircle2 } from 'lucide-react'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+function obtenerTextoDetalle(reserva: Record<string, any>): string {
+  if (!reserva) return 'Sin detalle'
+
+  if (reserva.detalle_reserva && typeof reserva.detalle_reserva === 'string') {
+    return reserva.detalle_reserva
+  }
+
+  if (Array.isArray(reserva.zonas_seleccionadas) && reserva.zonas_seleccionadas.length > 0) {
+    return reserva.zonas_seleccionadas.join(', ')
+  }
+
+  if (typeof reserva.zonas_seleccionadas === 'string' && reserva.zonas_seleccionadas) {
+    return reserva.zonas_seleccionadas
+  }
+
+  return reserva.servicio_nombre || reserva.nombre_promo || 'Sin especificar'
+}
 
 interface BuscadorProps {
-  onClienteSeleccionado: (data: { pacienteFicha: any; reservaHoy: any }) => void;
-  onVerHistorialDirecto: (pacienteId: string) => void;
+  onClienteSeleccionado: (data: { pacienteFicha: any; reservaHoy: any }) => void
+  onVerHistorialDirecto: (pacienteId: string) => void
 }
 
 export default function BuscadorMulticoincidencia({
   onClienteSeleccionado,
   onVerHistorialDirecto,
 }: BuscadorProps) {
-  const [query, setQuery] = useState('');
-  const [buscando, setBuscando] = useState(false);
-  const [resultadosPacientes, setResultadosPacientes] = useState<any[]>([]);
-  const [resultadosReservas, setResultadosReservas] = useState<any[]>([]);
-  const [buscado, setBuscado] = useState(false);
+  const [termino, setTermino] = useState('')
+  const [cargando, setCargando] = useState(false)
+  const [resultados, setResultados] = useState<any[]>([])
 
   const handleBuscar = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+    e.preventDefault()
+    if (!termino.trim()) return
 
-    setBuscando(true);
-    setBuscado(true);
+    setCargando(true)
+    const q = termino.trim().toLowerCase()
 
     try {
-      const termino = `%${query.trim()}%`;
-
-      // 1. Buscar en Fichas de Pacientes Existentes
+      // 1. Buscar en pacientes_ficha por nombre o celular
       const { data: pacientes } = await supabase
         .from('pacientes_ficha')
         .select('*')
-        .or(`nombre_completo.ilike.${termino},celular.ilike.${termino}`);
+        .or(`nombre_completo.ilike.%${q}%,celular.ilike.%${q}%`)
+        .limit(10)
 
-      // 2. Buscar en Agenda/Reservas de Hoy
-      const hoyInicio = new Date();
-      hoyInicio.setHours(0, 0, 0, 0);
-
+      // 2. Buscar en reservas usando la columna correcta: fecha_hora_inicio
       const { data: reservas } = await supabase
         .from('reservas')
         .select('*')
-        .gte('fecha', hoyInicio.toISOString())
-        .or(`cliente_nombre.ilike.${termino},cliente_celular.ilike.${termino}`);
+        .or(`cliente_nombre.ilike.%${q}%,cliente_celular.ilike.%${q}%,codigo_unico.ilike.%${q}%`)
+        .order('fecha_hora_inicio', { ascending: false })
+        .limit(10)
 
-      setResultadosPacientes(pacientes || []);
-      setResultadosReservas(reservas || []);
+      const listaCombinada: any[] = []
+      const idsProcesados = new Set()
+
+      // Insertar los pacientes que ya tienen ficha clínica creada
+      if (pacientes) {
+        pacientes.forEach((p: Record<string, any>) => {
+          const clave = p.celular || p.nombre_completo
+          idsProcesados.add(clave)
+
+          const reservaRelacionada = reservas?.find(
+            (r: Record<string, any>) =>
+              r.cliente_celular === p.celular ||
+              r.cliente_nombre?.toLowerCase() === p.nombre_completo?.toLowerCase()
+          )
+
+          listaCombinada.push({
+            pacienteFicha: p,
+            reservaHoy: reservaRelacionada || null,
+            nombre: p.nombre_completo,
+            celular: p.celular,
+            detalleZona: reservaRelacionada ? obtenerTextoDetalle(reservaRelacionada) : 'Ficha clínica registrada',
+            origen: 'ficha',
+          })
+        })
+      }
+
+      // Insertar reservas que aún no tienen ficha registrada
+      if (reservas) {
+        reservas.forEach((r: Record<string, any>) => {
+          const clave = r.cliente_celular || r.cliente_nombre
+          if (!idsProcesados.has(clave)) {
+            idsProcesados.add(clave)
+            listaCombinada.push({
+              pacienteFicha: null,
+              reservaHoy: r,
+              nombre: r.cliente_nombre || 'Sin nombre',
+              celular: r.cliente_celular || '',
+              detalleZona: obtenerTextoDetalle(r),
+              origen: 'reserva',
+            })
+          }
+        })
+      }
+
+      setResultados(listaCombinada)
     } catch (err) {
-      console.error('Error al buscar:', err);
+      console.error('Error al realizar la búsqueda:', err)
     } finally {
-      setBuscando(false);
+      setCargando(false)
     }
-  };
+  }
 
-  const seleccionar = (paciente: any, reserva: any) => {
-    onClienteSeleccionado({ pacienteFicha: paciente, reservaHoy: reserva });
-    setResultadosPacientes([]);
-    setResultadosReservas([]);
-    setBuscado(false);
-  };
+  const seleccionar = (item: any) => {
+    onClienteSeleccionado({
+      pacienteFicha: item.pacienteFicha,
+      reservaHoy: item.reservaHoy,
+    })
+    setResultados([])
+  }
 
   return (
-    <div className="space-y-3">
-      <form onSubmit={handleBuscar} className="flex gap-2">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar por Nombre o Celular..."
-          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
-        />
+    <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+      <form onSubmit={handleBuscar} className="relative flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Buscar por Nombre, Teléfono o Código..."
+            value={termino}
+            onChange={(e) => setTermino(e.target.value)}
+            className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50"
+          />
+        </div>
         <button
           type="submit"
-          disabled={buscando}
-          className="px-4 py-2 bg-indigo-600 text-white font-semibold text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+          disabled={cargando}
+          className="px-4 py-2 bg-rose-600 text-white rounded-xl text-sm font-semibold hover:bg-rose-700 transition-all active:scale-95 disabled:opacity-50"
         >
-          {buscando ? 'Buscando...' : 'Buscar'}
+          {cargando ? 'Buscando...' : 'Buscar'}
         </button>
       </form>
 
-      {/* RESULTADOS DE MULTI-COINCIDENCIA */}
-      {buscado && (
-        <div className="border border-slate-200 rounded-lg p-3 bg-slate-50 space-y-2">
-          <p className="text-xs font-bold text-slate-700 uppercase">
-            Resultados Coincidentes:
-          </p>
-
-          {resultadosPacientes.length === 0 && resultadosReservas.length === 0 && (
-            <div className="flex justify-between items-center py-2 text-xs text-slate-600">
-              <span>No se encontraron coincidencias exactas.</span>
-              <button
-                onClick={() => seleccionar(null, { cliente_nombre: query })}
-                className="bg-emerald-600 text-white px-2.5 py-1 rounded font-medium hover:bg-emerald-700"
-              >
-                + Cargar como Paciente Nuevo
-              </button>
-            </div>
-          )}
-
-          {/* LISTA DE PACIENTES REGISTRADOS */}
-          {resultadosPacientes.map((p) => {
-            const reservaAsociada = resultadosReservas.find(
-              (r) => r.cliente_celular === p.celular || r.cliente_nombre === p.nombre_completo
-            );
-
-            return (
-              <div
-                key={p.id}
-                className="bg-white p-3 rounded border border-slate-200 flex items-center justify-between"
-              >
-                <div>
-                  <p className="text-sm font-bold text-slate-900">{p.nombre_completo}</p>
-                  <p className="text-xs text-slate-500">📱 Cel: {p.celular} | Fototipo: {p.fototipo || 'N/I'}</p>
-                  {reservaAsociada && (
-                    <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.5 rounded mt-1 inline-block">
-                      📅 Tiene Reserva Hoy
+      {resultados.length > 0 && (
+        <div className="mt-3 divide-y divide-gray-100 border-t border-gray-100 max-h-60 overflow-y-auto">
+          {resultados.map((item, idx) => (
+            <div
+              key={item.pacienteFicha?.id || item.reservaHoy?.id || idx}
+              className="py-2.5 px-2 flex items-center justify-between hover:bg-rose-50/50 rounded-xl transition-colors"
+            >
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-sm text-gray-800">{item.nombre}</span>
+                  <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-full text-gray-600 font-medium border border-gray-200">
+                    {item.detalleZona}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                  {item.celular && (
+                    <span className="flex items-center gap-1">
+                      <Phone className="w-3 h-3" /> {item.celular}
                     </span>
                   )}
+                  {item.origen === 'reserva' && (
+                    <span className="text-amber-600 font-medium">Turno sin ficha guardada</span>
+                  )}
                 </div>
+              </div>
 
-                <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                {item.pacienteFicha?.id && (
                   <button
-                    onClick={() => onVerHistorialDirecto(p.id)}
-                    className="px-2.5 py-1.5 bg-slate-100 text-slate-700 text-xs font-medium rounded hover:bg-slate-200"
+                    type="button"
+                    onClick={() => onVerHistorialDirecto(item.pacienteFicha.id)}
+                    className="px-2.5 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
                   >
                     🔍 Ver Historial
                   </button>
-                  <button
-                    onClick={() => seleccionar(p, reservaAsociada || null)}
-                    className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded hover:bg-emerald-700"
-                  >
-                    Seleccionar
-                  </button>
-                </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => seleccionar(item)}
+                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg flex items-center gap-1 transition-colors"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Seleccionar
+                </button>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
     </div>
-  );
+  )
 }
