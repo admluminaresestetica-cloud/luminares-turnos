@@ -18,47 +18,48 @@ export default function ResumenReservaCobro({
   const montoAbonadoWeb = Number(reserva.monto_abonado || reserva.monto_sena || reserva.sena || 0);
   const saldoPendiente = Math.max(0, precioTotal - montoAbonadoWeb);
 
-  const obtenerDetalleReservaTexto = (r: any) => {
-    let detalle = r.detalle_reserva;
+const obtenerDetalleReservaTexto = (r: any) => {
+  let detalle = r.detalle_reserva;
 
-    if (!detalle) {
-      return r.servicio_tipo || 'Reserva estándar';
-    }
-
-    // Si viene como string
-    if (typeof detalle === 'string') {
-      try {
-        detalle = JSON.parse(detalle);
-      } catch (e) {
-        return detalle; // Es un texto simple como "promo M1 (axilas + espalda completa)"
-      }
-    }
-
-    // Si es un Array de zonas o promos
-    if (Array.isArray(detalle)) {
-      return detalle
-        .map((z: any) => {
-          if (typeof z === 'string') return z;
-          return z.nombre_promo || z.nombre_zona || z.nombre || z.zona || z.titulo || '';
-        })
-        .filter(Boolean)
-        .join(', ');
-    }
-
-    // Si es un Objeto JSONB
-    if (typeof detalle === 'object') {
-      if (detalle.nombre_promo) return detalle.nombre_promo;
-      if (detalle.nombre_zona) return detalle.nombre_zona;
-      if (detalle.titulo) return detalle.titulo;
-      if (detalle.nombre) return detalle.nombre;
-      if (detalle.descripcion) return detalle.descripcion;
-      if (Array.isArray(detalle.zonas)) {
-        return detalle.zonas.map((z: any) => (typeof z === 'string' ? z : z.nombre || z.nombre_zona)).join(', ');
-      }
-    }
-
+  if (!detalle) {
     return r.servicio_tipo || 'Reserva estándar';
-  };
+  }
+
+  // 1. Si viene como objeto JSONB
+  if (typeof detalle === 'object' && detalle !== null) {
+    if (detalle.detalle_texto) return detalle.detalle_texto;
+    if (detalle.nombre_promo) return detalle.nombre_promo;
+    if (detalle.nombre_zona) return detalle.nombre_zona;
+    if (detalle.titulo) return detalle.titulo;
+    if (detalle.nombre) return detalle.nombre;
+    if (detalle.descripcion) return detalle.descripcion;
+    if (Array.isArray(detalle.zonas)) {
+      return detalle.zonas.map((z: any) => (typeof z === 'string' ? z : z.nombre || z.nombre_zona)).join(', ');
+    }
+  }
+
+  // 2. Si viene como string
+  if (typeof detalle === 'string') {
+    try {
+      const parsed = JSON.parse(detalle);
+      if (parsed.detalle_texto) return parsed.detalle_texto;
+      if (parsed.nombre_promo) return parsed.nombre_promo;
+      return parsed;
+    } catch (e) {
+      return detalle;
+    }
+  }
+
+  // 3. Si viene como Array
+  if (Array.isArray(detalle)) {
+    return detalle
+      .map((z: any) => (typeof z === 'string' ? z : z.detalle_texto || z.nombre_promo || z.nombre || z.zona))
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  return r.servicio_tipo || 'Reserva estándar';
+};
 
   return (
     <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl space-y-2">
