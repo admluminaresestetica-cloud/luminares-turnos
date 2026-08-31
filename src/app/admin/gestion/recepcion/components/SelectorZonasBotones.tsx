@@ -58,14 +58,19 @@ export default function SelectorZonasBotones({
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-teal-600" />
-          <span className="text-sm font-bold text-slate-800">Zonas a realizar hoy</span>
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50 text-teal-600">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            Zonas a realizar hoy
+          </span>
         </div>
         {zonasSeleccionadas.length > 0 && (
-          <span className="rounded-full bg-teal-100 px-2 py-0.5 text-[11px] font-bold text-teal-800">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-100 px-2.5 py-1 text-[11px] font-bold text-teal-800">
+            <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
             {zonasSeleccionadas.length} seleccionada{zonasSeleccionadas.length > 1 ? 's' : ''}
           </span>
         )}
@@ -81,12 +86,12 @@ export default function SelectorZonasBotones({
 
           if (esMasculino) {
             estiloColor = seleccionada
-              ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-              : 'border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100';
+              ? 'border-transparent bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-sm shadow-blue-600/20'
+              : 'border-blue-200/80 bg-blue-50 text-blue-800 hover:bg-blue-100';
           } else {
             estiloColor = seleccionada
-              ? 'border-pink-600 bg-pink-600 text-white shadow-sm'
-              : 'border-pink-200 bg-pink-50 text-pink-800 hover:bg-pink-100';
+              ? 'border-transparent bg-gradient-to-r from-pink-600 to-pink-500 text-white shadow-sm shadow-pink-600/20'
+              : 'border-pink-200/80 bg-pink-50 text-pink-800 hover:bg-pink-100';
           }
 
           return (
@@ -94,7 +99,7 @@ export default function SelectorZonasBotones({
               key={item.nombre_zona}
               type="button"
               onClick={() => toggleZona(item.nombre_zona)}
-              className={`min-h-11 rounded-lg border px-3.5 py-2 text-xs font-semibold transition-all active:scale-95 ${estiloColor}`}
+              className={`min-h-11 rounded-full border px-4 py-2 text-xs font-semibold transition-all active:scale-95 ${estiloColor}`}
             >
               {seleccionada ? '✓ ' : '+ '}
               {item.nombre_zona}

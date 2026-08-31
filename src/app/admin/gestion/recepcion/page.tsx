@@ -2,7 +2,15 @@
 
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Settings, UserRound, UserPlus, ClipboardList } from 'lucide-react';
+import {
+  Settings,
+  UserRound,
+  UserPlus,
+  ClipboardList,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+} from 'lucide-react';
 
 import BuscadorMulticoincidencia from './components/BuscadorMulticoincidencia';
 import ResumenReservaCobro from './components/ResumenReservaCobro';
@@ -209,13 +217,29 @@ const handleEnviarAGabinete = async () => {
 
   const hayPacienteActivo = pacienteFicha || esNuevo;
 
-  const estiloMensaje = mensaje?.startsWith('✅')
-    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+  const configMensaje = mensaje?.startsWith('✅')
+    ? {
+        wrap: 'border-emerald-200/80 bg-emerald-50 text-emerald-800',
+        icon: <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />,
+      }
     : mensaje?.startsWith('❌')
-    ? 'border-rose-200 bg-rose-50 text-rose-800'
+    ? {
+        wrap: 'border-rose-200/80 bg-rose-50 text-rose-800 ring-1 ring-rose-200',
+        icon: <XCircle className="h-4 w-4 shrink-0 text-rose-600" />,
+      }
     : mensaje?.startsWith('⚠️')
-    ? 'border-amber-200 bg-amber-50 text-amber-800'
-    : 'border-slate-200 bg-slate-100 text-slate-800';
+    ? {
+        wrap: 'border-amber-200/80 bg-amber-50 text-amber-800',
+        icon: <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />,
+      }
+    : {
+        wrap: 'border-slate-200/80 bg-slate-50 text-slate-800',
+        icon: null,
+      };
+
+  const textoBoton = guardando
+    ? 'Enviando...'
+    : `Enviar a Gabinete${zonasSeleccionadas.length ? ` (${zonasSeleccionadas.length})` : ''}`;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -225,7 +249,7 @@ const handleEnviarAGabinete = async () => {
         }`}
       >
         {/* Encabezado */}
-        <header className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <header className="flex flex-col gap-3 border-b border-slate-200/80 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
               Recepción
@@ -237,7 +261,7 @@ const handleEnviarAGabinete = async () => {
 
           <button
             onClick={() => setMostrarConfigAnamnesis(!mostrarConfigAnamnesis)}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-100 active:bg-slate-200"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50 px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:scale-[0.98]"
           >
             <Settings className="h-4 w-4 text-teal-600" />
             <span>{mostrarConfigAnamnesis ? 'Volver a Recepción' : 'Configurar Anamnesis'}</span>
@@ -257,18 +281,26 @@ const handleEnviarAGabinete = async () => {
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start">
                 {/* Columna clínica */}
                 <div className="space-y-5 lg:col-span-7 xl:col-span-8">
-                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-                    <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-700">
-                          {esNuevo ? <UserPlus className="h-4.5 w-4.5" /> : <UserRound className="h-4.5 w-4.5" />}
+                  <div className="space-y-4 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm sm:p-5">
+                    <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                          {esNuevo ? <UserPlus className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
                         </span>
                         <div className="min-w-0">
                           <p className="truncate text-base font-bold text-slate-900">
                             {esNuevo ? 'Nuevo paciente' : nombre || 'Paciente'}
                           </p>
-                          {esNuevo && (
-                            <span className="text-xs font-medium text-teal-700">Se creará una ficha nueva</span>
+                          {esNuevo ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-teal-700">
+                              <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                              Se creará una ficha nueva
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                              Ficha clínica registrada
+                            </span>
                           )}
                         </div>
                       </div>
@@ -276,9 +308,9 @@ const handleEnviarAGabinete = async () => {
                       {pacienteFicha && (
                         <button
                           onClick={() => setPacienteIdModal(pacienteFicha.id)}
-                          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-teal-700 transition-colors hover:bg-teal-50"
+                          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50 px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
                         >
-                          <ClipboardList className="h-3.5 w-3.5" />
+                          <ClipboardList className="h-3.5 w-3.5 text-teal-600" />
                           <span className="hidden sm:inline">Ver historial</span>
                         </button>
                       )}
@@ -308,14 +340,14 @@ const handleEnviarAGabinete = async () => {
                     onToggleCobrado={setCobradoEnPuerta}
                   />
 
-                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                  <div className="space-y-5 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm sm:p-5">
                     <SelectorZonasBotones
                       zonasSeleccionadas={zonasSeleccionadas}
                       setZonasSeleccionadas={setZonasSeleccionadas}
                     />
 
-                    <div>
-                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                    <div className="border-t border-slate-100 pt-4">
+                      <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500">
                         Notas para gabinete
                       </label>
                       <input
@@ -323,13 +355,14 @@ const handleEnviarAGabinete = async () => {
                         value={observacionesHoy}
                         onChange={(e) => setObservacionesHoy(e.target.value)}
                         placeholder="Ej: Sensibilidad leve en axilas..."
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition-colors focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20"
+                        className="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                       />
                     </div>
 
                     {mensaje && (
-                      <div className={`rounded-lg border p-3 text-xs font-semibold ${estiloMensaje}`}>
-                        {mensaje}
+                      <div className={`flex items-start gap-2 rounded-xl border p-3 text-xs font-semibold ${configMensaje.wrap}`}>
+                        {configMensaje.icon}
+                        <span>{mensaje}</span>
                       </div>
                     )}
 
@@ -337,11 +370,9 @@ const handleEnviarAGabinete = async () => {
                     <button
                       onClick={handleEnviarAGabinete}
                       disabled={guardando}
-                      className="hidden h-12 w-full items-center justify-center rounded-xl bg-teal-600 text-sm font-bold text-white shadow-sm transition-colors hover:bg-teal-700 disabled:opacity-50 lg:flex"
+                      className="hidden h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none lg:flex"
                     >
-                      {guardando
-                        ? 'Enviando...'
-                        : `Enviar a Gabinete${zonasSeleccionadas.length ? ` (${zonasSeleccionadas.length})` : ''}`}
+                      {textoBoton}
                     </button>
                   </div>
                 </div>
@@ -352,21 +383,22 @@ const handleEnviarAGabinete = async () => {
 
         {/* Mensaje flotante para cuando no hay panel operativo visible (p.ej. sin zonas aún) */}
         {mensaje && !hayPacienteActivo && (
-          <div className={`rounded-lg border p-3 text-xs font-semibold ${estiloMensaje}`}>{mensaje}</div>
+          <div className={`flex items-start gap-2 rounded-xl border p-3 text-xs font-semibold ${configMensaje.wrap}`}>
+            {configMensaje.icon}
+            <span>{mensaje}</span>
+          </div>
         )}
       </div>
 
       {/* Barra de acción fija — mobile / tablet vertical */}
       {hayPacienteActivo && !mostrarConfigAnamnesis && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 p-3 backdrop-blur-sm lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200/80 bg-white/95 p-3 backdrop-blur-md lg:hidden">
           <button
             onClick={handleEnviarAGabinete}
             disabled={guardando}
-            className="flex h-12 w-full items-center justify-center rounded-xl bg-teal-600 text-sm font-bold text-white shadow-sm transition-colors active:bg-teal-700 disabled:opacity-50"
+            className="flex h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
           >
-            {guardando
-              ? 'Enviando...'
-              : `Enviar a Gabinete${zonasSeleccionadas.length ? ` (${zonasSeleccionadas.length})` : ''}`}
+            {textoBoton}
           </button>
         </div>
       )}

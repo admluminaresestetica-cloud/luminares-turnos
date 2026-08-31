@@ -63,13 +63,13 @@ export default function ResumenReservaCobro({
   };
 
   return (
-    <div className="space-y-3 rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4 sm:p-5">
-      <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
-          <CalendarClock className="h-4 w-4" />
+    <div className="space-y-4 rounded-2xl border border-indigo-100 bg-gradient-to-b from-indigo-50/80 to-white p-4 shadow-sm sm:p-5">
+      <div className="flex items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+          <CalendarClock className="h-4.5 w-4.5" />
         </span>
         <div className="min-w-0">
-          <span className="text-xs font-bold uppercase tracking-wide text-indigo-700">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-500">
             Turno / reserva web
           </span>
           <p className="mt-0.5 text-sm font-semibold text-indigo-950">
@@ -78,44 +78,55 @@ export default function ResumenReservaCobro({
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 rounded-xl bg-white/70 p-3 text-center">
+      <div className="grid grid-cols-3 divide-x divide-slate-100 rounded-xl border border-slate-100 bg-white/80 p-3 text-center">
         <div>
-          <p className="text-[11px] font-medium text-slate-500">Total</p>
+          <p className="text-[11px] font-medium text-slate-400">Total</p>
           <p className="text-sm font-bold text-slate-800">${precioTotal}</p>
         </div>
         <div>
-          <p className="text-[11px] font-medium text-slate-500">Señado</p>
-          <p className="text-sm font-bold text-emerald-700">${montoAbonadoWeb}</p>
+          <p className="text-[11px] font-medium text-slate-400">Señado</p>
+          <p className="text-sm font-bold text-emerald-600">${montoAbonadoWeb}</p>
         </div>
         <div>
-          <p className="text-[11px] font-medium text-slate-500">Saldo</p>
-          <p className="text-sm font-bold text-indigo-900">${saldoPendiente}</p>
+          <p className="text-[11px] font-medium text-slate-400">Saldo</p>
+          <p className="text-sm font-bold text-indigo-700">${saldoPendiente}</p>
         </div>
       </div>
 
       {saldoPendiente > 0 && (
-        <label
-          className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-xl border p-3 transition-colors ${
-            cobradoEnPuerta
-              ? 'border-emerald-300 bg-emerald-50'
-              : 'border-indigo-200 bg-white hover:bg-indigo-50/60'
+        <div
+          className={`flex items-center justify-between gap-3 rounded-xl border p-3 transition-colors ${
+            cobradoEnPuerta ? 'border-emerald-200 bg-emerald-50' : 'border-indigo-100 bg-white'
           }`}
         >
-          <span className="flex items-center gap-2.5 text-xs font-semibold text-indigo-900">
-            <input
-              type="checkbox"
-              checked={cobradoEnPuerta}
-              onChange={(e) => onToggleCobrado(e.target.checked)}
-              className="h-4.5 w-4.5 shrink-0 cursor-pointer rounded text-emerald-600 focus:ring-emerald-500"
-            />
-            Marcar saldo de ${saldoPendiente} como cobrado en recepción
+          <span className="text-xs font-semibold text-indigo-900">
+            Marcar saldo de ${saldoPendiente} como cobrado
           </span>
-          {cobradoEnPuerta && (
-            <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-              Cobrado
-            </span>
-          )}
-        </label>
+
+          {/* Switch estilo iOS/Shadcn */}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={cobradoEnPuerta}
+            onClick={() => onToggleCobrado(!cobradoEnPuerta)}
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
+              cobradoEnPuerta ? 'bg-emerald-500' : 'bg-slate-200'
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
+                cobradoEnPuerta ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+      )}
+
+      {saldoPendiente > 0 && cobradoEnPuerta && (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
+          <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          Cobrado en recepción
+        </span>
       )}
     </div>
   );
