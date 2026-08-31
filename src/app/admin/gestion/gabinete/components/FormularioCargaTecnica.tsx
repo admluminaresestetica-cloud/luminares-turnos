@@ -2,7 +2,18 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Settings, CheckCircle2, Loader2, Layers, ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
+import {
+  Settings,
+  CheckCircle2,
+  Loader2,
+  Layers,
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+  Plus,
+  Zap,
+  NotebookPen,
+} from 'lucide-react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -185,9 +196,9 @@ export default function FormularioCargaTecnica({
 
   if (!sesionActual) {
     return (
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-center">
-        <p className="text-xs text-slate-400 italic">
-          Selecciona un paciente para habilitar la carga de parámetros técnicos.
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm text-center">
+        <p className="text-xs text-slate-400">
+          Seleccioná un paciente para habilitar la carga de parámetros técnicos.
         </p>
       </div>
     );
@@ -242,44 +253,44 @@ export default function FormularioCargaTecnica({
   };
 
   return (
-    <form onSubmit={handleGuardarYFinalizar} className="space-y-4">
+    <form onSubmit={handleGuardarYFinalizar} className="space-y-4 sm:space-y-5">
+
       {/* SECCIÓN SUPERIOR: CATÁLOGO DE ZONAS NO SELECCIONADAS */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm transition-all overflow-hidden">
-        <div
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
+        <button
+          type="button"
           onClick={() => setDesplegadoCatalogo(!desplegadoCatalogo)}
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 transition-colors select-none"
+          className="w-full flex items-center justify-between p-4 hover:bg-slate-50/80 transition-colors active:bg-slate-100"
         >
-          <div className="flex items-center space-x-2 text-slate-800">
-            <Layers className="w-4 h-4 text-indigo-600" />
-            <h3 className="text-xs font-bold uppercase tracking-wider">
-              Agregar Zonas a la Sesión
+          <div className="flex items-center gap-2.5 text-slate-800">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
+              <Layers className="w-3.5 h-3.5 text-emerald-600" />
+            </div>
+            <h3 className="text-xs font-semibold text-slate-700">
+              Agregar zonas a la sesión
             </h3>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <span className="text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2 py-0.5 rounded-full">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[10px] font-medium bg-slate-100 text-slate-500 px-2 py-1 rounded-full">
               {zonasDisponiblesNoSeleccionadas.length} disponibles
             </span>
-
-            <button
-              type="button"
-              className="text-slate-400 hover:text-slate-600 p-1 rounded-md cursor-pointer"
-            >
+            <span className="text-slate-400">
               {desplegadoCatalogo ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
+            </span>
           </div>
-        </div>
+        </button>
 
         {desplegadoCatalogo && (
           <div className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-3">
-            <p className="text-xs text-slate-500">
-              Haz clic en una zona para añadirla a la tabla de trabajo:
+            <p className="text-xs text-slate-400 pt-3">
+              Tocá una zona para añadirla a la tabla de trabajo.
             </p>
 
             {cargandoCatalogo ? (
-              <p className="text-xs text-slate-400 font-medium py-2">Cargando catálogo...</p>
+              <p className="text-xs text-slate-400 py-2">Cargando catálogo…</p>
             ) : zonasDisponiblesNoSeleccionadas.length === 0 ? (
-              <p className="text-xs text-slate-400 italic py-2">
+              <p className="text-xs text-slate-400 py-2">
                 Todas las zonas del catálogo están cargadas en la tabla.
               </p>
             ) : (
@@ -289,14 +300,14 @@ export default function FormularioCargaTecnica({
                   const esMasc = item.genero === 'masculino';
 
                   let clasesBoton =
-                    'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
+                    'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100';
 
                   if (esFem) {
                     clasesBoton =
-                      'bg-rose-50/50 border-rose-200 text-rose-900 hover:bg-rose-100';
+                      'bg-rose-50/60 border-rose-100 text-rose-900 hover:bg-rose-50';
                   } else if (esMasc) {
                     clasesBoton =
-                      'bg-sky-50/50 border-sky-200 text-sky-900 hover:bg-sky-100';
+                      'bg-sky-50/60 border-sky-100 text-sky-900 hover:bg-sky-50';
                   }
 
                   return (
@@ -304,17 +315,15 @@ export default function FormularioCargaTecnica({
                       key={item.nombre}
                       type="button"
                       onClick={() => agregarZona(item.nombre)}
-                      className={`p-2.5 rounded-lg border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${clasesBoton}`}
+                      className={`min-h-[52px] p-2.5 rounded-xl border text-xs font-medium flex items-center justify-between gap-1 transition-all active:scale-95 ${clasesBoton}`}
                     >
-                      <div className="flex flex-col items-start truncate pr-1">
-                        <span className="truncate w-full text-left capitalize">
-                          {item.nombre}
+                      <span className="flex flex-col items-start truncate text-left">
+                        <span className="truncate w-full capitalize">{item.nombre}</span>
+                        <span className="text-[9px] font-normal opacity-60">
+                          {esFem ? 'Femenino' : esMasc ? 'Masculino' : 'General'}
                         </span>
-                        <span className="text-[9px] font-normal uppercase opacity-75 text-slate-500">
-                          {esFem ? 'Fem' : esMasc ? 'Masc' : 'Gral'}
-                        </span>
-                      </div>
-                      <Plus className="w-3.5 h-3.5 shrink-0 ml-1 text-slate-400" />
+                      </span>
+                      <Plus className="w-3.5 h-3.5 shrink-0 opacity-50" />
                     </button>
                   );
                 })}
@@ -325,143 +334,200 @@ export default function FormularioCargaTecnica({
       </div>
 
       {/* SECCIÓN INFERIOR: PARÁMETROS TÉCNICOS Y NOTAS DE GABINETE */}
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b pb-2 text-slate-800">
-          <div className="flex items-center space-x-2">
-            <Settings className="w-4 h-4 text-indigo-600" />
-            <h3 className="text-xs font-bold uppercase tracking-wider">
-              Parámetros Técnicos y Notas de Gabinete
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-sm space-y-5">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2.5 text-slate-800">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
+              <Settings className="w-3.5 h-3.5 text-emerald-600" />
+            </div>
+            <h3 className="text-xs font-semibold text-slate-700">
+              Parámetros técnicos y notas de gabinete
             </h3>
           </div>
-          <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2.5 py-0.5 rounded-full">
-            {zonasSeleccionadas.length} zonas seleccionadas
+          <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full">
+            {zonasSeleccionadas.length} zonas
           </span>
         </div>
 
         {/* Campo Equipo */}
         <div className="max-w-xs">
-          <label className="block text-[11px] font-bold text-slate-700 mb-1">Equipo / Tecnología</label>
+          <label className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600 mb-1.5">
+            <Zap className="w-3 h-3 text-slate-400" />
+            Equipo / Tecnología
+          </label>
           <input
             type="text"
             value={equipo}
             onChange={(e) => setEquipo(e.target.value)}
-            className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:border-indigo-500"
+            className="w-full text-xs border border-slate-200/80 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
             placeholder="Ej: Diodo Soprano"
           />
         </div>
 
         {/* TABLA DINÁMICA DE ZONAS */}
         <div>
-          <label className="block text-[11px] font-bold text-slate-700 mb-2">
-            Detalle por Zona
+          <label className="block text-[11px] font-medium text-slate-600 mb-2">
+            Detalle por zona
           </label>
           {zonasSeleccionadas.length === 0 ? (
-            <p className="text-xs text-slate-400 italic text-center py-4 border border-dashed border-slate-200 rounded-lg">
-              No hay zonas seleccionadas. Selecciona zonas arriba para ingresar sus parámetros.
+            <p className="text-xs text-slate-400 text-center py-6 border border-dashed border-slate-200 rounded-xl">
+              No hay zonas seleccionadas. Elegí zonas arriba para ingresar sus parámetros.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[500px]">
-                <thead>
-                  <tr className="bg-slate-100 text-slate-700 text-[11px] font-bold uppercase tracking-wider">
-                    <th className="p-2.5 border border-slate-200 rounded-l-md">Zonas</th>
-                    <th className="p-2.5 border border-slate-200">Afluencia / Frecuencia</th>
-                    <th className="p-2.5 border border-slate-200">Energy</th>
-                    <th className="p-2.5 border border-slate-200">Pasadas</th>
-                    <th className="p-2.5 border border-slate-200 rounded-r-md text-center w-10"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
-                  {zonasSeleccionadas.map((zona) => {
-                    const param = parametrosZonas[zona] || {
-                      afluencia: '',
-                      energy: '',
-                      pasadas: '',
-                    };
+            <>
+              {/* Vista tabla — desktop / tablet */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[520px]">
+                  <thead>
+                    <tr className="text-slate-500 text-[11px] font-medium uppercase tracking-wide">
+                      <th className="p-2.5 border-b border-slate-200">Zona</th>
+                      <th className="p-2.5 border-b border-slate-200">Afluencia / Frecuencia</th>
+                      <th className="p-2.5 border-b border-slate-200">Energy</th>
+                      <th className="p-2.5 border-b border-slate-200">Pasadas</th>
+                      <th className="p-2.5 border-b border-slate-200 w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {zonasSeleccionadas.map((zona) => {
+                      const param = parametrosZonas[zona] || {
+                        afluencia: '',
+                        energy: '',
+                        pasadas: '',
+                      };
 
-                    return (
-                      <tr key={zona} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-2 border border-slate-200 font-semibold text-slate-800 capitalize bg-slate-50/30">
-                          {zona}
-                        </td>
-                        <td className="p-1.5 border border-slate-200">
-                          <input
-                            type="text"
-                            placeholder="Ej: 12 J/cm² / 10Hz"
-                            value={param.afluencia}
-                            onChange={(e) =>
-                              cambiarParametro(zona, 'afluencia', e.target.value)
-                            }
-                            className="w-full p-1.5 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                          />
-                        </td>
-                        <td className="p-1.5 border border-slate-200">
-                          <input
-                            type="text"
-                            placeholder="Ej: 40 ms"
-                            value={param.energy}
-                            onChange={(e) => cambiarParametro(zona, 'energy', e.target.value)}
-                            className="w-full p-1.5 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                          />
-                        </td>
-                        <td className="p-1.5 border border-slate-200">
-                          <input
-                            type="text"
-                            placeholder="Ej: 2 pasadas"
-                            value={param.pasadas}
-                            onChange={(e) => cambiarParametro(zona, 'pasadas', e.target.value)}
-                            className="w-full p-1.5 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                          />
-                        </td>
-                        <td className="p-1.5 border border-slate-200 text-center">
-                          <button
-                            type="button"
-                            onClick={() => quitarZona(zona)}
-                            title="Quitar zona de la sesión"
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                      return (
+                        <tr key={zona} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="p-2 font-medium text-slate-800 capitalize">{zona}</td>
+                          <td className="p-1.5">
+                            <input
+                              type="text"
+                              placeholder="Ej: 12 J/cm² / 10Hz"
+                              value={param.afluencia}
+                              onChange={(e) => cambiarParametro(zona, 'afluencia', e.target.value)}
+                              className="w-full p-2 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
+                            />
+                          </td>
+                          <td className="p-1.5">
+                            <input
+                              type="text"
+                              placeholder="Ej: 40 ms"
+                              value={param.energy}
+                              onChange={(e) => cambiarParametro(zona, 'energy', e.target.value)}
+                              className="w-full p-2 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
+                            />
+                          </td>
+                          <td className="p-1.5">
+                            <input
+                              type="text"
+                              placeholder="Ej: 2 pasadas"
+                              value={param.pasadas}
+                              onChange={(e) => cambiarParametro(zona, 'pasadas', e.target.value)}
+                              className="w-full p-2 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
+                            />
+                          </td>
+                          <td className="p-1.5 text-center">
+                            <button
+                              type="button"
+                              onClick={() => quitarZona(zona)}
+                              title="Quitar zona de la sesión"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-90"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Vista tarjetas — mobile */}
+              <div className="sm:hidden space-y-3">
+                {zonasSeleccionadas.map((zona) => {
+                  const param = parametrosZonas[zona] || {
+                    afluencia: '',
+                    energy: '',
+                    pasadas: '',
+                  };
+
+                  return (
+                    <div
+                      key={zona}
+                      className="border border-slate-200/80 rounded-xl p-3 space-y-2.5 bg-slate-50/40"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-800 capitalize">{zona}</span>
+                        <button
+                          type="button"
+                          onClick={() => quitarZona(zona)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-90"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2">
+                        <input
+                          type="text"
+                          placeholder="Afluencia / Frecuencia — Ej: 12 J/cm² / 10Hz"
+                          value={param.afluencia}
+                          onChange={(e) => cambiarParametro(zona, 'afluencia', e.target.value)}
+                          className="w-full p-2.5 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Energy — Ej: 40 ms"
+                          value={param.energy}
+                          onChange={(e) => cambiarParametro(zona, 'energy', e.target.value)}
+                          className="w-full p-2.5 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Pasadas — Ej: 2 pasadas"
+                          value={param.pasadas}
+                          onChange={(e) => cambiarParametro(zona, 'pasadas', e.target.value)}
+                          className="w-full p-2.5 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-white"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
 
         {/* Observaciones */}
         <div>
-          <label className="block text-[11px] font-bold text-slate-700 mb-1">
-            Observaciones de Gabinete (Notas de la Sesión)
+          <label className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600 mb-1.5">
+            <NotebookPen className="w-3 h-3 text-slate-400" />
+            Observaciones de gabinete
           </label>
           <textarea
             rows={3}
             value={observacionesGabinete}
             onChange={(e) => setObservacionesGabinete(e.target.value)}
-            className="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:border-indigo-500"
-            placeholder="Escribe notas relevantes sobre la piel, tolerancia al tratamiento o recomendaciones dadas..."
+            className="w-full text-xs border border-slate-200/80 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50 resize-none"
+            placeholder="Escribí notas relevantes sobre la piel, tolerancia al tratamiento o recomendaciones dadas…"
           />
         </div>
 
         {/* Botón Submit */}
-        <div className="flex justify-end pt-2 border-t">
+        <div className="flex justify-end pt-3 border-t border-slate-100">
           <button
             type="submit"
             disabled={guardando}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center space-x-2 transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm disabled:opacity-50 disabled:active:scale-100"
           >
             {guardando ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Guardando en ficha...</span>
+                <span>Guardando en ficha…</span>
               </>
             ) : (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Guardar y Finalizar Atencion</span>
+                <span>Guardar y finalizar atención</span>
               </>
             )}
           </button>
