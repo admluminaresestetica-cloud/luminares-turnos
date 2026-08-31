@@ -30,7 +30,7 @@ export default function SelectorZonasGabinete({
   const [cargando, setCargando] = useState<boolean>(true);
   const [desplegado, setDesplegado] = useState<boolean>(true);
 
-  // Cargar servicios_laser (nombre y género) desde Supabase
+  // Cargar TODOS los servicios de servicios_laser desde Supabase
   useEffect(() => {
     const cargarServiciosLaser = async () => {
       setCargando(true);
@@ -55,7 +55,7 @@ export default function SelectorZonasGabinete({
     cargarServiciosLaser();
   }, []);
 
-  // Map de ayuda para saber el género de cada zona rápidamente
+  // Mapa rápido para conocer el género de cada zona
   const mapaGeneros = useMemo(() => {
     const map = new Map<string, string>();
     servicios.forEach((s) => {
@@ -66,7 +66,7 @@ export default function SelectorZonasGabinete({
     return map;
   }, [servicios]);
 
-  // Unimos las zonas traídas de la base con cualquier zona previa seleccionada
+  // Consolidar todas las zonas registradas más cualquier zona previamente elegida
   const listaZonasDisponibles = useMemo(() => {
     const nombresBd = servicios.map((s) => s.nombre).filter(Boolean);
     const lista = [...nombresBd];
@@ -117,7 +117,7 @@ export default function SelectorZonasGabinete({
 
           <button
             type="button"
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+            className="text-slate-400 hover:text-slate-600 p-1 rounded-md cursor-pointer"
             title={desplegado ? 'Ocultar zonas' : 'Mostrar zonas'}
           >
             {desplegado ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -129,15 +129,15 @@ export default function SelectorZonasGabinete({
       {desplegado && (
         <div className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-3">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs text-slate-500 gap-1">
-            <p>Haz clic en las zonas para marcarlas o desmarcarlas:</p>
+            <p>Haz clic para agregar o quitar cualquier zona en esta sesión:</p>
             {/* Leyenda de colores */}
             <div className="flex items-center space-x-3 text-[10px] font-semibold">
               <span className="flex items-center space-x-1 text-rose-600">
-                <span className="w-2 h-2 rounded-full bg-rose-400 inline-block"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block"></span>
                 <span>Femenino</span>
               </span>
               <span className="flex items-center space-x-1 text-sky-600">
-                <span className="w-2 h-2 rounded-full bg-sky-400 inline-block"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block"></span>
                 <span>Masculino</span>
               </span>
             </div>
@@ -153,7 +153,7 @@ export default function SelectorZonasGabinete({
                 const estaSeleccionada = zonasSeleccionadas.includes(zona);
                 const genero = mapaGeneros.get(zona.toLowerCase().trim()) || '';
 
-                // Definición de estilos dinámicos según el género
+                // Definición visual según el género cargado en la BD
                 let clasesBoton = 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
 
                 if (genero === 'femenino') {
@@ -165,7 +165,6 @@ export default function SelectorZonasGabinete({
                     ? 'bg-sky-600 border-sky-600 text-white shadow-xs'
                     : 'bg-sky-50/70 border-sky-200 text-sky-800 hover:bg-sky-100';
                 } else {
-                  // Sin género especificado o neutro
                   if (estaSeleccionada) {
                     clasesBoton = 'bg-indigo-600 border-indigo-600 text-white shadow-xs';
                   }
