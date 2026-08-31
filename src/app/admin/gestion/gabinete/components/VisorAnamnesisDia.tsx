@@ -19,6 +19,15 @@ export default function VisorAnamnesisDia({ sesionActual }: VisorAnamnesisDiaPro
 
   const anamnesis = sesionActual.anamnesis_sesion;
 
+  // Filtramos las entradas para ignorar claves que parezcan UUIDs o sean demasiado largas
+  const entradasValidas = anamnesis 
+    ? Object.entries(anamnesis).filter(([key]) => {
+        // Un UUID típico tiene 36 caracteres y guiones, o podemos filtrar si la clave es muy larga (> 32 caracteres)
+        const esUuidOId = key.length > 30 || /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}/.test(key);
+        return !esUuidOId;
+      })
+    : [];
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
       <div className="flex items-center justify-between border-b pb-2">
@@ -33,15 +42,14 @@ export default function VisorAnamnesisDia({ sesionActual }: VisorAnamnesisDiaPro
         </span>
       </div>
 
-      {!anamnesis || Object.keys(anamnesis).length === 0 ? (
+      {entradasValidas.length === 0 ? (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center space-x-2 text-amber-800 text-xs">
           <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
           <span>No hay un registro de anamnesis guardado para esta sesión específica.</span>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-          {Object.entries(anamnesis).map(([key, value]) => {
-            // value suele ser booleano (true si marcó la alerta/SÍ, false si es NO)
+          {entradasValidas.map(([key, value]) => {
             const tieneAlerta = Boolean(value);
 
             return (
