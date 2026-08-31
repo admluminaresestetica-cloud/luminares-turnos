@@ -13,17 +13,19 @@ export default function NotificacionNuevoCliente() {
   const [nuevoPacienteAlerta, setNuevoPacienteAlerta] = useState<string | null>(null);
 
   useEffect(() => {
-    // Escucha en tiempo real si se inserta una nueva sesión en estado 'en_espera'
+    // Escucha en tiempo real si un paciente pasa a estado 'en_espera' en pacientes_ficha
     const channel = supabase
       .channel('notificaciones_gabinete')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'sesiones_gabinete' },
+        { event: 'UPDATE', schema: 'public', table: 'pacientes_ficha' },
         (payload) => {
-          if (payload.new && payload.new.estado === 'en_espera') {
-            setNuevoPacienteAlerta('¡Nuevo paciente derivado a gabinete por recepción!');
-            // Ocultar alerta a los 5 segundos
-            setTimeout(() => setNuevoPacienteAlerta(null), 5000);
+          if (payload.new && payload.new.estado_atencion === 'en_espera') {
+            const nombre = payload.new.nombre_paciente || 'Un paciente';
+            setNuevoPacienteAlerta(`¡${nombre} acaba de ingresar a la lista de espera!`);
+            
+            // Ocultar alerta a los 6 segundos
+            setTimeout(() => setNuevoPacienteAlerta(null), 6000);
           }
         }
       )
@@ -43,8 +45,9 @@ export default function NotificacionNuevoCliente() {
         <span className="text-xs font-bold">{nuevoPacienteAlerta}</span>
       </div>
       <button
+        type="button"
         onClick={() => setNuevoPacienteAlerta(null)}
-        className="text-xs bg-indigo-700 hover:bg-indigo-800 px-2 py-1 rounded font-bold"
+        className="text-xs bg-indigo-700 hover:bg-indigo-800 px-2 py-1 rounded font-bold cursor-pointer"
       >
         Cerrar
       </button>

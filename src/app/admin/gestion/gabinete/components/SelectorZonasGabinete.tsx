@@ -1,14 +1,14 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Check, Layers } from 'lucide-react';
 
 interface SelectorZonasGabineteProps {
-  sesionActual: any;
+  sesionActual: any; // Representa el objeto de pacientes_ficha
   zonasSeleccionadas: string[];
   setZonasSeleccionadas: (zonas: string[]) => void;
 }
 
-// Lista estándar de zonas de depilación láser o tratamientos comunes
 const ZONAS_COMUNES = [
   'Cavo Axilas',
   'Cavo Pelvis',
@@ -31,11 +31,22 @@ export default function SelectorZonasGabinete({
     return (
       <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-center">
         <p className="text-xs text-slate-400 italic">
-          Selecciona un paciente para gestionar las zonas de tratamiento.
+          Selecciona un paciente en espera para gestionar sus zonas de tratamiento.
         </p>
       </div>
     );
   }
+
+  // Unimos las zonas comunes con cualquier otra zona previa que pueda traer el paciente
+  const listaZonasDisponibles = useMemo(() => {
+    const lista = [...ZONAS_COMUNES];
+    zonasSeleccionadas.forEach((z) => {
+      if (z && !lista.includes(z)) {
+        lista.push(z);
+      }
+    });
+    return lista;
+  }, [zonasSeleccionadas]);
 
   const toggleZona = (zona: string) => {
     if (zonasSeleccionadas.includes(zona)) {
@@ -60,11 +71,11 @@ export default function SelectorZonasGabinete({
       </div>
 
       <p className="text-xs text-slate-500">
-        Haz clic en las zonas para marcarlas o desmarcarlas según lo que se realizará hoy:
+        Haz clic en las zonas para marcarlas o desmarcarlas según lo que se realizará en el gabinete hoy:
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-        {ZONAS_COMUNES.map((zona) => {
+        {listaZonasDisponibles.map((zona) => {
           const estaSeleccionada = zonasSeleccionadas.includes(zona);
 
           return (

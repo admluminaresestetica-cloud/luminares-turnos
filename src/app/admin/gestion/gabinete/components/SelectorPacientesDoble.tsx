@@ -26,54 +26,43 @@ export default function SelectorPacientesDoble({
   const [atendidosHoy, setAtendidosHoy] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Cargar pacientes en espera (derivados desde recepción) y atendidos de hoy
-  const cargarPacientesEnEspera = async () => {
+  // Cargar pacientes directamente desde pacientes_ficha según su estado de atención
+  const cargarPacientes = async () => {
     setLoading(true);
     try {
-      const hoy = new Date().toISOString().split('T')[0];
-
-      // CORRECCIÓN: Apuntamos correctamente a la relación con 'pacientes_ficha'
       const { data, error } = await supabase
-        .from('sesiones_gabinete')
-        .select(`
-          *,
-          pacientes_ficha:paciente_id (
-            id,
-            nombre_completo,
-            celular,
-            fototipo
-          )
-        `)
-        .gte('created_at', `${hoy}T00:00:00`)
-        .order('created_at', { ascending: false });
+        .from('pacientes_ficha')
+        .select('*')
+        .in('estado_atencion', ['en_espera', 'atendido'])
+        .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
       if (data) {
-        const espera = data.filter((s: any) => s.estado === 'en_espera' || !s.estado);
-        const completados = data.filter((s: any) => s.estado === 'completada');
+        const espera = data.filter((p: any) => p.estado_atencion === 'en_espera');
+        const completados = data.filter((p: any) => p.estado_atencion === 'atendido');
 
         setEnEspera(espera);
         setAtendidosHoy(completados);
       }
     } catch (err) {
-      console.error('Error al cargar la lista de espera:', err);
+      console.error('Error al cargar la lista de pacientes:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    cargarPacientesEnEspera();
+    cargarPacientes();
 
-    // Suscripción en tiempo real por si recepción manda a alguien nuevo al instante
+    // Suscripción en tiempo real a cambios en pacientes_ficha
     const channel = supabase
-      .channel('cambios_gabinete')
+      .channel('cambios_pacientes_gabinete')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'sesiones_gabinete' },
+        { event: '*', schema: 'public', table: 'pacientes_ficha' },
         () => {
-          cargarPacientesEnEspera();
+          cargarPacientes();
         }
       )
       .subscribe();
@@ -83,19 +72,19 @@ export default function SelectorPacientesDoble({
     };
   }, []);
 
-  const seleccionarPacienteSesion = (sesion: any) => {
-    setSesionActual(sesion);
-    // Mapeamos el nombre_completo para que los demás componentes lo lean fácil
+  const seleccionarPaciente = (paciente: any) => {
+    // Al unificar todo en pacientes_ficha, la "sesionActual" pasa a ser el mismo objeto del paciente
+    setSesionActual(paciente);
     setPacienteSeleccionado({
-      ...sesion.pacientes_ficha,
-      nombre: sesion.pacientes_ficha?.nombre_completo || 'Paciente',
-      telefono: sesion.pacientes_ficha?.celular || 'N/A'
+      ...paciente,
+      nombre: paciente.nombre_completo || 'Paciente',
+      telefono: paciente.celular || 'N/A',
     });
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* BANDEJA 1: EN ESPERA (LISTOS PARA PASAR) */}
+      {/* BANDEJA 1: EN ESPERA */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
         <div className="flex justify-between items-center border-b pb-2">
           <div className="flex items-center space-x-2 text-indigo-600">
@@ -113,17 +102,28 @@ export default function SelectorPacientesDoble({
           <p className="text-xs text-slate-400 italic">No hay pacientes esperando en este momento.</p>
         ) : (
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-            {enEspera.map((sesion) => {
-              const pac = sesion.pacientes_ficha;
-              const esSeleccionado = sesionActual?.id === sesion.id;
-              const zonasMostrar = Array.isArray(sesion.zonas_preasignadas) 
-                ? sesion.zonas_preasignadas.join(', ') 
-                : 'General';
+            {enEspera.map((pac) => {
+              const esSeleccionado = sesionActual?.id === pac.id;
+              
+              // Extraer zonas de forma segura si están guardadas como JSON
+              let zonasMostrar = 'General';
+              if (pac.zonas_realizadas) {
+                if (Array.isArray(pac.zonas_realizadas)) {
+                  zonasMostrar = pac.zonas_realizadas.join(', ');
+                } else if (typeof pac.zonas_realizadas === 'string') {
+                  try {
+                    const parsed = JSON.parse(pac.zonas_realizadas);
+                    if (Array.isArray(parsed)) zonasMostrar = parsed.join(', ');
+                  } catch {
+                    zonasMostrar = pac.zonas_realizadas;
+                  }
+                }
+              }
 
               return (
                 <div
-                  key={sesion.id}
-                  onClick={() => seleccionarPacienteSesion(sesion)}
+                  key={pac.id}
+                  onClick={() => seleccionarPaciente(pac)}
                   className={`p-3 rounded-lg border transition-all cursor-pointer flex justify-between items-center ${
                     esSeleccionado
                       ? 'bg-indigo-50/70 border-indigo-500 shadow-sm'
@@ -132,10 +132,10 @@ export default function SelectorPacientesDoble({
                 >
                   <div>
                     <h4 className="text-xs font-bold text-slate-800">
-                      {pac ? pac.nombre_completo : 'Paciente sin datos'}
+                      {pac.nombre_completo || 'Paciente sin nombre'}
                     </h4>
                     <p className="text-[11px] text-slate-500">
-                      Celular: {pac?.celular || 'N/A'} • Zonas: {zonasMostrar}
+                      Celular: {pac.celular || 'N/A'} • Zonas: {zonasMostrar}
                     </p>
                   </div>
                   <button className={`text-xs p-1.5 rounded-lg ${esSeleccionado ? 'bg-indigo-600 text-white' : 'bg-white border text-slate-600'}`}>
@@ -164,19 +164,16 @@ export default function SelectorPacientesDoble({
           <p className="text-xs text-slate-400 italic">Ninguna sesión completada todavía hoy.</p>
         ) : (
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-            {atendidosHoy.map((sesion) => {
-              const pac = sesion.pacientes_ficha;
-              return (
-                <div key={sesion.id} className="p-3 rounded-lg border border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-700">
-                      {pac ? pac.nombre_completo : 'Paciente'}
-                    </h4>
-                    <p className="text-[10px] text-emerald-600 font-medium">✓ Sesión completada</p>
-                  </div>
+            {atendidosHoy.map((pac) => (
+              <div key={pac.id} className="p-3 rounded-lg border border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-700">
+                    {pac.nombre_completo || 'Paciente'}
+                  </h4>
+                  <p className="text-[10px] text-emerald-600 font-medium">✓ Sesión completada</p>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
       </div>

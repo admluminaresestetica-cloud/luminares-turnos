@@ -21,7 +21,7 @@ export default function HeaderOperadoraReloj({
   const [horaActual, setHoraActual] = useState<string>('');
   const [tiempoTranscurrido, setTiempoTranscurrido] = useState<number>(0);
   const [cronometroActivo, setCronometroActivo] = useState<boolean>(false);
-  const [operadoras, setOperadoras] = useState<any[]>([]);
+  const [operadoras, setOperadoras] = useState<{ id: string; nombre: string }[]>([]);
 
   // 1. Reloj en tiempo real
   useEffect(() => {
@@ -39,11 +39,11 @@ export default function HeaderOperadoraReloj({
     const cargarOperadoras = async () => {
       const { data, error } = await supabase
         .from('operadoras')
-        .select('*')
+        .select('id, nombre')
         .eq('activa', true)
         .order('nombre');
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         setOperadoras(data);
       }
     };
@@ -83,7 +83,9 @@ export default function HeaderOperadoraReloj({
             onChange={(e) => setOperadoraActual(e.target.value)}
             className="text-xs font-semibold text-slate-700 bg-transparent border-none focus:outline-none cursor-pointer"
           >
-            <option value="" disabled>Selecciona operadora...</option>
+            <option value="" disabled>
+              {operadoras.length === 0 ? 'Cargando operadoras...' : 'Selecciona operadora...'}
+            </option>
             {operadoras.map((op) => (
               <option key={op.id} value={op.nombre}>
                 {op.nombre}
@@ -101,19 +103,21 @@ export default function HeaderOperadoraReloj({
             {formatearTiempo(tiempoTranscurrido)}
           </span>
           <button
+            type="button"
             onClick={() => setCronometroActivo(!cronometroActivo)}
-            className={`text-[10px] px-2 py-0.5 rounded font-bold text-white transition-colors ${
+            className={`text-[10px] px-2 py-0.5 rounded font-bold text-white transition-colors cursor-pointer ${
               cronometroActivo ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-600 hover:bg-emerald-700'
             }`}
           >
             {cronometroActivo ? 'Pausar' : 'Iniciar'}
           </button>
           <button
+            type="button"
             onClick={() => {
               setCronometroActivo(false);
               setTiempoTranscurrido(0);
             }}
-            className="text-[10px] text-slate-400 hover:text-slate-600 px-1"
+            className="text-[10px] text-slate-400 hover:text-slate-600 px-1 cursor-pointer"
             title="Reiniciar cronómetro"
           >
             🔄

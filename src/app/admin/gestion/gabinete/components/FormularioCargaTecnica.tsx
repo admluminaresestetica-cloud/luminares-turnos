@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Settings, Save, CheckCircle2, Loader2 } from 'lucide-react';
+import { Settings, CheckCircle2, Loader2 } from 'lucide-react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,7 +10,7 @@ const supabase = createClient(
 );
 
 interface FormularioCargaTecnicaProps {
-  sesionActual: any;
+  sesionActual: any; // Es el paciente activo traído de pacientes_ficha
   operadoraActual: string;
   zonasSeleccionadas: string[];
   onSesionCompletada: () => void;
@@ -62,26 +62,29 @@ export default function FormularioCargaTecnica({
         equipo,
         joules,
         frecuencia,
+        operadora: operadoraActual,
+        observaciones_gabinete: observacionesGabinete,
+        fecha_atencion: new Date().toISOString()
       };
 
+      // UPDATE directo a la fuente única de verdad: pacientes_ficha
       const { error } = await supabase
-        .from('sesiones_gabinete')
+        .from('pacientes_ficha')
         .update({
-          operadora_nombre: operadoraActual,
           zonas_realizadas: zonasSeleccionadas,
           parametros_tecnicos,
-          observaciones_gabinete: observacionesGabinete,
-          estado: 'completada',
+          estado_atencion: 'atendido',
+          updated_at: new Date().toISOString()
         })
         .eq('id', sesionActual.id);
 
       if (error) throw error;
 
-      alert('¡Sesión de gabinete guardada y finalizada con éxito!');
+      alert('¡Atención finalizada con éxito! La ficha del paciente fue actualizada.');
       onSesionCompletada();
     } catch (err) {
       console.error('Error al guardar la sesión:', err);
-      alert('Hubo un error al guardar los datos de la sesión.');
+      alert('Hubo un error al guardar los datos en la ficha del paciente.');
     } finally {
       setGuardando(false);
     }
@@ -149,12 +152,12 @@ export default function FormularioCargaTecnica({
           {guardando ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Guardando sesión...</span>
+              <span>Guardando en ficha...</span>
             </>
           ) : (
             <>
               <CheckCircle2 className="w-4 h-4" />
-              <span>Guardar y Finalizar Sesión</span>
+              <span>Guardar y Finalizar Atencion</span>
             </>
           )}
         </button>

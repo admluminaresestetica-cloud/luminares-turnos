@@ -14,10 +14,11 @@ export default function GabinetePage() {
   const [sesionActual, setSesionActual] = useState<any>(null);
   const [zonasSeleccionadas, setZonasSeleccionadas] = useState<string[]>([]);
 
-  // Cada vez que cambia la sesión actual, sincronizamos las zonas preasignadas/realizadas
+  // Cada vez que cambia la sesión actual (ficha del paciente en espera), sincronizamos las zonas realizadas/preVIAS
   useEffect(() => {
     if (sesionActual) {
-      const rawZonas = sesionActual.zonas_realizadas || sesionActual.zonas_preasignadas;
+      const rawZonas = sesionActual.zonas_realizadas || sesionActual.zonas_preasignadas || [];
+      
       if (Array.isArray(rawZonas)) {
         setZonasSeleccionadas(rawZonas);
       } else if (typeof rawZonas === 'string') {
@@ -40,7 +41,7 @@ export default function GabinetePage() {
   }, [sesionActual]);
 
   const handleSesionCompletada = () => {
-    // Limpiar selección actual al finalizar la sesión
+    // Limpiar selección actual al finalizar la atención
     setSesionActual(null);
     setPacienteSeleccionado(null);
     setZonasSeleccionadas([]);
@@ -60,16 +61,16 @@ export default function GabinetePage() {
         </div>
       </div>
 
-      {/* NOTIFICACIÓN EN TIEMPO REAL DE NUEVOS PACIENTES */}
+      {/* NOTIFICACIÓN EN TIEMPO REAL DE NUEVOS PACIENTES EN ESPERA */}
       <NotificacionNuevoCliente />
 
-      {/* HEADER: RELOJ Y OPERADORA */}
+      {/* HEADER: RELOJ Y OPERADORA (Conectado a la tabla operadoras) */}
       <HeaderOperadoraReloj
         operadoraActual={operadoraActual}
         setOperadoraActual={setOperadoraActual}
       />
 
-      {/* BANDEJA DE PACIENTES (ESPERA Y ATENDIDOS) */}
+      {/* BANDEJA DE PACIENTES (ESPERA Y ATENDIDOS) DESDE PACIENTES_FICHA */}
       <SelectorPacientesDoble
         pacienteSeleccionado={pacienteSeleccionado}
         setPacienteSeleccionado={setPacienteSeleccionado}
@@ -87,7 +88,9 @@ export default function GabinetePage() {
                 Paciente en Tratamiento Activo
               </span>
               <h2 className="text-sm font-bold">
-                {pacienteSeleccionado ? (pacienteSeleccionado.nombre_completo || pacienteSeleccionado.nombre) : 'Paciente'}
+                {pacienteSeleccionado 
+                  ? (pacienteSeleccionado.nombre_paciente || pacienteSeleccionado.nombre_completo || pacienteSeleccionado.nombre) 
+                  : 'Paciente'}
               </h2>
             </div>
             <div className="text-xs bg-indigo-800 px-3 py-1.5 rounded-lg border border-indigo-700">
@@ -105,7 +108,7 @@ export default function GabinetePage() {
             setZonasSeleccionadas={setZonasSeleccionadas}
           />
 
-          {/* FORMULARIO DE CARGA TÉCNICA Y CIERRE */}
+          {/* FORMULARIO DE CARGA TÉCNICA Y CIERRE (UPDATE DIRECTO A PACIENTES_FICHA) */}
           <FormularioCargaTecnica
             sesionActual={sesionActual}
             operadoraActual={operadoraActual}
