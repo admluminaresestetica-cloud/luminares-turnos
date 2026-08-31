@@ -142,6 +142,25 @@ export default function ModalHistorialSesiones({
                   </div>
                 </div>
 
+                {/* 📸 FOTO HISTÓRICA DE LA ANAMNESIS DE ESE DÍA */}
+                <div>
+                  <strong className="block text-slate-700 mb-1">Checklist / Anamnesis Registrada en la Sesión:</strong>
+                  {sesionSeleccionada.anamnesis_sesion && Object.keys(sesionSeleccionada.anamnesis_sesion).length > 0 ? (
+                    <div className="bg-white p-2.5 rounded border border-slate-200 grid grid-cols-2 gap-2">
+                      {Object.entries(sesionSeleccionada.anamnesis_sesion).map(([key, value]) => (
+                        <div key={key} className="flex items-center space-x-2">
+                          <span className={`w-2 h-2 rounded-full ${value ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                          <span className="text-slate-700 font-medium capitalize">
+                            {key.replace(/_/g, ' ')}: <strong>{value ? 'SÍ' : 'NO'}</strong>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 italic">Sin registro histórico de anamnesis para esta sesión.</p>
+                  )}
+                </div>
+
                 {/* PARÁMETROS TÉCNICOS GUARDADOS */}
                 <div>
                   <strong className="block text-slate-700 mb-1">Parámetros Técnicos Aplicados:</strong>
