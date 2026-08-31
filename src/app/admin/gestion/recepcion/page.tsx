@@ -23,7 +23,6 @@ export default function RecepcionPage() {
   const [reservaHoy, setReservaHoy] = useState<any>(null);
   const [esNuevo, setEsNuevo] = useState(false);
 
-  // Estado para alternar entre recepción y el panel de configuración de anamnesis
   const [mostrarConfigAnamnesis, setMostrarConfigAnamnesis] = useState(false);
 
   // Campos del Paciente
@@ -43,7 +42,6 @@ export default function RecepcionPage() {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
-  // Extraer zonas automáticamente del objeto jsonb de la reserva
   const extraerZonasDeReserva = (reserva: any): string[] => {
     if (!reserva) return [];
 
@@ -135,6 +133,7 @@ export default function RecepcionPage() {
       const montoAbonado = Number(reservaHoy?.monto_abonado || reservaHoy?.monto_sena || 0);
       const saldoCalculado = Math.max(0, precioTotal - montoAbonado);
 
+      // Payload sin la columna estado_pago_recepcion
       const payload = {
         nombre_paciente: nombre,
         nombre_completo: nombre,
@@ -147,7 +146,6 @@ export default function RecepcionPage() {
         zonas_realizadas: zonasSeleccionadas,
         observaciones_recepcion: observacionesHoy,
         saldo_pendiente: cobradoEnPuerta ? 0 : saldoCalculado,
-        estado_pago_recepcion: cobradoEnPuerta ? 'cobrado' : 'pendiente',
         anamnesis_sesion: antecedentes,
         updated_at: new Date().toISOString(),
       };
@@ -193,14 +191,12 @@ export default function RecepcionPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Cabecera con título y botón de configuración */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Módulo Recepción (PRO-EVAL)</h1>
           <p className="text-xs text-slate-500">Búsqueda, evaluación clínica y derivación a gabinete.</p>
         </div>
         
-        {/* BOTÓN DE CONFIGURACIÓN */}
         <button
           onClick={() => setMostrarConfigAnamnesis(!mostrarConfigAnamnesis)}
           className="flex items-center space-x-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors cursor-pointer"
@@ -210,7 +206,6 @@ export default function RecepcionPage() {
         </button>
       </div>
 
-      {/* RENDERIZADO CONDICIONAL */}
       {mostrarConfigAnamnesis ? (
         <ConfiguracionAnamnesis onClose={() => setMostrarConfigAnamnesis(false)} />
       ) : (
