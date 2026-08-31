@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Settings } from 'lucide-react';
+import { Settings } from 'lucide-react'; // Ícono para el botón de configuración
 
 import BuscadorMulticoincidencia from './components/BuscadorMulticoincidencia';
 import ResumenReservaCobro from './components/ResumenReservaCobro';
 import ChecklistAnamnesis from './components/ChecklistAnamnesis';
 import SelectorZonasBotones from './components/SelectorZonasBotones';
-import ConfiguracionAnamnesis from './components/ConfiguracionAnamnesis';
+import ConfiguracionAnamnesis from './components/ConfiguracionAnamnesis'; // <-- 1. IMPORTADO AQUÍ
 
 import BannerAlertasClinicas from '../components/BannerAlertasClinicas';
 import ModalHistorialSesiones from '../components/ModalHistorialSesiones';
@@ -23,13 +23,15 @@ export default function RecepcionPage() {
   const [reservaHoy, setReservaHoy] = useState<any>(null);
   const [esNuevo, setEsNuevo] = useState(false);
 
-  const [mostrarConfigAnamnesis, setMostrarConfigAnamnesis] = useState(false);
+  // Estado para alternar entre recepción y el panel de configuración de anamnesis
+  const [mostrarConfigAnamnesis, setMostrarConfigAnamnesis] = useState(false); // <-- 2. ESTADO AGREGADO
 
   // Campos del Paciente
   const [nombre, setNombre] = useState('');
   const [celular, setCelular] = useState('');
   const [fototipo, setFototipo] = useState('Fototipo III');
   const [observacionesFijas, setObservacionesFijas] = useState('');
+
   const [antecedentes, setAntecedentes] = useState<Record<string, boolean>>({});
 
   // Operación del Día
@@ -42,6 +44,7 @@ export default function RecepcionPage() {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
+  // Extraer zonas automáticamente del objeto jsonb de la reserva
   const extraerZonasDeReserva = (reserva: any): string[] => {
     if (!reserva) return [];
 
@@ -94,8 +97,8 @@ export default function RecepcionPage() {
     if (data.pacienteFicha) {
       setPacienteFicha(data.pacienteFicha);
       setEsNuevo(false);
-      setNombre(data.pacienteFicha.nombre_completo || '');
-      setCelular(data.pacienteFicha.celular || '');
+      setNombre(data.pacienteFicha.nombre_completo);
+      setCelular(data.pacienteFicha.celular);
       setFototipo(data.pacienteFicha.fototipo || 'Fototipo III');
       setObservacionesFijas(data.pacienteFicha.observaciones_fijas || '');
       setAntecedentes(
@@ -129,42 +132,50 @@ export default function RecepcionPage() {
     try {
       let pacienteId = pacienteFicha?.id;
 
-      const precioTotal = Number(reservaHoy?.precio_total || 0);
-      const montoAbonado = Number(reservaHoy?.monto_abonado || reservaHoy?.monto_sena || 0);
-      const saldoCalculado = Math.max(0, precioTotal - montoAbonado);
-
-      // Usando estrictamente las columnas originales del archivo original
-      const payload = {
-        nombre_completo: nombre,
-        celular: celular,
-        fototipo: fototipo,
-        antecedentes_medicos: antecedentes,
-        observaciones_fijas: observacionesFijas,
-        estado_atencion: 'en_espera',
-        zonas_realizadas: zonasSeleccionadas,
-        observaciones_recepcion: observacionesHoy,
-        saldo_pendiente: cobradoEnPuerta ? 0 : saldoCalculado,
-        anamnesis_sesion: antecedentes,
-        updated_at: new Date().toISOString(),
-      };
-
       if (esNuevo || !pacienteId) {
         const { data: nuevo, error: errFicha } = await supabase
           .from('pacientes_ficha')
-          .insert(payload)
+          .insert({
+            nombre_completo: nombre,
+            celular: celular,
+            fototipo: fototipo,
+            antecedentes_medicos: antecedentes,
+            observaciones_fijas: observacionesFijas,
+          })
           .select('id')
           .single();
 
         if (errFicha) throw errFicha;
         pacienteId = nuevo.id;
       } else {
-        const { error: errUpdate } = await supabase
+        await supabase
           .from('pacientes_ficha')
-          .update(payload)
+          .update({
+            fototipo: fototipo,
+            antecedentes_medicos: antecedentes,
+            observaciones_fijas: observacionesFijas,
+            updated_at: new Date().toISOString(),
+          })
           .eq('id', pacienteId);
-
-        if (errUpdate) throw errUpdate;
       }
+
+      const precioTotal = Number(reservaHoy?.precio_total || 0);
+      const montoAbonado = Number(reservaHoy?.monto_abonado || reservaHoy?.monto_sena || 0);
+      const saldoRestante = Math.max(0, precioTotal - montoAbonado);
+
+      const { error: errSesion } = await supabase.from('sesiones_gabinete').insert({
+        paciente_id: pacienteId,
+        reserva_id: reservaHoy?.id || null,
+        estado: 'en_espera',
+        observaciones_recepcion: observacionesHoy,
+        zonas_preasignadas: zonasSeleccionadas,
+        saldo_pendiente: cobradoEnPuerta ? 0 : saldoRestante,
+        estado_pago_recepcion: cobradoEnPuerta ? 'cobrado' : 'pendiente',
+        anamnesis_sesion: antecedentes, // 📸 Aquí guardamos la foto de las respuestas del día
+        parametros_tecnicos: {},
+      });
+
+      if (errSesion) throw errSesion;
 
       setMensaje('✅ ¡Paciente derivado a Gabinete (En Espera)!');
       limpiar();
@@ -189,21 +200,24 @@ export default function RecepcionPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
+      {/* Cabecera con título y botón de configuración */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Módulo Recepción (PRO-EVAL)</h1>
           <p className="text-xs text-slate-500">Búsqueda, evaluación clínica y derivación a gabinete.</p>
         </div>
         
+        {/* 3. BOTÓN DE CONFIGURACIÓN */}
         <button
           onClick={() => setMostrarConfigAnamnesis(!mostrarConfigAnamnesis)}
-          className="flex items-center space-x-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors cursor-pointer"
+          className="flex items-center space-x-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
         >
           <Settings className="w-4 h-4 text-indigo-600" />
           <span>{mostrarConfigAnamnesis ? 'Volver a Recepción' : 'Configurar Anamnesis'}</span>
         </button>
       </div>
 
+      {/* 4. RENDERIZADO CONDICIONAL */}
       {mostrarConfigAnamnesis ? (
         <ConfiguracionAnamnesis onClose={() => setMostrarConfigAnamnesis(false)} />
       ) : (
@@ -222,7 +236,7 @@ export default function RecepcionPage() {
                 {pacienteFicha && (
                   <button
                     onClick={() => setPacienteIdModal(pacienteFicha.id)}
-                    className="text-xs font-semibold text-indigo-600 hover:underline cursor-pointer"
+                    className="text-xs font-semibold text-indigo-600 hover:underline"
                   >
                     📋 Ver Historial Completo
                   </button>
@@ -270,7 +284,7 @@ export default function RecepcionPage() {
               <button
                 onClick={handleEnviarAGabinete}
                 disabled={guardando}
-                className="w-full py-3 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 disabled:opacity-50 cursor-pointer"
+                className="w-full py-3 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 disabled:opacity-50"
               >
                 {guardando ? 'Enviando...' : '🚀 Enviar a Gabinete (En Espera)'}
               </button>
