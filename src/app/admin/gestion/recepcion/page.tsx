@@ -98,14 +98,9 @@ export default function RecepcionPage() {
       setCelular(data.pacienteFicha.celular || '');
       setFototipo(data.pacienteFicha.fototipo || 'Fototipo III');
       setObservacionesFijas(data.pacienteFicha.observaciones_fijas || '');
-      setAntecedentes(
-        data.pacienteFicha.antecedentes_medicos || {
-          embarazo: false,
-          solReciente: false,
-          medicacion: false,
-          pielSensible: false,
-        }
-      );
+      
+      // ✅ Si ya tiene antecedentes guardados los usa; si no, objeto vacío
+      setAntecedentes(data.pacienteFicha.antecedentes_medicos || {});
     } else {
       setPacienteFicha(null);
       setEsNuevo(true);
@@ -113,7 +108,9 @@ export default function RecepcionPage() {
       setCelular(data.reservaHoy?.cliente_celular || '');
       setFototipo('Fototipo III');
       setObservacionesFijas('');
-      setAntecedentes({ embarazo: false, solReciente: false, medicacion: false, pielSensible: false });
+      
+      // ✅ Para nuevo cliente arranca completamente limpio
+      setAntecedentes({});
     }
   };
 
@@ -129,7 +126,7 @@ export default function RecepcionPage() {
     try {
       let pacienteId = pacienteFicha?.id;
 
-      // Unicamente campos reales de pacientes_ficha
+      // Se guardan ÚNICAMENTE las respuestas de las preguntas reales
       const payload = {
         nombre_completo: nombre,
         celular: celular,
@@ -180,6 +177,7 @@ export default function RecepcionPage() {
     setZonasSeleccionadas([]);
     setObservacionesHoy('');
     setCobradoEnPuerta(false);
+    setAntecedentes({});
   };
 
   return (
@@ -281,10 +279,10 @@ export default function RecepcionPage() {
       )}
 
       <ModalHistorialSesiones
-      pacienteId={pacienteIdModal || ''}
-      celularPaciente={pacienteFicha?.celular || celular}
-      isOpen={!!pacienteIdModal}
-      onClose={() => setPacienteIdModal(null)}
+        pacienteId={pacienteIdModal || ''}
+        celularPaciente={pacienteFicha?.celular || celular}
+        isOpen={!!pacienteIdModal}
+        onClose={() => setPacienteIdModal(null)}
       />
     </div>
   );
