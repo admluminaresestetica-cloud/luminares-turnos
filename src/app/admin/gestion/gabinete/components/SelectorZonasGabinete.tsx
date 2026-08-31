@@ -39,23 +39,19 @@ export default function SelectorZonasGabinete({
   const [cargando, setCargando] = useState<boolean>(true);
   const [desplegado, setDesplegado] = useState<boolean>(true);
 
-  // Cargar TODAS las zonas de servicios_laser sin filtros de backend
   useEffect(() => {
     const cargarServiciosLaser = async () => {
       setCargando(true);
       try {
         const { data, error } = await supabase
           .from('servicios_laser')
-          .select('id, nombre, genero')
-          .order('nombre', { ascending: true });
+          .select('*'); // Traemos todo para verificar
 
-        if (error) {
-          console.error('Error al cargar servicios_laser:', error);
-        } else if (data) {
-          setServicios(data);
-        }
+        console.log('=== DIAGNÓSTICO GABINETE ===');
+        console.log('Error Supabase:', error);
+        console.log('Data Supabase:', data);
       } catch (err) {
-        console.error('Error en la petición de servicios_laser:', err);
+        console.error('Error en try/catch:', err);
       } finally {
         setCargando(false);
       }
