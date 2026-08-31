@@ -19,12 +19,10 @@ export default function HeaderOperadoraReloj({
   setOperadoraActual,
 }: HeaderOperadoraProps) {
   const [horaActual, setHoraActual] = useState<string>('');
-  const [tiempoTranscurrido, setTiempoTranscurrido] = useState<number>(0);
-  const [cronometroActivo, setCronometroActivo] = useState<boolean>(false);
-  
+
   const [operadoras, setOperadoras] = useState<{ id: string; nombre: string }[]>([]);
   const [cargando, setCargando] = useState<boolean>(true);
-  
+
   // Estado para el mini modal de agregar operadora
   const [mostrarModalCrear, setMostrarModalCrear] = useState<boolean>(false);
   const [nuevoNombre, setNuevoNombre] = useState<string>('');
@@ -82,7 +80,9 @@ export default function HeaderOperadoraReloj({
       if (error) throw error;
 
       if (data) {
-        setOperadoras((prev) => [...prev, { id: data.id, nombre: data.nombre }].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+        setOperadoras((prev) =>
+          [...prev, { id: data.id, nombre: data.nombre }].sort((a, b) => a.nombre.localeCompare(b.nombre))
+        );
         setOperadoraActual(data.nombre);
         setNuevoNombre('');
         setMostrarModalCrear(false);
@@ -94,46 +94,29 @@ export default function HeaderOperadoraReloj({
     }
   };
 
-  // 4. Temporizador de sesión
-  useEffect(() => {
-    let intervalCronometro: NodeJS.Timeout;
-    if (cronometroActivo) {
-      intervalCronometro = setInterval(() => {
-        setTiempoTranscurrido((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(intervalCronometro);
-  }, [cronometroActivo]);
-
-  const formatearTiempo = (segundos: number) => {
-    const mins = Math.floor(segundos / 60);
-    const secs = segundos % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
-    <header className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 relative">
+    <header className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
       {/* SECCIÓN OPERADORA DINÁMICA */}
-      <div className="flex items-center space-x-3 w-full md:w-auto">
-        <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600">
-          <UserCheck className="w-5 h-5" />
+      <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+          <UserCheck className="w-4 h-4 text-emerald-600" />
         </div>
-        <div>
-          <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-            Operadora en Turno
+        <div className="min-w-0">
+          <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wide">
+            Operadora en turno
           </span>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <select
               value={operadoraActual}
               onChange={(e) => setOperadoraActual(e.target.value)}
-              className="text-xs font-semibold text-slate-700 bg-transparent border-none focus:outline-none cursor-pointer"
+              className="text-xs font-semibold text-slate-700 bg-transparent border-none focus:outline-none cursor-pointer py-0.5"
             >
               <option value="" disabled>
                 {cargando
                   ? 'Cargando operadoras...'
                   : operadoras.length === 0
                   ? 'Sin operadoras registradas'
-                  : 'Selecciona operadora...'}
+                  : 'Seleccioná operadora...'}
               </option>
               {operadoras.map((op) => (
                 <option key={op.id} value={op.nombre}>
@@ -145,7 +128,7 @@ export default function HeaderOperadoraReloj({
             <button
               type="button"
               onClick={() => setMostrarModalCrear(true)}
-              className="flex items-center space-x-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded cursor-pointer"
+              className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-lg transition-colors active:scale-95"
               title="Agregar nueva operadora"
             >
               <Plus className="w-3 h-3" />
@@ -155,71 +138,42 @@ export default function HeaderOperadoraReloj({
         </div>
       </div>
 
-      {/* SECCIÓN RELOJ Y TEMPORIZADOR */}
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg">
-          <span className="text-xs font-bold text-slate-600">Sesión:</span>
-          <span className="text-xs font-mono font-bold text-indigo-600">
-            {formatearTiempo(tiempoTranscurrido)}
-          </span>
-          <button
-            type="button"
-            onClick={() => setCronometroActivo(!cronometroActivo)}
-            className={`text-[10px] px-2 py-0.5 rounded font-bold text-white transition-colors cursor-pointer ${
-              cronometroActivo ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-600 hover:bg-emerald-700'
-            }`}
-          >
-            {cronometroActivo ? 'Pausar' : 'Iniciar'}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setCronometroActivo(false);
-              setTiempoTranscurrido(0);
-            }}
-            className="text-[10px] text-slate-400 hover:text-slate-600 px-1 cursor-pointer"
-            title="Reiniciar cronómetro"
-          >
-            🔄
-          </button>
-        </div>
-
-        <div className="flex items-center space-x-2 text-slate-600 border-l pl-4 border-slate-200">
-          <Clock className="w-4 h-4 text-slate-400" />
-          <span className="text-xs font-mono font-medium">{horaActual || '--:--:--'}</span>
-        </div>
+      {/* RELOJ DE PARED */}
+      <div className="flex items-center gap-2 text-slate-600 sm:border-l sm:pl-4 border-slate-200 self-start sm:self-auto">
+        <Clock className="w-4 h-4 text-slate-400" />
+        <span className="text-xs font-mono font-medium tabular-nums">{horaActual || '--:--:--'}</span>
       </div>
 
       {/* MODAL CREAR OPERADORA */}
       {mostrarModalCrear && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-xl max-w-sm w-full space-y-4">
-            <h4 className="text-sm font-bold text-slate-800">👤 Agregar Nueva Operadora</h4>
+        <div className="fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xl max-w-sm w-full space-y-4">
+            <h4 className="text-sm font-semibold text-slate-800">Agregar nueva operadora</h4>
             <form onSubmit={handleCrearOperadora} className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">Nombre completo:</label>
+                <label className="block text-[11px] font-medium text-slate-600 mb-1.5">Nombre completo</label>
                 <input
                   type="text"
                   required
                   value={nuevoNombre}
                   onChange={(e) => setNuevoNombre(e.target.value)}
                   placeholder="Ej: Lucía Gómez"
-                  className="w-full text-xs px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full text-xs px-3 py-2.5 border border-slate-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
                 />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-2">
+              <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setMostrarModalCrear(false)}
-                  className="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors active:scale-95"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={guardandoOperadora}
-                  className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg disabled:opacity-50 cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl disabled:opacity-50 transition-colors active:scale-95"
                 >
                   {guardandoOperadora ? 'Guardando...' : 'Guardar'}
                 </button>
