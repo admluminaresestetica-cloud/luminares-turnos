@@ -30,7 +30,14 @@ export default function SelectorZonasGabinete({
   const [cargando, setCargando] = useState<boolean>(true);
   const [desplegado, setDesplegado] = useState<boolean>(true);
 
-  // Cargar TODOS los servicios de servicios_laser desde Supabase
+  // Obtener género del paciente en sesión (femenino / masculino)
+  const generoPaciente = useMemo(() => {
+    if (!sesionActual) return '';
+    const rawGender = sesionActual.genero || sesionActual.sexo || '';
+    return rawGender.toString().toLowerCase().trim();
+  }, [sesionActual]);
+
+  // Cargar servicios_laser desde Supabase
   useEffect(() => {
     const cargarServiciosLaser = async () => {
       setCargando(true);
@@ -55,28 +62,33 @@ export default function SelectorZonasGabinete({
     cargarServiciosLaser();
   }, []);
 
-  // Mapa rápido para conocer el género de cada zona
-  const mapaGeneros = useMemo(() => {
-    const map = new Map<string, string>();
-    servicios.forEach((s) => {
-      if (s.nombre) {
-        map.set(s.nombre.toLowerCase().trim(), (s.genero || '').toLowerCase().trim());
-      }
-    });
-    return map;
-  }, [servicios]);
+  // Filtrar zonas según el género del paciente
+  const zonasFiltradas = useMemo(() => {
+    if (!generoPaciente) {
+      // Si por alguna razón el paciente no tiene género definido, mostramos todas
+      return servicios;
+    }
 
-  // Consolidar todas las zonas registradas más cualquier zona previamente elegida
+    return servicios.filter((serv) => {
+      const gServ = (serv.genero || '').toLowerCase().trim();
+      // Incluye si coincide con el género del paciente o si no tiene género asignado (unisex)
+      return gServ === '' || gServ === generoPaciente;
+    });
+  }, [servicios, generoPaciente]);
+
+  // Consolidar la lista a mostrar asegurando que zonas seleccionadas previamente no se pierdan
   const listaZonasDisponibles = useMemo(() => {
-    const nombresBd = servicios.map((s) => s.nombre).filter(Boolean);
+    const nombresBd = zonasFiltradas.map((s) => s.nombre).filter(Boolean);
     const lista = [...nombresBd];
+
     zonasSeleccionadas.forEach((z) => {
       if (z && !lista.includes(z)) {
         lista.push(z);
       }
     });
+
     return lista;
-  }, [servicios, zonasSeleccionadas]);
+  }, [zonasFiltradas, zonasSeleccionadas]);
 
   const toggleZona = (zona: string) => {
     if (zonasSeleccionadas.includes(zona)) {
@@ -96,6 +108,9 @@ export default function SelectorZonasGabinete({
     );
   }
 
+  const esFemenino = generoPaciente === 'femenino';
+  const esMasculino = generoPaciente === 'masculino';
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm transition-all overflow-hidden">
       {/* CABECERA DESPLEGABLE */}
@@ -108,6 +123,19 @@ export default function SelectorZonasGabinete({
           <h3 className="text-xs font-bold uppercase tracking-wider">
             Zonas a Tratar en Sesión
           </h3>
+          {generoPaciente && (
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${
+                esFemenino
+                  ? 'bg-rose-100 text-rose-700'
+                  : esMasculino
+                  ? 'bg-sky-100 text-sky-700'
+                  : 'bg-slate-100 text-slate-600'
+              }`}
+            >
+              {generoPaciente}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center space-x-3">
@@ -128,39 +156,29 @@ export default function SelectorZonasGabinete({
       {/* CONTENIDO DESPLEGABLE */}
       {desplegado && (
         <div className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-3">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs text-slate-500 gap-1">
-            <p>Haz clic para agregar o quitar cualquier zona en esta sesión:</p>
-            {/* Leyenda de colores */}
-            <div className="flex items-center space-x-3 text-[10px] font-semibold">
-              <span className="flex items-center space-x-1 text-rose-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block"></span>
-                <span>Femenino</span>
-              </span>
-              <span className="flex items-center space-x-1 text-sky-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block"></span>
-                <span>Masculino</span>
-              </span>
-            </div>
-          </div>
+          <p className="text-xs text-slate-500">
+            Haz clic en las zonas para marcarlas o desmarcarlas según lo que se realizará hoy:
+          </p>
 
           {cargando ? (
             <p className="text-xs text-slate-400 font-medium py-2">Cargando zonas de depilación...</p>
           ) : listaZonasDisponibles.length === 0 ? (
-            <p className="text-xs text-slate-400 italic py-2">No se encontraron zonas en servicios_laser.</p>
+            <p className="text-xs text-slate-400 italic py-2">
+              No se encontraron zonas correspondientes para este género.
+            </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {listaZonasDisponibles.map((zona) => {
                 const estaSeleccionada = zonasSeleccionadas.includes(zona);
-                const genero = mapaGeneros.get(zona.toLowerCase().trim()) || '';
 
-                // Definición visual según el género cargado en la BD
+                // Colores acordes al género correspondiente
                 let clasesBoton = 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
 
-                if (genero === 'femenino') {
+                if (esFemenino) {
                   clasesBoton = estaSeleccionada
                     ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
                     : 'bg-rose-50/70 border-rose-200 text-rose-800 hover:bg-rose-100';
-                } else if (genero === 'masculino') {
+                } else if (esMasculino) {
                   clasesBoton = estaSeleccionada
                     ? 'bg-sky-600 border-sky-600 text-white shadow-xs'
                     : 'bg-sky-50/70 border-sky-200 text-sky-800 hover:bg-sky-100';
