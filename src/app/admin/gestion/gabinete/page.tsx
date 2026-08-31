@@ -7,6 +7,7 @@ import NotificacionNuevoCliente from './components/NotificacionNuevoCliente';
 import SelectorPacientesDoble from './components/SelectorPacientesDoble';
 import VisorAnamnesisDia from './components/VisorAnamnesisDia';
 import FormularioCargaTecnica from './components/FormularioCargaTecnica';
+import CronometroSesion from './components/Cronometrosesion';
 
 export default function GabinetePage() {
   const [operadoraActual, setOperadoraActual] = useState<string>('');
@@ -92,6 +93,11 @@ export default function GabinetePage() {
         {/* BLOQUE CLÍNICO Y TÉCNICO (SE ACTIVA AL SELECCIONAR UN PACIENTE) */}
         {sesionActual && (
           <div className="space-y-5 sm:space-y-6 animate-fadeIn">
+
+            {/* CRONÓMETRO DE SESIÓN — fijo al hacer scroll para no perderlo de vista */}
+            <div className="sticky top-2 z-30">
+              <CronometroSesion sesionActual={sesionActual} nombrePaciente={nombrePacienteActivo} />
+            </div>
 
             {/* INFORMACIÓN DEL PACIENTE ACTIVO */}
             <div className="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
