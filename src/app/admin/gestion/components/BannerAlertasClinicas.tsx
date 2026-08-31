@@ -1,29 +1,18 @@
 'use client';
 
-interface AntecedentesMedicos {
-  embarazo?: boolean;
-  solReciente?: boolean;
-  medicacion?: boolean;
-  pielSensible?: boolean;
-}
-
 interface BannerAlertasClinicasProps {
-  antecedentes?: AntecedentesMedicos;
+  antecedentes?: Record<string, boolean>;
   observacionesFijas?: string;
 }
 
 export default function BannerAlertasClinicas({
-  antecedentes,
+  antecedentes = {},
   observacionesFijas,
 }: BannerAlertasClinicasProps) {
-  if (!antecedentes && !observacionesFijas) return null;
-
-  const alertas: string[] = [];
-
-  if (antecedentes?.embarazo) alertas.push('Embarazo / Lactancia');
-  if (antecedentes?.solReciente) alertas.push('Sol / Bronceado < 15 días');
-  if (antecedentes?.medicacion) alertas.push('Medicación Fotosensible');
-  if (antecedentes?.pielSensible) alertas.push('Piel Sensible / Lesiones');
+  // Buscamos dinámicamente TODAS las preguntas de Supabase que se marcaron en TRUE
+  const alertas = Object.entries(antecedentes)
+    .filter(([_, valor]) => valor === true)
+    .map(([pregunta]) => pregunta);
 
   if (alertas.length === 0 && !observacionesFijas) return null;
 
