@@ -31,12 +31,7 @@ export default function RecepcionPage() {
   const [celular, setCelular] = useState('');
   const [fototipo, setFototipo] = useState('Fototipo III');
   const [observacionesFijas, setObservacionesFijas] = useState('');
-  const [antecedentes, setAntecedentes] = useState({
-    embarazo: false,
-    solReciente: false,
-    medicacion: false,
-    pielSensible: false,
-  });
+  const [antecedentes, setAntecedentes] = useState<Record<string, boolean>>({});
 
   // Operación del Día
   const [cobradoEnPuerta, setCobradoEnPuerta] = useState(false);
@@ -175,6 +170,7 @@ export default function RecepcionPage() {
         zonas_preasignadas: zonasSeleccionadas,
         saldo_pendiente: cobradoEnPuerta ? 0 : saldoRestante,
         estado_pago_recepcion: cobradoEnPuerta ? 'cobrado' : 'pendiente',
+        anamnesis_sesion: antecedentes, // 📸 Aquí guardamos la foto de las respuestas del día
         parametros_tecnicos: {},
       });
 
