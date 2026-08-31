@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { ListChecks, Check } from 'lucide-react';
+import { ListChecks, Check, Droplet } from 'lucide-react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,10 +62,13 @@ export default function ChecklistAnamnesis({
     });
   };
 
+  const totalMarcados = Object.values(antecedentes).filter(Boolean).length;
+
   return (
-    <div className="space-y-5 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm sm:p-5">
+    <div className="space-y-5">
       <div>
-        <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          <Droplet className="h-3.5 w-3.5 text-teal-500" />
           Fototipo de piel (Fitzpatrick)
         </label>
         <select
@@ -82,23 +85,34 @@ export default function ChecklistAnamnesis({
       </div>
 
       <div className="border-t border-slate-100 pt-4">
-        <div className="mb-3 flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50 text-teal-600">
-            <ListChecks className="h-4 w-4" />
-          </span>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-            Check clínico / anamnesis
-          </span>
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50 text-teal-600">
+              <ListChecks className="h-4 w-4" />
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              Check clínico / anamnesis
+            </span>
+          </div>
+          {totalMarcados > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-800">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              {totalMarcados} marcado{totalMarcados > 1 ? 's' : ''}
+            </span>
+          )}
         </div>
 
         {cargando ? (
-          <p className="text-xs italic text-slate-400">Cargando preguntas de anamnesis...</p>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-xs italic text-slate-400">
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-teal-500" />
+            Cargando preguntas de anamnesis...
+          </div>
         ) : preguntasDinamicas.length === 0 ? (
           <p className="rounded-xl border border-amber-200/80 bg-amber-50 p-3 text-xs text-amber-700">
             No hay preguntas configuradas. Usá el botón "Configurar Anamnesis" arriba para agregarlas.
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {preguntasDinamicas.map((item) => {
               // USAMOS EL TÍTULO O PREGUNTA REAL COMO CLAVE PARA GUARDAR EN LA BD
               const claveLegible = item.titulo || item.pregunta || item.id;

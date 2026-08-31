@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Search, Phone, CheckCircle2, History, Loader2 } from 'lucide-react'
+import { Search, Phone, CheckCircle2, History, Loader2, Users } from 'lucide-react'
 
 function obtenerTextoDetalle(reserva: Record<string, any>): string {
   if (!reserva) return 'Sin detalle'
@@ -152,7 +152,7 @@ export default function BuscadorMulticoincidencia({
   }
 
   return (
-    <div className="w-full rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm sm:p-5">
+    <div className="w-full rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
       <form onSubmit={handleBuscar} className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
@@ -175,55 +175,62 @@ export default function BuscadorMulticoincidencia({
       </form>
 
       {resultados.length > 0 && (
-        <div className="mt-4 max-h-80 divide-y divide-slate-100 overflow-y-auto border-t border-slate-100 sm:max-h-96">
-          {resultados.map((item, idx) => (
-            <div
-              key={item.pacienteFicha?.id || item.reservaHoy?.id || idx}
-              className="flex flex-col gap-3 rounded-xl px-2 py-3 transition-colors hover:bg-rose-50/40 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="flex min-w-0 flex-col gap-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-800">{item.nombre}</span>
-                  <span className="rounded-full border border-slate-200/80 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600">
-                    {item.detalleZona}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-slate-400">
-                  {item.celular && (
-                    <span className="flex items-center gap-1">
-                      <Phone className="h-3 w-3" /> {item.celular}
-                    </span>
-                  )}
-                  {item.origen === 'reserva' && (
-                    <span className="inline-flex items-center gap-1.5 font-medium text-amber-600">
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      Turno sin ficha guardada
-                    </span>
-                  )}
-                </div>
-              </div>
+        <div className="mt-4 space-y-1 border-t border-slate-100 pt-3">
+          <div className="mb-1 flex items-center gap-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <Users className="h-3.5 w-3.5" />
+            {resultados.length} resultado{resultados.length > 1 ? 's' : ''}
+          </div>
 
-              <div className="flex shrink-0 items-center gap-2">
-                {item.pacienteFicha?.id && (
+          <div className="max-h-80 divide-y divide-slate-100 overflow-y-auto sm:max-h-96">
+            {resultados.map((item, idx) => (
+              <div
+                key={item.pacienteFicha?.id || item.reservaHoy?.id || idx}
+                className="flex flex-col gap-3 rounded-xl px-2 py-3 transition-colors hover:bg-rose-50/40 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-800">{item.nombre}</span>
+                    <span className="rounded-full border border-slate-200/80 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                      {item.detalleZona}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-slate-400">
+                    {item.celular && (
+                      <span className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" /> {item.celular}
+                      </span>
+                    )}
+                    {item.origen === 'reserva' && (
+                      <span className="inline-flex items-center gap-1.5 font-medium text-amber-600">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        Turno sin ficha guardada
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  {item.pacienteFicha?.id && (
+                    <button
+                      type="button"
+                      onClick={() => onVerHistorialDirecto(item.pacienteFicha.id)}
+                      className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50 px-3 text-xs font-semibold text-slate-700 transition-all hover:bg-slate-100 hover:text-slate-900 active:scale-95"
+                    >
+                      <History className="h-3.5 w-3.5" />
+                      Historial
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => onVerHistorialDirecto(item.pacienteFicha.id)}
-                    className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50 px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    onClick={() => seleccionar(item)}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3 text-xs font-bold text-white shadow-sm shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98]"
                   >
-                    <History className="h-3.5 w-3.5" />
-                    Historial
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Seleccionar
                   </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => seleccionar(item)}
-                  className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3 text-xs font-bold text-white shadow-sm shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98]"
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Seleccionar
-                </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>
