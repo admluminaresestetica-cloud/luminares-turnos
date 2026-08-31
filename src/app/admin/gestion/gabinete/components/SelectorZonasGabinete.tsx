@@ -11,7 +11,7 @@ const supabase = createClient(
 
 interface ServicioLaser {
   id?: string;
-  nombre: string;
+  nombre_zona: string;
   genero?: string;
 }
 
@@ -39,19 +39,23 @@ export default function SelectorZonasGabinete({
   const [cargando, setCargando] = useState<boolean>(true);
   const [desplegado, setDesplegado] = useState<boolean>(true);
 
+  // Cargar TODAS las zonas de servicios_laser leyendo la columna correcta: nombre_zona
   useEffect(() => {
     const cargarServiciosLaser = async () => {
       setCargando(true);
       try {
         const { data, error } = await supabase
           .from('servicios_laser')
-          .select('*'); // Traemos todo para verificar
+          .select('id, nombre_zona, genero')
+          .order('nombre_zona', { ascending: true });
 
-        console.log('=== DIAGNÓSTICO GABINETE ===');
-        console.log('Error Supabase:', error);
-        console.log('Data Supabase:', data);
+        if (error) {
+          console.error('Error al cargar servicios_laser:', error);
+        } else if (data) {
+          setServicios(data);
+        }
       } catch (err) {
-        console.error('Error en try/catch:', err);
+        console.error('Error en la petición de servicios_laser:', err);
       } finally {
         setCargando(false);
       }
@@ -62,13 +66,12 @@ export default function SelectorZonasGabinete({
 
   // Consolidar lista completa ordenada: Femenino primero, Masculino después, luego Unisex
   const zonasOrganizadas = useMemo(() => {
-    // Mapa para saber el género de cada nombre de zona
     const mapaZonas = new Map<string, { nombre: string; genero: string }>();
 
     servicios.forEach((serv) => {
-      if (serv.nombre) {
-        mapaZonas.set(serv.nombre.toLowerCase().trim(), {
-          nombre: serv.nombre,
+      if (serv.nombre_zona) {
+        mapaZonas.set(serv.nombre_zona.toLowerCase().trim(), {
+          nombre: serv.nombre_zona,
           genero: obtenerGeneroLimpio(serv.genero),
         });
       }
@@ -99,7 +102,6 @@ export default function SelectorZonasGabinete({
   }, [servicios, zonasSeleccionadas]);
 
   const toggleZona = (nombreZona: string) => {
-    // Coincidencia insensible a mayúsculas/minúsculas para no duplicar
     const existe = zonasSeleccionadas.some(
       (z) => z.toLowerCase().trim() === nombreZona.toLowerCase().trim()
     );
@@ -177,7 +179,6 @@ export default function SelectorZonasGabinete({
                 const esFem = item.genero === 'femenino';
                 const esMasc = item.genero === 'masculino';
 
-                // Colores para identificar rápido visualmente cada género
                 let clasesBoton = 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
 
                 if (estaSeleccionada) {
@@ -202,7 +203,7 @@ export default function SelectorZonasGabinete({
                     className={`p-2.5 rounded-lg border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${clasesBoton}`}
                   >
                     <div className="flex flex-col items-start truncate pr-1">
-                      <span className="truncate w-full text-left">{item.nombre}</span>
+                      <span className="truncate w-full text-left capitalize">{item.nombre}</span>
                       <span
                         className={`text-[9px] font-normal uppercase opacity-75 ${
                           estaSeleccionada ? 'text-white' : 'text-slate-500'
