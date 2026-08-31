@@ -7,7 +7,7 @@ import NotificacionNuevoCliente from './components/NotificacionNuevoCliente';
 import SelectorPacientesDoble from './components/SelectorPacientesDoble';
 import VisorAnamnesisDia from './components/VisorAnamnesisDia';
 import FormularioCargaTecnica from './components/FormularioCargaTecnica';
-import CronometroSesion from './components/Cronometrosesion';
+import CronometroSesion from './components/CronometroSesion';
 
 export default function GabinetePage() {
   const [operadoraActual, setOperadoraActual] = useState<string>('');
