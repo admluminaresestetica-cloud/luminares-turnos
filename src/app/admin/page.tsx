@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Calendar, ShoppingBag, Clock, ArrowRight } from 'lucide-react';
+import { Calendar, ShoppingBag, Clock, ShieldCheck, ArrowRight } from 'lucide-react';
 
 export default function AdminHubPage() {
   const modulos = [
@@ -20,11 +20,18 @@ export default function AdminHubPage() {
       color: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900',
     },
     {
-      titulo: 'Gestión y Atención',
-      descripcion: 'Recepción, check-in, control de gabinete y sesiones en vivo.',
+      titulo: 'Recepción (PRO-EVAL)',
+      descripcion: 'Búsqueda de pacientes, check-in, anamnesis y derivación a gabinete.',
       icono: Clock,
       ruta: '/admin/gestion/recepcion',
       color: 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900',
+    },
+    {
+      titulo: 'Gabinete (PRO-GABINETE)',
+      descripcion: 'Control técnico en vivo, anamnesis del día, parámetros y sesiones.',
+      icono: ShieldCheck,
+      ruta: '/admin/gestion/gabinete',
+      color: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900',
     },
   ];
 
