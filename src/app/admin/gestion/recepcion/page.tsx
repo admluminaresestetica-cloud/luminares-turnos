@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Settings } from 'lucide-react';
+import { Settings, UserRound, UserPlus, ClipboardList } from 'lucide-react';
 
 import BuscadorMulticoincidencia from './components/BuscadorMulticoincidencia';
 import ResumenReservaCobro from './components/ResumenReservaCobro';
@@ -98,7 +98,7 @@ export default function RecepcionPage() {
       setCelular(data.pacienteFicha.celular || '');
       setFototipo(data.pacienteFicha.fototipo || 'Fototipo III');
       setObservacionesFijas(data.pacienteFicha.observaciones_fijas || '');
-      
+
       // ✅ Si ya tiene antecedentes guardados los usa; si no, objeto vacío
       setAntecedentes(data.pacienteFicha.antecedentes_medicos || {});
     } else {
@@ -108,7 +108,7 @@ export default function RecepcionPage() {
       setCelular(data.reservaHoy?.cliente_celular || '');
       setFototipo('Fototipo III');
       setObservacionesFijas('');
-      
+
       // ✅ Para nuevo cliente arranca completamente limpio
       setAntecedentes({});
     }
@@ -207,101 +207,167 @@ const handleEnviarAGabinete = async () => {
     setAntecedentes({});
   };
 
+  const hayPacienteActivo = pacienteFicha || esNuevo;
+
+  const estiloMensaje = mensaje?.startsWith('✅')
+    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+    : mensaje?.startsWith('❌')
+    ? 'border-rose-200 bg-rose-50 text-rose-800'
+    : mensaje?.startsWith('⚠️')
+    ? 'border-amber-200 bg-amber-50 text-amber-800'
+    : 'border-slate-200 bg-slate-100 text-slate-800';
+
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Módulo Recepción (PRO-EVAL)</h1>
-          <p className="text-xs text-slate-500">Búsqueda, evaluación clínica y derivación a gabinete.</p>
-        </div>
-        
-        <button
-          onClick={() => setMostrarConfigAnamnesis(!mostrarConfigAnamnesis)}
-          className="flex items-center space-x-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors cursor-pointer"
-        >
-          <Settings className="w-4 h-4 text-indigo-600" />
-          <span>{mostrarConfigAnamnesis ? 'Volver a Recepción' : 'Configurar Anamnesis'}</span>
-        </button>
+    <div className="min-h-screen bg-slate-50">
+      <div
+        className={`mx-auto max-w-6xl space-y-5 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 ${
+          hayPacienteActivo && !mostrarConfigAnamnesis ? 'pb-28 lg:pb-8' : 'pb-8'
+        }`}
+      >
+        {/* Encabezado */}
+        <header className="flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+              Recepción
+            </h1>
+            <p className="text-sm text-slate-500">
+              Búsqueda, evaluación clínica y derivación a gabinete
+            </p>
+          </div>
+
+          <button
+            onClick={() => setMostrarConfigAnamnesis(!mostrarConfigAnamnesis)}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-100 active:bg-slate-200"
+          >
+            <Settings className="h-4 w-4 text-teal-600" />
+            <span>{mostrarConfigAnamnesis ? 'Volver a Recepción' : 'Configurar Anamnesis'}</span>
+          </button>
+        </header>
+
+        {mostrarConfigAnamnesis ? (
+          <ConfiguracionAnamnesis onClose={() => setMostrarConfigAnamnesis(false)} />
+        ) : (
+          <>
+            <BuscadorMulticoincidencia
+              onClienteSeleccionado={handleClienteSeleccionado}
+              onVerHistorialDirecto={(id) => setPacienteIdModal(id)}
+            />
+
+            {hayPacienteActivo && (
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start">
+                {/* Columna clínica */}
+                <div className="space-y-5 lg:col-span-7 xl:col-span-8">
+                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                    <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-700">
+                          {esNuevo ? <UserPlus className="h-4.5 w-4.5" /> : <UserRound className="h-4.5 w-4.5" />}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate text-base font-bold text-slate-900">
+                            {esNuevo ? 'Nuevo paciente' : nombre || 'Paciente'}
+                          </p>
+                          {esNuevo && (
+                            <span className="text-xs font-medium text-teal-700">Se creará una ficha nueva</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {pacienteFicha && (
+                        <button
+                          onClick={() => setPacienteIdModal(pacienteFicha.id)}
+                          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-teal-700 transition-colors hover:bg-teal-50"
+                        >
+                          <ClipboardList className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Ver historial</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <BannerAlertasClinicas
+                      antecedentes={antecedentes}
+                      observacionesFijas={observacionesFijas}
+                    />
+                  </div>
+
+                  <ChecklistAnamnesis
+                    fototipo={fototipo}
+                    setFototipo={setFototipo}
+                    antecedentes={antecedentes}
+                    setAntecedentes={setAntecedentes}
+                    observacionesFijas={observacionesFijas}
+                    setObservacionesFijas={setObservacionesFijas}
+                  />
+                </div>
+
+                {/* Columna operativa (sticky en desktop) */}
+                <div className="space-y-5 lg:sticky lg:top-6 lg:col-span-5 xl:col-span-4">
+                  <ResumenReservaCobro
+                    reserva={reservaHoy}
+                    cobradoEnPuerta={cobradoEnPuerta}
+                    onToggleCobrado={setCobradoEnPuerta}
+                  />
+
+                  <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                    <SelectorZonasBotones
+                      zonasSeleccionadas={zonasSeleccionadas}
+                      setZonasSeleccionadas={setZonasSeleccionadas}
+                    />
+
+                    <div>
+                      <label className="mb-1 block text-xs font-semibold text-slate-700">
+                        Notas para gabinete
+                      </label>
+                      <input
+                        type="text"
+                        value={observacionesHoy}
+                        onChange={(e) => setObservacionesHoy(e.target.value)}
+                        placeholder="Ej: Sensibilidad leve en axilas..."
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition-colors focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20"
+                      />
+                    </div>
+
+                    {mensaje && (
+                      <div className={`rounded-lg border p-3 text-xs font-semibold ${estiloMensaje}`}>
+                        {mensaje}
+                      </div>
+                    )}
+
+                    {/* Botón de envío — versión desktop/tablet, integrada en el panel */}
+                    <button
+                      onClick={handleEnviarAGabinete}
+                      disabled={guardando}
+                      className="hidden h-12 w-full items-center justify-center rounded-xl bg-teal-600 text-sm font-bold text-white shadow-sm transition-colors hover:bg-teal-700 disabled:opacity-50 lg:flex"
+                    >
+                      {guardando
+                        ? 'Enviando...'
+                        : `Enviar a Gabinete${zonasSeleccionadas.length ? ` (${zonasSeleccionadas.length})` : ''}`}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Mensaje flotante para cuando no hay panel operativo visible (p.ej. sin zonas aún) */}
+        {mensaje && !hayPacienteActivo && (
+          <div className={`rounded-lg border p-3 text-xs font-semibold ${estiloMensaje}`}>{mensaje}</div>
+        )}
       </div>
 
-      {mostrarConfigAnamnesis ? (
-        <ConfiguracionAnamnesis onClose={() => setMostrarConfigAnamnesis(false)} />
-      ) : (
-        <>
-          <BuscadorMulticoincidencia
-            onClienteSeleccionado={handleClienteSeleccionado}
-            onVerHistorialDirecto={(id) => setPacienteIdModal(id)}
-          />
-
-          {(pacienteFicha || esNuevo) && (
-            <div className="bg-white p-6 rounded-xl border border-slate-200 space-y-5">
-              <div className="flex justify-between items-center border-b pb-2">
-                <h3 className="text-base font-bold text-slate-800">
-                  {esNuevo ? '🆕 Nuevo Paciente' : `👤 ${nombre}`}
-                </h3>
-                {pacienteFicha && (
-                  <button
-                    onClick={() => setPacienteIdModal(pacienteFicha.id)}
-                    className="text-xs font-semibold text-indigo-600 hover:underline cursor-pointer"
-                  >
-                    📋 Ver Historial Completo
-                  </button>
-                )}
-              </div>
-
-              <BannerAlertasClinicas
-                antecedentes={antecedentes}
-                observacionesFijas={observacionesFijas}
-              />
-
-              <ResumenReservaCobro
-                reserva={reservaHoy}
-                cobradoEnPuerta={cobradoEnPuerta}
-                onToggleCobrado={setCobradoEnPuerta}
-              />
-
-              <ChecklistAnamnesis
-                fototipo={fototipo}
-                setFototipo={setFototipo}
-                antecedentes={antecedentes}
-                setAntecedentes={setAntecedentes}
-                observacionesFijas={observacionesFijas}
-                setObservacionesFijas={setObservacionesFijas}
-              />
-
-              <SelectorZonasBotones
-                zonasSeleccionadas={zonasSeleccionadas}
-                setZonasSeleccionadas={setZonasSeleccionadas}
-              />
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Notas para Gabinete:
-                </label>
-                <input
-                  type="text"
-                  value={observacionesHoy}
-                  onChange={(e) => setObservacionesHoy(e.target.value)}
-                  placeholder="Ej: Sensibilidad leve en axilas..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-                />
-              </div>
-
-              <button
-                onClick={handleEnviarAGabinete}
-                disabled={guardando}
-                className="w-full py-3 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 disabled:opacity-50 cursor-pointer"
-              >
-                {guardando ? 'Enviando...' : '🚀 Enviar a Gabinete (En Espera)'}
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
-      {mensaje && (
-        <div className="p-3 rounded-lg text-xs font-semibold bg-slate-100 text-slate-800">
-          {mensaje}
+      {/* Barra de acción fija — mobile / tablet vertical */}
+      {hayPacienteActivo && !mostrarConfigAnamnesis && (
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 p-3 backdrop-blur-sm lg:hidden">
+          <button
+            onClick={handleEnviarAGabinete}
+            disabled={guardando}
+            className="flex h-12 w-full items-center justify-center rounded-xl bg-teal-600 text-sm font-bold text-white shadow-sm transition-colors active:bg-teal-700 disabled:opacity-50"
+          >
+            {guardando
+              ? 'Enviando...'
+              : `Enviar a Gabinete${zonasSeleccionadas.length ? ` (${zonasSeleccionadas.length})` : ''}`}
+          </button>
         </div>
       )}
 

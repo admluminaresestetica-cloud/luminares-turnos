@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Sparkles } from 'lucide-react';
 
 interface ZonaItem {
   nombre_zona: string;
@@ -57,10 +58,19 @@ export default function SelectorZonasBotones({
   }
 
   return (
-    <div className="space-y-2">
-      <label className="block text-xs font-bold uppercase text-slate-700">
-        ✂️ Zonas a Realizar Hoy (Clic para seleccionar)
-      </label>
+    <div className="space-y-2.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-teal-600" />
+          <span className="text-sm font-bold text-slate-800">Zonas a realizar hoy</span>
+        </div>
+        {zonasSeleccionadas.length > 0 && (
+          <span className="rounded-full bg-teal-100 px-2 py-0.5 text-[11px] font-bold text-teal-800">
+            {zonasSeleccionadas.length} seleccionada{zonasSeleccionadas.length > 1 ? 's' : ''}
+          </span>
+        )}
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {listaZonas.map((item) => {
           const seleccionada = zonasSeleccionadas.includes(item.nombre_zona);
@@ -71,12 +81,12 @@ export default function SelectorZonasBotones({
 
           if (esMasculino) {
             estiloColor = seleccionada
-              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-              : 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100';
+              ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+              : 'border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100';
           } else {
             estiloColor = seleccionada
-              ? 'bg-pink-600 text-white border-pink-600 shadow-sm'
-              : 'bg-pink-50 text-pink-800 border-pink-200 hover:bg-pink-100';
+              ? 'border-pink-600 bg-pink-600 text-white shadow-sm'
+              : 'border-pink-200 bg-pink-50 text-pink-800 hover:bg-pink-100';
           }
 
           return (
@@ -84,7 +94,7 @@ export default function SelectorZonasBotones({
               key={item.nombre_zona}
               type="button"
               onClick={() => toggleZona(item.nombre_zona)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${estiloColor}`}
+              className={`min-h-11 rounded-lg border px-3.5 py-2 text-xs font-semibold transition-all active:scale-95 ${estiloColor}`}
             >
               {seleccionada ? '✓ ' : '+ '}
               {item.nombre_zona}
