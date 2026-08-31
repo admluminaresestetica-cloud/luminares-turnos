@@ -50,6 +50,25 @@ export default function ModalHistorialSesiones({
     }
   };
 
+  // Función auxiliar blindada para convertir zonas a un arreglo seguro
+  const obtenerZonasSeguras = (sesion: any) => {
+    const rawZonas = sesion.zonas_realizadas || sesion.zonas_preasignadas;
+    
+    if (Array.isArray(rawZonas)) return rawZonas;
+    
+    if (typeof rawZonas === 'string') {
+      try {
+        const parsed = JSON.parse(rawZonas);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {
+        // Si es un string separado por comas o texto plano
+        return rawZonas.split(',').map((z: string) => z.trim()).filter(Boolean);
+      }
+    }
+    
+    return [];
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -111,12 +130,14 @@ export default function ModalHistorialSesiones({
                 <div>
                   <strong className="block text-slate-700 mb-1">Zonas Realizadas:</strong>
                   <div className="flex flex-wrap gap-1">
-                    {(sesionSeleccionada.zonas_realizadas || sesionSeleccionada.zonas_preasignadas || []).map(
-                      (zona: string, i: number) => (
+                    {obtenerZonasSeguras(sesionSeleccionada).length > 0 ? (
+                      obtenerZonasSeguras(sesionSeleccionada).map((zona: string, i: number) => (
                         <span key={i} className="bg-white border text-slate-800 px-2 py-0.5 rounded font-medium">
                           {zona}
                         </span>
-                      )
+                      ))
+                    ) : (
+                      <span className="text-slate-400 italic">Sin zonas registradas en esta sesión.</span>
                     )}
                   </div>
                 </div>
