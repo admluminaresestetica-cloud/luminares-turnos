@@ -1,10 +1,15 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 interface Antecedentes {
-  embarazo: boolean;
-  solReciente: boolean;
-  medicacion: boolean;
-  pielSensible: boolean;
+  [key: string]: boolean;
 }
 
 interface ChecklistProps {
@@ -24,7 +29,32 @@ export default function ChecklistAnamnesis({
   observacionesFijas,
   setObservacionesFijas,
 }: ChecklistProps) {
-  const toggleAntecedente = (campo: keyof Antecedentes) => {
+  const [preguntasDinamicas, setPreguntasDinamicas] = useState<any[]>([]);
+  const [cargando, setCargando] = useState(true);
+
+  // Cargar preguntas activas desde Supabase
+  useEffect(() => {
+    async function cargarPreguntas() {
+      try {
+        const { data, error } = await supabase
+          .from('checklist_anamnesis')
+          .select('*')
+          .eq('activo', true)
+          .order('orden', { ascending: true });
+
+        if (error) throw error;
+        setPreguntasDinamicas(data || []);
+      } catch (err) {
+        console.error('Error cargando checklist:', err);
+      } finally {
+        setCargando(false);
+      }
+    }
+
+    cargarPreguntas();
+  }, []);
+
+  const toggleAntecedente = (campo: string) => {
     setAntecedentes({
       ...antecedentes,
       [campo]: !antecedentes[campo],
@@ -54,27 +84,35 @@ export default function ChecklistAnamnesis({
         <span className="block text-xs font-bold uppercase text-slate-700 mb-2">
           📋 Check Clínico / Anamnesis
         </span>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-          {[
-            { key: 'embarazo', label: 'Embarazo / Lactancia' },
-            { key: 'solReciente', label: 'Sol / Bronceado < 15 días' },
-            { key: 'medicacion', label: 'Medicación Fotosensible' },
-            { key: 'pielSensible', label: 'Piel Sensible / Lesiones' },
-          ].map((item) => (
-            <label
-              key={item.key}
-              className="flex items-center gap-2 bg-white p-2 border rounded cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={antecedentes[item.key as keyof Antecedentes]}
-                onChange={() => toggleAntecedente(item.key as keyof Antecedentes)}
-                className="w-4 h-4 text-emerald-600 rounded"
-              />
-              <span className="font-medium text-slate-700">{item.label}</span>
-            </label>
-          ))}
-        </div>
+
+        {cargando ? (
+          <p className="text-xs text-slate-400 italic">Cargando preguntas de anamnesis...</p>
+        ) : preguntasDinamicas.length === 0 ? (
+          <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+            ⚠️ No hay preguntas configuradas. Usa el botón "Configurar Anamnesis" arriba para agregarlas.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            {preguntasDinamicas.map((item) => {
+              // Asumimos que tu tabla en Supabase guarda una columna identificadora como 'id', 'clave' o 'titulo'
+              const claveUnica = item.clave || item.id; 
+              return (
+                <label
+                  key={item.id}
+                  className="flex items-center gap-2 bg-white p-2 border rounded cursor-pointer hover:bg-slate-50 transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!antecedentes[claveUnica]}
+                    onChange={() => toggleAntecedente(claveUnica)}
+                    className="w-4 h-4 text-emerald-600 rounded"
+                  />
+                  <span className="font-medium text-slate-700">{item.titulo || item.pregunta}</span>
+                </label>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div>
