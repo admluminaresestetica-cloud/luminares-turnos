@@ -99,7 +99,12 @@ export default function FormularioCargaTecnica({
           setParametrosZonas(mapaPrevio);
         }
       }
-      setObservacionesGabinete(sesionActual.observaciones_gabinete || '');
+      // Leer nota directa o fallback a la que está dentro de parametros_tecnicos
+      setObservacionesGabinete(
+        sesionActual.observaciones_gabinete ||
+        sesionActual.parametros_tecnicos?.observaciones_gabinete ||
+        ''
+      );
     }
   }, [sesionActual]);
 
@@ -197,7 +202,6 @@ export default function FormularioCargaTecnica({
 
     setGuardando(true);
     try {
-      // Estructura de detalles por zona
       const detalles_zonas = zonasSeleccionadas.map((zona) => ({
         zona,
         afluencia: parametrosZonas[zona]?.afluencia || '',
@@ -213,12 +217,13 @@ export default function FormularioCargaTecnica({
         fecha_atencion: new Date().toISOString(),
       };
 
-      // UPDATE a pacientes_ficha
+      // UPDATE a pacientes_ficha registrando la nota como columna directa
       const { error } = await supabase
         .from('pacientes_ficha')
         .update({
           zonas_realizadas: zonasSeleccionadas,
           parametros_tecnicos,
+          observaciones_gabinete: observacionesGabinete, // Guardado directo en la columna de la tabla
           estado_atencion: 'atendido',
           updated_at: new Date().toISOString(),
         })

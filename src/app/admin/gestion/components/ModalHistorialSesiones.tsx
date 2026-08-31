@@ -10,7 +10,7 @@ const supabase = createClient(
 
 interface ModalHistorialSesionesProps {
   pacienteId: string;
-  celularPaciente?: string; // Agregamos celular para buscar el historial completo
+  celularPaciente?: string;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -39,7 +39,6 @@ export default function ModalHistorialSesiones({
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Si tenemos celular buscamos todas las citas del cliente, sino caemos al ID
       if (celularPaciente) {
         query = query.eq('celular', celularPaciente);
       } else {
@@ -74,7 +73,6 @@ export default function ModalHistorialSesiones({
     return [];
   };
 
-  // Helper para obtener los detalles de zonas técnicos guardados por Gabinete
   const obtenerDetallesTecnicos = (sesion: any) => {
     const params = sesion?.parametros_tecnicos;
     if (!params) return { operadora: null, equipo: null, detalles: [] };
@@ -107,7 +105,7 @@ export default function ModalHistorialSesiones({
           </div>
           <button
             onClick={onClose}
-            className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-medium transition-colors"
+            className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer"
           >
             Cerrar [X]
           </button>
@@ -119,7 +117,7 @@ export default function ModalHistorialSesiones({
           <p className="text-xs text-slate-500 py-4">No hay sesiones registradas previas para este paciente.</p>
         ) : (
           <div className="space-y-4">
-            {/* TIMELINE / BOTONES DE SESIONES */}
+            {/* TIMELINE DE SESIONES */}
             <div className="flex flex-wrap gap-2 border-b pb-3">
               {sesiones.map((sesion, index) => {
                 const fecha = sesion.created_at || sesion.updated_at
@@ -131,7 +129,7 @@ export default function ModalHistorialSesiones({
                   <button
                     key={sesion.id || index}
                     onClick={() => setSesionSeleccionada(sesion)}
-                    className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all ${
+                    className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all cursor-pointer ${
                       esActiva
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm font-semibold'
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -146,6 +144,9 @@ export default function ModalHistorialSesiones({
             {/* DETALLE DE LA SESIÓN SELECCIONADA */}
             {sesionSeleccionada && (() => {
               const infoTecnica = obtenerDetallesTecnicos(sesionSeleccionada);
+              const notaGabinete =
+                sesionSeleccionada.observaciones_gabinete ||
+                sesionSeleccionada.parametros_tecnicos?.observaciones_gabinete;
 
               return (
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4 text-xs">
@@ -162,7 +163,7 @@ export default function ModalHistorialSesiones({
                     </div>
                   </div>
 
-                  {/* PARÁMETROS TÉCNICOS REGISTRADOS EN GABINETE */}
+                  {/* PARÁMETROS TÉCNICOS */}
                   <div>
                     <strong className="block text-slate-800 font-bold mb-2">⚡ Parámetros Técnicos Aplicados en Gabinete:</strong>
                     {infoTecnica.detalles.length > 0 ? (
@@ -230,12 +231,25 @@ export default function ModalHistorialSesiones({
                     )}
                   </div>
 
-                  {/* NOTAS */}
-                  <div>
-                    <strong className="block text-slate-700 mb-0.5">Notas de Recepción:</strong>
-                    <p className="bg-white p-2.5 rounded-lg border border-slate-200 text-slate-600">
-                      {sesionSeleccionada.observaciones_recepcion || 'Sin notas de recepción.'}
-                    </p>
+                  {/* NOTAS DE GABINETE Y RECEPCIÓN */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <strong className="block text-slate-700 mb-1 font-bold">
+                        📝 Notas de Gabinete (Operadora):
+                      </strong>
+                      <p className="bg-amber-50/60 border border-amber-200 p-2.5 rounded-lg text-slate-700 italic min-h-[50px]">
+                        {notaGabinete || 'Sin observaciones registradas en gabinete.'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <strong className="block text-slate-700 mb-1 font-bold">
+                        📌 Notas de Recepción:
+                      </strong>
+                      <p className="bg-white p-2.5 rounded-lg border border-slate-200 text-slate-600 min-h-[50px]">
+                        {sesionSeleccionada.observaciones_recepcion || 'Sin notas de recepción.'}
+                      </p>
+                    </div>
                   </div>
                 </div>
               );

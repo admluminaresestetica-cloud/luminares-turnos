@@ -114,7 +114,7 @@ export default function RecepcionPage() {
     }
   };
 
-  const handleEnviarAGabinete = async () => {
+const handleEnviarAGabinete = async () => {
     if (zonasSeleccionadas.length === 0) {
       setMensaje('⚠️ Seleccioná al menos una zona para realizar hoy.');
       return;
@@ -126,7 +126,34 @@ export default function RecepcionPage() {
     try {
       let pacienteId = pacienteFicha?.id;
 
-      // Se guardan ÚNICAMENTE las respuestas de las preguntas reales
+      // 🛑 VALIDACIÓN: Verificar si el cliente ya fue derivado hoy
+      const inicioHoy = new Date();
+      inicioHoy.setHours(0, 0, 0, 0);
+
+      // Si tenemos celular o ID, buscamos si ya fue derivado en la fecha actual
+      let query = supabase
+        .from('pacientes_ficha')
+        .select('id, estado_atencion, updated_at')
+        .gte('updated_at', inicioHoy.toISOString());
+
+      if (pacienteId) {
+        query = query.eq('id', pacienteId);
+      } else if (celular) {
+        query = query.eq('celular', celular);
+      }
+
+      const { data: existente } = await query;
+
+      if (existente && existente.length > 0) {
+        const estadoActual = existente[0].estado_atencion;
+        if (['en_espera', 'en_atencion', 'atendido'].includes(estadoActual)) {
+          setMensaje(`⚠️ El paciente ya fue derivado a Gabinete el día de hoy (Estado: ${estadoActual}).`);
+          setGuardando(false);
+          return;
+        }
+      }
+
+      // Payload normal para Supabase
       const payload = {
         nombre_completo: nombre,
         celular: celular,

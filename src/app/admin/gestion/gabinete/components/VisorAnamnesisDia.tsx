@@ -20,6 +20,16 @@ export default function VisorAnamnesisDia({ sesionActual }: VisorAnamnesisDiaPro
         <span className="text-[10px] text-slate-400 font-medium">Verificado en recepción</span>
       </div>
 
+      {/* NOTA DE RECEPCIÓN PARA GABINETE */}
+      {sesionActual?.observaciones_recepcion && (
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-900 space-y-0.5">
+          <p className="font-bold uppercase tracking-wider text-[10px] text-blue-700">
+            📌 Nota enviada desde Recepción:
+          </p>
+          <p className="font-medium">{sesionActual.observaciones_recepcion}</p>
+        </div>
+      )}
+
       {entradas.length === 0 ? (
         <p className="text-xs text-slate-400 italic">No hay preguntas de anamnesis registradas para este paciente.</p>
       ) : (
