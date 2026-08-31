@@ -98,8 +98,8 @@ export default function HeaderOperadoraReloj({
     <header className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
       {/* SECCIÓN OPERADORA DINÁMICA */}
       <div className="flex items-center gap-3 w-full sm:w-auto">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
-          <UserCheck className="w-4 h-4 text-emerald-600" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+          <UserCheck className="w-5 h-5 text-emerald-600" />
         </div>
         <div className="min-w-0">
           <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wide">
@@ -109,7 +109,7 @@ export default function HeaderOperadoraReloj({
             <select
               value={operadoraActual}
               onChange={(e) => setOperadoraActual(e.target.value)}
-              className="text-xs font-semibold text-slate-700 bg-transparent border-none focus:outline-none cursor-pointer py-0.5"
+              className="text-xs sm:text-sm font-semibold text-slate-700 bg-transparent border-none focus:outline-none cursor-pointer py-0.5"
             >
               <option value="" disabled>
                 {cargando
@@ -138,10 +138,17 @@ export default function HeaderOperadoraReloj({
         </div>
       </div>
 
-      {/* RELOJ DE PARED */}
-      <div className="flex items-center gap-2 text-slate-600 sm:border-l sm:pl-4 border-slate-200 self-start sm:self-auto">
-        <Clock className="w-4 h-4 text-slate-400" />
-        <span className="text-xs font-mono font-medium tabular-nums">{horaActual || '--:--:--'}</span>
+      {/* RELOJ DE PARED DESTACADO */}
+      <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/60 rounded-xl px-3.5 py-1.5 self-start sm:self-auto shadow-inner">
+        <Clock className="w-5 h-5 text-emerald-600 shrink-0" />
+        <div className="flex flex-col">
+          <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider leading-none">
+            Hora actual
+          </span>
+          <span className="text-base sm:text-lg font-mono font-bold text-slate-800 tabular-nums leading-tight">
+            {horaActual || '--:--:--'}
+          </span>
+        </div>
       </div>
 
       {/* MODAL CREAR OPERADORA */}
