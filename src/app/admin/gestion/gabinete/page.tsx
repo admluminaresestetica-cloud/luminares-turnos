@@ -87,7 +87,7 @@ export default function GabinetePage() {
                 Paciente en Tratamiento Activo
               </span>
               <h2 className="text-sm font-bold">
-                {pacienteSeleccionado ? `${pacienteSeleccionado.nombre} ${pacienteSeleccionado.apellido}` : 'Paciente'}
+                {pacienteSeleccionado ? (pacienteSeleccionado.nombre_completo || pacienteSeleccionado.nombre) : 'Paciente'}
               </h2>
             </div>
             <div className="text-xs bg-indigo-800 px-3 py-1.5 rounded-lg border border-indigo-700">
