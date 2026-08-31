@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { Settings } from 'lucide-react'; // Ícono para el botón de configuración
 
 import BuscadorMulticoincidencia from './components/BuscadorMulticoincidencia';
 import ResumenReservaCobro from './components/ResumenReservaCobro';
 import ChecklistAnamnesis from './components/ChecklistAnamnesis';
 import SelectorZonasBotones from './components/SelectorZonasBotones';
+import ConfiguracionAnamnesis from './components/ConfiguracionAnamnesis'; // <-- 1. IMPORTADO AQUÍ
 
 import BannerAlertasClinicas from '../components/BannerAlertasClinicas';
 import ModalHistorialSesiones from '../components/ModalHistorialSesiones';
@@ -20,6 +22,9 @@ export default function RecepcionPage() {
   const [pacienteFicha, setPacienteFicha] = useState<any>(null);
   const [reservaHoy, setReservaHoy] = useState<any>(null);
   const [esNuevo, setEsNuevo] = useState(false);
+
+  // Estado para alternar entre recepción y el panel de configuración de anamnesis
+  const [mostrarConfigAnamnesis, setMostrarConfigAnamnesis] = useState(false); // <-- 2. ESTADO AGREGADO
 
   // Campos del Paciente
   const [nombre, setNombre] = useState('');
@@ -43,57 +48,53 @@ export default function RecepcionPage() {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
-// Extraer zonas automáticamente del objeto jsonb de la reserva
+  // Extraer zonas automáticamente del objeto jsonb de la reserva
   const extraerZonasDeReserva = (reserva: any): string[] => {
-    if (!reserva) return []
+    if (!reserva) return [];
 
-    let detalle = reserva.detalle_reserva
+    let detalle = reserva.detalle_reserva;
 
     if (!detalle) {
-      if (reserva.servicio_tipo) return [reserva.servicio_tipo]
-      return []
+      if (reserva.servicio_tipo) return [reserva.servicio_tipo];
+      return [];
     }
 
-    // 1. Si detalle_reserva viene como texto (JSON serializado)
     if (typeof detalle === 'string') {
       try {
-        detalle = JSON.parse(detalle)
+        detalle = JSON.parse(detalle);
       } catch (e) {
-        return detalle.split(/[,+\-/]/).map((z: string) => z.trim()).filter(Boolean)
+        return detalle.split(/[,+\-/]/).map((z: string) => z.trim()).filter(Boolean);
       }
     }
 
-    // 2. Si detalle_reserva es directamente un Array (JSONB array)
     if (Array.isArray(detalle)) {
       return detalle
         .map((item: any) => {
-          if (typeof item === 'string') return item
-          return item.nombre_zona || item.nombre || item.zona || item.titulo || ''
+          if (typeof item === 'string') return item;
+          return item.nombre_zona || item.nombre || item.zona || item.titulo || '';
         })
-        .filter(Boolean)
+        .filter(Boolean);
     }
 
-    // 3. Si detalle_reserva es un Objeto (JSONB object)
     if (typeof detalle === 'object') {
       if (Array.isArray(detalle.zonas)) {
-        return detalle.zonas.map((z: any) => (typeof z === 'string' ? z : z.nombre_zona || z.nombre))
+        return detalle.zonas.map((z: any) => (typeof z === 'string' ? z : z.nombre_zona || z.nombre));
       }
       if (Array.isArray(detalle.zonas_seleccionadas)) {
-        return detalle.zonas_seleccionadas
+        return detalle.zonas_seleccionadas;
       }
-      if (detalle.nombre_zona) return [detalle.nombre_zona]
-      if (detalle.nombre) return [detalle.nombre]
-      if (detalle.servicio) return [detalle.servicio]
+      if (detalle.nombre_zona) return [detalle.nombre_zona];
+      if (detalle.nombre) return [detalle.nombre];
+      if (detalle.servicio) return [detalle.servicio];
     }
 
-    return []
-  }
+    return [];
+  };
 
   const handleClienteSeleccionado = (data: { pacienteFicha: any; reservaHoy: any }) => {
     setMensaje(null);
     setReservaHoy(data.reservaHoy);
 
-    // Auto-preseleccionar zonas contratadas en la reserva
     const zonasPrecalculadas = extraerZonasDeReserva(data.reservaHoy);
     setZonasSeleccionadas(zonasPrecalculadas);
 
@@ -202,78 +203,97 @@ export default function RecepcionPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Módulo Recepción (PRO-EVAL)</h1>
-        <p className="text-xs text-slate-500">Búsqueda, evaluación clínica y derivación a gabinete.</p>
+      {/* Cabecera con título y botón de configuración */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Módulo Recepción (PRO-EVAL)</h1>
+          <p className="text-xs text-slate-500">Búsqueda, evaluación clínica y derivación a gabinete.</p>
+        </div>
+        
+        {/* 3. BOTÓN DE CONFIGURACIÓN */}
+        <button
+          onClick={() => setMostrarConfigAnamnesis(!mostrarConfigAnamnesis)}
+          className="flex items-center space-x-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
+        >
+          <Settings className="w-4 h-4 text-indigo-600" />
+          <span>{mostrarConfigAnamnesis ? 'Volver a Recepción' : 'Configurar Anamnesis'}</span>
+        </button>
       </div>
 
-      <BuscadorMulticoincidencia
-        onClienteSeleccionado={handleClienteSeleccionado}
-        onVerHistorialDirecto={(id) => setPacienteIdModal(id)}
-      />
+      {/* 4. RENDERIZADO CONDICIONAL */}
+      {mostrarConfigAnamnesis ? (
+        <ConfiguracionAnamnesis onClose={() => setMostrarConfigAnamnesis(false)} />
+      ) : (
+        <>
+          <BuscadorMulticoincidencia
+            onClienteSeleccionado={handleClienteSeleccionado}
+            onVerHistorialDirecto={(id) => setPacienteIdModal(id)}
+          />
 
-      {(pacienteFicha || esNuevo) && (
-        <div className="bg-white p-6 rounded-xl border border-slate-200 space-y-5">
-          <div className="flex justify-between items-center border-b pb-2">
-            <h3 className="text-base font-bold text-slate-800">
-              {esNuevo ? '🆕 Nuevo Paciente' : `👤 ${nombre}`}
-            </h3>
-            {pacienteFicha && (
+          {(pacienteFicha || esNuevo) && (
+            <div className="bg-white p-6 rounded-xl border border-slate-200 space-y-5">
+              <div className="flex justify-between items-center border-b pb-2">
+                <h3 className="text-base font-bold text-slate-800">
+                  {esNuevo ? '🆕 Nuevo Paciente' : `👤 ${nombre}`}
+                </h3>
+                {pacienteFicha && (
+                  <button
+                    onClick={() => setPacienteIdModal(pacienteFicha.id)}
+                    className="text-xs font-semibold text-indigo-600 hover:underline"
+                  >
+                    📋 Ver Historial Completo
+                  </button>
+                )}
+              </div>
+
+              <BannerAlertasClinicas
+                antecedentes={antecedentes}
+                observacionesFijas={observacionesFijas}
+              />
+
+              <ResumenReservaCobro
+                reserva={reservaHoy}
+                cobradoEnPuerta={cobradoEnPuerta}
+                onToggleCobrado={setCobradoEnPuerta}
+              />
+
+              <ChecklistAnamnesis
+                fototipo={fototipo}
+                setFototipo={setFototipo}
+                antecedentes={antecedentes}
+                setAntecedentes={setAntecedentes}
+                observacionesFijas={observacionesFijas}
+                setObservacionesFijas={setObservacionesFijas}
+              />
+
+              <SelectorZonasBotones
+                zonasSeleccionadas={zonasSeleccionadas}
+                setZonasSeleccionadas={setZonasSeleccionadas}
+              />
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Notas para Gabinete:
+                </label>
+                <input
+                  type="text"
+                  value={observacionesHoy}
+                  onChange={(e) => setObservacionesHoy(e.target.value)}
+                  placeholder="Ej: Sensibilidad leve en axilas..."
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
+                />
+              </div>
+
               <button
-                onClick={() => setPacienteIdModal(pacienteFicha.id)}
-                className="text-xs font-semibold text-indigo-600 hover:underline"
+                onClick={handleEnviarAGabinete}
+                disabled={guardando}
+                className="w-full py-3 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 disabled:opacity-50"
               >
-                📋 Ver Historial Completo
+                {guardando ? 'Enviando...' : '🚀 Enviar a Gabinete (En Espera)'}
               </button>
-            )}
-          </div>
-
-          <BannerAlertasClinicas
-            antecedentes={antecedentes}
-            observacionesFijas={observacionesFijas}
-          />
-
-          <ResumenReservaCobro
-            reserva={reservaHoy}
-            cobradoEnPuerta={cobradoEnPuerta}
-            onToggleCobrado={setCobradoEnPuerta}
-          />
-
-          <ChecklistAnamnesis
-            fototipo={fototipo}
-            setFototipo={setFototipo}
-            antecedentes={antecedentes}
-            setAntecedentes={setAntecedentes}
-            observacionesFijas={observacionesFijas}
-            setObservacionesFijas={setObservacionesFijas}
-          />
-
-          <SelectorZonasBotones
-            zonasSeleccionadas={zonasSeleccionadas}
-            setZonasSeleccionadas={setZonasSeleccionadas}
-          />
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Notas para Gabinete:
-            </label>
-            <input
-              type="text"
-              value={observacionesHoy}
-              onChange={(e) => setObservacionesHoy(e.target.value)}
-              placeholder="Ej: Sensibilidad leve en axilas..."
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs"
-            />
-          </div>
-
-          <button
-            onClick={handleEnviarAGabinete}
-            disabled={guardando}
-            className="w-full py-3 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {guardando ? 'Enviando...' : '🚀 Enviar a Gabinete (En Espera)'}
-          </button>
-        </div>
+            </div>
+          )}
+        </>
       )}
 
       {mensaje && (
