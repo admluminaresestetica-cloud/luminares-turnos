@@ -129,11 +129,7 @@ export default function RecepcionPage() {
     try {
       let pacienteId = pacienteFicha?.id;
 
-      const precioTotal = Number(reservaHoy?.precio_total || 0);
-      const montoAbonado = Number(reservaHoy?.monto_abonado || reservaHoy?.monto_sena || 0);
-      const saldoCalculado = Math.max(0, precioTotal - montoAbonado);
-
-      // Usando estrictamente las columnas originales del archivo original
+      // Unicamente campos reales de pacientes_ficha
       const payload = {
         nombre_completo: nombre,
         celular: celular,
@@ -143,7 +139,6 @@ export default function RecepcionPage() {
         estado_atencion: 'en_espera',
         zonas_realizadas: zonasSeleccionadas,
         observaciones_recepcion: observacionesHoy,
-        saldo_pendiente: cobradoEnPuerta ? 0 : saldoCalculado,
         anamnesis_sesion: antecedentes,
         updated_at: new Date().toISOString(),
       };
