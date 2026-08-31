@@ -94,8 +94,8 @@ export default function RecepcionPage() {
     if (data.pacienteFicha) {
       setPacienteFicha(data.pacienteFicha);
       setEsNuevo(false);
-      setNombre(data.pacienteFicha.nombre_paciente || data.pacienteFicha.nombre_completo || '');
-      setCelular(data.pacienteFicha.celular || data.pacienteFicha.telefono || '');
+      setNombre(data.pacienteFicha.nombre_completo || '');
+      setCelular(data.pacienteFicha.celular || '');
       setFototipo(data.pacienteFicha.fototipo || 'Fototipo III');
       setObservacionesFijas(data.pacienteFicha.observaciones_fijas || '');
       setAntecedentes(
@@ -133,12 +133,10 @@ export default function RecepcionPage() {
       const montoAbonado = Number(reservaHoy?.monto_abonado || reservaHoy?.monto_sena || 0);
       const saldoCalculado = Math.max(0, precioTotal - montoAbonado);
 
-      // Payload sin la columna estado_pago_recepcion
+      // Usando estrictamente las columnas originales del archivo original
       const payload = {
-        nombre_paciente: nombre,
         nombre_completo: nombre,
         celular: celular,
-        telefono: celular,
         fototipo: fototipo,
         antecedentes_medicos: antecedentes,
         observaciones_fijas: observacionesFijas,
