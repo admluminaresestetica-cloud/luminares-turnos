@@ -1,20 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { Clock, UserCheck } from 'lucide-react';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface HeaderOperadoraProps {
   operadoraActual: string;
   setOperadoraActual: (nombre: string) => void;
 }
-
-// Puedes cambiar o ampliar esta lista según las operadoras de tu gabinete
-const OPERADORAS_DISPONIBLES = [
-  'Lic. Romina Gómez',
-  'Lic. Sofía Benítez',
-  'Dra. Mariana Acosta',
-  'Operadora General'
-];
 
 export default function HeaderOperadoraReloj({
   operadoraActual,
@@ -23,6 +21,7 @@ export default function HeaderOperadoraReloj({
   const [horaActual, setHoraActual] = useState<string>('');
   const [tiempoTranscurrido, setTiempoTranscurrido] = useState<number>(0);
   const [cronometroActivo, setCronometroActivo] = useState<boolean>(false);
+  const [operadoras, setOperadoras] = useState<any[]>([]);
 
   // 1. Reloj en tiempo real
   useEffect(() => {
@@ -35,7 +34,23 @@ export default function HeaderOperadoraReloj({
     return () => clearInterval(intervalReloj);
   }, []);
 
-  // 2. Temporizador de sesión
+  // 2. Cargar operadoras activas desde Supabase
+  useEffect(() => {
+    const cargarOperadoras = async () => {
+      const { data, error } = await supabase
+        .from('operadoras')
+        .select('*')
+        .eq('activa', true)
+        .order('nombre');
+
+      if (!error && data) {
+        setOperadoras(data);
+      }
+    };
+    cargarOperadoras();
+  }, []);
+
+  // 3. Temporizador de sesión
   useEffect(() => {
     let intervalCronometro: NodeJS.Timeout;
     if (cronometroActivo) {
@@ -54,7 +69,7 @@ export default function HeaderOperadoraReloj({
 
   return (
     <header className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-      {/* SECCIÓN OPERADORA */}
+      {/* SECCIÓN OPERADORA DINÁMICA */}
       <div className="flex items-center space-x-3 w-full md:w-auto">
         <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600">
           <UserCheck className="w-5 h-5" />
@@ -69,9 +84,9 @@ export default function HeaderOperadoraReloj({
             className="text-xs font-semibold text-slate-700 bg-transparent border-none focus:outline-none cursor-pointer"
           >
             <option value="" disabled>Selecciona operadora...</option>
-            {OPERADORAS_DISPONIBLES.map((op) => (
-              <option key={op} value={op}>
-                {op}
+            {operadoras.map((op) => (
+              <option key={op.id} value={op.nombre}>
+                {op.nombre}
               </option>
             ))}
           </select>
@@ -80,7 +95,6 @@ export default function HeaderOperadoraReloj({
 
       {/* SECCIÓN RELOJ Y TEMPORIZADOR */}
       <div className="flex items-center space-x-4">
-        {/* Cronómetro de sesión */}
         <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg">
           <span className="text-xs font-bold text-slate-600">Sesión:</span>
           <span className="text-xs font-mono font-bold text-indigo-600">
@@ -106,7 +120,6 @@ export default function HeaderOperadoraReloj({
           </button>
         </div>
 
-        {/* Reloj general */}
         <div className="flex items-center space-x-2 text-slate-600 border-l pl-4 border-slate-200">
           <Clock className="w-4 h-4 text-slate-400" />
           <span className="text-xs font-mono font-medium">{horaActual || '--:--:--'}</span>

@@ -30,19 +30,18 @@ export default function SelectorPacientesDoble({
   const cargarPacientesEnEspera = async () => {
     setLoading(true);
     try {
-      // Buscamos las sesiones de hoy en estado 'en_espera' o 'completada'
       const hoy = new Date().toISOString().split('T')[0];
 
+      // CORRECCIÓN: Apuntamos correctamente a la relación con 'pacientes_ficha'
       const { data, error } = await supabase
         .from('sesiones_gabinete')
         .select(`
           *,
-          pacientes (
+          pacientes_ficha:paciente_id (
             id,
-            nombre,
-            apellido,
-            dni,
-            telefono
+            nombre_completo,
+            celular,
+            fototipo
           )
         `)
         .gte('created_at', `${hoy}T00:00:00`)
@@ -86,7 +85,12 @@ export default function SelectorPacientesDoble({
 
   const seleccionarPacienteSesion = (sesion: any) => {
     setSesionActual(sesion);
-    setPacienteSeleccionado(sesion.pacientes);
+    // Mapeamos el nombre_completo para que los demás componentes lo lean fácil
+    setPacienteSeleccionado({
+      ...sesion.pacientes_ficha,
+      nombre: sesion.pacientes_ficha?.nombre_completo || 'Paciente',
+      telefono: sesion.pacientes_ficha?.celular || 'N/A'
+    });
   };
 
   return (
@@ -110,8 +114,11 @@ export default function SelectorPacientesDoble({
         ) : (
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {enEspera.map((sesion) => {
-              const pac = sesion.pacientes;
+              const pac = sesion.pacientes_ficha;
               const esSeleccionado = sesionActual?.id === sesion.id;
+              const zonasMostrar = Array.isArray(sesion.zonas_preasignadas) 
+                ? sesion.zonas_preasignadas.join(', ') 
+                : 'General';
 
               return (
                 <div
@@ -125,10 +132,10 @@ export default function SelectorPacientesDoble({
                 >
                   <div>
                     <h4 className="text-xs font-bold text-slate-800">
-                      {pac ? `${pac.nombre} ${pac.apellido}` : 'Paciente sin datos'}
+                      {pac ? pac.nombre_completo : 'Paciente sin datos'}
                     </h4>
                     <p className="text-[11px] text-slate-500">
-                      DNI: {pac?.dni || 'N/A'} • Zonas: {Array.isArray(sesion.zonas_realizadas) ? sesion.zonas_realizadas.join(', ') : 'General'}
+                      Celular: {pac?.celular || 'N/A'} • Zonas: {zonasMostrar}
                     </p>
                   </div>
                   <button className={`text-xs p-1.5 rounded-lg ${esSeleccionado ? 'bg-indigo-600 text-white' : 'bg-white border text-slate-600'}`}>
@@ -158,12 +165,12 @@ export default function SelectorPacientesDoble({
         ) : (
           <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
             {atendidosHoy.map((sesion) => {
-              const pac = sesion.pacientes;
+              const pac = sesion.pacientes_ficha;
               return (
                 <div key={sesion.id} className="p-3 rounded-lg border border-slate-100 bg-slate-50/50 flex justify-between items-center">
                   <div>
                     <h4 className="text-xs font-bold text-slate-700">
-                      {pac ? `${pac.nombre} ${pac.apellido}` : 'Paciente'}
+                      {pac ? pac.nombre_completo : 'Paciente'}
                     </h4>
                     <p className="text-[10px] text-emerald-600 font-medium">✓ Sesión completada</p>
                   </div>
