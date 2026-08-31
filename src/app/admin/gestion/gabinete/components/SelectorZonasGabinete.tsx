@@ -12,7 +12,7 @@ const supabase = createClient(
 interface ServicioLaser {
   id?: string;
   nombre: string;
-  genero?: string; // 'femenino', 'masculino', etc.
+  genero?: string;
 }
 
 interface SelectorZonasGabineteProps {
@@ -20,6 +20,15 @@ interface SelectorZonasGabineteProps {
   zonasSeleccionadas: string[];
   setZonasSeleccionadas: (zonas: string[]) => void;
 }
+
+// Convierte cualquier string/valor a "femenino" o "masculino" de forma limpia
+const normalizarGenero = (val: any): string => {
+  if (!val) return '';
+  const str = String(val).toLowerCase().trim();
+  if (str.startsWith('m') || str.includes('homb') || str.includes('masc')) return 'masculino';
+  if (str.startsWith('f') || str.includes('muj') || str.includes('fem')) return 'femenino';
+  return str;
+};
 
 export default function SelectorZonasGabinete({
   sesionActual,
@@ -30,14 +39,36 @@ export default function SelectorZonasGabinete({
   const [cargando, setCargando] = useState<boolean>(true);
   const [desplegado, setDesplegado] = useState<boolean>(true);
 
-  // Obtener género del paciente en sesión (femenino / masculino)
+  // Leer EXCLUSIVAMENTE el género del objeto/JSON detalle_reserva o propiedades directas del turno
   const generoPaciente = useMemo(() => {
     if (!sesionActual) return '';
-    const rawGender = sesionActual.genero || sesionActual.sexo || '';
-    return rawGender.toString().toLowerCase().trim();
+
+    const detalle = sesionActual.detalle_reserva;
+    
+    // Si detalle_reserva es un objeto JSON o string JSON
+    let generoRaw = '';
+    if (detalle) {
+      if (typeof detalle === 'object') {
+        generoRaw = detalle.genero || detalle.sexo || detalle.genero_cliente || detalle.tipo_cliente || '';
+      } else if (typeof detalle === 'string') {
+        try {
+          const parsed = JSON.parse(detalle);
+          generoRaw = parsed.genero || parsed.sexo || parsed.genero_cliente || parsed.tipo_cliente || '';
+        } catch {
+          generoRaw = detalle;
+        }
+      }
+    }
+
+    // Fallback por si viniera en la raíz del objeto del turno
+    if (!generoRaw) {
+      generoRaw = sesionActual.genero || sesionActual.sexo || '';
+    }
+
+    return normalizarGenero(generoRaw);
   }, [sesionActual]);
 
-  // Cargar servicios_laser desde Supabase
+  // Cargar lista completa de la tabla servicios_laser
   useEffect(() => {
     const cargarServiciosLaser = async () => {
       setCargando(true);
@@ -62,27 +93,26 @@ export default function SelectorZonasGabinete({
     cargarServiciosLaser();
   }, []);
 
-  // Filtrar zonas según el género del paciente
+  // Filtrar zonas de Supabase estrictamente según el género detectado
   const zonasFiltradas = useMemo(() => {
     if (!generoPaciente) {
-      // Si por alguna razón el paciente no tiene género definido, mostramos todas
+      // Si no hay género especificado en la reserva, muestra todas
       return servicios;
     }
 
     return servicios.filter((serv) => {
-      const gServ = (serv.genero || '').toLowerCase().trim();
-      // Incluye si coincide con el género del paciente o si no tiene género asignado (unisex)
+      const gServ = normalizarGenero(serv.genero);
       return gServ === '' || gServ === generoPaciente;
     });
   }, [servicios, generoPaciente]);
 
-  // Consolidar la lista a mostrar asegurando que zonas seleccionadas previamente no se pierdan
+  // Consolidar lista de zonas asegurando que las seleccionadas no se pierdan
   const listaZonasDisponibles = useMemo(() => {
     const nombresBd = zonasFiltradas.map((s) => s.nombre).filter(Boolean);
     const lista = [...nombresBd];
 
     zonasSeleccionadas.forEach((z) => {
-      if (z && !lista.includes(z)) {
+      if (z && !lista.some((l) => l.toLowerCase().trim() === z.toLowerCase().trim())) {
         lista.push(z);
       }
     });
@@ -164,14 +194,13 @@ export default function SelectorZonasGabinete({
             <p className="text-xs text-slate-400 font-medium py-2">Cargando zonas de depilación...</p>
           ) : listaZonasDisponibles.length === 0 ? (
             <p className="text-xs text-slate-400 italic py-2">
-              No se encontraron zonas correspondientes para este género.
+              No se encontraron zonas en servicios_laser.
             </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {listaZonasDisponibles.map((zona) => {
                 const estaSeleccionada = zonasSeleccionadas.includes(zona);
 
-                // Colores acordes al género correspondiente
                 let clasesBoton = 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
 
                 if (esFemenino) {
