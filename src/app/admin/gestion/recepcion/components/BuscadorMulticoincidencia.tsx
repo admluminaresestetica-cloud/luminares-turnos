@@ -7,10 +7,43 @@ import { Search, Phone, CheckCircle2 } from 'lucide-react'
 function obtenerTextoDetalle(reserva: Record<string, any>): string {
   if (!reserva) return 'Sin detalle'
 
-  if (reserva.detalle_reserva && typeof reserva.detalle_reserva === 'string') {
-    return reserva.detalle_reserva
+  let detalle = reserva.detalle_reserva
+
+  // 1. Si detalle_reserva es un string (Ej: "promo M1 (axilas + espalda completa)")
+  if (typeof detalle === 'string' && detalle.trim()) {
+    try {
+      const parsed = JSON.parse(detalle)
+      if (typeof parsed === 'object' && parsed !== null) {
+        detalle = parsed
+      } else {
+        return detalle
+      }
+    } catch (e) {
+      return detalle
+    }
   }
 
+  // 2. Si detalle_reserva es un objeto JSONB
+  if (typeof detalle === 'object' && detalle !== null) {
+    if (detalle.nombre_promo) return detalle.nombre_promo
+    if (detalle.nombre_zona) return detalle.nombre_zona
+    if (detalle.nombre) return detalle.nombre
+    if (detalle.titulo) return detalle.titulo
+    if (detalle.descripcion) return detalle.descripcion
+    if (Array.isArray(detalle.zonas)) {
+      return detalle.zonas.map((z: any) => (typeof z === 'string' ? z : z.nombre || z.nombre_zona)).join(', ')
+    }
+  }
+
+  // 3. Si detalle_reserva es un Array
+  if (Array.isArray(detalle)) {
+    return detalle
+      .map((z: any) => (typeof z === 'string' ? z : z.nombre_promo || z.nombre_zona || z.nombre || z.zona))
+      .filter(Boolean)
+      .join(', ')
+  }
+
+  // Fallbacks de compatibilidad
   if (Array.isArray(reserva.zonas_seleccionadas) && reserva.zonas_seleccionadas.length > 0) {
     return reserva.zonas_seleccionadas.join(', ')
   }
@@ -19,7 +52,7 @@ function obtenerTextoDetalle(reserva: Record<string, any>): string {
     return reserva.zonas_seleccionadas
   }
 
-  return reserva.servicio_nombre || reserva.nombre_promo || 'Sin especificar'
+  return reserva.servicio_tipo || 'Sin especificar'
 }
 
 interface BuscadorProps {
