@@ -14,6 +14,7 @@ export default function ResumenReservaCobro({
   if (!reserva) return null;
 
   const precioTotal = Number(reserva.precio_total || reserva.monto_total || 0);
+  console.log('RESERVA SELECCIONADA EN RECEPCION:', reserva);
   const montoAbonadoWeb = Number(reserva.monto_abonado || reserva.monto_sena || reserva.sena || 0);
   const saldoPendiente = Math.max(0, precioTotal - montoAbonadoWeb);
 
