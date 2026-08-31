@@ -12,7 +12,7 @@ const supabase = createClient(
 interface ServicioLaser {
   id?: string;
   nombre: string;
-  genero?: string; // 'femenino', 'masculino', etc.
+  genero?: string;
 }
 
 interface SelectorZonasGabineteProps {
@@ -21,13 +21,13 @@ interface SelectorZonasGabineteProps {
   setZonasSeleccionadas: (zonas: string[]) => void;
 }
 
-// Normaliza cualquier string a 'masculino' o 'femenino'
-const normalizarGenero = (val: any): string => {
-  if (!val) return '';
+// Limpia el texto del género para agrupar fácil
+const obtenerGeneroLimpio = (val: any): string => {
+  if (!val) return 'unisex';
   const str = String(val).toLowerCase().trim();
-  if (str.startsWith('m') || str.includes('homb') || str.includes('masc')) return 'masculino';
-  if (str.startsWith('f') || str.includes('muj') || str.includes('fem')) return 'femenino';
-  return str;
+  if (str.startsWith('f') || str.includes('fem') || str.includes('muj')) return 'femenino';
+  if (str.startsWith('m') || str.includes('masc') || str.includes('homb')) return 'masculino';
+  return 'unisex';
 };
 
 export default function SelectorZonasGabinete({
@@ -39,35 +39,7 @@ export default function SelectorZonasGabinete({
   const [cargando, setCargando] = useState<boolean>(true);
   const [desplegado, setDesplegado] = useState<boolean>(true);
 
-  // Obtener género del paciente extrayendo el dato desde detalle_reserva (o raíz del objeto)
-  const generoPaciente = useMemo(() => {
-    if (!sesionActual) return '';
-
-    const detalle = sesionActual.detalle_reserva;
-    let generoRaw = '';
-
-    if (detalle) {
-      if (typeof detalle === 'object') {
-        generoRaw = detalle.genero || detalle.sexo || detalle.genero_cliente || detalle.tipo_cliente || '';
-      } else if (typeof detalle === 'string') {
-        try {
-          const parsed = JSON.parse(detalle);
-          generoRaw = parsed.genero || parsed.sexo || parsed.genero_cliente || parsed.tipo_cliente || '';
-        } catch {
-          generoRaw = detalle;
-        }
-      }
-    }
-
-    // Fallback si viene directamente en el objeto de la sesión
-    if (!generoRaw) {
-      generoRaw = sesionActual.genero || sesionActual.sexo || sesionActual.paciente?.genero || '';
-    }
-
-    return normalizarGenero(generoRaw);
-  }, [sesionActual]);
-
-  // Cargar servicios_laser desde Supabase
+  // Cargar TODAS las zonas de servicios_laser sin filtros de backend
   useEffect(() => {
     const cargarServiciosLaser = async () => {
       setCargando(true);
@@ -92,39 +64,58 @@ export default function SelectorZonasGabinete({
     cargarServiciosLaser();
   }, []);
 
-  // Filtrar zonas según el género del paciente
-  const zonasFiltradas = useMemo(() => {
-    if (!generoPaciente) {
-      // Si por alguna razón el paciente no tiene género definido, mostramos todas
-      return servicios;
-    }
+  // Consolidar lista completa ordenada: Femenino primero, Masculino después, luego Unisex
+  const zonasOrganizadas = useMemo(() => {
+    // Mapa para saber el género de cada nombre de zona
+    const mapaZonas = new Map<string, { nombre: string; genero: string }>();
 
-    return servicios.filter((serv) => {
-      const gServ = normalizarGenero(serv.genero);
-      // Incluye si coincide con el género del paciente o si es unisex
-      return gServ === '' || gServ === generoPaciente;
-    });
-  }, [servicios, generoPaciente]);
-
-  // Consolidar la lista a mostrar asegurando que zonas seleccionadas previamente no se pierdan
-  const listaZonasDisponibles = useMemo(() => {
-    const nombresBd = zonasFiltradas.map((s) => s.nombre).filter(Boolean);
-    const lista = [...nombresBd];
-
-    zonasSeleccionadas.forEach((z) => {
-      if (z && !lista.some((l) => l.toLowerCase().trim() === z.toLowerCase().trim())) {
-        lista.push(z);
+    servicios.forEach((serv) => {
+      if (serv.nombre) {
+        mapaZonas.set(serv.nombre.toLowerCase().trim(), {
+          nombre: serv.nombre,
+          genero: obtenerGeneroLimpio(serv.genero),
+        });
       }
     });
 
-    return lista;
-  }, [zonasFiltradas, zonasSeleccionadas]);
+    // Asegurar que las zonas que seleccionó recepción también estén en la lista
+    zonasSeleccionadas.forEach((z) => {
+      if (z) {
+        const key = z.toLowerCase().trim();
+        if (!mapaZonas.has(key)) {
+          mapaZonas.set(key, { nombre: z, genero: 'unisex' });
+        }
+      }
+    });
 
-  const toggleZona = (zona: string) => {
-    if (zonasSeleccionadas.includes(zona)) {
-      setZonasSeleccionadas(zonasSeleccionadas.filter((z) => z !== zona));
+    const listaCompleta = Array.from(mapaZonas.values());
+
+    // Ordenar por prioridad de género: Femenino (1) -> Masculino (2) -> Unisex (3)
+    const ordenGenero: Record<string, number> = { femenino: 1, masculino: 2, unisex: 3 };
+
+    return listaCompleta.sort((a, b) => {
+      const pA = ordenGenero[a.genero] || 3;
+      const pB = ordenGenero[b.genero] || 3;
+
+      if (pA !== pB) return pA - pB;
+      return a.nombre.localeCompare(b.nombre);
+    });
+  }, [servicios, zonasSeleccionadas]);
+
+  const toggleZona = (nombreZona: string) => {
+    // Coincidencia insensible a mayúsculas/minúsculas para no duplicar
+    const existe = zonasSeleccionadas.some(
+      (z) => z.toLowerCase().trim() === nombreZona.toLowerCase().trim()
+    );
+
+    if (existe) {
+      setZonasSeleccionadas(
+        zonasSeleccionadas.filter(
+          (z) => z.toLowerCase().trim() !== nombreZona.toLowerCase().trim()
+        )
+      );
     } else {
-      setZonasSeleccionadas([...zonasSeleccionadas, zona]);
+      setZonasSeleccionadas([...zonasSeleccionadas, nombreZona]);
     }
   };
 
@@ -138,12 +129,9 @@ export default function SelectorZonasGabinete({
     );
   }
 
-  const esFemenino = generoPaciente === 'femenino';
-  const esMasculino = generoPaciente === 'masculino';
-
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm transition-all overflow-hidden">
-      {/* CABECERA DESPLEGABLE */}
+      {/* CABECERA */}
       <div
         onClick={() => setDesplegado(!desplegado)}
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 transition-colors select-none"
@@ -153,19 +141,6 @@ export default function SelectorZonasGabinete({
           <h3 className="text-xs font-bold uppercase tracking-wider">
             Zonas a Tratar en Sesión
           </h3>
-          {generoPaciente && (
-            <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${
-                esFemenino
-                  ? 'bg-rose-100 text-rose-700'
-                  : esMasculino
-                  ? 'bg-sky-100 text-sky-700'
-                  : 'bg-slate-100 text-slate-600'
-              }`}
-            >
-              {generoPaciente}
-            </span>
-          )}
         </div>
 
         <div className="flex items-center space-x-3">
@@ -183,7 +158,7 @@ export default function SelectorZonasGabinete({
         </div>
       </div>
 
-      {/* CONTENIDO DESPLEGABLE */}
+      {/* LISTADO DE TODAS LAS ZONAS */}
       {desplegado && (
         <div className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-3">
           <p className="text-xs text-slate-500">
@@ -191,42 +166,57 @@ export default function SelectorZonasGabinete({
           </p>
 
           {cargando ? (
-            <p className="text-xs text-slate-400 font-medium py-2">Cargando zonas de depilación...</p>
-          ) : listaZonasDisponibles.length === 0 ? (
+            <p className="text-xs text-slate-400 font-medium py-2">Cargando catálogo completo de zonas...</p>
+          ) : zonasOrganizadas.length === 0 ? (
             <p className="text-xs text-slate-400 italic py-2">
-              No se encontraron zonas correspondientes para este género.
+              No se encontraron zonas en la tabla servicios_laser.
             </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {listaZonasDisponibles.map((zona) => {
-                const estaSeleccionada = zonasSeleccionadas.includes(zona);
+              {zonasOrganizadas.map((item) => {
+                const estaSeleccionada = zonasSeleccionadas.some(
+                  (z) => z.toLowerCase().trim() === item.nombre.toLowerCase().trim()
+                );
 
-                // Estilos visuales por género
+                const esFem = item.genero === 'femenino';
+                const esMasc = item.genero === 'masculino';
+
+                // Colores para identificar rápido visualmente cada género
                 let clasesBoton = 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
 
-                if (esFemenino) {
-                  clasesBoton = estaSeleccionada
+                if (estaSeleccionada) {
+                  clasesBoton = esFem
                     ? 'bg-rose-600 border-rose-600 text-white shadow-xs'
-                    : 'bg-rose-50/70 border-rose-200 text-rose-800 hover:bg-rose-100';
-                } else if (esMasculino) {
-                  clasesBoton = estaSeleccionada
+                    : esMasc
                     ? 'bg-sky-600 border-sky-600 text-white shadow-xs'
-                    : 'bg-sky-50/70 border-sky-200 text-sky-800 hover:bg-sky-100';
+                    : 'bg-indigo-600 border-indigo-600 text-white shadow-xs';
                 } else {
-                  if (estaSeleccionada) {
-                    clasesBoton = 'bg-indigo-600 border-indigo-600 text-white shadow-xs';
-                  }
+                  clasesBoton = esFem
+                    ? 'bg-rose-50/50 border-rose-200 text-rose-900 hover:bg-rose-100'
+                    : esMasc
+                    ? 'bg-sky-50/50 border-sky-200 text-sky-900 hover:bg-sky-100'
+                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
                 }
 
                 return (
                   <button
-                    key={zona}
+                    key={item.nombre}
                     type="button"
-                    onClick={() => toggleZona(zona)}
+                    onClick={() => toggleZona(item.nombre)}
                     className={`p-2.5 rounded-lg border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${clasesBoton}`}
                   >
-                    <span className="truncate pr-1">{zona}</span>
-                    {estaSeleccionada && <Check className="w-3.5 h-3.5 shrink-0" />}
+                    <div className="flex flex-col items-start truncate pr-1">
+                      <span className="truncate w-full text-left">{item.nombre}</span>
+                      <span
+                        className={`text-[9px] font-normal uppercase opacity-75 ${
+                          estaSeleccionada ? 'text-white' : 'text-slate-500'
+                        }`}
+                      >
+                        {esFem ? 'Fem' : esMasc ? 'Masc' : 'Gral'}
+                      </span>
+                    </div>
+
+                    {estaSeleccionada && <Check className="w-3.5 h-3.5 shrink-0 ml-1" />}
                   </button>
                 );
               })}
