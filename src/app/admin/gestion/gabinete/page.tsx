@@ -5,7 +5,6 @@ import HeaderOperadoraReloj from './components/HeaderOperadoraReloj';
 import NotificacionNuevoCliente from './components/NotificacionNuevoCliente';
 import SelectorPacientesDoble from './components/SelectorPacientesDoble';
 import VisorAnamnesisDia from './components/VisorAnamnesisDia';
-import SelectorZonasGabinete from './components/SelectorZonasGabinete';
 import FormularioCargaTecnica from './components/FormularioCargaTecnica';
 
 export default function GabinetePage() {
@@ -14,7 +13,7 @@ export default function GabinetePage() {
   const [sesionActual, setSesionActual] = useState<any>(null);
   const [zonasSeleccionadas, setZonasSeleccionadas] = useState<string[]>([]);
 
-  // Cada vez que cambia la sesión actual (ficha del paciente en espera), sincronizamos las zonas realizadas/preVIAS
+  // Cada vez que cambia la sesión actual (ficha del paciente en espera), sincronizamos las zonas realizadas/previas
   useEffect(() => {
     if (sesionActual) {
       const rawZonas = sesionActual.zonas_realizadas || sesionActual.zonas_preasignadas || [];
@@ -101,18 +100,12 @@ export default function GabinetePage() {
           {/* VISOR DE LA ANAMNESIS DEL DÍA */}
           <VisorAnamnesisDia sesionActual={sesionActual} />
 
-          {/* SELECTOR DE ZONAS A TRATAR */}
-          <SelectorZonasGabinete
-            sesionActual={sesionActual}
-            zonasSeleccionadas={zonasSeleccionadas}
-            setZonasSeleccionadas={setZonasSeleccionadas}
-          />
-
-          {/* FORMULARIO DE CARGA TÉCNICA Y CIERRE (UPDATE DIRECTO A PACIENTES_FICHA) */}
+          {/* FORMULARIO DE CARGA TÉCNICA Y CIERRE (INCLUYE CATÁLOGO Y TABLA DE ZONAS) */}
           <FormularioCargaTecnica
             sesionActual={sesionActual}
             operadoraActual={operadoraActual}
             zonasSeleccionadas={zonasSeleccionadas}
+            setZonasSeleccionadas={setZonasSeleccionadas}
             onSesionCompletada={handleSesionCompletada}
           />
         </div>
