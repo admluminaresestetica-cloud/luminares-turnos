@@ -12,7 +12,7 @@ const supabase = createClient(
 interface ServicioLaser {
   id?: string;
   nombre: string;
-  genero?: string;
+  genero?: string; // 'femenino', 'masculino', etc.
 }
 
 interface SelectorZonasGabineteProps {
@@ -21,7 +21,7 @@ interface SelectorZonasGabineteProps {
   setZonasSeleccionadas: (zonas: string[]) => void;
 }
 
-// Convierte cualquier string/valor a "femenino" o "masculino" de forma limpia
+// Normaliza cualquier string a 'masculino' o 'femenino'
 const normalizarGenero = (val: any): string => {
   if (!val) return '';
   const str = String(val).toLowerCase().trim();
@@ -39,14 +39,13 @@ export default function SelectorZonasGabinete({
   const [cargando, setCargando] = useState<boolean>(true);
   const [desplegado, setDesplegado] = useState<boolean>(true);
 
-  // Leer EXCLUSIVAMENTE el género del objeto/JSON detalle_reserva o propiedades directas del turno
+  // Obtener género del paciente extrayendo el dato desde detalle_reserva (o raíz del objeto)
   const generoPaciente = useMemo(() => {
     if (!sesionActual) return '';
 
     const detalle = sesionActual.detalle_reserva;
-    
-    // Si detalle_reserva es un objeto JSON o string JSON
     let generoRaw = '';
+
     if (detalle) {
       if (typeof detalle === 'object') {
         generoRaw = detalle.genero || detalle.sexo || detalle.genero_cliente || detalle.tipo_cliente || '';
@@ -60,15 +59,15 @@ export default function SelectorZonasGabinete({
       }
     }
 
-    // Fallback por si viniera en la raíz del objeto del turno
+    // Fallback si viene directamente en el objeto de la sesión
     if (!generoRaw) {
-      generoRaw = sesionActual.genero || sesionActual.sexo || '';
+      generoRaw = sesionActual.genero || sesionActual.sexo || sesionActual.paciente?.genero || '';
     }
 
     return normalizarGenero(generoRaw);
   }, [sesionActual]);
 
-  // Cargar lista completa de la tabla servicios_laser
+  // Cargar servicios_laser desde Supabase
   useEffect(() => {
     const cargarServiciosLaser = async () => {
       setCargando(true);
@@ -93,20 +92,21 @@ export default function SelectorZonasGabinete({
     cargarServiciosLaser();
   }, []);
 
-  // Filtrar zonas de Supabase estrictamente según el género detectado
+  // Filtrar zonas según el género del paciente
   const zonasFiltradas = useMemo(() => {
     if (!generoPaciente) {
-      // Si no hay género especificado en la reserva, muestra todas
+      // Si por alguna razón el paciente no tiene género definido, mostramos todas
       return servicios;
     }
 
     return servicios.filter((serv) => {
       const gServ = normalizarGenero(serv.genero);
+      // Incluye si coincide con el género del paciente o si es unisex
       return gServ === '' || gServ === generoPaciente;
     });
   }, [servicios, generoPaciente]);
 
-  // Consolidar lista de zonas asegurando que las seleccionadas no se pierdan
+  // Consolidar la lista a mostrar asegurando que zonas seleccionadas previamente no se pierdan
   const listaZonasDisponibles = useMemo(() => {
     const nombresBd = zonasFiltradas.map((s) => s.nombre).filter(Boolean);
     const lista = [...nombresBd];
@@ -194,13 +194,14 @@ export default function SelectorZonasGabinete({
             <p className="text-xs text-slate-400 font-medium py-2">Cargando zonas de depilación...</p>
           ) : listaZonasDisponibles.length === 0 ? (
             <p className="text-xs text-slate-400 italic py-2">
-              No se encontraron zonas en servicios_laser.
+              No se encontraron zonas correspondientes para este género.
             </p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {listaZonasDisponibles.map((zona) => {
                 const estaSeleccionada = zonasSeleccionadas.includes(zona);
 
+                // Estilos visuales por género
                 let clasesBoton = 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
 
                 if (esFemenino) {
