@@ -92,22 +92,25 @@ export default function ChecklistAnamnesis({
             ⚠️ No hay preguntas configuradas. Usa el botón "Configurar Anamnesis" arriba para agregarlas.
           </p>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
             {preguntasDinamicas.map((item) => {
-              // Asumimos que tu tabla en Supabase guarda una columna identificadora como 'id', 'clave' o 'titulo'
-              const claveUnica = item.clave || item.id; 
+              // USAMOS EL TÍTULO O PREGUNTA REAL COMO CLAVE PARA GUARDAR EN LA BD
+              const claveLegible = item.titulo || item.pregunta || item.id;
+              
               return (
                 <label
                   key={item.id}
-                  className="flex items-center gap-2 bg-white p-2 border rounded cursor-pointer hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-2 bg-white p-2 border border-slate-200 rounded cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs"
                 >
                   <input
                     type="checkbox"
-                    checked={!!antecedentes[claveUnica]}
-                    onChange={() => toggleAntecedente(claveUnica)}
-                    className="w-4 h-4 text-emerald-600 rounded"
+                    checked={!!antecedentes[claveLegible]}
+                    onChange={() => toggleAntecedente(claveLegible)}
+                    className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
                   />
-                  <span className="font-medium text-slate-700">{item.titulo || item.pregunta}</span>
+                  <span className="font-medium text-slate-700 leading-tight">
+                    {item.titulo || item.pregunta}
+                  </span>
                 </label>
               );
             })}
