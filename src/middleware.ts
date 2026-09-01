@@ -8,7 +8,6 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  // 1. Crear el cliente de Supabase optimizado para Middleware/SSR
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -32,21 +31,21 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // 2. Obtener el usuario actual desde la sesión de Supabase
+  // Actualiza la sesión y las cookies en la respuesta
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
 
   const isLoginPage = request.nextUrl.pathname === '/admin/login'
   const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
 
-  // 3. REGLA A: Si intenta entrar a /admin/* (que no sea /admin/login) y NO tiene sesión -> Al Login
-  if (isAdminRoute && !isLoginPage && !user) {
+  // 1. Si intenta acceder a rutas /admin (que no sea login) y NO tiene sesión activa -> Al Login
+  if (isAdminRoute && !isLoginPage && !session) {
     return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 
-  // 4. REGLA B: Si ya está logueado e intenta ir a /admin/login -> Al Panel Admin directamente
-  if (isLoginPage && user) {
+  // 2. Si ya tiene sesión activa e intenta ir al login -> Al Dashboard de Admin
+  if (isLoginPage && session) {
     return NextResponse.redirect(new URL('/admin', request.url))
   }
 
