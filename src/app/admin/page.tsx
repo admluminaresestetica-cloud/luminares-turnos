@@ -1,15 +1,28 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 import { UserCheck, Sparkles, CalendarDays, ShoppingBag, LogOut } from 'lucide-react';
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function AdminHubPage() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/admin/login');
+  };
+
   const modulos = [
     {
       titulo: 'Recepción',
       icono: UserCheck,
       ruta: '/admin/gestion/recepcion',
-      // Estilos de acento sutiles para el hover/touch
       bgHover: 'hover:bg-indigo-50/60 hover:border-indigo-300 hover:shadow-indigo-500/10',
       iconBg: 'bg-indigo-100/70 text-indigo-600 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white',
       textColor: 'group-hover:text-indigo-700',
@@ -42,8 +55,8 @@ export default function AdminHubPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between p-6 sm:p-10 select-none">
-      
-      {/* ENCABEZADO SUPERIOR */}
+
+      {/* ENCABEZADO SUPERIOR CON BOTÓN DE CERRAR SESIÓN */}
       <header className="w-full max-w-xl mx-auto flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-slate-800">
@@ -54,16 +67,17 @@ export default function AdminHubPage() {
           </p>
         </div>
 
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-700 bg-white border border-slate-200/80 px-3 py-2 rounded-xl shadow-sm hover:shadow transition-all active:scale-95"
+        <button
+          onClick={handleLogout}
+          type="button"
+          className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-white border border-rose-200/80 hover:bg-rose-50 px-3.5 py-2 rounded-xl shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Volver al sitio</span>
-        </Link>
+          <span>Cerrar sesión</span>
+        </button>
       </header>
 
-      {/* GRILLA DE BOTONES CUADRADOS (TIPO APP LAUNCHER) */}
+      {/* GRILLA DE BOTONES CUADRADOS */}
       <main className="w-full max-w-xl mx-auto my-auto py-8">
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
           {modulos.map((modulo) => {
@@ -74,14 +88,12 @@ export default function AdminHubPage() {
                 href={modulo.ruta}
                 className={`group flex flex-col items-center justify-center p-6 sm:p-8 aspect-square bg-white border border-slate-200/80 rounded-3xl shadow-sm transition-all duration-200 active:scale-95 hover:-translate-y-1 ${modulo.bgHover}`}
               >
-                {/* ÍCONO DESTACADO DENTRO DEL BOTÓN */}
                 <div
                   className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-inner mb-3 sm:mb-4 ${modulo.iconBg}`}
                 >
                   <IconoComponente className="w-8 h-8 sm:w-10 sm:h-10 transition-transform duration-300 group-hover:scale-105" strokeWidth={1.8} />
                 </div>
 
-                {/* TÍTULO CORTO DEL MÓDULO */}
                 <span className={`text-sm sm:text-base font-bold text-slate-700 transition-colors tracking-tight ${modulo.textColor}`}>
                   {modulo.titulo}
                 </span>
@@ -91,7 +103,7 @@ export default function AdminHubPage() {
         </div>
       </main>
 
-      {/* PIE DE PÁGINA DISCRETO */}
+      {/* PIE DE PÁGINA */}
       <footer className="w-full max-w-xl mx-auto text-center">
         <span className="text-[11px] text-slate-400 font-medium">
           Seleccioná un módulo para operar
