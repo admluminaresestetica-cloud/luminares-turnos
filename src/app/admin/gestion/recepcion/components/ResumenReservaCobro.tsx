@@ -65,7 +65,7 @@ export default function ResumenReservaCobro({
   return (
     <div className="space-y-4 rounded-2xl border border-indigo-100 bg-gradient-to-b from-indigo-50/80 to-white p-4 shadow-sm sm:p-5">
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
           <CalendarClock className="h-4.5 w-4.5" />
         </span>
         <div className="min-w-0">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Check, Layers, ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
+import { Layers, ChevronDown, ChevronUp, Trash2, Plus } from 'lucide-react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -124,7 +124,7 @@ export default function SelectorZonasGabinete({
   // Agregar zona a la tabla
   const agregarZona = (nombreZona: string) => {
     setZonasSeleccionadas([...zonasSeleccionadas, nombreZona]);
-    
+
     // Inicializar parámetros limpios si no existen
     if (!parametrosZonas[nombreZona]) {
       setParametrosZonas((prev) => ({
@@ -160,9 +160,9 @@ export default function SelectorZonasGabinete({
 
   if (!sesionActual) {
     return (
-      <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-center">
-        <p className="text-xs text-slate-400 italic">
-          Selecciona un paciente en espera para gestionar sus zonas y parámetros de tratamiento.
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm text-center">
+        <p className="text-xs text-slate-400">
+          Seleccioná un paciente en espera para gestionar sus zonas y parámetros de tratamiento.
         </p>
       </div>
     );
@@ -171,43 +171,42 @@ export default function SelectorZonasGabinete({
   return (
     <div className="space-y-4">
       {/* SECCIÓN SUPERIOR: ZONAS DISPONIBLES PARA SUMAR */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm transition-all overflow-hidden">
-        <div
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
+        <button
+          type="button"
           onClick={() => setDesplegado(!desplegado)}
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 transition-colors select-none"
+          className="w-full flex items-center justify-between p-4 hover:bg-slate-50/80 transition-colors active:bg-slate-100"
         >
-          <div className="flex items-center space-x-2 text-slate-800">
-            <Layers className="w-4 h-4 text-indigo-600" />
-            <h3 className="text-xs font-bold uppercase tracking-wider">
-              Agregar Zonas a la Sesión
+          <div className="flex items-center gap-2.5 text-slate-800">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
+              <Layers className="w-3.5 h-3.5 text-emerald-600" />
+            </div>
+            <h3 className="text-xs font-semibold text-slate-700">
+              Agregar zonas a la sesión
             </h3>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <span className="text-[10px] bg-indigo-50 text-indigo-600 font-bold px-2 py-0.5 rounded-full">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[10px] font-medium bg-slate-100 text-slate-500 px-2 py-1 rounded-full">
               {zonasDisponiblesNoSeleccionadas.length} disponibles
             </span>
-
-            <button
-              type="button"
-              className="text-slate-400 hover:text-slate-600 p-1 rounded-md cursor-pointer"
-            >
+            <span className="text-slate-400">
               {desplegado ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
+            </span>
           </div>
-        </div>
+        </button>
 
         {desplegado && (
           <div className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-3">
-            <p className="text-xs text-slate-500">
-              Haz clic en una zona para añadirla a la tabla de trabajo de hoy:
+            <p className="text-xs text-slate-400 pt-3">
+              Tocá una zona para añadirla a la tabla de trabajo de hoy.
             </p>
 
             {cargando ? (
-              <p className="text-xs text-slate-400 font-medium py-2">Cargando catálogo...</p>
+              <p className="text-xs text-slate-400 py-2">Cargando catálogo…</p>
             ) : zonasDisponiblesNoSeleccionadas.length === 0 ? (
-              <p className="text-xs text-slate-400 italic py-2">
-                Todas las zonas disponibles han sido agregadas a la sesión.
+              <p className="text-xs text-slate-400 py-2">
+                Todas las zonas disponibles ya fueron agregadas a la sesión.
               </p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -216,14 +215,14 @@ export default function SelectorZonasGabinete({
                   const esMasc = item.genero === 'masculino';
 
                   let clasesBoton =
-                    'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
+                    'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100';
 
                   if (esFem) {
                     clasesBoton =
-                      'bg-rose-50/50 border-rose-200 text-rose-900 hover:bg-rose-100';
+                      'bg-rose-50/60 border-rose-100 text-rose-900 hover:bg-rose-50';
                   } else if (esMasc) {
                     clasesBoton =
-                      'bg-sky-50/50 border-sky-200 text-sky-900 hover:bg-sky-100';
+                      'bg-sky-50/60 border-sky-100 text-sky-900 hover:bg-sky-50';
                   }
 
                   return (
@@ -231,17 +230,15 @@ export default function SelectorZonasGabinete({
                       key={item.nombre}
                       type="button"
                       onClick={() => agregarZona(item.nombre)}
-                      className={`p-2.5 rounded-lg border text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${clasesBoton}`}
+                      className={`min-h-[52px] p-2.5 rounded-xl border text-xs font-medium flex items-center justify-between gap-1 transition-all active:scale-95 ${clasesBoton}`}
                     >
-                      <div className="flex flex-col items-start truncate pr-1">
-                        <span className="truncate w-full text-left capitalize">
-                          {item.nombre}
+                      <span className="flex flex-col items-start truncate text-left">
+                        <span className="truncate w-full capitalize">{item.nombre}</span>
+                        <span className="text-[9px] font-normal opacity-60">
+                          {esFem ? 'Femenino' : esMasc ? 'Masculino' : 'General'}
                         </span>
-                        <span className="text-[9px] font-normal uppercase opacity-75 text-slate-500">
-                          {esFem ? 'Fem' : esMasc ? 'Masc' : 'Gral'}
-                        </span>
-                      </div>
-                      <Plus className="w-3.5 h-3.5 shrink-0 ml-1 text-slate-400" />
+                      </span>
+                      <Plus className="w-3.5 h-3.5 shrink-0 opacity-50" />
                     </button>
                   );
                 })}
@@ -252,99 +249,141 @@ export default function SelectorZonasGabinete({
       </div>
 
       {/* SECCIÓN INFERIOR: TABLA DE TRABAJO (PARÁMETROS TÉCNICOS) */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 space-y-3">
+      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm p-4 space-y-3">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
-            Tabla de Parámetros de Sesión
+          <h3 className="text-xs font-semibold text-slate-700">
+            Tabla de parámetros de sesión
           </h3>
-          <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2.5 py-0.5 rounded-full">
+          <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full">
             {zonasSeleccionadas.length} zonas en tratamiento
           </span>
         </div>
 
         {zonasSeleccionadas.length === 0 ? (
-          <p className="text-xs text-slate-400 italic text-center py-6">
-            No hay zonas seleccionadas para esta sesión. Agrega una desde el catálogo superior.
+          <p className="text-xs text-slate-400 text-center py-6">
+            No hay zonas seleccionadas para esta sesión. Agregá una desde el catálogo de arriba.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[500px]">
-              <thead>
-                <tr className="bg-slate-100 text-slate-700 text-[11px] font-bold uppercase tracking-wider">
-                  <th className="p-2.5 border border-slate-200 rounded-l-md">Zonas</th>
-                  <th className="p-2.5 border border-slate-200">Afluencia / Frecuencia</th>
-                  <th className="p-2.5 border border-slate-200">Energy</th>
-                  <th className="p-2.5 border border-slate-200">Pasadas</th>
-                  <th className="p-2.5 border border-slate-200 rounded-r-md text-center w-10"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-xs">
-                {zonasSeleccionadas.map((zona) => {
-                  const param = parametrosZonas[zona] || {
-                    afluencia: '',
-                    energy: '',
-                    pasadas: '',
-                  };
+          <>
+            {/* Vista tabla — desktop / tablet */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[520px]">
+                <thead>
+                  <tr className="text-slate-500 text-[11px] font-medium uppercase tracking-wide">
+                    <th className="p-2.5 border-b border-slate-200">Zona</th>
+                    <th className="p-2.5 border-b border-slate-200">Afluencia / Frecuencia</th>
+                    <th className="p-2.5 border-b border-slate-200">Energy</th>
+                    <th className="p-2.5 border-b border-slate-200">Pasadas</th>
+                    <th className="p-2.5 border-b border-slate-200 w-10"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {zonasSeleccionadas.map((zona) => {
+                    const param = parametrosZonas[zona] || {
+                      afluencia: '',
+                      energy: '',
+                      pasadas: '',
+                    };
 
-                  return (
-                    <tr key={zona} className="hover:bg-slate-50/50 transition-colors">
-                      {/* Nombre de la zona */}
-                      <td className="p-2 border border-slate-200 font-semibold text-slate-800 capitalize bg-slate-50/30">
-                        {zona}
-                      </td>
+                    return (
+                      <tr key={zona} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="p-2 font-medium text-slate-800 capitalize">{zona}</td>
+                        <td className="p-1.5">
+                          <input
+                            type="text"
+                            placeholder="Ej: 12 J/cm² / 10Hz"
+                            value={param.afluencia}
+                            onChange={(e) => cambiarParametro(zona, 'afluencia', e.target.value)}
+                            className="w-full p-2 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
+                          />
+                        </td>
+                        <td className="p-1.5">
+                          <input
+                            type="text"
+                            placeholder="Ej: 40 ms"
+                            value={param.energy}
+                            onChange={(e) => cambiarParametro(zona, 'energy', e.target.value)}
+                            className="w-full p-2 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
+                          />
+                        </td>
+                        <td className="p-1.5">
+                          <input
+                            type="text"
+                            placeholder="Ej: 2 pasadas"
+                            value={param.pasadas}
+                            onChange={(e) => cambiarParametro(zona, 'pasadas', e.target.value)}
+                            className="w-full p-2 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
+                          />
+                        </td>
+                        <td className="p-1.5 text-center">
+                          <button
+                            type="button"
+                            onClick={() => quitarZona(zona)}
+                            title="Quitar zona de la sesión"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-90"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
 
-                      {/* Input Afluencia */}
-                      <td className="p-1.5 border border-slate-200">
-                        <input
-                          type="text"
-                          placeholder="Ej: 12 J/cm² / 10Hz"
-                          value={param.afluencia}
-                          onChange={(e) =>
-                            cambiarParametro(zona, 'afluencia', e.target.value)
-                          }
-                          className="w-full p-1.5 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                        />
-                      </td>
+            {/* Vista tarjetas — mobile */}
+            <div className="sm:hidden space-y-3">
+              {zonasSeleccionadas.map((zona) => {
+                const param = parametrosZonas[zona] || {
+                  afluencia: '',
+                  energy: '',
+                  pasadas: '',
+                };
 
-                      {/* Input Energy */}
-                      <td className="p-1.5 border border-slate-200">
-                        <input
-                          type="text"
-                          placeholder="Ej: 40 ms"
-                          value={param.energy}
-                          onChange={(e) => cambiarParametro(zona, 'energy', e.target.value)}
-                          className="w-full p-1.5 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                        />
-                      </td>
-
-                      {/* Input Pasadas */}
-                      <td className="p-1.5 border border-slate-200">
-                        <input
-                          type="text"
-                          placeholder="Ej: 2 pasadas"
-                          value={param.pasadas}
-                          onChange={(e) => cambiarParametro(zona, 'pasadas', e.target.value)}
-                          className="w-full p-1.5 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white"
-                        />
-                      </td>
-
-                      {/* Botón Quitar */}
-                      <td className="p-1.5 border border-slate-200 text-center">
-                        <button
-                          type="button"
-                          onClick={() => quitarZona(zona)}
-                          title="Quitar zona de la sesión"
-                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                return (
+                  <div
+                    key={zona}
+                    className="border border-slate-200/80 rounded-xl p-3 space-y-2.5 bg-slate-50/40"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-slate-800 capitalize">{zona}</span>
+                      <button
+                        type="button"
+                        onClick={() => quitarZona(zona)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-90"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Afluencia / Frecuencia — Ej: 12 J/cm² / 10Hz"
+                        value={param.afluencia}
+                        onChange={(e) => cambiarParametro(zona, 'afluencia', e.target.value)}
+                        className="w-full p-2.5 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Energy — Ej: 40 ms"
+                        value={param.energy}
+                        onChange={(e) => cambiarParametro(zona, 'energy', e.target.value)}
+                        className="w-full p-2.5 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Pasadas — Ej: 2 pasadas"
+                        value={param.pasadas}
+                        onChange={(e) => cambiarParametro(zona, 'pasadas', e.target.value)}
+                        className="w-full p-2.5 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-white"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>

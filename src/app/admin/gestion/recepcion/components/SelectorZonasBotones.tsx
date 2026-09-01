@@ -54,7 +54,12 @@ export default function SelectorZonasBotones({
   };
 
   if (cargando) {
-    return <div className="text-xs text-slate-400">Cargando zonas de la base de datos...</div>;
+    return (
+      <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-xs italic text-slate-400">
+        <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-teal-500" />
+        Cargando zonas de la base de datos...
+      </div>
+    );
   }
 
   return (

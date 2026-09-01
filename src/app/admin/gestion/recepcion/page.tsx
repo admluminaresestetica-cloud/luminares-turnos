@@ -10,6 +10,13 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
+  X,
+  Clock,
+  UserCheck,
+  Ban,
+  FileHeart,
+  ClipboardCheck,
+  IdCard,
 } from 'lucide-react';
 
 import BuscadorMulticoincidencia from './components/BuscadorMulticoincidencia';
@@ -25,6 +32,17 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+
+// Catálogo visual de estados de atención. Este módulo siempre deriva con
+// 'en_espera' (ver payload en handleEnviarAGabinete) — Gabinete es quien
+// avanza el estado luego. Se muestran los 4 para dar contexto del flujo
+// completo, pero solo 'en_espera' está activo/resaltado.
+const ESTADOS_ATENCION = [
+  { key: 'en_espera', label: 'En espera', icon: Clock },
+  { key: 'en_atencion', label: 'Atendiendo', icon: UserCheck },
+  { key: 'atendido', label: 'Completado', icon: CheckCircle2 },
+  { key: 'cancelado', label: 'Cancelado', icon: Ban },
+] as const;
 
 export default function RecepcionPage() {
   const [pacienteFicha, setPacienteFicha] = useState<any>(null);
@@ -242,26 +260,31 @@ const handleEnviarAGabinete = async () => {
     : `Enviar a Gabinete${zonasSeleccionadas.length ? ` (${zonasSeleccionadas.length})` : ''}`;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100/60">
       <div
-        className={`mx-auto max-w-6xl space-y-5 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 ${
+        className={`mx-auto max-w-7xl space-y-6 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 ${
           hayPacienteActivo && !mostrarConfigAnamnesis ? 'pb-28 lg:pb-8' : 'pb-8'
         }`}
       >
         {/* Encabezado */}
         <header className="flex flex-col gap-3 border-b border-slate-200/80 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-              Recepción
-            </h1>
-            <p className="text-sm text-slate-500">
-              Búsqueda, evaluación clínica y derivación a gabinete
-            </p>
+          <div className="flex items-center gap-3">
+            <span className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm shadow-teal-600/20 sm:flex">
+              <IdCard className="h-5 w-5" />
+            </span>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                Recepción
+              </h1>
+              <p className="text-sm text-slate-500">
+                Búsqueda, evaluación clínica y derivación a gabinete
+              </p>
+            </div>
           </div>
 
           <button
             onClick={() => setMostrarConfigAnamnesis(!mostrarConfigAnamnesis)}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50 px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 active:scale-[0.98]"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-95"
           >
             <Settings className="h-4 w-4 text-teal-600" />
             <span>{mostrarConfigAnamnesis ? 'Volver a Recepción' : 'Configurar Anamnesis'}</span>
@@ -272,50 +295,92 @@ const handleEnviarAGabinete = async () => {
           <ConfiguracionAnamnesis onClose={() => setMostrarConfigAnamnesis(false)} />
         ) : (
           <>
+            {/* Buscador */}
             <BuscadorMulticoincidencia
               onClienteSeleccionado={handleClienteSeleccionado}
               onVerHistorialDirecto={(id) => setPacienteIdModal(id)}
             />
 
-            {hayPacienteActivo && (
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-start">
-                {/* Columna clínica */}
-                <div className="space-y-5 lg:col-span-7 xl:col-span-8">
-                  <div className="space-y-4 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm sm:p-5">
-                    <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
-                          {esNuevo ? <UserPlus className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate text-base font-bold text-slate-900">
-                            {esNuevo ? 'Nuevo paciente' : nombre || 'Paciente'}
-                          </p>
-                          {esNuevo ? (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-teal-700">
-                              <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                              Se creará una ficha nueva
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                              Ficha clínica registrada
-                            </span>
-                          )}
-                        </div>
-                      </div>
+            {mensaje && !hayPacienteActivo && (
+              <div className={`flex items-start gap-2 rounded-xl border p-3.5 text-sm font-semibold shadow-sm ${configMensaje.wrap}`}>
+                {configMensaje.icon}
+                <span>{mensaje}</span>
+              </div>
+            )}
 
-                      {pacienteFicha && (
-                        <button
-                          onClick={() => setPacienteIdModal(pacienteFicha.id)}
-                          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200/80 bg-slate-50 px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
-                        >
-                          <ClipboardList className="h-3.5 w-3.5 text-teal-600" />
-                          <span className="hidden sm:inline">Ver historial</span>
-                        </button>
+            {hayPacienteActivo && (
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 xl:items-start">
+                {/* ───────────────────────── SECCIÓN 1 · PACIENTE ───────────────────────── */}
+                <section className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5 xl:col-span-1">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      <IdCard className="h-3.5 w-3.5" />
+                      Datos del paciente
+                    </span>
+                    <button
+                      type="button"
+                      onClick={limpiar}
+                      title="Quitar paciente seleccionado"
+                      className="inline-flex h-8 items-center gap-1 rounded-lg border border-rose-200/70 bg-rose-50/70 px-2.5 text-[11px] font-semibold text-rose-600 transition-all hover:bg-rose-100 active:scale-95"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Quitar
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 ring-1 ring-teal-100">
+                      {esNuevo ? <UserPlus className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-bold text-slate-900">
+                        {esNuevo ? 'Nuevo paciente' : nombre || 'Paciente'}
+                      </p>
+                      {esNuevo ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-teal-700">
+                          <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                          Se creará una ficha nueva
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          Ficha clínica registrada
+                        </span>
                       )}
                     </div>
+                  </div>
 
+                  <dl className="space-y-2.5 text-sm">
+                    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50/70 px-3 py-2">
+                      <dt className="text-xs font-semibold text-slate-500">Celular</dt>
+                      <dd className="truncate font-medium text-slate-800">{celular || '—'}</dd>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50/70 px-3 py-2">
+                      <dt className="text-xs font-semibold text-slate-500">Fototipo</dt>
+                      <dd className="truncate font-medium text-slate-800">{fototipo}</dd>
+                    </div>
+                  </dl>
+
+                  {pacienteFicha && (
+                    <button
+                      type="button"
+                      onClick={() => setPacienteIdModal(pacienteFicha.id)}
+                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100 hover:text-slate-900 active:scale-[0.98]"
+                    >
+                      <ClipboardList className="h-4 w-4 text-teal-600" />
+                      Ver historial completo
+                    </button>
+                  )}
+                </section>
+
+                {/* ─────────────────── SECCIÓN 2 · INFO MÉDICA / HISTORIAL ─────────────────── */}
+                <section className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5 xl:col-span-1">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <FileHeart className="h-3.5 w-3.5" />
+                    Historial e información médica
+                  </span>
+
+                  <div className="border-b border-slate-100 pb-4">
                     <BannerAlertasClinicas
                       antecedentes={antecedentes}
                       observacionesFijas={observacionesFijas}
@@ -330,76 +395,109 @@ const handleEnviarAGabinete = async () => {
                     observacionesFijas={observacionesFijas}
                     setObservacionesFijas={setObservacionesFijas}
                   />
-                </div>
+                </section>
 
-                {/* Columna operativa (sticky en desktop) */}
-                <div className="space-y-5 lg:sticky lg:top-6 lg:col-span-5 xl:col-span-4">
-                  <ResumenReservaCobro
-                    reserva={reservaHoy}
-                    cobradoEnPuerta={cobradoEnPuerta}
-                    onToggleCobrado={setCobradoEnPuerta}
-                  />
+                {/* ───────────────── SECCIÓN 3 · ESTADO DE ATENCIÓN / OPERACIÓN ───────────────── */}
+                <section className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5 xl:sticky xl:top-6 xl:col-span-1">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <ClipboardCheck className="h-3.5 w-3.5" />
+                    Estado de atención
+                  </span>
 
-                  <div className="space-y-5 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm sm:p-5">
+                  {/* Grid de estados — solo 'En espera' es el destino real de esta acción */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {ESTADOS_ATENCION.map(({ key, label, icon: Icon }) => {
+                      const activo = key === 'en_espera';
+                      return (
+                        <div
+                          key={key}
+                          className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all ${
+                            activo
+                              ? 'border-teal-300 bg-teal-50 text-teal-800 ring-1 ring-teal-200'
+                              : 'border-slate-200/70 bg-slate-50/60 text-slate-400'
+                          }`}
+                        >
+                          <Icon className={`h-4 w-4 shrink-0 ${activo ? 'text-teal-600' : 'text-slate-300'}`} />
+                          {label}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="-mt-2 flex items-center gap-1.5 text-[11px] text-slate-400">
+                    <span className="h-1 w-1 rounded-full bg-slate-300" />
+                    Al enviar, el paciente pasa a "En espera" en Gabinete.
+                  </p>
+
+                  <div className="border-t border-slate-100 pt-4">
+                    <ResumenReservaCobro
+                      reserva={reservaHoy}
+                      cobradoEnPuerta={cobradoEnPuerta}
+                      onToggleCobrado={setCobradoEnPuerta}
+                    />
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-4">
                     <SelectorZonasBotones
                       zonasSeleccionadas={zonasSeleccionadas}
                       setZonasSeleccionadas={setZonasSeleccionadas}
                     />
-
-                    <div className="border-t border-slate-100 pt-4">
-                      <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                        Notas para gabinete
-                      </label>
-                      <input
-                        type="text"
-                        value={observacionesHoy}
-                        onChange={(e) => setObservacionesHoy(e.target.value)}
-                        placeholder="Ej: Sensibilidad leve en axilas..."
-                        className="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                      />
-                    </div>
-
-                    {mensaje && (
-                      <div className={`flex items-start gap-2 rounded-xl border p-3 text-xs font-semibold ${configMensaje.wrap}`}>
-                        {configMensaje.icon}
-                        <span>{mensaje}</span>
-                      </div>
-                    )}
-
-                    {/* Botón de envío — versión desktop/tablet, integrada en el panel */}
-                    <button
-                      onClick={handleEnviarAGabinete}
-                      disabled={guardando}
-                      className="hidden h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none lg:flex"
-                    >
-                      {textoBoton}
-                    </button>
                   </div>
-                </div>
+
+                  <div className="border-t border-slate-100 pt-4">
+                    <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Notas para gabinete
+                    </label>
+                    <input
+                      type="text"
+                      value={observacionesHoy}
+                      onChange={(e) => setObservacionesHoy(e.target.value)}
+                      placeholder="Ej: Sensibilidad leve en axilas..."
+                      className="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                    />
+                  </div>
+
+                  {mensaje && (
+                    <div className={`flex items-start gap-2 rounded-xl border p-3 text-xs font-semibold ${configMensaje.wrap}`}>
+                      {configMensaje.icon}
+                      <span>{mensaje}</span>
+                    </div>
+                  )}
+
+                  {/* Botón de envío — versión desktop/tablet, integrada en el panel */}
+                  <button
+                    onClick={handleEnviarAGabinete}
+                    disabled={guardando}
+                    className="hidden h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none lg:flex"
+                  >
+                    {textoBoton}
+                  </button>
+                </section>
               </div>
             )}
           </>
-        )}
-
-        {/* Mensaje flotante para cuando no hay panel operativo visible (p.ej. sin zonas aún) */}
-        {mensaje && !hayPacienteActivo && (
-          <div className={`flex items-start gap-2 rounded-xl border p-3 text-xs font-semibold ${configMensaje.wrap}`}>
-            {configMensaje.icon}
-            <span>{mensaje}</span>
-          </div>
         )}
       </div>
 
       {/* Barra de acción fija — mobile / tablet vertical */}
       {hayPacienteActivo && !mostrarConfigAnamnesis && (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200/80 bg-white/95 p-3 backdrop-blur-md lg:hidden">
-          <button
-            onClick={handleEnviarAGabinete}
-            disabled={guardando}
-            className="flex h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
-          >
-            {textoBoton}
-          </button>
+          <div className="mx-auto flex max-w-7xl items-center gap-2">
+            <button
+              type="button"
+              onClick={limpiar}
+              title="Quitar paciente seleccionado"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-rose-200/70 bg-rose-50/70 text-rose-600 transition-all active:scale-95"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <button
+              onClick={handleEnviarAGabinete}
+              disabled={guardando}
+              className="flex h-12 flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
+            >
+              {textoBoton}
+            </button>
+          </div>
         </div>
       )}
 
