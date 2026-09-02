@@ -1,5 +1,5 @@
 'use client';
-import { ejecutarAccionAdmin } from '@/lib/admin/api';
+
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {
@@ -35,6 +35,10 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// Catálogo visual de estados de atención. Este módulo siempre deriva con
+// 'en_espera' (ver payload en handleEnviarAGabinete) — Gabinete es quien
+// avanza el estado luego. Se muestran los 4 para dar contexto del flujo
+// completo, pero solo 'en_espera' está activo/resaltado.
 const ESTADOS_ATENCION = [
   { key: 'en_espera', label: 'En espera', icon: Clock },
   { key: 'en_atencion', label: 'Atendiendo', icon: UserCheck },
@@ -122,6 +126,8 @@ export default function RecepcionPage() {
       setCelular(data.pacienteFicha.celular || '');
       setFototipo(data.pacienteFicha.fototipo || 'Fototipo III');
       setObservacionesFijas(data.pacienteFicha.observaciones_fijas || '');
+
+      // ✅ Si ya tiene antecedentes guardados los usa; si no, objeto vacío
       setAntecedentes(data.pacienteFicha.antecedentes_medicos || {});
     } else {
       setPacienteFicha(null);
@@ -130,11 +136,13 @@ export default function RecepcionPage() {
       setCelular(data.reservaHoy?.cliente_celular || '');
       setFototipo('Fototipo III');
       setObservacionesFijas('');
+
+      // ✅ Para nuevo cliente arranca completamente limpio
       setAntecedentes({});
     }
   };
 
-  const handleEnviarAGabinete = async () => {
+const handleEnviarAGabinete = async () => {
     if (zonasSeleccionadas.length === 0) {
       setMensaje('⚠️ Seleccioná al menos una zona para realizar hoy.');
       return;
@@ -150,6 +158,7 @@ export default function RecepcionPage() {
       const inicioHoy = new Date();
       inicioHoy.setHours(0, 0, 0, 0);
 
+      // Si tenemos celular o ID, buscamos si ya fue derivado en la fecha actual
       let query = supabase
         .from('pacientes_ficha')
         .select('id, estado_atencion, updated_at')
@@ -172,7 +181,7 @@ export default function RecepcionPage() {
         }
       }
 
-      // Payload normal para la base de datos
+      // Payload normal para Supabase
       const payload = {
         nombre_completo: nombre,
         celular: celular,
@@ -186,24 +195,22 @@ export default function RecepcionPage() {
         updated_at: new Date().toISOString(),
       };
 
-      // ✅ SE USA EL HELPER SEGURO EN LUGAR DE SUPABASE DIRECTO
       if (esNuevo || !pacienteId) {
-        const resultado = await ejecutarAccionAdmin({
-          tabla: 'pacientes_ficha',
-          accion: 'INSERT',
-          datos: payload,
-        });
+        const { data: nuevo, error: errFicha } = await supabase
+          .from('pacientes_ficha')
+          .insert(payload)
+          .select('id')
+          .single();
 
-        if (resultado && resultado.length > 0) {
-          pacienteId = resultado[0].id;
-        }
+        if (errFicha) throw errFicha;
+        pacienteId = nuevo.id;
       } else {
-        await ejecutarAccionAdmin({
-          tabla: 'pacientes_ficha',
-          accion: 'UPDATE',
-          id: pacienteId,
-          datos: payload,
-        });
+        const { error: errUpdate } = await supabase
+          .from('pacientes_ficha')
+          .update(payload)
+          .eq('id', pacienteId);
+
+        if (errUpdate) throw errUpdate;
       }
 
       setMensaje('✅ ¡Paciente derivado a Gabinete (En Espera)!');
@@ -407,6 +414,7 @@ export default function RecepcionPage() {
                     Estado de atención
                   </span>
 
+                  {/* Grid de estados — solo 'En espera' es el destino real de esta acción */}
                   <div className="grid grid-cols-2 gap-2">
                     {ESTADOS_ATENCION.map(({ key, label, icon: Icon }) => {
                       const activo = key === 'en_espera';
@@ -465,6 +473,7 @@ export default function RecepcionPage() {
                     </div>
                   )}
 
+                  {/* Botón de envío — versión desktop/tablet, integrada en el panel */}
                   <button
                     onClick={handleEnviarAGabinete}
                     disabled={guardando}
@@ -479,6 +488,7 @@ export default function RecepcionPage() {
         )}
       </div>
 
+      {/* Barra de acción fija — mobile / tablet vertical */}
       {hayPacienteActivo && !mostrarConfigAnamnesis && (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200/80 bg-white/95 p-3 backdrop-blur-md lg:hidden">
           <div className="mx-auto flex max-w-7xl items-center gap-2">
