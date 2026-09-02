@@ -11,15 +11,6 @@ import CronometroSesion from './components/CronometroSesion';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-// Dentro del header de la página:
-<Link
-  href="/admin"
-  className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-sm hover:shadow transition-all active:scale-95"
->
-  <ArrowLeft className="w-4 h-4" />
-  <span>Menú Admin</span>
-</Link>
-
 export default function GabinetePage() {
   const [operadoraActual, setOperadoraActual] = useState<string>('');
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState<any>(null);
@@ -64,6 +55,7 @@ export default function GabinetePage() {
     : 'Paciente';
 
   return (
+    
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
 
@@ -83,6 +75,17 @@ export default function GabinetePage() {
             </div>
           </div>
         </div>
+        import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+
+// Dentro del header de la página:
+<Link
+  href="/admin"
+  className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-sm hover:shadow transition-all active:scale-95"
+>
+  <ArrowLeft className="w-4 h-4" />
+  <span>Menú Admin</span>
+</Link>
 
         {/* NOTIFICACIÓN EN TIEMPO REAL DE NUEVOS PACIENTES EN ESPERA */}
         <NotificacionNuevoCliente />
