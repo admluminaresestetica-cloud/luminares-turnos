@@ -8,6 +8,16 @@ import SelectorPacientesDoble from './components/SelectorPacientesDoble';
 import VisorAnamnesisDia from './components/VisorAnamnesisDia';
 import FormularioCargaTecnica from './components/FormularioCargaTecnica';
 import CronometroSesion from './components/CronometroSesion';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+
+<Link
+  href="/admin"
+  className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-sm hover:shadow transition-all active:scale-95"
+>
+  <ArrowLeft className="w-4 h-4" />
+  <span>Menú Admin</span>
+</Link>
 
 export default function GabinetePage() {
   const [operadoraActual, setOperadoraActual] = useState<string>('');
