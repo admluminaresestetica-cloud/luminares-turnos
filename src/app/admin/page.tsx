@@ -1,7 +1,7 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { UserCheck, Sparkles, CalendarDays, ShoppingBag, LogOut } from 'lucide-react';
 
@@ -11,11 +11,18 @@ const supabase = createClient(
 );
 
 export default function AdminHubPage() {
-  const router = useRouter();
+  const [cerrandoSesion, setCerrandoSesion] = useState(false);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/admin/login');
+    setCerrandoSesion(true);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    } finally {
+      // Usar window.location.href fuerza una recarga limpia y elimina cualquier caché de auth
+      window.location.href = '/admin/login';
+    }
   };
 
   const modulos = [
@@ -69,11 +76,12 @@ export default function AdminHubPage() {
 
         <button
           onClick={handleLogout}
+          disabled={cerrandoSesion}
           type="button"
-          className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-white border border-rose-200/80 hover:bg-rose-50 px-3.5 py-2 rounded-xl shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
+          className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-white border border-rose-200/80 hover:bg-rose-50 px-3.5 py-2 rounded-xl shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer disabled:opacity-50"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Cerrar sesión</span>
+          <span>{cerrandoSesion ? 'Saliendo...' : 'Cerrar sesión'}</span>
         </button>
       </header>
 
