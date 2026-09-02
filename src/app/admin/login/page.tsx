@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
@@ -12,6 +12,12 @@ export default function AdminLogin() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+
+  // Cliente de Supabase adaptado para SSR y Cookies en Next.js
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   // PASO 1: Enviar credenciales a la API para verificar y mandar el código por mail
   const handleLogin = async (e: React.FormEvent) => {
@@ -34,7 +40,6 @@ export default function AdminLogin() {
         return
       }
 
-      // Si todo sale bien, pasamos a la pantalla del código y guardamos la contraseña temporalmente en memoria para el paso final
       setStep('otp')
       setLoading(false)
     } catch (err: any) {
@@ -64,15 +69,16 @@ export default function AdminLogin() {
         return
       }
 
-      // 2. Validar si el código expiró
-      if (new Date() > new Date(registros.expira_at)) {
+      // 2. Validar si el código expiró (usando expires_at o expira_at por compatibilidad)
+      const fechaExpiracion = registros.expires_at || registros.expira_at
+      if (fechaExpiracion && new Date() > new Date(fechaExpiracion)) {
         setError('El código ha expirado. Volvé a iniciar sesión.')
         setLoading(false)
         setStep('credentials')
         return
       }
 
-      // 3. Si el código es correcto, iniciamos sesión de verdad en Supabase
+      // 3. Iniciar sesión oficialmente con Supabase Auth (esto setea las cookies automáticamente)
       const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -88,11 +94,8 @@ export default function AdminLogin() {
       // 4. Limpiar el código usado de la base de datos
       await supabase.from('codigos_admin').delete().eq('email', email)
 
-      // 5. Guardar cookies y redirigir al panel
-      const maxAge = 60 * 60 * 24 * 7 // 7 días
-      document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`
-      document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=${maxAge}; SameSite=Lax`
-
+      // 5. Refrescar el estado del servidor para que el middleware lea la cookie nueva y redirigir
+      router.refresh()
       window.location.href = '/admin'
     } catch (err: any) {
       setError(`Error al verificar: ${err.message || 'Desconocido'}`)
@@ -212,5 +215,4 @@ export default function AdminLogin() {
       </div>
     </div>
   )
-  
 }
