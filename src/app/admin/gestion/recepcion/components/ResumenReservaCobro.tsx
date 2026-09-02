@@ -4,20 +4,15 @@ import { CalendarClock } from 'lucide-react';
 
 interface ResumenProps {
   reserva: any;
-  cobradoEnPuerta: boolean;
-  onToggleCobrado: (cobrado: boolean) => void;
+  // Mantenemos estas props opcionales por si se llaman desde la vista principal sin romper el tipo
+  cobradoEnPuerta?: boolean;
+  onToggleCobrado?: (cobrado: boolean) => void;
 }
 
 export default function ResumenReservaCobro({
   reserva,
-  cobradoEnPuerta,
-  onToggleCobrado,
 }: ResumenProps) {
   if (!reserva) return null;
-
-  const precioTotal = Number(reserva.precio_total || reserva.monto_total || 0);
-  const montoAbonadoWeb = Number(reserva.monto_abonado || reserva.monto_sena || reserva.sena || 0);
-  const saldoPendiente = Math.max(0, precioTotal - montoAbonadoWeb);
 
   const obtenerDetalleReservaTexto = (r: any) => {
     let detalle = r.detalle_reserva;
@@ -77,57 +72,6 @@ export default function ResumenReservaCobro({
           </p>
         </div>
       </div>
-
-      <div className="grid grid-cols-3 divide-x divide-slate-100 rounded-xl border border-slate-100 bg-white/80 p-3 text-center">
-        <div>
-          <p className="text-[11px] font-medium text-slate-400">Total</p>
-          <p className="text-sm font-bold text-slate-800">${precioTotal}</p>
-        </div>
-        <div>
-          <p className="text-[11px] font-medium text-slate-400">Señado</p>
-          <p className="text-sm font-bold text-emerald-600">${montoAbonadoWeb}</p>
-        </div>
-        <div>
-          <p className="text-[11px] font-medium text-slate-400">Saldo</p>
-          <p className="text-sm font-bold text-indigo-700">${saldoPendiente}</p>
-        </div>
-      </div>
-
-      {saldoPendiente > 0 && (
-        <div
-          className={`flex items-center justify-between gap-3 rounded-xl border p-3 transition-colors ${
-            cobradoEnPuerta ? 'border-emerald-200 bg-emerald-50' : 'border-indigo-100 bg-white'
-          }`}
-        >
-          <span className="text-xs font-semibold text-indigo-900">
-            Marcar saldo de ${saldoPendiente} como cobrado
-          </span>
-
-          {/* Switch estilo iOS/Shadcn */}
-          <button
-            type="button"
-            role="switch"
-            aria-checked={cobradoEnPuerta}
-            onClick={() => onToggleCobrado(!cobradoEnPuerta)}
-            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
-              cobradoEnPuerta ? 'bg-emerald-500' : 'bg-slate-200'
-            }`}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
-                cobradoEnPuerta ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
-          </button>
-        </div>
-      )}
-
-      {saldoPendiente > 0 && cobradoEnPuerta && (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
-          <span className="h-2 w-2 rounded-full bg-emerald-500" />
-          Cobrado en recepción
-        </span>
-      )}
     </div>
   );
 }
