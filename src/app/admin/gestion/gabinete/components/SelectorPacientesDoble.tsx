@@ -26,26 +26,20 @@ export default function SelectorPacientesDoble({
   const [atendidosHoy, setAtendidosHoy] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-// Cargar pacientes desde pacientes_ficha abarcando variantes comunes de estado de espera
-  const cargarPacientes = async () => {
+const cargarPacientes = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('pacientes_ficha')
         .select('*')
-        .in('estado_atencion', ['en_espera', 'espera', 'en_gabinete', 'atendido'])
-        .order('updated_at', { ascending: false });
+        .in('estado_atencion', ['en_espera', 'atendido'])
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       if (data) {
-        // Filtramos con flexibilidad para que capture 'en_espera', 'espera' o 'en_gabinete'
-        const espera = data.filter((p: any) => 
-          ['en_espera', 'espera', 'en_gabinete'].includes(p.estado_atencion)
-        );
-        const completados = data.filter((p: any) => 
-          p.estado_atencion === 'atendido'
-        );
+        const espera = data.filter((p: any) => p.estado_atencion === 'en_espera');
+        const completados = data.filter((p: any) => p.estado_atencion === 'atendido');
 
         setEnEspera(espera);
         setAtendidosHoy(completados);
