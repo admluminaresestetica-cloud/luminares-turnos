@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 import { UserCheck, Sparkles, CalendarDays, ShoppingBag, LogOut } from 'lucide-react';
 
-const supabase = createClient(
+// Cliente configurado para manejar cookies de sesión en el navegador
+const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
@@ -14,24 +15,20 @@ export default function AdminHubPage() {
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
 
   const handleLogout = async (e: React.MouseEvent) => {
-    e.preventDefault(); // Previene cualquier comportamiento raro del navegador
+    e.preventDefault();
     setCerrandoSesion(true);
 
     try {
-      // Intentamos cerrar sesión en Supabase con un límite de tiempo máximo de 500ms
-      const logoutPromise = supabase.auth.signOut();
-      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 500));
-
-      await Promise.race([logoutPromise, timeoutPromise]);
+      // Al cerrar sesión aquí, @supabase/ssr borra la cookie del navegador
+      await supabase.auth.signOut();
     } catch (error) {
       console.error('Error durante el cierre de sesión:', error);
     } finally {
-      // 1. Limpiamos cualquier rastro de tokens guardados en el navegador
       if (typeof window !== 'undefined') {
         localStorage.clear();
         sessionStorage.clear();
-        // 2. Redirección forzada que limpia la memoria y cookies de la app
-        window.location.replace('/admin/login');
+        // Redirigimos directamente al login
+        window.location.href = '/admin/login';
       }
     }
   };

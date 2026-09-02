@@ -1,57 +1,56 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // Si la ruta es directamente el login de admin, la dejamos pasar sin tocar nada
+  if (pathname === '/admin/login') {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
-  })
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
+        get(name: string) {
+          return request.cookies.get(name)?.value;
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({ name, value, ...options });
           response = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
+            request: { headers: request.headers },
+          });
+          response.cookies.set({ name, value, ...options });
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({ name, value: '', ...options });
+          response = NextResponse.next({
+            request: { headers: request.headers },
+          });
+          response.cookies.set({ name, value: '', ...options });
         },
       },
     }
-  )
+  );
 
-  // Actualiza la sesión y las cookies en la respuesta
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  const { data: { session } } = await supabase.auth.getSession();
 
-  const isLoginPage = request.nextUrl.pathname === '/admin/login'
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
-
-  // 1. Si intenta acceder a rutas /admin (que no sea login) y NO tiene sesión activa -> Al Login
-  if (isAdminRoute && !isLoginPage && !session) {
-    return NextResponse.redirect(new URL('/admin/login', request.url))
+  // Si intenta acceder a cualquier subruta de /admin sin sesión, mandamos a /admin/login
+  if (pathname.startsWith('/admin') && !session) {
+    return NextResponse.redirect(new URL('/admin/login', request.url));
   }
 
-  // 2. Si ya tiene sesión activa e intenta ir al login -> Al Dashboard de Admin
-  if (isLoginPage && session) {
-    return NextResponse.redirect(new URL('/admin', request.url))
-  }
-
-  return response
+  return response;
 }
 
 export const config = {
   matcher: ['/admin/:path*'],
-}
+};
