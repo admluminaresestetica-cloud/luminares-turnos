@@ -34,18 +34,26 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Verificamos si hay una sesión activa
-  const { data: { session } } = await supabase.auth.getSession();
+  // IMPORTANTE: Se usa getUser() en lugar de getSession() para refrescar cookies de forma segura
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // Si la ruta empieza con /admin y NO hay sesión, lo mandamos al login
-  if (request.nextUrl.pathname.startsWith('/admin') && !session) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  const pathname = request.nextUrl.pathname;
+
+  // Si intenta ir a la página de login teniendo sesión activa, lo mandamos al admin directamente
+  if (pathname === '/admin/login' && user) {
+    return NextResponse.redirect(new URL('/admin', request.url));
+  }
+
+  // Si intenta entrar a cualquier ruta dentro de /admin (que no sea /admin/login) SIN sesión, lo mandamos al login
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login' && !user) {
+    return NextResponse.redirect(new URL('/admin/login', request.url));
   }
 
   return response;
 }
 
-// Acá le decimos al middleware en qué rutas debe ejecutarse
 export const config = {
   matcher: ['/admin/:path*'],
 };
