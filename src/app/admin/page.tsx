@@ -13,15 +13,26 @@ const supabase = createClient(
 export default function AdminHubPage() {
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Previene cualquier comportamiento raro del navegador
     setCerrandoSesion(true);
+
     try {
-      await supabase.auth.signOut();
+      // Intentamos cerrar sesión en Supabase con un límite de tiempo máximo de 500ms
+      const logoutPromise = supabase.auth.signOut();
+      const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 500));
+
+      await Promise.race([logoutPromise, timeoutPromise]);
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      console.error('Error durante el cierre de sesión:', error);
     } finally {
-      // Usar window.location.href fuerza una recarga limpia y elimina cualquier caché de auth
-      window.location.href = '/admin/login';
+      // 1. Limpiamos cualquier rastro de tokens guardados en el navegador
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+        // 2. Redirección forzada que limpia la memoria y cookies de la app
+        window.location.replace('/admin/login');
+      }
     }
   };
 
