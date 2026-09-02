@@ -230,10 +230,10 @@ export default function AdminTiendaPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link 
-              href="/admin" 
+              href="/admin/turnos" 
               className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-xl text-sm transition-colors shadow-sm inline-flex items-center gap-2 border border-[#E7E5E0]"
             >
-              ← Volver al Panel
+              ← Volver a Turnos
             </Link>
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#12151B] text-lg text-white">
               🛍️
@@ -342,4 +342,3 @@ export default function AdminTiendaPage() {
     </div>
   );
 }
- 

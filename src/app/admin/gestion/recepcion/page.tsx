@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 
 import BuscadorMulticoincidencia from './components/BuscadorMulticoincidencia';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import ResumenReservaCobro from './components/ResumenReservaCobro';
 import ChecklistAnamnesis from './components/ChecklistAnamnesis';
 import SelectorZonasBotones from './components/SelectorZonasBotones';
@@ -281,6 +283,14 @@ const handleEnviarAGabinete = async () => {
               </p>
             </div>
           </div>
+
+          <Link
+            href="/admin"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+          >
+            <ArrowLeft className="h-4 w-4 text-slate-500" />
+            <span>Menú Admin</span>
+          </Link>
 
           <button
             onClick={() => setMostrarConfigAnamnesis(!mostrarConfigAnamnesis)}

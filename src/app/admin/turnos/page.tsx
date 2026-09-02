@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 
 import AdminHeader from '@/app/admin/turnos/AdminHeader'
 import AdminTabs from './components/AdminTabs';
@@ -55,20 +56,30 @@ export default function AdminDashboard() {
       <AdminHeader onLogout={handleLogout} />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
-        {/* Encabezado superior del Panel con acceso directo a Admin Tienda */}
+        {/* Encabezado superior del Panel con acceso directo a Admin Tienda y Menú Admin */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
           <div>
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">Panel de Control</h1>
             <p className="text-xs text-gray-500">Gestión integral de turnos, agenda y productos</p>
           </div>
           
-          <Link 
-            href="/admin/tienda" 
-            className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-all shadow-xs hover:shadow flex items-center justify-center gap-2 shrink-0"
-          >
-            <span>🛒</span>
-            <span>Admin Tienda</span>
-          </Link>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link 
+              href="/admin" 
+              className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2.5 rounded-lg transition-all shadow-xs hover:shadow flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4 text-slate-500" />
+              <span>Menú Admin</span>
+            </Link>
+
+            <Link 
+              href="/admin/tienda" 
+              className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-all shadow-xs hover:shadow flex items-center justify-center gap-2"
+            >
+              <span>🛒</span>
+              <span>Admin Tienda</span>
+            </Link>
+          </div>
         </div>
 
         <AdminTabs
@@ -157,9 +168,9 @@ export default function AdminDashboard() {
             nuevaExcepcionGeneral={horarios.nuevaExcepcionGeneral}
             setNuevaExcepcionGeneral={horarios.setNuevaExcepcionGeneral}
             onToggleDiaGeneral={(dia) => {
-            horarios.toggleDiaGeneral(dia as any);}}
+              horarios.toggleDiaGeneral(dia as any);}}
             onActualizarHorarioGeneral={(dia, campo, valor) => {
-            horarios.actualizarHorarioGeneral(dia as any, campo, valor);}}
+              horarios.actualizarHorarioGeneral(dia as any, campo, valor);}}
             onAgregarExcepcionGeneral={horarios.agregarExcepcionGeneral}
             onQuitarExcepcionGeneral={horarios.quitarExcepcionGeneral}
             onGuardarConfigGeneral={horarios.guardarConfigGeneral}

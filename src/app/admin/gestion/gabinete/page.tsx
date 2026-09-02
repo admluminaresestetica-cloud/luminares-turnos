@@ -1,15 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 import HeaderOperadoraReloj from './components/HeaderOperadoraReloj';
 import NotificacionNuevoCliente from './components/NotificacionNuevoCliente';
 import SelectorPacientesDoble from './components/SelectorPacientesDoble';
 import VisorAnamnesisDia from './components/VisorAnamnesisDia';
 import FormularioCargaTecnica from './components/FormularioCargaTecnica';
 import CronometroSesion from './components/CronometroSesion';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 
 export default function GabinetePage() {
   const [operadoraActual, setOperadoraActual] = useState<string>('');
@@ -55,11 +54,10 @@ export default function GabinetePage() {
     : 'Paciente';
 
   return (
-    
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
 
-        {/* TÍTULO DE LA VISTA */}
+        {/* TÍTULO DE LA VISTA CON BOTÓN DE RETORNO AL MENÚ ADMIN */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-100">
@@ -74,18 +72,16 @@ export default function GabinetePage() {
               </p>
             </div>
           </div>
-        </div>
-        import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 
-// Dentro del header de la página:
-<Link
-  href="/admin"
-  className="flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-sm hover:shadow transition-all active:scale-95"
->
-  <ArrowLeft className="w-4 h-4" />
-  <span>Menú Admin</span>
-</Link>
+          {/* BOTÓN VOLVER AL MENÚ ADMIN */}
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-sm hover:shadow transition-all active:scale-95 self-start sm:self-auto"
+          >
+            <ArrowLeft className="w-4 h-4 text-slate-500" />
+            <span>Menú Admin</span>
+          </Link>
+        </div>
 
         {/* NOTIFICACIÓN EN TIEMPO REAL DE NUEVOS PACIENTES EN ESPERA */}
         <NotificacionNuevoCliente />
