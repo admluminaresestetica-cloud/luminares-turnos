@@ -1,19 +1,55 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  // Verificación básica de sesión desde las cookies de Supabase
-  const token = req.cookies.get('sb-access-token')?.value || req.cookies.get('sb-localhost-auth-token')?.value
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-  const isLoginPage = req.nextUrl.pathname === '/admin/login'
-  const isAdminRoute = req.nextUrl.pathname.startsWith('/admin')
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
+          response = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
 
-  // Si intenta acceder a /admin sin estar en login y sin token, redirige al login
-  if (isAdminRoute && !isLoginPage && !token) {
-    return NextResponse.redirect(new URL('/admin/login', req.url))
+  // Actualiza la sesión y las cookies en la respuesta
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  const isLoginPage = request.nextUrl.pathname === '/admin/login'
+  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
+
+  // 1. Si intenta acceder a rutas /admin (que no sea login) y NO tiene sesión activa -> Al Login
+  if (isAdminRoute && !isLoginPage && !session) {
+    return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 
-  return NextResponse.next()
+  // 2. Si ya tiene sesión activa e intenta ir al login -> Al Dashboard de Admin
+  if (isLoginPage && session) {
+    return NextResponse.redirect(new URL('/admin', request.url))
+  }
+
+  return response
 }
 
 export const config = {
