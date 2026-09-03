@@ -221,32 +221,37 @@ export default function FormularioCargaTecnica({
       }));
 
       const parametros_tecnicos = {
-        equipo,
+        equipo: equipo || 'Laser Soprano / Diodo',
         detalles_zonas,
         operadora: operadoraActual,
-        observaciones_gabinete: observacionesGabinete,
+        observaciones_gabinete: observacionesGabinete || '',
         fecha_atencion: new Date().toISOString(),
       };
 
-      // UPDATE a pacientes_ficha registrando la nota como columna directa
-      const { error } = await supabase
+      // Guardado en pacientes_ficha asegurando tipos limpios
+      const { data, error } = await supabase
         .from('pacientes_ficha')
         .update({
           zonas_realizadas: zonasSeleccionadas,
-          parametros_tecnicos,
-          observaciones_gabinete: observacionesGabinete, // Guardado directo en la columna de la tabla
+          parametros_tecnicos: parametros_tecnicos,
+          observaciones_gabinete: observacionesGabinete || '',
           estado_atencion: 'atendido',
           updated_at: new Date().toISOString(),
         })
-        .eq('id', sesionActual.id);
+        .eq('id', sesionActual.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error devuelto por Supabase:', error);
+        alert(`Error de Supabase: ${error.message}`);
+        return;
+      }
 
       alert('¡Atención finalizada con éxito! La ficha del paciente fue actualizada.');
       onSesionCompletada();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error al guardar la sesión:', err);
-      alert('Hubo un error al guardar los datos en la ficha del paciente.');
+      alert(`Hubo un error inesperado: ${err?.message || 'Error desconocido'}`);
     } finally {
       setGuardando(false);
     }
