@@ -502,11 +502,11 @@ export default function RecepcionPage() {
       )}
 
       <ModalHistorialSesiones
-        pacienteId={pacienteIdModal || ''}
-        celularPaciente={pacienteFicha?.celular || celular}
-        isOpen={!!pacienteIdModal}
-        onClose={() => setPacienteIdModal(null)}
-      />
+  pacienteId={pacienteIdModal || ''}
+  celularPaciente={pacienteFicha?.celular || celular}
+  isOpen={!!pacienteIdModal}
+  onClose={() => setPacienteIdModal(null)}
+/>
     </div>
   );
 }

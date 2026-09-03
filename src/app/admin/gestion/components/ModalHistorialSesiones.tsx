@@ -35,32 +35,36 @@ export default function ModalHistorialSesiones({
     setLoading(true);
     try {
       let query = supabase
-        .from('pacientes_ficha')
+        .from('sesiones_laser')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('fecha_sesion', { ascending: false });
 
-      if (celularPaciente) {
-        query = query.eq('celular', celularPaciente);
-      } else {
-        query = query.eq('id', pacienteId);
+      if (pacienteId) {
+        query = query.eq('paciente_id', pacienteId);
+      } else if (celularPaciente) {
+        query = query.eq('celular_paciente', celularPaciente);
       }
 
       const { data, error } = await query;
 
       if (error) throw error;
+      
       setSesiones(data || []);
       if (data && data.length > 0) {
         setSesionSeleccionada(data[0]);
+      } else {
+        setSesionSeleccionada(null);
       }
     } catch (err) {
-      console.error('Error al cargar historial:', err);
+      console.error('Error al cargar historial de sesiones_laser:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const obtenerZonasSeguras = (sesion: any) => {
-    const rawZonas = sesion.zonas_realizadas || sesion.zonas_preasignadas;
+    if (!sesion) return [];
+    const rawZonas = sesion.zonas_tratadas || sesion.zonas_realizadas || sesion.zonas_preasignadas;
     if (Array.isArray(rawZonas)) return rawZonas;
     if (typeof rawZonas === 'string') {
       try {
@@ -74,18 +78,39 @@ export default function ModalHistorialSesiones({
   };
 
   const obtenerDetallesTecnicos = (sesion: any) => {
-    const params = sesion?.parametros_tecnicos;
-    if (!params) return { operadora: null, equipo: null, detalles: [] };
+    if (!sesion) return { operadora: 'No registrada', equipo: 'Soprano / Ice', detalles: [] };
 
-    let detalles = params.detalles_zonas || [];
-    if (typeof detalles === 'string') {
-      try { detalles = JSON.parse(detalles); } catch { detalles = []; }
+    // Si viene directamente de los campos directos de la nueva tabla
+    const tieneValoresDirectos = sesion.julios !== undefined || sesion.milisegundos !== undefined || sesion.pasadas !== undefined;
+
+    let detalles: any[] = [];
+
+    if (tieneValoresDirectos) {
+      const zonas = obtenerZonasSeguras(sesion);
+      detalles = [
+        {
+          zona: zonas.length > 0 ? zonas.join(', ') : 'Zonas Generales',
+          afluencia: sesion.julios ?? '-',
+          pulso: sesion.milisegundos ?? '-',
+          pasadas: sesion.pasadas ?? '-',
+        },
+      ];
+    } else {
+      // Compatibilidad con la estructura previa guardada dentro de un JSON
+      const params = sesion?.parametros_tecnicos;
+      if (params) {
+        let rawDetalles = params.detalles_zonas || [];
+        if (typeof rawDetalles === 'string') {
+          try { rawDetalles = JSON.parse(rawDetalles); } catch { rawDetalles = []; }
+        }
+        detalles = Array.isArray(rawDetalles) ? rawDetalles : [];
+      }
     }
 
     return {
-      operadora: params.operadora || 'No registrada',
-      equipo: params.equipo || 'Soprano / Ice',
-      detalles: Array.isArray(detalles) ? detalles : []
+      operadora: sesion.atendido_por || sesion.parametros_tecnicos?.operadora || 'No registrada',
+      equipo: sesion.equipo || sesion.parametros_tecnicos?.equipo || 'Soprano / Ice',
+      detalles,
     };
   };
 
@@ -120,8 +145,9 @@ export default function ModalHistorialSesiones({
             {/* TIMELINE DE SESIONES */}
             <div className="flex flex-wrap gap-2 border-b pb-3">
               {sesiones.map((sesion, index) => {
-                const fecha = sesion.created_at || sesion.updated_at
-                  ? new Date(sesion.created_at || sesion.updated_at).toLocaleDateString()
+                const fechaRaw = sesion.fecha_sesion || sesion.created_at || sesion.updated_at;
+                const fecha = fechaRaw
+                  ? new Date(fechaRaw).toLocaleDateString('es-AR')
                   : `Sesión ${sesiones.length - index}`;
                 const esActiva = sesionSeleccionada?.id === sesion.id;
 
@@ -135,7 +161,7 @@ export default function ModalHistorialSesiones({
                         : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    📅 {fecha} {sesion.estado_atencion === 'atendido' ? '✅' : '⏳'}
+                    📅 {fecha} {sesion.estado_atencion === 'atendido' || sesion.atendido_por ? '✅' : '⏳'}
                   </button>
                 );
               })}
@@ -145,8 +171,11 @@ export default function ModalHistorialSesiones({
             {sesionSeleccionada && (() => {
               const infoTecnica = obtenerDetallesTecnicos(sesionSeleccionada);
               const notaGabinete =
+                sesionSeleccionada.observaciones ||
                 sesionSeleccionada.observaciones_gabinete ||
                 sesionSeleccionada.parametros_tecnicos?.observaciones_gabinete;
+
+              const fechaDetalleRaw = sesionSeleccionada.fecha_sesion || sesionSeleccionada.updated_at || sesionSeleccionada.created_at;
 
               return (
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4 text-xs">
@@ -154,7 +183,7 @@ export default function ModalHistorialSesiones({
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Fecha de Atención</span>
                       <span className="font-bold text-slate-800 text-sm">
-                        {sesionSeleccionada.updated_at ? new Date(sesionSeleccionada.updated_at).toLocaleString() : 'N/D'}
+                        {fechaDetalleRaw ? new Date(fechaDetalleRaw).toLocaleString('es-AR') : 'N/D'}
                       </span>
                     </div>
                     <div className="text-right">
@@ -173,7 +202,7 @@ export default function ModalHistorialSesiones({
                             <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-[11px]">
                               <th className="p-2">Zona</th>
                               <th className="p-2">Fluencia (J/cm²)</th>
-                              <th className="p-2">Largo de Pulso / Hz</th>
+                              <th className="p-2">Largo de Pulso (ms) / Hz</th>
                               <th className="p-2">Pasadas</th>
                             </tr>
                           </thead>
