@@ -36,18 +36,19 @@ export default function ModalHistorialSesiones({
   try {
     let query = supabase
       .from('sesiones_laser')
-      .select('*')
-      .order('fecha_sesion', { ascending: false });
+      .select('*');
 
-    // Armamos un filtro flexible
+    // Filtro por paciente_id o celular_paciente
     const condiciones: string[] = [];
     if (pacienteId) condiciones.push(`paciente_id.eq.${pacienteId}`);
     if (celularPaciente) condiciones.push(`celular_paciente.eq.${celularPaciente}`);
 
     if (condiciones.length > 0) {
-      // Busca si coincide el ID O si coincide el celular
       query = query.or(condiciones.join(','));
     }
+
+    // Ordenar por fecha de creación (created_at) o campo alternativo
+    query = query.order('created_at', { ascending: false });
 
     const { data, error } = await query;
 
