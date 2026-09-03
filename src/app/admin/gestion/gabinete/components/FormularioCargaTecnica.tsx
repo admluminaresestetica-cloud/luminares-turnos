@@ -15,7 +15,7 @@ import {
   NotebookPen,
 } from 'lucide-react';
 
-// Declarar 'supabase' UNA SOLA VEZ arriba de todo
+// Instancia única del cliente de Supabase
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -26,8 +26,6 @@ interface ServicioLaser {
   nombre_zona: string;
   genero?: string;
 }
-
-// ... continua con la interfaz FormularioCargaTecnicaProps y el resto del componente
 
 interface FormularioCargaTecnicaProps {
   sesionActual: any;
@@ -66,23 +64,25 @@ export default function FormularioCargaTecnica({
   const [cargandoCatalogo, setCargandoCatalogo] = useState<boolean>(true);
   const [desplegadoCatalogo, setDesplegadoCatalogo] = useState<boolean>(true);
 
-  // Cargar catálogo de servicios_laser
+  // 1. Cargar catálogo de servicios_laser
   useEffect(() => {
     const cargarServiciosLaser = async () => {
       setCargandoCatalogo(true);
       try {
+        console.log('🔍 [FormularioCargaTecnica] Cargando catálogo servicios_laser...');
         const { data, error } = await supabase
           .from('servicios_laser')
           .select('id, nombre_zona, genero')
           .order('nombre_zona', { ascending: true });
 
         if (error) {
-          console.error('Error al cargar servicios_laser:', error);
+          console.error('❌ Error al cargar servicios_laser:', error);
         } else if (data) {
+          console.log(`✅ [FormularioCargaTecnica] Se cargaron ${data.length} servicios del catálogo.`);
           setServicios(data);
         }
       } catch (err) {
-        console.error('Error en la petición de servicios_laser:', err);
+        console.error('❌ Excepción en la petición de servicios_laser:', err);
       } finally {
         setCargandoCatalogo(false);
       }
@@ -91,14 +91,14 @@ export default function FormularioCargaTecnica({
     cargarServiciosLaser();
   }, []);
 
-  // Cargar datos previos de la sesión si existen
+  // 2. Cargar datos previos de la sesión si existen
   useEffect(() => {
     if (sesionActual) {
+      console.log('📋 [FormularioCargaTecnica] Cargando datos de la sesión actual:', sesionActual);
       if (sesionActual.parametros_tecnicos) {
         const pTech = sesionActual.parametros_tecnicos;
         setEquipo(pTech.equipo || 'Laser Soprano / Diodo');
 
-        // Si existen detalles cargados previamente por zona
         if (pTech.detalles_zonas && Array.isArray(pTech.detalles_zonas)) {
           const mapaPrevio: Record<string, { afluencia: string; energy: string; pasadas: string }> = {};
           pTech.detalles_zonas.forEach((d: any) => {
@@ -113,7 +113,6 @@ export default function FormularioCargaTecnica({
           setParametrosZonas(mapaPrevio);
         }
       }
-      // Leer nota directa o fallback a la que está dentro de parametros_tecnicos
       setObservacionesGabinete(
         sesionActual.observaciones_gabinete ||
         sesionActual.parametros_tecnicos?.observaciones_gabinete ||
@@ -166,6 +165,7 @@ export default function FormularioCargaTecnica({
   }, [todasLasZonas, zonasSeleccionadas]);
 
   const agregarZona = (nombreZona: string) => {
+    console.log(`➕ [FormularioCargaTecnica] Agregando zona: "${nombreZona}"`);
     setZonasSeleccionadas([...zonasSeleccionadas, nombreZona]);
     if (!parametrosZonas[nombreZona]) {
       setParametrosZonas((prev) => ({
@@ -176,6 +176,7 @@ export default function FormularioCargaTecnica({
   };
 
   const quitarZona = (nombreZona: string) => {
+    console.log(`➖ [FormularioCargaTecnica] Quitando zona: "${nombreZona}"`);
     setZonasSeleccionadas(
       zonasSeleccionadas.filter(
         (z) => z.toLowerCase().trim() !== nombreZona.toLowerCase().trim()
@@ -209,13 +210,19 @@ export default function FormularioCargaTecnica({
 
   const handleGuardarYFinalizar = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.group('🚀 [FormularioCargaTecnica] Proceso de guardado iniciado');
+
     if (!operadoraActual) {
+      console.warn('⚠️ Guardado cancelado: No hay operadora seleccionada.');
       alert('Por favor selecciona una operadora en la barra superior antes de finalizar.');
+      console.groupEnd();
       return;
     }
 
     if (!sesionActual?.id) {
+      console.warn('⚠️ Guardado cancelado: ID de sesión no válido.');
       alert('Error: No hay una sesión o paciente seleccionado correctamente.');
+      console.groupEnd();
       return;
     }
 
@@ -236,45 +243,54 @@ export default function FormularioCargaTecnica({
         fecha_atencion: new Date().toISOString(),
       };
 
-      // Se ejecuta la actualización exigiendo el retorno del registro (.select())
+      const payload = {
+        zonas_realizadas: zonasSeleccionadas,
+        parametros_tecnicos: parametros_tecnicos,
+        observaciones_gabinete: observacionesGabinete || '',
+        estado_atencion: 'atendido',
+        updated_at: new Date().toISOString(),
+      };
+
+      console.log('ID Paciente/Ficha:', sesionActual.id);
+      console.log('Payload enviado a Supabase:', payload);
+
       const { data, error } = await supabase
         .from('pacientes_ficha')
-        .update({
-          zonas_realizadas: zonasSeleccionadas,
-          parametros_tecnicos: parametros_tecnicos,
-          observaciones_gabinete: observacionesGabinete || '',
-          estado_atencion: 'atendido',
-          updated_at: new Date().toISOString(),
-        })
+        .update(payload)
         .eq('id', sesionActual.id)
         .select();
 
       if (error) {
+        console.error('❌ Error devuelto por Supabase:', error);
         alert(`Error al actualizar en Supabase: ${error.message}`);
         return;
       }
 
+      console.log('✅ Respuesta exitosa de Supabase. Registro actualizado:', data);
+
       if (!data || data.length === 0) {
+        console.warn('⚠️ Supabase ejecutó la orden pero devolvió 0 filas afectadas. Verifica ID y políticas RLS.');
         alert('No se pudo actualizar el registro. Verifique que el paciente exista en la base de datos.');
         return;
       }
 
       alert('¡Atención finalizada con éxito!');
-      
+
       if (typeof onSesionCompletada === 'function') {
+        console.log('🔄 Ejecutando callback onSesionCompletada()...');
         onSesionCompletada();
       }
     } catch (err: any) {
-      console.error('Error al guardar la sesión:', err);
+      console.error('💥 Excepción inesperada durante el guardado:', err);
       alert(`Hubo un error inesperado: ${err?.message || 'Error desconocido'}`);
     } finally {
       setGuardando(false);
+      console.groupEnd();
     }
   };
 
   return (
     <form onSubmit={handleGuardarYFinalizar} className="space-y-4 sm:space-y-5">
-
       {/* SECCIÓN SUPERIOR: CATÁLOGO DE ZONAS NO SELECCIONADAS */}
       <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
         <button
