@@ -205,23 +205,20 @@ export default function RecepcionPage() {
           datos: payload,
         });
       }
-      
+
+      // ✅ REGISTRO EN LA TABLA SESIONES_LASER
       await ejecutarAccionAdmin({
         tabla: 'sesiones_laser',
         accion: 'INSERT',
         datos: {
           paciente_id: pacienteId,
           nombre_paciente: nombre,
-          celular_paciente: celular,
           zonas_tratadas: zonasSeleccionadas,
           observaciones_recepcion: observacionesHoy,
           estado_atencion: 'en_espera',
           fecha_sesion: new Date().toISOString(),
         },
       });
-
-      setMensaje('✅ ¡Paciente derivado a Gabinete (En Espera)!');
-      limpiar();
 
       setMensaje('✅ ¡Paciente derivado a Gabinete (En Espera)!');
       limpiar();
