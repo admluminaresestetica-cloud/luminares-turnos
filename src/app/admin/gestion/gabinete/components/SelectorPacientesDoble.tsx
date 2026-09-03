@@ -30,10 +30,9 @@ const cargarPacientes = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('pacientes_ficha')
-        .select('*')
-        .in('estado_atencion', ['en_espera', 'atendido'])
-        .order('created_at', { ascending: false });
+  .from('pacientes_ficha')
+  .select('*')
+  .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
