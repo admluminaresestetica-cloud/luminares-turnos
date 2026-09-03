@@ -32,35 +32,39 @@ export default function ModalHistorialSesiones({
   }, [isOpen, pacienteId, celularPaciente]);
 
   const cargarHistorial = async () => {
-    setLoading(true);
-    try {
-      let query = supabase
-        .from('sesiones_laser')
-        .select('*')
-        .order('fecha_sesion', { ascending: false });
+  setLoading(true);
+  try {
+    let query = supabase
+      .from('sesiones_laser')
+      .select('*')
+      .order('fecha_sesion', { ascending: false });
 
-      if (pacienteId) {
-        query = query.eq('paciente_id', pacienteId);
-      } else if (celularPaciente) {
-        query = query.eq('celular_paciente', celularPaciente);
-      }
+    // Armamos un filtro flexible
+    const condiciones: string[] = [];
+    if (pacienteId) condiciones.push(`paciente_id.eq.${pacienteId}`);
+    if (celularPaciente) condiciones.push(`celular_paciente.eq.${celularPaciente}`);
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      
-      setSesiones(data || []);
-      if (data && data.length > 0) {
-        setSesionSeleccionada(data[0]);
-      } else {
-        setSesionSeleccionada(null);
-      }
-    } catch (err) {
-      console.error('Error al cargar historial de sesiones_laser:', err);
-    } finally {
-      setLoading(false);
+    if (condiciones.length > 0) {
+      // Busca si coincide el ID O si coincide el celular
+      query = query.or(condiciones.join(','));
     }
-  };
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    
+    setSesiones(data || []);
+    if (data && data.length > 0) {
+      setSesionSeleccionada(data[0]);
+    } else {
+      setSesionSeleccionada(null);
+    }
+  } catch (err) {
+    console.error('Error al cargar historial de sesiones_laser:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const obtenerZonasSeguras = (sesion: any) => {
     if (!sesion) return [];
