@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 import {
   Settings,
   CheckCircle2,
@@ -15,7 +15,8 @@ import {
   NotebookPen,
 } from 'lucide-react';
 
-const supabase = createClient(
+// Declarar 'supabase' UNA SOLA VEZ arriba de todo
+const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
@@ -25,6 +26,8 @@ interface ServicioLaser {
   nombre_zona: string;
   genero?: string;
 }
+
+// ... continua con la interfaz FormularioCargaTecnicaProps y el resto del componente
 
 interface FormularioCargaTecnicaProps {
   sesionActual: any;
@@ -211,6 +214,11 @@ export default function FormularioCargaTecnica({
       return;
     }
 
+    if (!sesionActual?.id) {
+      alert('Error: No hay una sesión o paciente seleccionado correctamente.');
+      return;
+    }
+
     setGuardando(true);
     try {
       const detalles_zonas = zonasSeleccionadas.map((zona) => ({
@@ -228,7 +236,7 @@ export default function FormularioCargaTecnica({
         fecha_atencion: new Date().toISOString(),
       };
 
-      // Guardado en pacientes_ficha asegurando tipos limpios
+      // Se ejecuta la actualización exigiendo el retorno del registro (.select())
       const { data, error } = await supabase
         .from('pacientes_ficha')
         .update({
@@ -242,13 +250,20 @@ export default function FormularioCargaTecnica({
         .select();
 
       if (error) {
-        console.error('Error devuelto por Supabase:', error);
-        alert(`Error de Supabase: ${error.message}`);
+        alert(`Error al actualizar en Supabase: ${error.message}`);
         return;
       }
 
-      alert('¡Atención finalizada con éxito! La ficha del paciente fue actualizada.');
-      onSesionCompletada();
+      if (!data || data.length === 0) {
+        alert('No se pudo actualizar el registro. Verifique que el paciente exista en la base de datos.');
+        return;
+      }
+
+      alert('¡Atención finalizada con éxito!');
+      
+      if (typeof onSesionCompletada === 'function') {
+        onSesionCompletada();
+      }
     } catch (err: any) {
       console.error('Error al guardar la sesión:', err);
       alert(`Hubo un error inesperado: ${err?.message || 'Error desconocido'}`);

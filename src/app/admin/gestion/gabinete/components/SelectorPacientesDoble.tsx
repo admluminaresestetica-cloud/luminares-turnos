@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createBrowserClient } from '@supabase/ssr'; // <-- Usar el cliente de SSR para navegador
+import { createClient } from '@supabase/supabase-js';
 import { Users, UserCheck, Clock, ArrowRight } from 'lucide-react';
 
-// Inicializar con el cliente que reconoce las cookies de sesión
-const supabase = createBrowserClient(
+const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
