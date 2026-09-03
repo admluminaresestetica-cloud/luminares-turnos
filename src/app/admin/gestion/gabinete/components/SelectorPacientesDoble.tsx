@@ -37,7 +37,7 @@ const cargarPacientes = async () => {
       if (error) throw error;
 
       if (data) {
-        const espera = data.filter((p: any) => p.estado_atencion === 'en_espera');
+        const espera = data.filter((p: any) => p.estado_atencion !== 'atendido' && p.estado_atencion !== 'cancelado');
         const completados = data.filter((p: any) => p.estado_atencion === 'atendido');
 
         setEnEspera(espera);
