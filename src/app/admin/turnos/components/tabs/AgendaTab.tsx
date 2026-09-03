@@ -1,8 +1,8 @@
-// src/components/admin/tabs/AgendaTab.tsx
+// src/app/admin/turnos/components/tabs/AgendaTab.tsx
 'use client'
 
 import { useState } from 'react'
-import { Search, CalendarDays, Plus, Gift, CreditCard } from 'lucide-react'
+import { Search, CalendarDays, Plus, Gift, CreditCard, Trash2 } from 'lucide-react'
 import ResumenAgenda from '@/app/admin/turnos/components/ResumenAgenda'
 import { Reserva, renderDetalle, renderFechaHora } from '@/app/admin/turnos/components/types';
 
@@ -24,6 +24,7 @@ interface AgendaTabProps {
   onNuevoTurno: () => void
   onEditarTurno: (t: Reserva) => void
   onActualizarEstado: (id: string, nuevoEstado: string) => void
+  onEliminarTurno: (id: string) => void // 🔴 Nueva prop para manejar la eliminación
 }
 
 export default function AgendaTab({
@@ -41,7 +42,8 @@ export default function AgendaTab({
   setFiltroEstado,
   onNuevoTurno,
   onEditarTurno,
-  onActualizarEstado
+  onActualizarEstado,
+  onEliminarTurno
 }: AgendaTabProps) {
   // Estado local para el Medio de Pago
   const [filtroMedioPago, setFiltroMedioPago] = useState<string>('todos')
@@ -95,6 +97,14 @@ export default function AgendaTab({
 
     return true
   })
+
+  // Manejador local con confirmación antes de llamar a la prop del padre
+  const handleConfirmarEliminacion = (id: string, cliente: string) => {
+    const confirmar = window.confirm(`¿Estás seguro de que deseas eliminar permanentemente la reserva de ${cliente || 'este cliente'}?`)
+    if (confirmar) {
+      onEliminarTurno(id)
+    }
+  }
 
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 overflow-hidden transition-all">
@@ -248,37 +258,48 @@ export default function AgendaTab({
                         )}
                       </div>
                     </td>
-                    <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap space-x-1.5">
-                      <button
-                        onClick={() => onEditarTurno(t)}
-                        className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-all"
-                      >
-                        Editar
-                      </button>
-                      {t.estado !== 'confirmado' && t.estado !== 'completado' && (
+                    <td className="px-4 sm:px-6 py-4 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1.5">
                         <button
-                          onClick={() => onActualizarEstado(t.id, 'confirmado')}
-                          className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 font-bold transition-all"
+                          onClick={() => onEditarTurno(t)}
+                          className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-all"
                         >
-                          Confirmar
+                          Editar
                         </button>
-                      )}
-                      {t.estado !== 'completado' && (
+                        {t.estado !== 'confirmado' && t.estado !== 'completado' && (
+                          <button
+                            onClick={() => onActualizarEstado(t.id, 'confirmado')}
+                            className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 font-bold transition-all"
+                          >
+                            Confirmar
+                          </button>
+                        )}
+                        {t.estado !== 'completado' && (
+                          <button
+                            onClick={() => onActualizarEstado(t.id, 'completado')}
+                            className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 font-bold transition-all"
+                          >
+                            Completar
+                          </button>
+                        )}
+                        {t.estado !== 'cancelado' && (
+                          <button
+                            onClick={() => onActualizarEstado(t.id, 'cancelado')}
+                            className="text-xs bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-100 font-bold transition-all"
+                          >
+                            Cancelar
+                          </button>
+                        )}
+
+                        {/* Botón Ícono de Borrar/Eliminar Reserva sin envoltorio opcional */}
                         <button
-                          onClick={() => onActualizarEstado(t.id, 'completado')}
-                          className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 font-bold transition-all"
+                          onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-1"
+                          title="Eliminar reserva permanentemente"
                         >
-                          Completar
+                          <Trash2 className="w-4 h-4" />
                         </button>
-                      )}
-                      {t.estado !== 'cancelado' && (
-                        <button
-                          onClick={() => onActualizarEstado(t.id, 'cancelado')}
-                          className="text-xs bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-100 font-bold transition-all"
-                        >
-                          Cancelar
-                        </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
