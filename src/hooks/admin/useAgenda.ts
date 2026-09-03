@@ -1,3 +1,4 @@
+// src/hooks/admin/useAgenda.ts
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
@@ -203,6 +204,22 @@ export function useAgenda() {
     }
   }
 
+  // 🔴 Nueva función para eliminar reservas permanentemente en Supabase
+  const eliminarTurno = async (id: string) => {
+    const { error } = await supabase
+      .from('reservas')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      alert('Error al eliminar la reserva: ' + error.message)
+      return
+    }
+
+    // Remueve el turno del estado local para actualizar la vista al instante
+    setTurnos((prev) => prev.filter((t) => t.id !== id))
+  }
+
   const cerrarModalCobro = () => setTurnoACobrar(null)
 
   const confirmarCobro = async () => {
@@ -264,6 +281,7 @@ export function useAgenda() {
     guardarEdicionTurno,
 
     actualizarEstado,
+    eliminarTurno, // 👈 Ahora está disponible para page.tsx
 
     turnoACobrar,
     medioPagoSeleccionado, setMedioPagoSeleccionado,
