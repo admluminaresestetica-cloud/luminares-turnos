@@ -243,7 +243,8 @@ export default function FormularioCargaTecnica({
         fecha_atencion: new Date().toISOString(),
       };
 
-      const payload = {
+      // 1️⃣ Payload para actualizar pacientes_ficha y pasarlo a "atendido"
+      const payloadFicha = {
         zonas_realizadas: zonasSeleccionadas,
         parametros_tecnicos: parametros_tecnicos,
         observaciones_gabinete: observacionesGabinete || '',
@@ -251,27 +252,42 @@ export default function FormularioCargaTecnica({
         updated_at: new Date().toISOString(),
       };
 
-      console.log('ID Paciente/Ficha:', sesionActual.id);
-      console.log('Payload enviado a Supabase:', payload);
-
-      const { data, error } = await supabase
+      console.log('Actualizando pacientes_ficha ID:', sesionActual.id);
+      
+      const { error: errorFicha } = await supabase
         .from('pacientes_ficha')
-        .update(payload)
-        .eq('id', sesionActual.id)
-        .select();
+        .update(payloadFicha)
+        .eq('id', sesionActual.id);
 
-      if (error) {
-        console.error('❌ Error devuelto por Supabase:', error);
-        alert(`Error al actualizar en Supabase: ${error.message}`);
+      if (errorFicha) {
+        console.error('❌ Error al actualizar pacientes_ficha:', errorFicha);
+        alert(`Error al actualizar ficha del paciente: ${errorFicha.message}`);
         return;
       }
 
-      console.log('✅ Respuesta exitosa de Supabase. Registro actualizado:', data);
+      // 2️⃣ REGISTRO HISTÓRICO REAL EN LA TABLA sesiones_laser
+      const payloadSesion = {
+        paciente_id: sesionActual.id,
+        estado_atencion: 'atendido',
+        zonas_realizadas: zonasSeleccionadas,
+        observaciones_recepcion: sesionActual.observaciones_recepcion || sesionActual.observaciones || '',
+        anamnesis_sesion: sesionActual.anamnesis_sesion || sesionActual.antecedentes_medicos || null,
+        parametros_tecnicos: parametros_tecnicos,
+        observaciones_gabinete: observacionesGabinete || '',
+        atendido_por: operadoraActual,
+      };
 
-      if (!data || data.length === 0) {
-        console.warn('⚠️ Supabase ejecutó la orden pero devolvió 0 filas afectadas. Verifica ID y políticas RLS.');
-        alert('No se pudo actualizar el registro. Verifique que el paciente exista en la base de datos.');
-        return;
+      console.log('Insertando en sesiones_laser:', payloadSesion);
+
+      const { error: errorSesion } = await supabase
+        .from('sesiones_laser')
+        .insert([payloadSesion]);
+
+      if (errorSesion) {
+        console.error('❌ Error al registrar en sesiones_laser:', errorSesion);
+        alert(`Atención actualizada en ficha, pero hubo un detalle al crear el registro histórico: ${errorSesion.message}`);
+      } else {
+        console.log('✅ Sesión registrada exitosamente en sesiones_laser');
       }
 
       alert('¡Atención finalizada con éxito!');
