@@ -34,34 +34,18 @@ export default function ModalHistorialSesiones({
   const cargarHistorial = async () => {
     setLoading(true);
     try {
-      let idBuscar = pacienteId;
-
-      // Si por alguna razón no tenemos el ID directo pero sí el celular, buscamos el id en pacientes_ficha
-      if (!idBuscar && celularPaciente) {
-        const { data: ficha } = await supabase
-          .from('pacientes_ficha')
-          .select('id')
-          .eq('celular', celularPaciente)
-          .maybeSingle();
-
-        if (ficha) {
-          idBuscar = ficha.id;
-        }
-      }
-
-      if (!idBuscar) {
-        setSesiones([]);
-        setSesionSeleccionada(null);
-        setLoading(false);
-        return;
-      }
-
-      // ✅ Consulta corregida: Filtrado por paciente_id y ordenado por created_at
-      const { data, error } = await supabase
+      let query = supabase
         .from('sesiones_laser')
         .select('*')
-        .eq('paciente_id', idBuscar)
-        .order('created_at', { ascending: false });
+        .order('fecha_sesion', { ascending: false });
+
+      if (pacienteId) {
+        query = query.eq('paciente_id', pacienteId);
+      } else if (celularPaciente) {
+        query = query.eq('celular_paciente', celularPaciente);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       
@@ -80,7 +64,7 @@ export default function ModalHistorialSesiones({
 
   const obtenerZonasSeguras = (sesion: any) => {
     if (!sesion) return [];
-    const rawZonas = sesion.zonas_realizadas || sesion.zonas_tratadas || sesion.zonas_preasignadas;
+    const rawZonas = sesion.zonas_tratadas || sesion.zonas_realizadas || sesion.zonas_preasignadas;
     if (Array.isArray(rawZonas)) return rawZonas;
     if (typeof rawZonas === 'string') {
       try {
@@ -96,6 +80,7 @@ export default function ModalHistorialSesiones({
   const obtenerDetallesTecnicos = (sesion: any) => {
     if (!sesion) return { operadora: 'No registrada', equipo: 'Soprano / Ice', detalles: [] };
 
+    // Si viene directamente de los campos directos de la nueva tabla
     const tieneValoresDirectos = sesion.julios !== undefined || sesion.milisegundos !== undefined || sesion.pasadas !== undefined;
 
     let detalles: any[] = [];
@@ -111,6 +96,7 @@ export default function ModalHistorialSesiones({
         },
       ];
     } else {
+      // Compatibilidad con la estructura previa guardada dentro de un JSON
       const params = sesion?.parametros_tecnicos;
       if (params) {
         let rawDetalles = params.detalles_zonas || [];
@@ -159,7 +145,7 @@ export default function ModalHistorialSesiones({
             {/* TIMELINE DE SESIONES */}
             <div className="flex flex-wrap gap-2 border-b pb-3">
               {sesiones.map((sesion, index) => {
-                const fechaRaw = sesion.created_at || sesion.updated_at;
+                const fechaRaw = sesion.fecha_sesion || sesion.created_at || sesion.updated_at;
                 const fecha = fechaRaw
                   ? new Date(fechaRaw).toLocaleDateString('es-AR')
                   : `Sesión ${sesiones.length - index}`;
@@ -189,7 +175,7 @@ export default function ModalHistorialSesiones({
                 sesionSeleccionada.observaciones_gabinete ||
                 sesionSeleccionada.parametros_tecnicos?.observaciones_gabinete;
 
-              const fechaDetalleRaw = sesionSeleccionada.created_at || sesionSeleccionada.updated_at;
+              const fechaDetalleRaw = sesionSeleccionada.fecha_sesion || sesionSeleccionada.updated_at || sesionSeleccionada.created_at;
 
               return (
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-4 text-xs">
