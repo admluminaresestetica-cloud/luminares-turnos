@@ -27,12 +27,15 @@ export default function SelectorPacientesDoble({
   const [loading, setLoading] = useState(false);
 
 const cargarPacientes = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-  .from('pacientes_ficha')
-  .select('*')
-  .order('updated_at', { ascending: false });
+  setLoading(true);
+  try {
+    const { data, error } = await supabase
+      .from('pacientes_ficha')
+      .select('*');
+
+    console.log("DATOS BRUTOS SUPABASE:", data);
+    console.log("ERROR SUPABASE:", error);
+
 
       if (error) throw error;
 
