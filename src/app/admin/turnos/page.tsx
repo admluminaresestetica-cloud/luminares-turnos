@@ -98,24 +98,25 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'agenda' && (
-          <AgendaTab
-            loading={agenda.loading}
-            turnosFiltrados={agenda.turnosFiltrados}
-            turnosAgendaResumen={agenda.turnosAgendaResumen}
-            esFechaAgendaPasada={agenda.esFechaAgendaPasada}
-            busqueda={agenda.busqueda}
-            setBusqueda={agenda.setBusqueda}
-            filtroFechaTipo={agenda.filtroFechaTipo}
-            setFiltroFechaTipo={agenda.setFiltroFechaTipo}
-            fechaEspecifica={agenda.fechaEspecifica}
-            setFechaEspecifica={agenda.setFechaEspecifica}
-            filtroEstado={agenda.filtroEstado}
-            setFiltroEstado={agenda.setFiltroEstado}
-            onNuevoTurno={nuevoTurno.abrirModalNuevoTurno}
-            onEditarTurno={agenda.abrirModalEditarTurno}
-            onActualizarEstado={agenda.actualizarEstado}
-          />
-        )}
+  <AgendaTab
+    loading={agenda.loading}
+    turnosFiltrados={agenda.turnosFiltrados}
+    turnosAgendaResumen={agenda.turnosAgendaResumen}
+    esFechaAgendaPasada={agenda.esFechaAgendaPasada}
+    busqueda={agenda.busqueda}
+    setBusqueda={agenda.setBusqueda}
+    filtroFechaTipo={agenda.filtroFechaTipo}
+    setFiltroFechaTipo={agenda.setFiltroFechaTipo}
+    fechaEspecifica={agenda.fechaEspecifica}
+    setFechaEspecifica={agenda.setFechaEspecifica}
+    filtroEstado={agenda.filtroEstado}
+    setFiltroEstado={agenda.setFiltroEstado}
+    onNuevoTurno={nuevoTurno.abrirModalNuevoTurno}
+    onEditarTurno={agenda.abrirModalEditarTurno}
+    onActualizarEstado={agenda.actualizarEstado}
+    onEliminarTurno={(id) => agenda.eliminarTurno(id)}
+  />
+)}
 
         {activeTab === 'precios' && (
           <PreciosTab
