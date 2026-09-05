@@ -1,14 +1,13 @@
-// src/app/admin/turnos/components/tabs/AgendaTab.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, ChangeEvent } from 'react'
 import { Search, CalendarDays, Plus, Gift, CreditCard, Trash2 } from 'lucide-react'
 import ResumenAgenda from '@/app/admin/turnos/components/ResumenAgenda'
-import { Reserva, renderDetalle, renderFechaHora } from '@/app/admin/turnos/components/types';
+import { Reserva, renderDetalle, renderFechaHora } from '@/app/admin/turnos/components/types'
 
 interface AgendaTabProps {
   loading: boolean
-  turnosFiltrados: Reserva[] // Se reciben todos los turnos base
+  turnosFiltrados: Reserva[]
   turnosAgendaResumen: Reserva[]
   esFechaAgendaPasada: boolean
 
@@ -24,7 +23,7 @@ interface AgendaTabProps {
   onNuevoTurno: () => void
   onEditarTurno: (t: Reserva) => void
   onActualizarEstado: (id: string, nuevoEstado: string) => void
-  onEliminarTurno: (id: string) => void // 🔴 Nueva prop para manejar la eliminación
+  onEliminarTurno: (id: string) => void
 }
 
 export default function AgendaTab({
@@ -45,12 +44,9 @@ export default function AgendaTab({
   onActualizarEstado,
   onEliminarTurno
 }: AgendaTabProps) {
-  // Estado local para el Medio de Pago
   const [filtroMedioPago, setFiltroMedioPago] = useState<string>('todos')
 
-  // FILTRADO UNIFICADO Y SEGURO DE TODAS LAS CONDICIONES
   const turnosFinales = turnosFiltrados.filter((t) => {
-    // 1. Filtro por Búsqueda de Texto (Cliente, Teléfono, Código)
     if (busqueda.trim()) {
       const q = busqueda.toLowerCase().trim()
       const matchNombre = (t.cliente_nombre || '').toLowerCase().includes(q)
@@ -59,7 +55,6 @@ export default function AgendaTab({
       if (!matchNombre && !matchTel && !matchCodigo) return false
     }
 
-    // 2. Filtro por Estado (Tolerante a variantes de 'pendiente_sena')
     if (filtroEstado !== 'todos') {
       const estadoActual = String(t.estado || '').toLowerCase().trim()
       const estadoBuscado = filtroEstado.toLowerCase().trim()
@@ -76,7 +71,6 @@ export default function AgendaTab({
       }
     }
 
-    // 3. Filtro por Medio de Pago (Tolerante a variantes de Mercado Pago, Wa, Cash)
     if (filtroMedioPago !== 'todos') {
       const medioRaw = String(t.medio_pago || t.tipo_pago_elegido || '').toLowerCase().trim()
 
@@ -98,7 +92,6 @@ export default function AgendaTab({
     return true
   })
 
-  // Manejador local con confirmación antes de llamar a la prop del padre
   const handleConfirmarEliminacion = (id: string, cliente: string) => {
     const confirmar = window.confirm(`¿Estás seguro de que deseas eliminar permanentemente la reserva de ${cliente || 'este cliente'}?`)
     if (confirmar) {
@@ -122,10 +115,9 @@ export default function AgendaTab({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {/* Filtro Fecha */}
           <select
             value={filtroFechaTipo}
-            onChange={(e) => setFiltroFechaTipo(e.target.value as any)}
+            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFiltroFechaTipo(e.target.value as 'todos' | 'hoy' | 'especifica')}
             className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50"
           >
             <option value="todos">Todas las fechas</option>
@@ -142,7 +134,6 @@ export default function AgendaTab({
             />
           )}
 
-          {/* Filtro Estado del Turno */}
           <select
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
@@ -155,7 +146,6 @@ export default function AgendaTab({
             <option value="cancelado">❌ Cancelado</option>
           </select>
 
-          {/* Filtro Medio de Pago */}
           <select
             value={filtroMedioPago}
             onChange={(e) => setFiltroMedioPago(e.target.value)}
@@ -204,8 +194,8 @@ export default function AgendaTab({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {turnosFinales.map((t) => (
-                  <tr key={t.id} className="hover:bg-gray-50/60 transition-colors">
+                {turnosFinales.map((t, idx) => (
+                  <tr key={t.id || idx} className="hover:bg-gray-50/60 transition-colors">
                     <td className="px-4 sm:px-6 py-4 font-mono text-xs text-gray-400 whitespace-nowrap">
                       {t.codigo_unico || '-'}
                     </td>
@@ -291,7 +281,6 @@ export default function AgendaTab({
                           </button>
                         )}
 
-                        {/* Botón Ícono de Borrar/Eliminar Reserva sin envoltorio opcional */}
                         <button
                           onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
                           className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-1"

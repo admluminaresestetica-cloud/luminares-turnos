@@ -1,8 +1,7 @@
-// src/components/admin/modals/ModalServicioLaser.tsx
 'use client'
 
 import { Sparkles, X, Clock, DollarSign, Users, Folder, CheckCircle2 } from 'lucide-react'
-import { ServicioLaser } from '@/app/admin/turnos/components/types';
+import { ServicioLaser } from '@/app/admin/turnos/components/types'
 
 interface ModalServicioLaserProps {
   servicioEdit: Partial<ServicioLaser>
@@ -51,11 +50,12 @@ export default function ModalServicioLaser({
           
           {/* Nombre de la Zona */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
+            <label htmlFor="nombre_zona" className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-gray-400" />
-              Nombre de la Zona
+              <span>Nombre de la Zona</span>
             </label>
             <input
+              id="nombre_zona"
               type="text"
               required
               value={servicioEdit.nombre_zona || ''}
@@ -65,11 +65,11 @@ export default function ModalServicioLaser({
             />
           </div>
 
-          {/* Selección de Género (Femenino / Masculino) */}
+          {/* Selección de Género */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5 text-gray-400" />
-              Público Objetivo (Género)
+              <span>Público Objetivo (Género)</span>
             </label>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -98,49 +98,52 @@ export default function ModalServicioLaser({
             </div>
           </div>
 
-          {/* Categoría */}
+          {/* Categoría / Tamaño */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
+            <label htmlFor="categoria_zona" className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
               <Folder className="w-3.5 h-3.5 text-gray-400" />
-              Tamaño
+              <span>Tamaño</span>
             </label>
             <input
+              id="categoria_zona"
               type="text"
               value={servicioEdit.categoria_zona || ''}
               onChange={(e) => setServicioEdit({ ...servicioEdit, categoria_zona: e.target.value })}
               className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm"
-              placeholder="Ej:  "
+              placeholder="Ej: Chica, Mediana, Grande"
             />
           </div>
 
           {/* Precio Lista y Duración */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
+              <label htmlFor="precio_lista" className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-gray-400" />
-                Precio Lista ($)
+                <span>Precio Lista ($)</span>
               </label>
               <input
+                id="precio_lista"
                 type="number"
                 required
                 min={0}
-                value={servicioEdit.precio_lista || 0}
-                onChange={(e) => setServicioEdit({ ...servicioEdit, precio_lista: Number(e.target.value) })}
+                value={servicioEdit.precio_lista ?? ''}
+                onChange={(e) => setServicioEdit({ ...servicioEdit, precio_lista: e.target.value === '' ? undefined : Number(e.target.value) })}
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
+              <label htmlFor="duracion_minutos" className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-gray-400" />
-                Duración (min)
+                <span>Duración (min)</span>
               </label>
               <input
+                id="duracion_minutos"
                 type="number"
                 required
                 min={0}
-                value={servicioEdit.duracion_minutos || 0}
-                onChange={(e) => setServicioEdit({ ...servicioEdit, duracion_minutos: Number(e.target.value) })}
+                value={servicioEdit.duracion_minutos ?? ''}
+                onChange={(e) => setServicioEdit({ ...servicioEdit, duracion_minutos: e.target.value === '' ? undefined : Number(e.target.value) })}
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm"
               />
             </div>
