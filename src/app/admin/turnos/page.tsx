@@ -179,7 +179,16 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'banner' && <BannerTab />}
-        {activeTab === 'referidos' && <ReferidosTab />}
+        {activeTab === 'referidos' && (
+         <ReferidosTab 
+        referidosActivo={referidos.referidosActivo}
+        setReferidosActivo={referidos.setReferidosActivo}
+        referidosTipoDescuento={referidos.referidosTipoDescuento}
+        setReferidosTipoDescuento={referidos.setReferidosTipoDescuento}
+        referidosValorDescuento={referidos.referidosValorDescuento}
+        setReferidosValorDescuento={referidos.setReferidosValorDescuento}
+        />
+)}
         {activeTab === 'faq' && <FaqTab />}
         
       </div>

@@ -211,14 +211,23 @@ export default function AgendaTab({
                     </td>
                     <td className="px-4 sm:px-6 py-4 font-medium whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-900">{t.cliente_nombre || 'Sin nombre'}</span>
-                        {t.codigo_referido_usado && (
-                          <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-[11px] font-semibold">
-                            <Gift className="w-3 h-3" />
-                            {t.codigo_referido_usado}
-                          </span>
-                        )}
-                      </div>
+  <span className="text-gray-900">{t.cliente_nombre || 'Sin nombre'}</span>
+
+  {/* Código PROPIO asignado al cliente (Ej: MONICA-EY1Y) */}
+  {(t as any).codigo_referido_propio && (
+    <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold" title="Código de referido propio del cliente">
+      {(t as any).codigo_referido_propio}
+    </span>
+  )}
+
+  {/* Código de referido que USÓ en este turno para recibir descuento */}
+  {t.codigo_referido_usado && (
+    <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-[11px] font-semibold" title="Descuento aplicado con código">
+      <Gift className="w-3 h-3" />
+      {t.codigo_referido_usado}
+    </span>
+  )}
+</div>
                       {t.cliente_celular && (
                         <div className="text-xs text-gray-400 mt-0.5">{t.cliente_celular}</div>
                       )}

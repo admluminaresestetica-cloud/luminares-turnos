@@ -30,14 +30,36 @@ export function useAgenda() {
 
   const fetchTurnos = async () => {
     setLoading(true)
-    const { data, error } = await supabase
+
+    // 1. Obtener reservas y la lista de clientes con sus códigos de referido
+    const { data: reservasData, error } = await supabase
       .from('reservas')
       .select('*')
       .order('fecha_hora_inicio', { ascending: true })
 
-    if (!error && data) {
-      setTurnos(data as Reserva[])
+    const { data: clientesData } = await supabase
+      .from('clientes')
+      .select('celular, codigo_referido')
+
+    if (!error && reservasData) {
+      // 2. Asociar el código_referido propio de cada cliente comparando por los últimos 10 dígitos del celular
+      const turnosConCodigoPropio = reservasData.map((reserva) => {
+        const celReserva = (reserva.cliente_celular || '').replace(/\D/g, '').slice(-10)
+
+        const clienteMatch = (clientesData || []).find((c) => {
+          const celCliente = (c.celular || '').replace(/\D/g, '').slice(-10)
+          return celCliente && celReserva && celCliente === celReserva
+        })
+
+        return {
+          ...reserva,
+          codigo_referido_propio: clienteMatch?.codigo_referido || null
+        }
+      })
+
+      setTurnos(turnosConCodigoPropio as Reserva[])
     }
+
     setLoading(false)
   }
 

@@ -24,7 +24,16 @@ interface Cliente {
   descuentos_disponibles: number;
 }
 
-export default function ReferidosTab() {
+interface ReferidosTabProps {
+  referidosActivo?: boolean;
+  setReferidosActivo?: React.Dispatch<React.SetStateAction<boolean>>;
+  referidosTipoDescuento?: 'porcentaje' | 'monto_fijo';
+  setReferidosTipoDescuento?: React.Dispatch<React.SetStateAction<'porcentaje' | 'monto_fijo'>>;
+  referidosValorDescuento?: number;
+  setReferidosValorDescuento?: React.Dispatch<React.SetStateAction<number>>;
+}
+
+export default function ReferidosTab(_props?: ReferidosTabProps) {
   const [config, setConfig] = useState<ConfiguracionSistema | null>(null);
   const [cargandoConfig, setCargandoConfig] = useState(true);
   const [guardandoConfig, setGuardandoConfig] = useState(false);
