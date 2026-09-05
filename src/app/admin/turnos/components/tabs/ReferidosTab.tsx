@@ -302,3 +302,5 @@ export default function ReferidosTab(_props?: ReferidosTabProps) {
     </div>
   );
 }
+
+{/* TARJETA 2: GESTIÓN DE CLIENTES Y CRÉDITOS */}
