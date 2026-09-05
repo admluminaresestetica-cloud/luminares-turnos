@@ -42,13 +42,20 @@ export function useAgenda() {
       .select('celular, codigo_referido')
 
     if (!error && reservasData) {
-      // 2. Asociar el código_referido propio de cada cliente comparando por los últimos 10 dígitos del celular
+      // 2. Asociar el código_referido comparando los números de teléfono
       const turnosConCodigoPropio = reservasData.map((reserva) => {
-        const celReserva = (reserva.cliente_celular || '').replace(/\D/g, '').slice(-10)
+        const celReserva = (reserva.cliente_celular || '').replace(/\D/g, '')
 
         const clienteMatch = (clientesData || []).find((c) => {
-          const celCliente = (c.celular || '').replace(/\D/g, '').slice(-10)
-          return celCliente && celReserva && celCliente === celReserva
+          const celCliente = (c.celular || '').replace(/\D/g, '')
+          if (!celCliente || !celReserva) return false
+
+          // Coinciden si uno termina en el otro o si coinciden los últimos 8 dígitos
+          return (
+            celReserva.endsWith(celCliente) || 
+            celCliente.endsWith(celReserva) ||
+            celReserva.slice(-8) === celCliente.slice(-8)
+          )
         })
 
         return {
