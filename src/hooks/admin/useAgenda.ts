@@ -31,7 +31,7 @@ export function useAgenda() {
   const fetchTurnos = async () => {
     setLoading(true)
 
-    // 1. Obtener reservas y la lista de clientes con sus códigos de referido
+    // 1. Obtener reservas y la lista de clientes
     const { data: reservasData, error } = await supabase
       .from('reservas')
       .select('*')
@@ -41,8 +41,12 @@ export function useAgenda() {
       .from('clientes')
       .select('celular, codigo_referido')
 
+    // 🔍 LOGS DE DIAGNÓSTICO
+    console.log('--- DIAGNÓSTICO REFERIDOS ---')
+    console.log('1. Clientes desde Supabase:', clientesData)
+    console.log('2. Reservas desde Supabase:', reservasData)
+
     if (!error && reservasData) {
-      // 2. Asociar el código_referido comparando los números de teléfono
       const turnosConCodigoPropio = reservasData.map((reserva) => {
         const celReserva = (reserva.cliente_celular || '').replace(/\D/g, '')
 
@@ -50,7 +54,6 @@ export function useAgenda() {
           const celCliente = (c.celular || '').replace(/\D/g, '')
           if (!celCliente || !celReserva) return false
 
-          // Coinciden si uno termina en el otro o si coinciden los últimos 8 dígitos
           return (
             celReserva.endsWith(celCliente) || 
             celCliente.endsWith(celReserva) ||
@@ -64,12 +67,12 @@ export function useAgenda() {
         }
       })
 
+      console.log('3. Turnos procesados con código:', turnosConCodigoPropio)
       setTurnos(turnosConCodigoPropio as Reserva[])
     }
 
     setLoading(false)
   }
-
   useEffect(() => {
     fetchTurnos()
   }, [])
