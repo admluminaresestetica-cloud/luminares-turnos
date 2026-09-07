@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, ChevronDown, LayoutGrid, X, Check, Flame, ArrowUpDown } from "lucide-react";
+import { Search, ChevronDown, LayoutGrid, X, Check, Flame } from "lucide-react";
 
 interface BuscadorYCategoriasProps {
   busqueda: string;
@@ -75,7 +75,7 @@ export default function BuscadorYCategorias({
               />
             </button>
 
-            {/* Menú Desplegable */}
+            {/* Menú Desplegable (Mega Menu Grid) */}
             {menuAbierto && (
               <div className="absolute left-0 top-full z-40 mt-2 w-full sm:w-[420px] rounded-2xl border border-slate-100 bg-white p-4 shadow-xl shadow-slate-900/10 animate-in fade-in zoom-in-95 duration-150">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3 px-1">
@@ -91,7 +91,9 @@ export default function BuscadorYCategorias({
                   </button>
                 </div>
 
+                {/* Grid de Categorías con 'Ver todo' y 'Ofertas' destacado */}
                 <div className="grid grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1">
+
                   {/* Opción 'Ver todo' */}
                   <button
                     type="button"
@@ -108,7 +110,7 @@ export default function BuscadorYCategorias({
                     )}
                   </button>
 
-                  {/* Opción 'Ofertas' */}
+                  {/* Opción 'Ofertas' destacada dentro del menú */}
                   <button
                     type="button"
                     onClick={() => seleccionarCategoria("Ofertas")}
@@ -127,7 +129,7 @@ export default function BuscadorYCategorias({
                     )}
                   </button>
 
-                  {/* Categorías de la BD */}
+                  {/* Resto de las Categorías de la BD */}
                   {categorias
                     .filter((cat) => cat !== "Todos")
                     .map((cat) => {
