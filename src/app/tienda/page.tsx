@@ -16,10 +16,9 @@ import BuscadorYCategorias from "./components/BuscadorYCategorias";
 import GridProductos from "./components/GridProductos";
 import ModalDetalleProducto from "./components/ModalDetalleProducto";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function TiendaPage() {
   const [mounted, setMounted] = useState(false);
@@ -38,7 +37,7 @@ export default function TiendaPage() {
   const context = useCarrito();
   const items = context?.items || context?.carrito || [];
   const totalItems = Array.isArray(items)
-    ? items.reduce((acc: number, item: any) => acc + (item.cantidad || 1), 0)
+    ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 1), 0)
     : 0;
 
   useEffect(() => {
@@ -46,29 +45,38 @@ export default function TiendaPage() {
 
     const fetchProductos = async () => {
       setCargando(true);
-      const { data, error } = await supabase
-        .from("productos")
-        .select("*")
-        .eq("activo", true);
+      try {
+        const { data, error } = await supabase
+          .from("productos")
+          .select("*")
+          .eq("activo", true);
 
-      if (error) {
-        console.error("Error al cargar productos:", error);
-      } else {
-        setProductos(data || []);
+        if (error) {
+          console.error("Error al cargar productos:", error);
+        } else {
+          setProductos(data || []);
+        }
+      } catch (err) {
+        console.error("Error inesperado al cargar productos:", err);
+      } finally {
+        setCargando(false);
       }
-      setCargando(false);
     };
 
     const fetchCategorias = async () => {
-      const { data, error } = await supabase
-        .from("categorias")
-        .select("nombre")
-        .order("nombre", { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from("categorias")
+          .select("nombre")
+          .order("nombre", { ascending: true });
 
-      if (error) {
-        console.error("Error al cargar categorías:", error);
-      } else if (data && data.length > 0) {
-        setCategorias(["Todos", ...data.map((c) => c.nombre)]);
+        if (error) {
+          console.error("Error al cargar categorías:", error);
+        } else if (data && data.length > 0) {
+          setCategorias(["Todos", ...data.map((c) => c.nombre)]);
+        }
+      } catch (err) {
+        console.error("Error inesperado al cargar categorías:", err);
       }
     };
 
@@ -76,11 +84,17 @@ export default function TiendaPage() {
     fetchCategorias();
   }, []);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#F7F7F5] flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0E6E55] border-t-transparent" />
+      </div>
+    );
+  }
 
   // Lógica de filtrado con soporte para Ofertas
   const productosFiltrados = productos.filter((p) => {
-    const coincideBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase());
+    const coincideBusqueda = p.nombre ? p.nombre.toLowerCase().includes(busqueda.toLowerCase()) : true;
     
     let coincideCategoria = true;
     if (categoriaFiltro === "Ofertas") {
@@ -106,7 +120,7 @@ export default function TiendaPage() {
       const descB = ((Number(b.precio_original ?? b.precio_anterior) || b.precio) - b.precio);
       return descB - descA;
     }
-    return 0; // Orden por defecto / destacados
+    return 0;
   });
 
   const resetearFiltros = () => {
@@ -120,7 +134,6 @@ export default function TiendaPage() {
       <div>
         {/* Navbar */}
         <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0] bg-white/90 px-4 py-3 backdrop-blur-md sm:px-10 sm:py-4">
-          {/* Logo y Título */}
           <Link
             href="https://www.mireservalumin.com.ar/tienda"
             onClick={resetearFiltros}
@@ -150,7 +163,7 @@ export default function TiendaPage() {
           {/* Botón del Carrito en Navbar */}
           <button
             onClick={() => setModalAbierto(true)}
-            className="relative flex shrink-0 items-center justify-center gap-2 rounded-full border border-[#E7E5E0] bg-white p-2.5 text-sm font-semibold text-[#12151B] transition-all duration-200 hover:border-[#12151B]/40 hover:shadow-sm active:scale-95 sm:px-4 sm:py-2.5"
+            className="relative flex shrink-0 items-center justify-center gap-2 rounded-full border border-[#E7E5E0] bg-white p-2.5 text-sm font-semibold text-[#12151B] transition-all duration-200 hover:border-[#12151B]/40 hover:shadow-sm active:scale-95 sm:px-4 sm:py-2.5 cursor-pointer"
           >
             <ShoppingBag className="h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4" strokeWidth={2} />
             <span className="hidden sm:inline">Mi Carrito</span>
@@ -164,11 +177,9 @@ export default function TiendaPage() {
         </nav>
 
         {/* Contenido Principal */}
-        <div className="mx-auto max-w-[1150px] px-4 pb-24 pt-4 sm:px-10 sm:pb-16">
-          {/* Carrusel exclusivo de la Tienda */}
+        <div className="mx-auto max-w-[1150px] px-4 pb-28 pt-4 sm:px-10 sm:pb-16">
           <BannerCarousel />
 
-          {/* Buscador, Categorías y Selector de Orden */}
           <BuscadorYCategorias
             busqueda={busqueda}
             onBusquedaChange={setBusqueda}
@@ -200,26 +211,32 @@ export default function TiendaPage() {
           onClose={() => setModalAbierto(false)}
         />
 
-        {/* Sticky Mobile Cart Button */}
+        {/* Botón Flotante para Celulares: Solo visible cuando totalItems > 0 */}
         {totalItems > 0 && (
-          <div className="fixed bottom-4 right-4 left-4 z-40 sm:hidden">
+          <div className="fixed bottom-5 right-4 left-4 z-40 sm:hidden animate-in slide-in-from-bottom-5 duration-300">
             <button
               onClick={() => setModalAbierto(true)}
-              className="flex w-full items-center justify-between rounded-full bg-[#12151B] px-5 py-3.5 text-sm font-bold text-white shadow-xl shadow-slate-900/20 active:scale-98 transition-all duration-200"
+              className="flex w-full items-center justify-between rounded-2xl bg-[#12151B]/95 p-4 text-sm font-bold text-white shadow-2xl backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer border border-white/10"
             >
-              <div className="flex items-center gap-2.5">
-                <ShoppingBag className="h-5 w-5 text-[#0E6E55]" />
-                <span>Ver Mi Carrito</span>
+              <div className="flex items-center gap-3">
+                <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-[#0E6E55]">
+                  <ShoppingBag className="h-4 w-4 text-white" />
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-extrabold text-[#12151B]">
+                    {totalItems}
+                  </span>
+                </div>
+                <span className="font-semibold tracking-wide">Ver Mi Carrito</span>
               </div>
-              <span className="flex h-6 min-w-[24px] items-center justify-center rounded-full bg-[#0E6E55] px-2 text-xs font-extrabold text-white">
-                {totalItems}
-              </span>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-emerald-400">Abrir</span>
+                <span className="text-slate-400">→</span>
+              </div>
             </button>
           </div>
         )}
       </div>
 
-      {/* Footer exclusivo de la Tienda */}
       <FooterTienda />
     </div>
   );
