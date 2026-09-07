@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, ChevronDown, LayoutGrid, X, Check } from "lucide-react";
+import { Search, ChevronDown, LayoutGrid, X, Check, Flame } from "lucide-react";
 
 interface BuscadorYCategoriasProps {
   busqueda: string;
@@ -37,97 +37,137 @@ export default function BuscadorYCategorias({
     setMenuAbierto(false);
   };
 
+  const esOfertasActivo = categoriaSeleccionada === "Ofertas";
+
   return (
     <div className="relative mb-8 space-y-4" ref={menuRef}>
       <div className="flex flex-col sm:flex-row items-center gap-3">
 
-        {/* Botón Desplegable de Categorías */}
-        <div className="relative w-full sm:w-auto">
+        {/* Selector de Categorías y Botón de Ofertas */}
+        <div className="flex w-full sm:w-auto items-center gap-2">
+          
+          {/* Botón Desplegable de Categorías */}
+          <div className="relative flex-1 sm:flex-initial">
+            <button
+              type="button"
+              onClick={() => setMenuAbierto(!menuAbierto)}
+              className={`flex w-full sm:w-auto items-center justify-between gap-2.5 rounded-full border px-5 py-3 text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                menuAbierto || (categoriaSeleccionada !== "Todos" && !esOfertasActivo)
+                  ? "border-slate-900 bg-slate-900 text-white shadow-md shadow-slate-900/15"
+                  : "border-slate-200 bg-white text-slate-800 shadow-xs hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4 shrink-0" />
+                <span>
+                  {categoriaSeleccionada === "Todos" || esOfertasActivo
+                    ? "Categorías"
+                    : categoriaSeleccionada}
+                </span>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
+                  menuAbierto ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {/* Menú Desplegable (Mega Menu Grid) */}
+            {menuAbierto && (
+              <div className="absolute left-0 top-full z-40 mt-2 w-full sm:w-[420px] rounded-2xl border border-slate-100 bg-white p-4 shadow-xl shadow-slate-900/10 animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3 px-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Explorar Categorías
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMenuAbierto(false)}
+                    className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full p-1 transition-colors duration-200"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Grid de Categorías con 'Ver todo' y 'Ofertas' destacado */}
+                <div className="grid grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1">
+
+                  {/* Opción 'Ver todo' */}
+                  <button
+                    type="button"
+                    onClick={() => seleccionarCategoria("Todos")}
+                    className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-medium transition-all duration-200 text-left cursor-pointer ${
+                      categoriaSeleccionada === "Todos"
+                        ? "bg-slate-900 text-white font-semibold shadow-sm"
+                        : "bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    <span>Ver todo</span>
+                    {categoriaSeleccionada === "Todos" && (
+                      <Check className="h-3.5 w-3.5 text-white shrink-0" />
+                    )}
+                  </button>
+
+                  {/* Opción 'Ofertas' destacada dentro del menú */}
+                  <button
+                    type="button"
+                    onClick={() => seleccionarCategoria("Ofertas")}
+                    className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all duration-200 text-left cursor-pointer ${
+                      esOfertasActivo
+                        ? "bg-[#0E6E55] text-white shadow-sm"
+                        : "bg-[#E6F4EA] text-[#0E6E55] hover:bg-[#D1EBD9]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Flame className="h-3.5 w-3.5" />
+                      <span>Ofertas</span>
+                    </div>
+                    {esOfertasActivo && (
+                      <Check className="h-3.5 w-3.5 text-white shrink-0" />
+                    )}
+                  </button>
+
+                  {/* Resto de las Categorías de la BD */}
+                  {categorias
+                    .filter((cat) => cat !== "Todos")
+                    .map((cat) => {
+                      const esSeleccionada = categoriaSeleccionada === cat;
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => seleccionarCategoria(cat)}
+                          className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-medium transition-all duration-200 text-left cursor-pointer ${
+                            esSeleccionada
+                              ? "bg-slate-900 text-white font-semibold shadow-sm"
+                              : "bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                          }`}
+                        >
+                          <span className="truncate">{cat}</span>
+                          {esSeleccionada && (
+                            <Check className="h-3.5 w-3.5 text-white shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Botón Directo "🔥 Ofertas" al lado de Categorías */}
           <button
             type="button"
-            onClick={() => setMenuAbierto(!menuAbierto)}
-            className={`flex w-full sm:w-auto items-center justify-between gap-2.5 rounded-full border px-5 py-3 text-sm font-semibold transition-all duration-200 cursor-pointer ${
-              menuAbierto || categoriaSeleccionada !== "Todos"
-                ? "border-slate-900 bg-slate-900 text-white shadow-md shadow-slate-900/15"
-                : "border-slate-200 bg-white text-slate-800 shadow-xs hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm"
+            onClick={() => onCategoriaSelect(esOfertasActivo ? "Todos" : "Ofertas")}
+            className={`flex items-center gap-1.5 rounded-full px-4 py-3 text-sm font-bold transition-all duration-200 cursor-pointer shrink-0 ${
+              esOfertasActivo
+                ? "bg-[#0E6E55] text-white shadow-md shadow-[#0E6E55]/20 ring-2 ring-[#0E6E55]"
+                : "bg-[#E6F4EA] text-[#0E6E55] border border-[#A3E0BF] hover:bg-[#D1EBD9]"
             }`}
           >
-            <div className="flex items-center gap-2">
-              <LayoutGrid className="h-4 w-4 shrink-0" />
-              <span>
-                {categoriaSeleccionada === "Todos"
-                  ? "Categorías"
-                  : categoriaSeleccionada}
-              </span>
-            </div>
-            <ChevronDown
-              className={`h-4 w-4 shrink-0 transition-transform duration-200 ${
-                menuAbierto ? "rotate-180" : ""
-              }`}
-            />
+            <Flame className="h-4 w-4" />
+            <span className="hidden xs:inline">Ofertas</span>
           </button>
 
-          {/* Menú Desplegable (Mega Menu Grid) */}
-          {menuAbierto && (
-            <div className="absolute left-0 top-full z-40 mt-2 w-full sm:w-[420px] rounded-2xl border border-slate-100 bg-white p-4 shadow-xl shadow-slate-900/10 animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3 px-1">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                  Explorar Categorías
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setMenuAbierto(false)}
-                  className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full p-1 transition-colors duration-200"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Grid de Categorías con 'Ver todo' destacado */}
-              <div className="grid grid-cols-2 gap-2 max-h-[320px] overflow-y-auto pr-1">
-
-                {/* Opción 'Ver todo' */}
-                <button
-                  type="button"
-                  onClick={() => seleccionarCategoria("Todos")}
-                  className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-medium transition-all duration-200 text-left cursor-pointer ${
-                    categoriaSeleccionada === "Todos"
-                      ? "bg-slate-900 text-white font-semibold shadow-sm"
-                      : "bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                  }`}
-                >
-                  <span>Ver todo</span>
-                  {categoriaSeleccionada === "Todos" && (
-                    <Check className="h-3.5 w-3.5 text-white shrink-0" />
-                  )}
-                </button>
-
-                {/* Resto de las Categorías de la BD */}
-                {categorias
-                  .filter((cat) => cat !== "Todos")
-                  .map((cat) => {
-                    const esSeleccionada = categoriaSeleccionada === cat;
-                    return (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => seleccionarCategoria(cat)}
-                        className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-medium transition-all duration-200 text-left cursor-pointer ${
-                          esSeleccionada
-                            ? "bg-slate-900 text-white font-semibold shadow-sm"
-                            : "bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                        }`}
-                      >
-                        <span className="truncate">{cat}</span>
-                        {esSeleccionada && (
-                          <Check className="h-3.5 w-3.5 text-white shrink-0" />
-                        )}
-                      </button>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Buscador de Productos */}
