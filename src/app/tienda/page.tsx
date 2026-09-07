@@ -49,7 +49,7 @@ export default function TiendaPage() {
         .from("productos")
         .select("*")
         .eq("activo", true);
-        
+
       if (error) {
         console.error("Error al cargar productos:", error);
       } else {
@@ -77,21 +77,20 @@ export default function TiendaPage() {
 
   if (!mounted) return null;
 
-    const productosFiltrados = productos.filter((p) => {
+  // Lógica de filtrado con soporte para Ofertas
+  const productosFiltrados = productos.filter((p) => {
     const coincideBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase());
     
     let coincideCategoria = true;
     if (categoriaFiltro === "Ofertas") {
-      // Es oferta si precio_original o precio_anterior es mayor a precio
-      const precioOriginal = Number(p.precio_original ?? p.precio_anterior) || 0;
-      coincideCategoria = precioOriginal > p.precio;
+      const precioBase = Number(p.precio_original ?? p.precio_anterior) || 0;
+      coincideCategoria = precioBase > p.precio;
     } else if (categoriaFiltro !== "Todos") {
       coincideCategoria = p.categoria === categoriaFiltro;
     }
 
     return coincideBusqueda && coincideCategoria;
   });
-
 
   const resetearFiltros = () => {
     setBusqueda("");
