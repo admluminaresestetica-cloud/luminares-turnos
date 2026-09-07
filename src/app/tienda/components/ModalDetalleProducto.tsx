@@ -1,172 +1,183 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { X, Plus, Minus, ShoppingBag } from "lucide-react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 
 interface ModalDetalleProductoProps {
   producto: Producto | null;
+  todosProductos?: Producto[];
   onClose: () => void;
+  onSeleccionarProducto?: (prod: Producto) => void;
 }
 
 export default function ModalDetalleProducto({
   producto,
+  todosProductos = [],
   onClose,
+  onSeleccionarProducto,
 }: ModalDetalleProductoProps) {
   const [cantidad, setCantidad] = useState(1);
-  const context = useCarrito();
-  const agregarAlCarrito = context?.agregarAlCarrito;
-  const items = context?.items || context?.carrito || [];
+  const { agregarAlCarrito } = useCarrito();
 
-  // Calcular cuántas unidades ya están en el carrito
-  const itemEnCarrito = Array.isArray(items) && producto
-    ? items.find((item: any) => item.id === producto.id)
-    : null;
-  const yaEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
-
-  // Stock total real restante para sumar
-  const stockTotal = producto?.stock ?? 0;
-  const disponibleParaAgregar = Math.max(0, stockTotal - yaEnCarrito);
-
-  // Resetea el contador al abrir o cambiar de producto
   useEffect(() => {
-    if (producto) {
-      setCantidad(disponibleParaAgregar > 0 ? 1 : 0);
-    }
-  }, [producto, yaEnCarrito]);
+    setCantidad(1);
+  }, [producto]);
 
   if (!producto) return null;
 
-  const precioFormateado = new Intl.NumberFormat("es-AR").format(
-    producto.precio || 0
-  );
-
-  const decrementar = () => {
-    if (cantidad > 1) setCantidad(cantidad - 1);
-  };
-
-  const incrementar = () => {
-    if (cantidad < disponibleParaAgregar) setCantidad(cantidad + 1);
-  };
+  const precioOriginal = Number(producto.precio_original ?? producto.precio_anterior) || 0;
+  const tieneDescuento = precioOriginal > producto.precio;
+  const porcentajeDescuento = tieneDescuento
+    ? Math.round(((precioOriginal - producto.precio) / precioOriginal) * 100)
+    : 0;
 
   const handleAgregar = () => {
-    if (disponibleParaAgregar > 0 && agregarAlCarrito && cantidad > 0) {
-      agregarAlCarrito({
-        ...producto,
-        cantidad: cantidad,
-      });
-      onClose();
+    for (let i = 0; i < cantidad; i++) {
+      agregarAlCarrito(producto);
     }
+    onClose();
   };
 
+  // Productos relacionados (misma categoría, excluyendo el actual)
+  const productosRelacionados = todosProductos
+    .filter((p) => p.id !== producto.id && p.categoria === producto.categoria)
+    .slice(0, 3);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center p-0 sm:p-4 transition-opacity">
-      <div 
-        className="relative w-full max-w-lg rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl max-h-[90vh] overflow-y-auto animate-in fade-in slide-in-from-bottom duration-200"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Botón cerrar */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-200">
+        
+        {/* Botón Cerrar */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[#F7F7F5] text-xs font-bold text-[#12151B] transition-colors hover:bg-[#E7E5E0]"
+          className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800"
         >
-          ✕
+          <X className="h-5 w-5" />
         </button>
 
-        {/* Imagen */}
-        <div className="mb-4 aspect-square w-full overflow-hidden rounded-2xl bg-[#F7F7F5] flex items-center justify-center">
-          {producto.imagen_url ? (
-            <img
-              src={producto.imagen_url}
-              alt={producto.nombre}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="text-5xl">🛍️</span>
-          )}
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          {/* Imagen */}
+          <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 border border-slate-100">
+            {producto.imagen_url ? (
+              <Image
+                src={producto.imagen_url}
+                alt={producto.nombre}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-slate-300">
+                Sin Imagen
+              </div>
+            )}
 
-        {/* Categoria & Nombre */}
-        {producto.categoria && (
-          <span className="inline-block rounded-full bg-[#F7F7F5] px-2.5 py-1 text-[10px] font-bold tracking-wider text-[#6B675F] uppercase mb-1">
-            {producto.categoria}
-          </span>
-        )}
-        <h2 className="text-xl font-bold text-[#12151B] leading-snug">
-          {producto.nombre}
-        </h2>
-        <p className="mt-1 text-2xl font-extrabold text-[#12151B]">
-          ${precioFormateado}
-        </p>
-
-        {/* Descripción */}
-        {producto.descripcion && (
-          <div className="mt-4 border-t border-[#E7E5E0] pt-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-[#A6A29B]">
-              Descripción
-            </h4>
-            <p className="mt-1 text-xs text-[#6B675F] leading-relaxed">
-              {producto.descripcion}
-            </p>
+            {tieneDescuento && (
+              <span className="absolute top-3 left-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-sm">
+                -{porcentajeDescuento}% OFF
+              </span>
+            )}
           </div>
-        )}
 
-        {/* Selector de cantidad y Stock */}
-        <div className="mt-6 border-t border-[#E7E5E0] pt-4">
-          <div className="flex items-center justify-between mb-3">
+          {/* Información */}
+          <div className="flex flex-col justify-between space-y-4">
             <div>
-              <p className="text-xs font-semibold text-[#12151B]">
-                Disponible para agregar: {disponibleParaAgregar}
-              </p>
-              {yaEnCarrito > 0 && (
-                <p className="text-[11px] font-bold text-[#0E6E55] mt-0.5">
-                  (Ya tenés {yaEnCarrito} en tu carrito)
+              <span className="text-xs font-bold uppercase tracking-wider text-[#0E6E55]">
+                {producto.categoria}
+              </span>
+              <h2 className="text-xl font-bold text-slate-900 sm:text-2xl mt-1">
+                {producto.nombre}
+              </h2>
+
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-2xl font-extrabold text-slate-900">
+                  ${producto.precio.toLocaleString("es-AR")}
+                </span>
+                {tieneDescuento && (
+                  <span className="text-sm font-medium text-slate-400 line-through">
+                    ${precioOriginal.toLocaleString("es-AR")}
+                  </span>
+                )}
+              </div>
+
+              {producto.descripcion && (
+                <p className="mt-4 text-sm text-slate-600 leading-relaxed">
+                  {producto.descripcion}
                 </p>
               )}
             </div>
 
-            {/* Selector - / + */}
-            <div className="flex items-center gap-3 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-1">
+            {/* Selector de Cantidad y Botón */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-2">
+                <span className="text-xs font-semibold text-slate-600 pl-2">Cantidad:</span>
+                <div className="flex items-center gap-3 bg-white rounded-xl border border-slate-200 p-1">
+                  <button
+                    onClick={() => setCantidad(Math.max(1, cantidad - 1))}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+                  >
+                    <Minus className="h-3.5 w-3.5" />
+                  </button>
+                  <span className="w-6 text-center text-sm font-bold text-slate-900">
+                    {cantidad}
+                  </span>
+                  <button
+                    onClick={() => setCantidad(cantidad + 1)}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
               <button
-                onClick={decrementar}
-                disabled={cantidad <= 1 || disponibleParaAgregar === 0}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-sm font-bold shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={handleAgregar}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0E6E55] py-3.5 text-sm font-bold text-white transition-all hover:bg-[#0b5944] active:scale-[0.98] shadow-md shadow-[#0E6E55]/20"
               >
-                -
-              </button>
-              <span className="w-6 text-center text-xs font-bold">
-                {disponibleParaAgregar === 0 ? 0 : cantidad}
-              </span>
-              <button
-                onClick={incrementar}
-                disabled={cantidad >= disponibleParaAgregar || disponibleParaAgregar === 0}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-sm font-bold shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                +
+                <ShoppingBag className="h-4 w-4" />
+                <span>Agregar al Carrito • ${(producto.precio * cantidad).toLocaleString("es-AR")}</span>
               </button>
             </div>
           </div>
-
-          {/* Botón de Confirmación */}
-          <button
-            onClick={handleAgregar}
-            disabled={disponibleParaAgregar === 0}
-            className={`w-full py-3.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-              disponibleParaAgregar === 0
-                ? "bg-[#E7E5E0] text-[#6B675F] cursor-not-allowed opacity-80"
-                : "bg-[#12151B] text-white hover:bg-[#0E6E55] active:scale-[0.98]"
-            }`}
-          >
-            <span>🛒</span>
-            <span>
-              {disponibleParaAgregar === 0
-                ? "Máximo disponible alcanzado"
-                : `Agregar ${cantidad} al Carrito • $${new Intl.NumberFormat(
-                    "es-AR"
-                  ).format((producto.precio || 0) * cantidad)}`}
-            </span>
-          </button>
         </div>
+
+        {/* Sección Cross-Selling / Productos Relacionados */}
+        {productosRelacionados.length > 0 && (
+          <div className="mt-8 border-t border-slate-100 pt-6">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+              También te puede interesar
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              {productosRelacionados.map((rel) => (
+                <button
+                  key={rel.id}
+                  onClick={() => onSeleccionarProducto && onSeleccionarProducto(rel)}
+                  className="group flex flex-col text-left rounded-xl border border-slate-100 p-2 hover:border-slate-300 hover:bg-slate-50 transition-all cursor-pointer"
+                >
+                  <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-slate-100 mb-2">
+                    {rel.imagen_url && (
+                      <Image
+                        src={rel.imagen_url}
+                        alt={rel.nombre}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform"
+                      />
+                    )}
+                  </div>
+                  <span className="text-xs font-semibold text-slate-800 truncate w-full">
+                    {rel.nombre}
+                  </span>
+                  <span className="text-xs font-bold text-[#0E6E55] mt-0.5">
+                    ${rel.precio.toLocaleString("es-AR")}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -29,6 +29,7 @@ export default function TiendaPage() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("Todos");
+  const [ordenarPor, setOrdenarPor] = useState("destacados");
 
   // Estado para el modal de detalle
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
@@ -49,7 +50,7 @@ export default function TiendaPage() {
         .from("productos")
         .select("*")
         .eq("activo", true);
-        
+
       if (error) {
         console.error("Error al cargar productos:", error);
       } else {
@@ -77,15 +78,41 @@ export default function TiendaPage() {
 
   if (!mounted) return null;
 
+  // Lógica de filtrado con soporte para Ofertas
   const productosFiltrados = productos.filter((p) => {
     const coincideBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase());
-    const coincideCategoria = categoriaFiltro === "Todos" || p.categoria === categoriaFiltro;
+    
+    let coincideCategoria = true;
+    if (categoriaFiltro === "Ofertas") {
+      const precioBase = Number(p.precio_original ?? p.precio_anterior) || 0;
+      coincideCategoria = precioBase > p.precio;
+    } else if (categoriaFiltro !== "Todos") {
+      coincideCategoria = p.categoria === categoriaFiltro;
+    }
+
     return coincideBusqueda && coincideCategoria;
+  });
+
+  // Lógica de Ordenamiento
+  const productosOrdenados = [...productosFiltrados].sort((a, b) => {
+    if (ordenarPor === "precio-asc") {
+      return a.precio - b.precio;
+    }
+    if (ordenarPor === "precio-desc") {
+      return b.precio - a.precio;
+    }
+    if (ordenarPor === "descuento") {
+      const descA = ((Number(a.precio_original ?? a.precio_anterior) || a.precio) - a.precio);
+      const descB = ((Number(b.precio_original ?? b.precio_anterior) || b.precio) - b.precio);
+      return descB - descA;
+    }
+    return 0; // Orden por defecto / destacados
   });
 
   const resetearFiltros = () => {
     setBusqueda("");
     setCategoriaFiltro("Todos");
+    setOrdenarPor("destacados");
   };
 
   return (
@@ -93,7 +120,7 @@ export default function TiendaPage() {
       <div>
         {/* Navbar */}
         <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0] bg-white/90 px-4 py-3 backdrop-blur-md sm:px-10 sm:py-4">
-          {/* Logo y Título con enlace al inicio */}
+          {/* Logo y Título */}
           <Link
             href="https://www.mireservalumin.com.ar/tienda"
             onClick={resetearFiltros}
@@ -120,7 +147,7 @@ export default function TiendaPage() {
             </div>
           </Link>
 
-          {/* Botón del Carrito */}
+          {/* Botón del Carrito en Navbar */}
           <button
             onClick={() => setModalAbierto(true)}
             className="relative flex shrink-0 items-center justify-center gap-2 rounded-full border border-[#E7E5E0] bg-white p-2.5 text-sm font-semibold text-[#12151B] transition-all duration-200 hover:border-[#12151B]/40 hover:shadow-sm active:scale-95 sm:px-4 sm:py-2.5"
@@ -137,21 +164,23 @@ export default function TiendaPage() {
         </nav>
 
         {/* Contenido Principal */}
-        <div className="mx-auto max-w-[1150px] px-4 pb-16 pt-4 sm:px-10">
+        <div className="mx-auto max-w-[1150px] px-4 pb-24 pt-4 sm:px-10 sm:pb-16">
           {/* Carrusel exclusivo de la Tienda */}
           <BannerCarousel />
 
-          {/* Buscador y Categorías */}
+          {/* Buscador, Categorías y Selector de Orden */}
           <BuscadorYCategorias
             busqueda={busqueda}
             onBusquedaChange={setBusqueda}
             categorias={categorias}
             categoriaSeleccionada={categoriaFiltro}
             onCategoriaSelect={setCategoriaFiltro}
+            ordenarPor={ordenarPor}
+            onOrdenarChange={setOrdenarPor}
           />
 
           <GridProductos
-            productos={productosFiltrados}
+            productos={productosOrdenados}
             cargando={cargando}
             onVerDetalle={(prod) => setProductoSeleccionado(prod)}
           />
@@ -160,7 +189,9 @@ export default function TiendaPage() {
         {/* Modal de Detalle de Producto */}
         <ModalDetalleProducto
           producto={productoSeleccionado}
+          todosProductos={productos}
           onClose={() => setProductoSeleccionado(null)}
+          onSeleccionarProducto={(prod) => setProductoSeleccionado(prod)}
         />
 
         {/* Drawer del Carrito */}
@@ -168,6 +199,24 @@ export default function TiendaPage() {
           isOpen={modalAbierto}
           onClose={() => setModalAbierto(false)}
         />
+
+        {/* Sticky Mobile Cart Button */}
+        {totalItems > 0 && (
+          <div className="fixed bottom-4 right-4 left-4 z-40 sm:hidden">
+            <button
+              onClick={() => setModalAbierto(true)}
+              className="flex w-full items-center justify-between rounded-full bg-[#12151B] px-5 py-3.5 text-sm font-bold text-white shadow-xl shadow-slate-900/20 active:scale-98 transition-all duration-200"
+            >
+              <div className="flex items-center gap-2.5">
+                <ShoppingBag className="h-5 w-5 text-[#0E6E55]" />
+                <span>Ver Mi Carrito</span>
+              </div>
+              <span className="flex h-6 min-w-[24px] items-center justify-center rounded-full bg-[#0E6E55] px-2 text-xs font-extrabold text-white">
+                {totalItems}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Footer exclusivo de la Tienda */}
