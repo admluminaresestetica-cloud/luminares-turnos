@@ -32,11 +32,32 @@ export default function TarjetaProducto({
     producto.precio || 0
   );
 
+  // Obtener precio base tomando en cuenta ambos posibles nombres
+  const precioBaseNum = Number(producto.precio_original ?? producto.precio_anterior) || 0;
+
+  // Lógica para descuento y precio anterior
+  const tieneOferta = precioBaseNum > producto.precio;
+
+  const porcentajeDescuento = tieneOferta
+    ? Math.round(((precioBaseNum - producto.precio) / precioBaseNum) * 100)
+    : 0;
+
+  const precioOriginalFormateado = tieneOferta
+    ? new Intl.NumberFormat("es-AR").format(precioBaseNum)
+    : null;
+
   return (
     <div
       onClick={() => onVerDetalle && onVerDetalle(producto)}
       className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white p-2.5 sm:p-3.5 shadow-sm transition-all hover:shadow-md cursor-pointer"
     >
+      {/* Badge de Porcentaje OFF */}
+      {tieneOferta && !sinStock && (
+        <span className="absolute top-4 right-4 z-10 rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
+          {porcentajeDescuento}% OFF
+        </span>
+      )}
+
       {/* Imagen del Producto */}
       <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[#F7F7F5] flex items-center justify-center">
         {producto.imagen_url ? (
@@ -68,10 +89,15 @@ export default function TarjetaProducto({
 
         {/* Precios y Stock */}
         <div className="mt-2 mb-2">
-          <div className="flex items-baseline gap-1">
+          <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-sm sm:text-base font-bold text-[#12151B]">
               ${precioFormateado}
             </span>
+            {tieneOferta && (
+              <span className="text-xs text-[#A6A29B] line-through">
+                ${precioOriginalFormateado}
+              </span>
+            )}
           </div>
           <p className="text-[10px] text-[#A6A29B] mt-0.5">
             Stock: {producto.stock}
@@ -83,7 +109,7 @@ export default function TarjetaProducto({
           onClick={(e) => {
             e.stopPropagation();
             if (!sinStock && !limiteAlcanzado && agregarAlCarrito) {
-              agregarAlCarrito({
+              (agregarAlCarrito as any)({
                 ...producto,
                 cantidad: 1,
               });

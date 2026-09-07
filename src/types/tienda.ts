@@ -4,11 +4,13 @@ export interface Producto {
   descripcion?: string;
   precio: number;
   precio_anterior?: number;
+  precio_original?: number;
   stock: number;
   imagen_url?: string;
   categoria_id?: string;
   categoria?: string;
   activo?: boolean;
+  cantidad?: number; 
 }
 
 export interface CarritoItem extends Producto {

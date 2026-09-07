@@ -17,6 +17,14 @@ interface Producto {
 }
 
 export default function ProductoCard({ producto }: { producto: Producto }) {
+  // 🔍 AGREGAR ESTA LÍNEA DE DIAGNÓSTICO:
+  console.log("Datos del producto:", producto.nombre, {
+    precio: producto.precio,
+    precio_original: producto.precio_original,
+    tipo_precio_original: typeof producto.precio_original
+  });
+
+
   const { carrito, agregarAlCarrito, restarUnidad } = useCarrito();
 
   const itemEnCarrito = carrito.find((item) => item.id === producto.id);
