@@ -31,6 +31,19 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
   // Límite alcanzado en el contador
   const alcanzoLimiteStock = cantidad >= stockDisponible;
 
+  // Cálculo del porcentaje de descuento
+  const tieneOferta =
+    Boolean(producto.precio_original) &&
+    (producto.precio_original ?? 0) > producto.precio;
+
+  const porcentajeDescuento = tieneOferta
+    ? Math.round(
+        ((producto.precio_original! - producto.precio) /
+          producto.precio_original!) *
+          100
+      )
+    : 0;
+
   return (
     <div
       style={{
@@ -47,8 +60,8 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
       }}
     >
       <div>
-        {/* Badge de Sin Stock / Pausado si aplica */}
-        {estaAgotado && (
+        {/* Badges superiores (Sin Stock / Pausado / Oferta %) */}
+        {estaAgotado ? (
           <span
             style={{
               position: "absolute",
@@ -66,6 +79,25 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
           >
             {estaPausado ? "Pausado" : "Sin Stock"}
           </span>
+        ) : (
+          tieneOferta && (
+            <span
+              style={{
+                position: "absolute",
+                top: "12px",
+                right: "12px",
+                backgroundColor: "#10b981", // Verde oferta
+                color: "#ffffff",
+                fontSize: "11px",
+                fontWeight: "700",
+                padding: "4px 8px",
+                borderRadius: "6px",
+                zIndex: 1,
+              }}
+            >
+              {porcentajeDescuento}% OFF
+            </span>
+          )
         )}
 
         {producto.imagen_url && (
@@ -123,7 +155,7 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
             >
               ${producto.precio}
             </span>
-            {producto.precio_original && (
+            {tieneOferta && (
               <span
                 style={{
                   fontSize: "13px",
