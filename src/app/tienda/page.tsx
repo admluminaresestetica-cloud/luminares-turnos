@@ -77,11 +77,21 @@ export default function TiendaPage() {
 
   if (!mounted) return null;
 
-  const productosFiltrados = productos.filter((p) => {
+    const productosFiltrados = productos.filter((p) => {
     const coincideBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase());
-    const coincideCategoria = categoriaFiltro === "Todos" || p.categoria === categoriaFiltro;
+    
+    let coincideCategoria = true;
+    if (categoriaFiltro === "Ofertas") {
+      // Es oferta si precio_original o precio_anterior es mayor a precio
+      const precioOriginal = Number(p.precio_original ?? p.precio_anterior) || 0;
+      coincideCategoria = precioOriginal > p.precio;
+    } else if (categoriaFiltro !== "Todos") {
+      coincideCategoria = p.categoria === categoriaFiltro;
+    }
+
     return coincideBusqueda && coincideCategoria;
   });
+
 
   const resetearFiltros = () => {
     setBusqueda("");
