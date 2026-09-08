@@ -1,6 +1,6 @@
 'use client';
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ShoppingBag, ChevronRight } from "lucide-react";
 import { useCarrito } from "@/context/CarritoContext";
 
@@ -18,6 +18,19 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
     ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 1), 0)
     : 0;
 
+  // Estado para controlar la animación de latido cuando cambian los ítems
+  const [animando, setAnimando] = useState(false);
+
+  useEffect(() => {
+    if (totalItems > 0) {
+      setAnimando(true);
+      const timer = setTimeout(() => {
+        setAnimando(false);
+      }, 600); // Dura 600ms la animación de rebote
+      return () => clearTimeout(timer);
+    }
+  }, [totalItems]);
+
   if (totalItems === 0) return null;
 
   const totalPrecio = Array.isArray(items)
@@ -31,11 +44,13 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
     <div className="fixed bottom-4 left-4 right-4 z-40 sm:hidden animate-in slide-in-from-bottom-4 duration-300">
       <button
         onClick={onOpenCarrito}
-        className="flex w-full items-center justify-between rounded-2xl bg-[#12151B] px-4 py-3 text-white shadow-xl shadow-black/20 backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer border border-white/10"
+        className={`flex w-full items-center justify-between rounded-2xl bg-[#12151B] px-4 py-3 text-white shadow-xl shadow-black/20 backdrop-blur-md active:scale-95 transition-all duration-300 cursor-pointer border border-white/10 ${
+          animando ? "scale-105 ring-2 ring-[#0E6E55]" : "scale-100"
+        }`}
       >
         {/* Lado izquierdo: Ícono con contador y texto explicativo */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0E6E55]">
+          <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0E6E55] transition-transform duration-300 ${animando ? "rotate-12 scale-110" : ""}`}>
             <ShoppingBag className="h-5 w-5 text-white" />
             <span className="absolute -top-1.5 -right-1.5 flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-extrabold text-[#12151B] shadow-sm">
               {totalItems}
