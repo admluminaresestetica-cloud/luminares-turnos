@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { X, Plus, Minus, ShoppingBag, Sparkles } from "lucide-react";
+import { X, Plus, Minus, ShoppingBag, Sparkles, Share2 } from "lucide-react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 
@@ -11,7 +11,7 @@ interface ModalDetalleProductoProps {
   todosProductos: Producto[];
   onClose: () => void;
   onSeleccionarProducto: (prod: Producto) => void;
-  onAbrirCarrito?: () => void; // <--- Agregás esto
+  onAbrirCarrito?: () => void;
 }
 
 export default function ModalDetalleProducto({
@@ -19,16 +19,16 @@ export default function ModalDetalleProducto({
   todosProductos,
   onClose,
   onSeleccionarProducto,
-  onAbrirCarrito, // <--- Lo recibís acá
+  onAbrirCarrito,
 }: ModalDetalleProductoProps) {
   const [cantidad, setCantidad] = useState(1);
-  
+
   const context = useCarrito();
   const agregarAlCarrito = context?.agregarAlCarrito;
   const actualizarCantidad = (context as any)?.actualizarCantidad;
   const eliminarDelCarrito = (context as any)?.eliminarDelCarrito;
   const items = context?.items || context?.carrito || [];
-  
+
   const modalContainerRef = useRef<HTMLDivElement>(null);
 
   // Stock real del producto principal
@@ -77,7 +77,31 @@ export default function ModalDetalleProducto({
     ? Math.round(((precioOriginal - producto.precio) / precioOriginal) * 100)
     : 0;
 
-  // 1. Las dos funciones juntas
+  // Función para Compartir Enlace Inteligente
+  const handleCompartir = async () => {
+    const shareData = {
+      title: producto.nombre,
+      text: `¡Mirá este producto en Luminares! ${producto.nombre} a $${producto.precio.toLocaleString("es-AR")}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log("Error al compartir:", err);
+      }
+    } else {
+      // Fallback si la Web Share API no está disponible en PC/navegador antiguo
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert("¡Enlace copiado al portapapeles!");
+      } catch (err) {
+        console.error("Error al copiar enlace:", err);
+      }
+    }
+  };
+
   const handleAgregarPrincipal = () => {
     if (cantidad <= 0 || maximoPermitidoParaAgregar <= 0 || !agregarAlCarrito) return;
 
@@ -90,15 +114,12 @@ export default function ModalDetalleProducto({
   const handleComprarAhora = () => {
     if (cantidad <= 0 || maximoPermitidoParaAgregar <= 0 || !agregarAlCarrito) return;
 
-    // 1. Agrega las unidades al carrito
     for (let i = 0; i < cantidad; i++) {
       agregarAlCarrito(producto);
     }
 
-    // 2. Cierra el modal de detalle
     onClose();
 
-    // 3. Abre el CarritoDrawer inmediatamente
     if (onAbrirCarrito) {
       onAbrirCarrito();
     }
@@ -152,14 +173,26 @@ export default function ModalDetalleProducto({
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
       >
-        {/* Botón Cerrar */}
-        <button
-          onClick={onClose}
-          className="sticky top-0 float-right z-20 -mr-2 -mt-2 sm:-mr-4 sm:-mt-4 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-500 backdrop-blur-md transition-colors hover:bg-slate-200 hover:text-slate-800 cursor-pointer shadow-sm"
-          title="Cerrar (Esc)"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        {/* Contenedor de Botones Superiores (Compartir y Cerrar) */}
+        <div className="sticky top-0 float-right z-20 -mr-2 -mt-2 sm:-mr-4 sm:-mt-4 flex items-center gap-2">
+          {/* Botón Compartir */}
+          <button
+            onClick={handleCompartir}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-600 backdrop-blur-md transition-colors hover:bg-slate-200 hover:text-slate-900 cursor-pointer shadow-sm"
+            title="Compartir producto"
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
+
+          {/* Botón Cerrar */}
+          <button
+            onClick={onClose}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-500 backdrop-blur-md transition-colors hover:bg-slate-200 hover:text-slate-800 cursor-pointer shadow-sm"
+            title="Cerrar (Esc)"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start clear-both">
           {/* Imagen Principal */}
@@ -287,21 +320,18 @@ export default function ModalDetalleProducto({
                 </span>
               </button>
 
-              {/* Botón de Comprar Ahora (Estilo Mercado Libre, Limpio) */}
-             <button
-  onClick={handleComprarAhora}
-  disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-  className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all mt-2.5 ${
-    sinStock || maximoPermitidoParaAgregar <= 0
-      ? "bg-slate-200 text-slate-400 cursor-not-allowed border-transparent"
-      : "border-2 border-[#0E6E55] bg-transparent text-[#0E6E55] hover:bg-[#0E6E55]/10 active:scale-[0.98] cursor-pointer"
-  }`}
->
-  <span>Comprar ahora</span>
-</button>
-
-
-
+              {/* Botón de Comprar Ahora */}
+              <button
+                onClick={handleComprarAhora}
+                disabled={sinStock || maximoPermitidoParaAgregar <= 0}
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all mt-2.5 ${
+                  sinStock || maximoPermitidoParaAgregar <= 0
+                    ? "bg-slate-200 text-slate-400 cursor-not-allowed border-transparent"
+                    : "border-2 border-[#0E6E55] bg-transparent text-[#0E6E55] hover:bg-[#0E6E55]/10 active:scale-[0.98] cursor-pointer"
+                }`}
+              >
+                <span>Comprar ahora</span>
+              </button>
             </div>
           </div>
         </div>
@@ -325,7 +355,6 @@ export default function ModalDetalleProducto({
                 const relTieneDesc = relPrecioOriginal > rel.precio;
                 const relStock = rel.stock ?? 0;
 
-                // Ver cuántos hay en carrito de este recomendado
                 const itemRelEnCarrito = Array.isArray(items)
                   ? items.find((item: any) => item.id === rel.id)
                   : null;
@@ -377,7 +406,6 @@ export default function ModalDetalleProducto({
                         )}
                       </div>
 
-                      {/* Controles de Cantidad / Botón Agregar para Recomendados */}
                       {relCantidadEnCarrito === 0 ? (
                         <button
                           onClick={(e) => handleSumarRecomendado(e, rel, relCantidadEnCarrito, relStock)}
