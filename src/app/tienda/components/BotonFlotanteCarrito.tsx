@@ -4,7 +4,7 @@ import React from "react";
 import { ShoppingBag } from "lucide-react";
 import { useCarrito } from "@/context/CarritoContext";
 
-const MONTO_ENVIO_GRATIS = 25000;
+const MONTO_ENVIO_GRATIS = 35000;
 
 interface BotonFlotanteCarritoProps {
   onOpenCarrito: () => void;

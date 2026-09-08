@@ -14,7 +14,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const MONTO_ENVIO_GRATIS = 25000;
+const MONTO_ENVIO_GRATIS = 35000;
 
 interface CarritoDrawerProps {
   isOpen: boolean;
