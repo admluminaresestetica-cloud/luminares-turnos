@@ -111,8 +111,7 @@ export default function TiendaPage() {
     fetchCategorias();
     fetchTags(); // Ejecutamos la carga de tags
   }, []);
-
-<<<<<<< HEAD
+  
   // Abrir modal automáticamente si la URL trae ?producto=ID
   useEffect(() => {
     if (productos.length > 0) {
@@ -131,9 +130,6 @@ export default function TiendaPage() {
   }, [productos]);
 
   // Lógica de filtrado inteligente con Fuse.js (soporta errores de tipeo como "uggies")
-=======
-  // Lógica de filtrado inteligente con Fuse.js y soporte para Tags
->>>>>>> actualizacion-8-9
   const productosFiltrados = useMemo(() => {
     let resultado = productos;
 
