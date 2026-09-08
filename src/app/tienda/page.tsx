@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
@@ -11,6 +11,7 @@ import FooterTienda from "@/components/FooterTienda";
 import { useCarrito } from "@/context/CarritoContext";
 import { Producto } from "@/types/tienda";
 import BotonFlotanteCarrito from "./components/BotonFlotanteCarrito";
+import Fuse from "fuse.js";
 
 // Componentes modularizados
 import BuscadorYCategorias from "./components/BuscadorYCategorias";
@@ -85,6 +86,53 @@ export default function TiendaPage() {
     fetchCategorias();
   }, []);
 
+  // Lógica de filtrado inteligente con Fuse.js (soporta errores de tipeo como "uggies")
+  const productosFiltrados = useMemo(() => {
+    let resultado = productos;
+
+    // 1. Filtrar por Búsqueda Inteligente (Fuzzy Search)
+    if (busqueda.trim() !== "") {
+      const fuseOptions = {
+        keys: ["nombre", "categoria"], // Campos donde buscar
+        threshold: 0.4, // Tolerancia a errores de tipeo
+        ignoreLocation: true,
+      };
+
+      const fuse = new Fuse(productos, fuseOptions);
+      resultado = fuse.search(busqueda).map((res) => res.item);
+    }
+
+    // 2. Filtrar por Categoría / Ofertas
+    if (categoriaFiltro === "Ofertas") {
+      resultado = resultado.filter((p) => {
+        const precioBase = Number(p.precio_original ?? p.precio_anterior) || 0;
+        return precioBase > p.precio;
+      });
+    } else if (categoriaFiltro !== "Todos") {
+      resultado = resultado.filter((p) => p.categoria === categoriaFiltro);
+    }
+
+    return resultado;
+  }, [productos, busqueda, categoriaFiltro]);
+
+  // Lógica de Ordenamiento
+  const productosOrdenados = useMemo(() => {
+    return [...productosFiltrados].sort((a, b) => {
+      if (ordenarPor === "precio-asc") {
+        return a.precio - b.precio;
+      }
+      if (ordenarPor === "precio-desc") {
+        return b.precio - a.precio;
+      }
+      if (ordenarPor === "descuento") {
+        const descA = ((Number(a.precio_original ?? a.precio_anterior) || a.precio) - a.precio);
+        const descB = ((Number(b.precio_original ?? b.precio_anterior) || b.precio) - b.precio);
+        return descB - descA;
+      }
+      return 0;
+    });
+  }, [productosFiltrados, ordenarPor]);
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-[#F7F7F5] flex items-center justify-center">
@@ -92,37 +140,6 @@ export default function TiendaPage() {
       </div>
     );
   }
-
-  // Lógica de filtrado con soporte para Ofertas
-  const productosFiltrados = productos.filter((p) => {
-    const coincideBusqueda = p.nombre ? p.nombre.toLowerCase().includes(busqueda.toLowerCase()) : true;
-    
-    let coincideCategoria = true;
-    if (categoriaFiltro === "Ofertas") {
-      const precioBase = Number(p.precio_original ?? p.precio_anterior) || 0;
-      coincideCategoria = precioBase > p.precio;
-    } else if (categoriaFiltro !== "Todos") {
-      coincideCategoria = p.categoria === categoriaFiltro;
-    }
-
-    return coincideBusqueda && coincideCategoria;
-  });
-
-  // Lógica de Ordenamiento
-  const productosOrdenados = [...productosFiltrados].sort((a, b) => {
-    if (ordenarPor === "precio-asc") {
-      return a.precio - b.precio;
-    }
-    if (ordenarPor === "precio-desc") {
-      return b.precio - a.precio;
-    }
-    if (ordenarPor === "descuento") {
-      const descA = ((Number(a.precio_original ?? a.precio_anterior) || a.precio) - a.precio);
-      const descB = ((Number(b.precio_original ?? b.precio_anterior) || b.precio) - b.precio);
-      return descB - descA;
-    }
-    return 0;
-  });
 
   const resetearFiltros = () => {
     setBusqueda("");
