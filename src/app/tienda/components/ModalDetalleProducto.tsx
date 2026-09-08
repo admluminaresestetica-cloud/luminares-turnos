@@ -8,16 +8,18 @@ import { useCarrito } from "@/context/CarritoContext";
 
 interface ModalDetalleProductoProps {
   producto: Producto | null;
-  todosProductos?: Producto[];
+  todosProductos: Producto[];
   onClose: () => void;
-  onSeleccionarProducto?: (prod: Producto) => void;
+  onSeleccionarProducto: (prod: Producto) => void;
+  onAbrirCarrito?: () => void; // <--- Agregás esto
 }
 
 export default function ModalDetalleProducto({
   producto,
-  todosProductos = [],
+  todosProductos,
   onClose,
   onSeleccionarProducto,
+  onAbrirCarrito, // <--- Lo recibís acá
 }: ModalDetalleProductoProps) {
   const [cantidad, setCantidad] = useState(1);
   
@@ -75,6 +77,7 @@ export default function ModalDetalleProducto({
     ? Math.round(((precioOriginal - producto.precio) / precioOriginal) * 100)
     : 0;
 
+  // 1. Las dos funciones juntas
   const handleAgregarPrincipal = () => {
     if (cantidad <= 0 || maximoPermitidoParaAgregar <= 0 || !agregarAlCarrito) return;
 
@@ -82,6 +85,23 @@ export default function ModalDetalleProducto({
       agregarAlCarrito(producto);
     }
     onClose();
+  };
+
+  const handleComprarAhora = () => {
+    if (cantidad <= 0 || maximoPermitidoParaAgregar <= 0 || !agregarAlCarrito) return;
+
+    // 1. Agrega las unidades al carrito
+    for (let i = 0; i < cantidad; i++) {
+      agregarAlCarrito(producto);
+    }
+
+    // 2. Cierra el modal de detalle
+    onClose();
+
+    // 3. Abre el CarritoDrawer inmediatamente
+    if (onAbrirCarrito) {
+      onAbrirCarrito();
+    }
   };
 
   // Handlers para la sección de Cross-Selling (Productos Recomendados)
@@ -247,15 +267,13 @@ export default function ModalDetalleProducto({
                 </div>
               </div>
 
-              {/* Botón Principal de Acción */}
+              {/* Botón de Agregar al Carrito */}
               <button
                 onClick={handleAgregarPrincipal}
                 disabled={sinStock || maximoPermitidoParaAgregar <= 0}
                 className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all ${
-                  sinStock
+                  sinStock || maximoPermitidoParaAgregar <= 0
                     ? "bg-slate-200 text-slate-500 cursor-not-allowed"
-                    : maximoPermitidoParaAgregar <= 0
-                    ? "bg-slate-200 text-slate-600 cursor-not-allowed"
                     : "bg-[#0E6E55] text-white hover:bg-[#0b5944] active:scale-[0.98] shadow-md shadow-[#0E6E55]/20 cursor-pointer"
                 }`}
               >
@@ -268,6 +286,20 @@ export default function ModalDetalleProducto({
                     : `Agregar al Carrito • $${(producto.precio * cantidad).toLocaleString("es-AR")}`}
                 </span>
               </button>
+
+              {/* Botón de Comprar Ahora (Estilo Mercado Libre, Limpio) */}
+              <button
+                  onClick={handleComprarAhora}
+                  disabled={sinStock || maximoPermitidoParaAgregar <= 0}
+                  className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all mt-2.5 ${
+                  sinStock || maximoPermitidoParaAgregar <= 0
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-[#009EE3] text-white hover:bg-[#008AC7] active:scale-[0.98] shadow-md shadow-[#009EE3]/25 cursor-pointer"
+   }`}
+               >
+             <span>Comprar ahora</span>
+             </button>
+
             </div>
           </div>
         </div>

@@ -204,6 +204,7 @@ export default function TiendaPage() {
           todosProductos={productos}
           onClose={() => setProductoSeleccionado(null)}
           onSeleccionarProducto={(prod) => setProductoSeleccionado(prod)}
+          onAbrirCarrito={() => setModalAbierto(true)}
         />
 
         {/* Drawer del Carrito */}
