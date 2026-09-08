@@ -6,7 +6,10 @@ import { useCarrito } from "@/context/CarritoContext";
 import { Plus, Minus, Flame } from "lucide-react";
 
 interface TarjetaProductoProps {
-  producto: Producto & { mostrar_ultimas_unidades?: boolean; stock_minimo_aviso?: number };
+  producto: Producto & { 
+    mostrar_ultimas_unidades?: boolean; 
+    ultimas_unidades?: boolean; 
+  };
   onVerDetalle?: (producto: Producto) => void;
 }
 
@@ -23,11 +26,12 @@ export default function TarjetaProducto({
   const stockDisponible = producto.stock ?? 0;
   const sinStock = stockDisponible <= 0;
 
-  // Lógica para el distintivo de últimas unidades (activado desde el panel o por stock bajo ej. menor o igual a 3 o 5)
-  const stockMinimoAviso = producto.stock_minimo_aviso ?? 3;
-  const esUltimasUnidades = 
-    !sinStock && 
-    (producto.mostrar_ultimas_unidades || stockDisponible <= stockMinimoAviso);
+  // Verificamos exactamente el tilde que guardás desde el panel de administración
+  const esUltimasUnidades = !sinStock && (
+    producto.mostrar_ultimas_unidades === true || 
+    producto.ultimas_unidades === true ||
+    (producto as any).mostrarUltimasUnidades === true
+  );
 
   const itemEnCarrito = Array.isArray(items) 
     ? items.find((item: any) => item.id === producto.id) 
@@ -86,7 +90,7 @@ export default function TarjetaProducto({
       onClick={() => onVerDetalle && onVerDetalle(producto)}
       className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white p-2.5 sm:p-3.5 shadow-sm transition-all hover:shadow-md cursor-pointer"
     >
-      {/* Badges superiores (Descuento u Últimas unidades) */}
+      {/* Badges superiores (Descuento u Últimas unidades según panel) */}
       <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1 pointer-events-none">
         {tieneOferta && !sinStock && (
           <span className="rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
