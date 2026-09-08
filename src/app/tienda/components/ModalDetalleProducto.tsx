@@ -80,14 +80,13 @@ export default function ModalDetalleProducto({
 
   // Función para Compartir Enlace Inteligente
   const handleCompartir = async () => {
-    const urlProducto = `${window.location.origin}${window.location.pathname}?producto=${producto.id}`;
+    const urlProducto = `${window.location.origin}/tienda/producto/${producto.id}`;
 
-    const shareData = {
-      title: producto.nombre,
-      text: `¡Mirá este producto en Luminares! ${producto.nombre} a $${producto.precio.toLocaleString("es-AR")}`,
-      url: urlProducto,
-    };
-
+  const shareData = {
+    title: producto.nombre,
+    text: `¡Mirá este producto en Luminares! ${producto.nombre} a $${producto.precio.toLocaleString("es-AR")}`,
+    url: urlProducto,
+  };
     if (navigator.share) {
       try {
         await navigator.share(shareData);
