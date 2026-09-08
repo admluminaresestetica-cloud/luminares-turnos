@@ -86,6 +86,23 @@ export default function TiendaPage() {
     fetchCategorias();
   }, []);
 
+  // Abrir modal automáticamente si la URL trae ?producto=ID
+  useEffect(() => {
+    if (productos.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const idParam = params.get("producto");
+
+      if (idParam) {
+        const prodEncontrado = productos.find(
+          (p) => String(p.id) === String(idParam)
+        );
+        if (prodEncontrado) {
+          setProductoSeleccionado(prodEncontrado);
+        }
+      }
+    }
+  }, [productos]);
+
   // Lógica de filtrado inteligente con Fuse.js (soporta errores de tipeo como "uggies")
   const productosFiltrados = useMemo(() => {
     let resultado = productos;
