@@ -35,7 +35,10 @@ export default function TarjetaProducto({
     producto.precio || 0
   );
 
+  // Obtener precio base tomando en cuenta ambos posibles nombres
   const precioBaseNum = Number(producto.precio_original ?? producto.precio_anterior) || 0;
+
+  // Lógica para descuento y precio anterior
   const tieneOferta = precioBaseNum > producto.precio;
 
   const porcentajeDescuento = tieneOferta
@@ -46,11 +49,7 @@ export default function TarjetaProducto({
     ? new Intl.NumberFormat("es-AR").format(precioBaseNum)
     : null;
 
-<<<<<<< HEAD
   // Handlers para sumar y restar desde la tarjeta
-=======
-  // Handler para restar 1 unidad o eliminar si llega a 0
->>>>>>> actualizacion-interfaz-tienda
   const handleRestar = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (cantidadEnCarrito > 1 && actualizarCantidad) {
@@ -62,24 +61,16 @@ export default function TarjetaProducto({
     }
   };
 
-<<<<<<< HEAD
-=======
-  // Handler para sumar 1 unidad hasta el stock límite
->>>>>>> actualizacion-interfaz-tienda
   const handleSumar = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!limiteAlcanzado) {
       if (cantidadEnCarrito > 0 && actualizarCantidad) {
         actualizarCantidad(producto.id, cantidadEnCarrito + 1);
       } else if (agregarAlCarrito) {
-<<<<<<< HEAD
-        agregarAlCarrito(producto);
-=======
         (agregarAlCarrito as any)({
           ...producto,
           cantidad: 1,
         });
->>>>>>> actualizacion-interfaz-tienda
       }
     }
   };
@@ -89,23 +80,15 @@ export default function TarjetaProducto({
       onClick={() => onVerDetalle && onVerDetalle(producto)}
       className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white p-2.5 sm:p-3.5 shadow-sm transition-all hover:shadow-md cursor-pointer"
     >
+      {/* Badge de Porcentaje OFF */}
+      {tieneOferta && !sinStock && (
+        <span className="absolute top-4 right-4 z-10 rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
+          {porcentajeDescuento}% OFF
+        </span>
+      )}
+
       {/* Imagen del Producto */}
       <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[#F7F7F5] flex items-center justify-center">
-        
-        {/* Badge: 🔥 ¡Últimas unidades! */}
-        {producto.mostrar_ultimas_unidades && !sinStock && (
-          <span className="absolute top-2 left-2 z-20 rounded-md bg-[#D97706] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
-            🔥 ¡Últimas unidades!
-          </span>
-        )}
-
-        {/* Badge: Porcentaje OFF */}
-        {tieneOferta && !sinStock && (
-          <span className="absolute top-2 right-2 z-20 rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
-            {porcentajeDescuento}% OFF
-          </span>
-        )}
-
         {producto.imagen_url ? (
           <img
             src={producto.imagen_url}
@@ -117,7 +100,7 @@ export default function TarjetaProducto({
         )}
 
         {sinStock && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
             <span className="rounded-md bg-white/90 px-2 py-1 text-[10px] sm:text-[11px] font-bold text-[#12151B]">
               Sin Stock
             </span>
@@ -150,11 +133,7 @@ export default function TarjetaProducto({
           </p>
         </div>
 
-<<<<<<< HEAD
         {/* Botón Adaptativo / Control - y + */}
-=======
-        {/* Controles de Botón Adaptativo */}
->>>>>>> actualizacion-interfaz-tienda
         {sinStock ? (
           <button
             disabled
@@ -171,7 +150,6 @@ export default function TarjetaProducto({
             <span>Agregar</span>
           </button>
         ) : (
-<<<<<<< HEAD
           <div
             onClick={(e) => e.stopPropagation()}
             className="flex items-center justify-between w-full rounded-xl border border-[#0E6E55]/30 bg-[#0E6E55]/5 p-1"
@@ -202,32 +180,6 @@ export default function TarjetaProducto({
               title={limiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
             >
               <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-=======
-          <div className="flex items-center justify-between w-full bg-[#F7F7F5] border border-[#E7E5E0] rounded-xl p-1">
-            <button
-              onClick={handleRestar}
-              className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-sm font-bold text-[#12151B] shadow-sm hover:bg-gray-100 active:scale-95 transition-all"
-              title="Restar una unidad"
-            >
-              −
-            </button>
-
-            <span className="text-xs font-extrabold text-[#12151B] px-2">
-              {cantidadEnCarrito}
-            </span>
-
-            <button
-              onClick={handleSumar}
-              disabled={limiteAlcanzado}
-              className={`flex h-7 w-7 items-center justify-center rounded-lg text-sm font-bold shadow-sm transition-all ${
-                limiteAlcanzado
-                  ? "bg-[#E7E5E0] text-[#A6A29B] cursor-not-allowed"
-                  : "bg-[#12151B] text-white hover:bg-[#0E6E55] active:scale-95"
-              }`}
-              title={limiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
-            >
-              +
->>>>>>> actualizacion-interfaz-tienda
             </button>
           </div>
         )}
