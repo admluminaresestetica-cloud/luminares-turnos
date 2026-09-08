@@ -14,13 +14,12 @@ import {
   Check,
 } from "lucide-react";
 
-export default function CarritoModal({ carrito, onClose, onEliminar, onEnviar }: any) {
+export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
   const total = carrito.reduce(
     (acc: number, p: any) => acc + Number(p.precio) * (p.cantidad || 1),
     0
   );
 
-  // Estado local para la experiencia de checkout (no altera la lógica existente)
   const [metodoEntrega, setMetodoEntrega] = useState<"retiro" | "envio">("retiro");
   const [metodoPago, setMetodoPago] = useState<"whatsapp" | "transferencia" | "mercadopago">(
     "whatsapp"
@@ -28,6 +27,49 @@ export default function CarritoModal({ carrito, onClose, onEliminar, onEnviar }:
   const [nombre, setNombre] = useState("");
   const [celular, setCelular] = useState("");
   const [direccion, setDireccion] = useState("");
+
+  // Función para construir y enviar el mensaje ordenado a WhatsApp
+  const handleFinalizarPedido = () => {
+    // Número oficial de la tienda Luminares (formato internacional sin signos)
+    const numeroWhatsApp = "5493415555555"; // Reemplazá por tu número real de WhatsApp
+
+    // Formateo visual para el método de pago y entrega
+    const entregaTexto = metodoEntrega === "retiro" ? "🏪 Retiro en local" : `🚚 Envío a domicilio (${direccion || "Dirección no especificada"})`;
+    
+    const pagoTexto = 
+      metodoPago === "transferencia" ? "🏛️ Transferencia / Alias" :
+      metodoPago === "mercadopago" ? "💳 Mercado Pago" : "💬 Coordinar por WhatsApp";
+
+    // 1. Encabezado del pedido
+    let mensaje = `🛍️ *NUEVO PEDIDO - LUMINARES TIENDA*\n`;
+    mensaje += `-----------------------------------\n\n`;
+
+    // 2. Datos del cliente
+    mensaje += `👤 *Cliente:* ${nombre || "No especificado"}\n`;
+    if (celular) mensaje += `📱 *Teléfono:* ${celular}\n`;
+    mensaje += `🚚 *Modalidad:* ${entregaTexto}\n`;
+    mensaje += `💳 *Pago:* ${pagoTexto}\n\n`;
+
+    // 3. Detalle de productos
+    mensaje += `📦 *PRODUCTOS:* \n`;
+    carrito.forEach((p: any) => {
+      const cant = p.cantidad || 1;
+      const subtotal = Number(p.precio) * cant;
+      mensaje += `• ${cant}x ${p.nombre} - *$${subtotal.toLocaleString("es-AR")}*\n`;
+    });
+
+    // 4. Total final
+    mensaje += `\n-----------------------------------\n`;
+    mensaje += `💰 *TOTAL A PAGAR:* *$${total.toLocaleString("es-AR")}*\n`;
+    mensaje += `-----------------------------------\n\n`;
+    mensaje += `¡Hola! Quisiera confirmar este pedido. Quedo a la espera para coordinar. ✨`;
+
+    // Convertir el texto para URL
+    const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+    
+    // Abrir WhatsApp en una nueva pestaña
+    window.open(url, "_blank");
+  };
 
   return (
     <div
@@ -228,7 +270,7 @@ export default function CarritoModal({ carrito, onClose, onEliminar, onEnviar }:
                             </span>
                           )}
                           <p className="m-0 text-sm font-bold text-[#0E6E55]">
-                            ${Number(p.precio) * (p.cantidad || 1)}
+                            ${(Number(p.precio) * (p.cantidad || 1)).toLocaleString("es-AR")}
                           </p>
                         </div>
                       </div>
@@ -256,11 +298,11 @@ export default function CarritoModal({ carrito, onClose, onEliminar, onEnviar }:
                 className="text-xl font-bold text-[#12151B]"
                 style={{ fontFamily: "'Space Grotesk', ui-sans-serif, sans-serif" }}
               >
-                ${total}
+                ${total.toLocaleString("es-AR")}
               </span>
             </div>
             <button
-              onClick={onEnviar}
+              onClick={handleFinalizarPedido}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#12151B] py-3.5 text-[15px] font-bold text-white shadow-lg shadow-[#12151B]/25 transition-all duration-200 hover:bg-[#1E222B] active:scale-[0.98]"
             >
               <Send className="h-4 w-4" strokeWidth={2.2} />
