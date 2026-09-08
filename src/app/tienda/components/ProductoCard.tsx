@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Producto } from '@/types/tienda';
 import { useCarrito } from '@/context/CarritoContext';
 
@@ -18,6 +18,17 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
   const estaPausado = producto.activo === false;
   const sinStock = stockDisponible <= 0 || estaPausado;
   const alcanzoLimiteStock = cantidadEnCarrito >= stockDisponible;
+
+  // Estado temporal para animar el botón de agregado por primera vez
+  const [fueAgregadoRecien, setFueAgregadoRecien] = useState(false);
+
+  const handleAgregarPorPrimeraVez = () => {
+    agregarAlCarrito(producto);
+    setFueAgregadoRecien(true);
+    setTimeout(() => {
+      setFueAgregadoRecien(false);
+    }, 1000); // Vuelve al estado normal de contador después de 1 segundo
+  };
 
   // WhatsApp para consulta de reingreso
   const numeroTelefono = "5493413954355";
@@ -93,6 +104,10 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
               Consultar Reingreso 💬
             </a>
           )
+        ) : fueAgregadoRecien ? (
+          <div className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white shadow-md transition-all animate-in fade-in zoom-in-95 duration-200">
+            ¡Agregado! ✓
+          </div>
         ) : cantidadEnCarrito > 0 ? (
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between rounded-xl border border-[#12151B] bg-[#F7F7F5] p-1 shadow-2xs">
@@ -126,15 +141,15 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
 
             {alcanzoLimiteStock && (
               <span className="text-[10px] text-center font-medium text-amber-600 mt-0.5">
-                Máximo disponible reached
+                Stock máximo alcanzado
               </span>
             )}
           </div>
         ) : (
           <button
             type="button"
-            onClick={() => agregarAlCarrito(producto)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#12151B] py-2.5 text-xs font-bold text-white shadow-xs transition-all duration-200 hover:bg-black active:scale-[0.98]"
+            onClick={handleAgregarPorPrimeraVez}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#12151B] py-2.5 text-xs font-bold text-white shadow-xs transition-all duration-200 hover:bg-black active:scale-[0.98] cursor-pointer"
           >
             🛒 Agregar al Carrito
           </button>
