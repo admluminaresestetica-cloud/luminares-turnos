@@ -17,6 +17,7 @@ import Fuse from "fuse.js";
 import BuscadorYCategorias from "./components/BuscadorYCategorias";
 import GridProductos from "./components/GridProductos";
 import ModalDetalleProducto from "./components/ModalDetalleProducto";
+import TagsFiltros from "./components/TagsFiltros"; // 👈 1. Importamos el componente de Tags
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -27,6 +28,11 @@ export default function TiendaPage() {
   const [cargando, setCargando] = useState(true);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<string[]>(["Todos"]);
+  
+  // Estados para los Tags de Búsqueda Inteligente
+  const [tags, setTags] = useState<any[]>([]);
+  const [tagSeleccionado, setTagSeleccionado] = useState<string | null>(null);
+
   const [modalAbierto, setModalAbierto] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("Todos");
@@ -82,27 +88,58 @@ export default function TiendaPage() {
       }
     };
 
+    // 2. Función para traer los tags activos de Supabase
+    const fetchTags = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("tags_busqueda")
+          .select("*")
+          .eq("activo", true)
+          .order("orden", { ascending: true });
+
+        if (error) {
+          console.error("Error al cargar tags:", error);
+        } else {
+          setTags(data || []);
+        }
+      } catch (err) {
+        console.error("Error inesperado al cargar tags:", err);
+      }
+    };
+
     fetchProductos();
     fetchCategorias();
+    fetchTags(); // Ejecutamos la carga de tags
   }, []);
 
-  // Lógica de filtrado inteligente con Fuse.js (soporta errores de tipeo como "uggies")
+  // Lógica de filtrado inteligente con Fuse.js y soporte para Tags
   const productosFiltrados = useMemo(() => {
     let resultado = productos;
 
-    // 1. Filtrar por Búsqueda Inteligente (Fuzzy Search)
+    // 1. Filtrar si hay un Tag seleccionado (Búsqueda rápida por regla/slug)
+    if (tagSeleccionado) {
+      const criterio = tagSeleccionado.toLowerCase();
+      resultado = resultado.filter((p) => {
+        const nombre = p.nombre?.toLowerCase() || "";
+        const desc = p.descripcion?.toLowerCase() || "";
+        const cat = p.categoria?.toLowerCase() || "";
+        return nombre.includes(criterio) || desc.includes(criterio) || cat.includes(criterio);
+      });
+    }
+
+    // 2. Filtrar por Búsqueda Tradicional (Fuse.js)
     if (busqueda.trim() !== "") {
       const fuseOptions = {
-        keys: ["nombre", "categoria"], // Campos donde buscar
-        threshold: 0.4, // Tolerancia a errores de tipeo
+        keys: ["nombre", "categoria"],
+        threshold: 0.4,
         ignoreLocation: true,
       };
 
-      const fuse = new Fuse(productos, fuseOptions);
+      const fuse = new Fuse(resultado, fuseOptions);
       resultado = fuse.search(busqueda).map((res) => res.item);
     }
 
-    // 2. Filtrar por Categoría / Ofertas
+    // 3. Filtrar por Categoría / Ofertas
     if (categoriaFiltro === "Ofertas") {
       resultado = resultado.filter((p) => {
         const precioBase = Number(p.precio_original ?? p.precio_anterior) || 0;
@@ -113,7 +150,7 @@ export default function TiendaPage() {
     }
 
     return resultado;
-  }, [productos, busqueda, categoriaFiltro]);
+  }, [productos, busqueda, categoriaFiltro, tagSeleccionado]);
 
   // Lógica de Ordenamiento
   const productosOrdenados = useMemo(() => {
@@ -145,6 +182,7 @@ export default function TiendaPage() {
     setBusqueda("");
     setCategoriaFiltro("Todos");
     setOrdenarPor("destacados");
+    setTagSeleccionado(null); // Resetea el tag también
   };
 
   return (
@@ -197,6 +235,13 @@ export default function TiendaPage() {
         {/* Contenido Principal */}
         <div className="mx-auto max-w-[1150px] px-4 pb-28 pt-4 sm:px-10 sm:pb-16">
           <BannerCarousel />
+
+          {/* 3. Componente de Tags Inteligentes justo debajo del banner */}
+          <TagsFiltros
+            tags={tags}
+            tagSeleccionado={tagSeleccionado}
+            onSelectTag={(slug) => setTagSeleccionado(slug)}
+          />
 
           <BuscadorYCategorias
             busqueda={busqueda}
