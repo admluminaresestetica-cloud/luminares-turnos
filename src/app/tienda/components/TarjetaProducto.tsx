@@ -51,15 +51,23 @@ export default function TarjetaProducto({
       onClick={() => onVerDetalle && onVerDetalle(producto)}
       className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white p-2.5 sm:p-3.5 shadow-sm transition-all hover:shadow-md cursor-pointer"
     >
-      {/* Badge de Porcentaje OFF */}
-      {tieneOferta && !sinStock && (
-        <span className="absolute top-4 right-4 z-10 rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
-          {porcentajeDescuento}% OFF
-        </span>
-      )}
-
       {/* Imagen del Producto */}
       <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[#F7F7F5] flex items-center justify-center">
+        
+        {/* Badge: 🔥 ¡Últimas unidades! */}
+        {producto.mostrar_ultimas_unidades && !sinStock && (
+          <span className="absolute top-2 left-2 z-20 rounded-md bg-[#D97706] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
+            🔥 ¡Últimas unidades!
+          </span>
+        )}
+
+        {/* Badge: Porcentaje OFF */}
+        {tieneOferta && !sinStock && (
+          <span className="absolute top-2 right-2 z-20 rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
+            {porcentajeDescuento}% OFF
+          </span>
+        )}
+
         {producto.imagen_url ? (
           <img
             src={producto.imagen_url}
@@ -71,7 +79,7 @@ export default function TarjetaProducto({
         )}
 
         {sinStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
             <span className="rounded-md bg-white/90 px-2 py-1 text-[10px] sm:text-[11px] font-bold text-[#12151B]">
               Sin Stock
             </span>
