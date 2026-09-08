@@ -1,6 +1,7 @@
 "use client";
 
-import { Search, X, Flame, ArrowUpDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Search, X, Flame, ArrowUpDown, Check } from "lucide-react";
 
 interface BuscadorYCategoriasProps {
   busqueda: string;
@@ -12,6 +13,13 @@ interface BuscadorYCategoriasProps {
   onOrdenarChange: (val: string) => void;
 }
 
+const OpcionesOrden = [
+  { id: "destacados", label: "Destacados" },
+  { id: "precio-asc", label: "Precio: Menor a Mayor" },
+  { id: "precio-desc", label: "Precio: Mayor a Menor" },
+  { id: "descuento", label: "Mayor Descuento" },
+];
+
 export default function BuscadorYCategorias({
   busqueda,
   onBusquedaChange,
@@ -21,11 +29,26 @@ export default function BuscadorYCategorias({
   ordenarPor,
   onOrdenarChange,
 }: BuscadorYCategoriasProps) {
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const esOfertasActivo = categoriaSeleccionada === "Ofertas";
+  const opcionActual = OpcionesOrden.find((o) => o.id === ordenarPor)?.label || "Ordenar";
+
+  // Cerrar el menú si se hace click fuera
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuAbierto(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="relative mb-8 space-y-4">
-      {/* Fila Superior: Buscador y Filtro de Orden */}
+      {/* Fila Superior: Buscador y Filtro de Orden Personalizado */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         {/* Buscador de Productos */}
         <div className="group relative flex-1 w-full">
@@ -49,27 +72,52 @@ export default function BuscadorYCategorias({
           )}
         </div>
 
-        {/* Selector de Ordenamiento */}
-        <div className="relative w-full sm:w-auto shrink-0">
-          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-xs hover:border-slate-300">
-            <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
-            <select
-              value={ordenarPor}
-              onChange={(e) => onOrdenarChange(e.target.value)}
-              className="w-full bg-transparent font-medium text-slate-700 outline-none cursor-pointer text-xs sm:text-sm pr-1"
-            >
-              <option value="destacados">Destacados</option>
-              <option value="precio-asc">Precio: Menor a Mayor</option>
-              <option value="precio-desc">Precio: Mayor a Menor</option>
-              <option value="descuento">Mayor Descuento</option>
-            </select>
-          </div>
+        {/* Botón y Menú Desplegable de Orden Personalizado (Estilo App) */}
+        <div className="relative w-full sm:w-auto shrink-0" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuAbierto(!menuAbierto)}
+            className="flex w-full sm:w-auto items-center justify-between gap-2.5 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 shadow-xs hover:border-slate-300 cursor-pointer transition-all active:scale-98"
+          >
+            <span className="flex items-center gap-2">
+              <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+              <span className="font-medium text-xs sm:text-sm text-slate-800">{opcionActual}</span>
+            </span>
+          </button>
+
+          {/* Menú Flotante Estilo App */}
+          {menuAbierto && (
+            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto mt-2 w-full sm:w-64 rounded-2xl border border-slate-100 bg-white p-2 shadow-xl shadow-slate-900/10 z-50 animate-[fadeIn_0.15s_ease-out]">
+              <div className="flex flex-col gap-1">
+                {OpcionesOrden.map((op) => {
+                  const seleccionado = ordenarPor === op.id;
+                  return (
+                    <button
+                      key={op.id}
+                      type="button"
+                      onClick={() => {
+                        onOrdenarChange(op.id);
+                        setMenuAbierto(false);
+                      }}
+                      className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs sm:text-sm font-medium transition-all cursor-pointer ${
+                        seleccionado
+                          ? "bg-slate-900 text-white font-semibold"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span>{op.label}</span>
+                      {seleccionado && <Check className="h-4 w-4 text-white" strokeWidth={2.5} />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Fila Inferior: Tira Horizontal Desplazable de Categorías (Estilo Mercado Libre) */}
+      {/* Fila Inferior: Tira Horizontal Desplazable de Categorías */}
       <div className="no-scrollbar flex w-full items-center gap-2 overflow-x-auto scroll-smooth py-1 font-medium text-xs sm:text-sm">
-        {/* Opción 'Ver todo' */}
         <button
           type="button"
           onClick={() => onCategoriaSelect("Todos")}
@@ -82,7 +130,6 @@ export default function BuscadorYCategorias({
           Ver todo
         </button>
 
-        {/* Opción 'Ofertas' */}
         <button
           type="button"
           onClick={() => onCategoriaSelect(esOfertasActivo ? "Todos" : "Ofertas")}
@@ -96,7 +143,6 @@ export default function BuscadorYCategorias({
           <span>Ofertas</span>
         </button>
 
-        {/* Mapeo dinámico de Categorías de la Base de Datos */}
         {categorias
           .filter((cat) => cat !== "Todos" && cat !== "Ofertas")
           .map((cat) => {
