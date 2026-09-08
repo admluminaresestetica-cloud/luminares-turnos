@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
-import { redirect } from "next/navigation";
+import RedireccionarTienda from "./RedireccionarTienda";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -10,7 +10,7 @@ interface Props {
   params: { id: string };
 }
 
-// 1. Metadatos dinámicos que lee el bot de WhatsApp
+// 1. Metadatos dinámicos que lee el bot de WhatsApp (Servidor)
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = params;
 
@@ -30,6 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const titulo = `${producto.nombre} - $${producto.precio.toLocaleString("es-AR")}`;
   const descripcion = producto.descripcion || "¡Mirá este producto en Luminares Tienda Oficial!";
   const imagen = producto.imagen_url || "https://www.mireservalumin.com.ar/og-image.jpg";
+  const urlFinal = `https://www.mireservalumin.com.ar/tienda/producto/${id}`;
 
   return {
     title: titulo,
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: titulo,
       description: descripcion,
-      url: `https://www.mireservalumin.com.ar/tienda/producto/${id}`,
+      url: urlFinal,
       siteName: "Luminares Tienda",
       images: [
         {
@@ -58,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// 2. Redirección automática del usuario a la tienda abriendo el modal
+// 2. Componente de servidor que renderiza las etiquetas y delega la redirección al cliente
 export default function ProductoPage({ params }: Props) {
-  redirect(`/tienda?producto=${params.id}`);
+  return <RedireccionarTienda productoId={params.id} />;
 }
