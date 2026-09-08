@@ -14,6 +14,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+const MONTO_ENVIO_GRATIS = 25000;
+
 interface CarritoDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -32,7 +34,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     const status = searchParams.get("status");
     if (status === "success") {
       setMostrarModalExito(true);
-      // Limpia los parámetros de la URL para evitar que se reabra al recargar
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [searchParams]);
@@ -52,6 +53,11 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   // Monto base
   const totalPrecio = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+
+  // Cálculos de Envío Gratis
+  const faltaParaEnvioGratis = Math.max(0, MONTO_ENVIO_GRATIS - totalPrecio);
+  const porcentajeProgreso = Math.min(100, (totalPrecio / MONTO_ENVIO_GRATIS) * 100);
+  const tieneEnvioGratis = totalPrecio >= MONTO_ENVIO_GRATIS;
 
   // Recargo por tarjeta / MP (10%)
   const PORCENTAJE_RECARGO = 0.10;
@@ -226,6 +232,30 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                 <span className="text-lg leading-none">✕</span>
               </button>
             </div>
+
+            {/* Barra de Envío Gratis */}
+            {carrito.length > 0 && (
+              <div className="border-b border-[#E7E5E0] bg-[#0E6E55]/5 px-5 py-3">
+                <div className="flex items-center justify-between text-xs font-semibold text-[#12151B] mb-1.5">
+                  {tieneEnvioGratis ? (
+                    <span className="text-[#0E6E55] font-bold flex items-center gap-1">
+                       ¡Genial! Tenés ENVÍO GRATIS
+                    </span>
+                  ) : (
+                    <span>
+                      Te faltan <strong className="text-[#0E6E55]">${faltaParaEnvioGratis.toLocaleString("es-AR")}</strong> para **ENVÍO GRATIS**
+                    </span>
+                  )}
+                  <span className="text-[10px] text-gray-500 font-bold">{Math.round(porcentajeProgreso)}%</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-[#E7E5E0]">
+                  <div
+                    className="h-full bg-[#0E6E55] transition-all duration-500 ease-out rounded-full"
+                    style={{ width: `${porcentajeProgreso}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Lista de Productos */}
             <div className="flex-1 px-5 py-4">

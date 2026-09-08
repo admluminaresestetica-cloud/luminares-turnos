@@ -10,6 +10,7 @@ import BannerCarousel from "./components/BannerCarousel";
 import FooterTienda from "@/components/FooterTienda";
 import { useCarrito } from "@/context/CarritoContext";
 import { Producto } from "@/types/tienda";
+import BotonFlotanteCarrito from "./components/BotonFlotanteCarrito";
 
 // Componentes modularizados
 import BuscadorYCategorias from "./components/BuscadorYCategorias";
@@ -211,30 +212,8 @@ export default function TiendaPage() {
           onClose={() => setModalAbierto(false)}
         />
 
-        {/* Botón Flotante para Celulares: Solo visible cuando totalItems > 0 */}
-        {totalItems > 0 && (
-          <div className="fixed bottom-5 right-4 left-4 z-40 sm:hidden animate-in slide-in-from-bottom-5 duration-300">
-            <button
-              onClick={() => setModalAbierto(true)}
-              className="flex w-full items-center justify-between rounded-2xl bg-[#12151B]/95 p-4 text-sm font-bold text-white shadow-2xl backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer border border-white/10"
-            >
-              <div className="flex items-center gap-3">
-                <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-[#0E6E55]">
-                  <ShoppingBag className="h-4 w-4 text-white" />
-                  <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-extrabold text-[#12151B]">
-                    {totalItems}
-                  </span>
-                </div>
-                <span className="font-semibold tracking-wide">Ver Mi Carrito</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-emerald-400">Abrir</span>
-                <span className="text-slate-400">→</span>
-              </div>
-            </button>
-          </div>
-        )}
+        {/* Botón Flotante para Celulares */}
+        <BotonFlotanteCarrito onOpenCarrito={() => setModalAbierto(true)} />
       </div>
 
       <FooterTienda />

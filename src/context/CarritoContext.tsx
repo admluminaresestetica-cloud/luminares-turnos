@@ -32,7 +32,7 @@ interface CarritoContextType {
   setDatosEnvio: React.Dispatch<React.SetStateAction<DatosEnvio>>;
   agregarAlCarrito: (producto: Producto) => void;
   restarDelCarrito: (id: number | string) => void;
-  restarUnidad: (id: number | string) => void; // <-- Agregado para compatibilidad
+  restarUnidad: (id: number | string) => void;
   eliminarDelCarrito: (id: number | string) => void;
   vaciarCarrito: () => void;
   total: number;
@@ -42,6 +42,7 @@ const CarritoContext = createContext<CarritoContextType | undefined>(undefined);
 
 export function CarritoProvider({ children }: { children: React.ReactNode }) {
   const [carrito, setCarrito] = useState<CarritoItem[]>([]);
+  const [cargado, setCargado] = useState(false); // Bandera para evitar sobrescribir al iniciar
   const [datosEnvio, setDatosEnvio] = useState<DatosEnvio>({
     nombreCliente: "",
     telefonoCliente: "",
@@ -50,7 +51,7 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
     notaAdicional: "",
   });
 
-  // Cargar carrito desde localStorage
+  // 1. Cargar carrito desde localStorage en la primera carga
   useEffect(() => {
     const guardado = localStorage.getItem("luminares_carrito");
     if (guardado) {
@@ -60,12 +61,15 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
         console.error("Error al cargar el carrito:", e);
       }
     }
+    setCargado(true); // Marcamos que la lectura inicial ya se realizó
   }, []);
 
-  // Guardar carrito en localStorage
+  // 2. Guardar en localStorage solo DESPUÉS de haber cargado el estado inicial
   useEffect(() => {
-    localStorage.setItem("luminares_carrito", JSON.stringify(carrito));
-  }, [carrito]);
+    if (cargado) {
+      localStorage.setItem("luminares_carrito", JSON.stringify(carrito));
+    }
+  }, [carrito, cargado]);
 
   const agregarAlCarrito = (producto: Producto) => {
     if (producto.activo === false) {
@@ -130,7 +134,7 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
         setDatosEnvio,
         agregarAlCarrito,
         restarDelCarrito,
-        restarUnidad: restarDelCarrito, // <-- Mapeado aquí para CarritoDrawer.tsx
+        restarUnidad: restarDelCarrito,
         eliminarDelCarrito,
         vaciarCarrito,
         total,

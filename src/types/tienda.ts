@@ -10,7 +10,8 @@ export interface Producto {
   categoria_id?: string;
   categoria?: string;
   activo?: boolean;
-  cantidad?: number; 
+  cantidad?: number;
+  mostrar_ultimas_unidades?: boolean; // <- Nuevo campo
 }
 
 export interface CarritoItem extends Producto {
