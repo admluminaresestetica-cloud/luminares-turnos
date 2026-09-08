@@ -5,6 +5,7 @@ import Image from "next/image";
 import { X, Plus, Minus, ShoppingBag, Sparkles, Share2 } from "lucide-react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
+import AcordeonFAQ from "./AcordeonFAQ";
 
 interface ModalDetalleProductoProps {
   producto: Producto | null;
@@ -77,9 +78,8 @@ export default function ModalDetalleProducto({
     ? Math.round(((precioOriginal - producto.precio) / precioOriginal) * 100)
     : 0;
 
-    // Función para Compartir Enlace Inteligente
+  // Función para Compartir Enlace Inteligente
   const handleCompartir = async () => {
-    // Armamos la URL con el parámetro 'producto' e ID único
     const urlProducto = `${window.location.origin}${window.location.pathname}?producto=${producto.id}`;
 
     const shareData = {
@@ -94,8 +94,7 @@ export default function ModalDetalleProducto({
       } catch (err) {
         console.log("Error al compartir:", err);
       }
-        } else {
-      // Fallback si la Web Share API no está disponible en PC/navegador antiguo
+    } else {
       try {
         await navigator.clipboard.writeText(urlProducto);
         alert("¡Enlace del producto copiado al portapapeles!");
@@ -103,7 +102,6 @@ export default function ModalDetalleProducto({
         console.error("Error al copiar enlace:", err);
       }
     }
-
   };
 
   const handleAgregarPrincipal = () => {
@@ -261,7 +259,7 @@ export default function ModalDetalleProducto({
               </p>
 
               {producto.descripcion && (
-                <p className="mt-4 text-sm text-slate-600 leading-relaxed">
+                <p className="mt-4 text-xs sm:text-sm text-slate-600 leading-relaxed">
                   {producto.descripcion}
                 </p>
               )}
@@ -339,6 +337,9 @@ export default function ModalDetalleProducto({
             </div>
           </div>
         </div>
+
+        {/* Componente Modular de FAQ */}
+        <AcordeonFAQ />
 
         {/* Sección Cross-Selling con Controles Inteligentes */}
         {productosRelacionados.length > 0 && (
