@@ -3,6 +3,7 @@
 import React from "react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
+import { Plus, Minus } from "lucide-react";
 
 interface TarjetaProductoProps {
   producto: Producto;
@@ -15,6 +16,8 @@ export default function TarjetaProducto({
 }: TarjetaProductoProps) {
   const context = useCarrito();
   const agregarAlCarrito = context?.agregarAlCarrito;
+  const actualizarCantidad = (context as any)?.actualizarCantidad;
+  const eliminarDelCarrito = (context as any)?.eliminarDelCarrito;
   const items = context?.items || context?.carrito || [];
 
   const stockDisponible = producto.stock ?? 0;
@@ -45,6 +48,29 @@ export default function TarjetaProducto({
   const precioOriginalFormateado = tieneOferta
     ? new Intl.NumberFormat("es-AR").format(precioBaseNum)
     : null;
+
+  // Handlers para sumar y restar desde la tarjeta
+  const handleRestar = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (cantidadEnCarrito > 1 && actualizarCantidad) {
+      actualizarCantidad(producto.id, cantidadEnCarrito - 1);
+    } else if (eliminarDelCarrito) {
+      eliminarDelCarrito(producto.id);
+    } else if (actualizarCantidad) {
+      actualizarCantidad(producto.id, 0);
+    }
+  };
+
+  const handleSumar = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!limiteAlcanzado) {
+      if (cantidadEnCarrito > 0 && actualizarCantidad) {
+        actualizarCantidad(producto.id, cantidadEnCarrito + 1);
+      } else if (agregarAlCarrito) {
+        agregarAlCarrito(producto);
+      }
+    }
+  };
 
   return (
     <div
@@ -104,39 +130,56 @@ export default function TarjetaProducto({
           </p>
         </div>
 
-        {/* Botón adaptativo */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!sinStock && !limiteAlcanzado && agregarAlCarrito) {
-              (agregarAlCarrito as any)({
-                ...producto,
-                cantidad: 1,
-              });
-            }
-          }}
-          disabled={sinStock || limiteAlcanzado}
-          className={`w-full py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-            sinStock || limiteAlcanzado
-              ? "bg-[#E7E5E0] text-[#6B675F] cursor-not-allowed opacity-80"
-              : "bg-[#12151B] text-white hover:bg-[#0E6E55] active:scale-[0.97]"
-          }`}
-        >
-          <span>🛒</span>
-          <span>
-            {sinStock
-              ? "Agotado"
-              : limiteAlcanzado
-              ? "Máximo alcanzado"
-              : "Agregar"}
-          </span>
+        {/* Botón Adaptativo / Control - y + */}
+        {sinStock ? (
+          <button
+            disabled
+            className="w-full py-2 px-2 rounded-xl text-xs font-bold bg-[#E7E5E0] text-[#6B675F] cursor-not-allowed opacity-80"
+          >
+            Agotado
+          </button>
+        ) : cantidadEnCarrito === 0 ? (
+          <button
+            onClick={handleSumar}
+            className="w-full py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-[#12151B] text-white hover:bg-[#0E6E55] active:scale-[0.97]"
+          >
+            <span>🛒</span>
+            <span>Agregar</span>
+          </button>
+        ) : (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center justify-between w-full rounded-xl border border-[#0E6E55]/30 bg-[#0E6E55]/5 p-1"
+          >
+            {/* Botón Restar */}
+            <button
+              onClick={handleRestar}
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-[#0E6E55] shadow-sm hover:bg-[#0E6E55] hover:text-white transition-all cursor-pointer"
+              title="Restar una unidad"
+            >
+              <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
+            </button>
 
-          {cantidadEnCarrito > 0 && !sinStock && (
-            <span className="ml-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0E6E55] px-1 text-[10px] font-extrabold text-white">
-              {cantidadEnCarrito}
+            {/* Cantidad Actual */}
+            <span className="text-xs font-extrabold text-[#0E6E55] px-1">
+              {cantidadEnCarrito} en carrito
             </span>
-          )}
-        </button>
+
+            {/* Botón Sumar */}
+            <button
+              onClick={handleSumar}
+              disabled={limiteAlcanzado}
+              className={`flex h-7 w-7 items-center justify-center rounded-lg transition-all ${
+                limiteAlcanzado
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-[#0E6E55] text-white hover:bg-[#0b5944] cursor-pointer shadow-sm"
+              }`}
+              title={limiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
+            >
+              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
