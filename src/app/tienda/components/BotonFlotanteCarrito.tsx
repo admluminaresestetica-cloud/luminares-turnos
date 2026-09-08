@@ -25,7 +25,6 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
     : 0;
 
   const faltaParaEnvioGratis = Math.max(0, MONTO_ENVIO_GRATIS - totalPrecio);
-  const porcentajeProgreso = Math.min(100, (totalPrecio / MONTO_ENVIO_GRATIS) * 100);
   const tieneEnvioGratis = totalPrecio >= MONTO_ENVIO_GRATIS;
 
   return (
@@ -34,7 +33,7 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
         onClick={onOpenCarrito}
         className="flex w-full items-center justify-between rounded-2xl bg-[#12151B] px-4 py-3 text-white shadow-xl shadow-black/20 backdrop-blur-md active:scale-95 transition-all duration-200 cursor-pointer border border-white/10"
       >
-        {/* Lado izquierdo: Ícono con contador y texto de envío */}
+        {/* Lado izquierdo: Ícono con contador y texto explicativo */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0E6E55]">
             <ShoppingBag className="h-5 w-5 text-white" />
@@ -44,15 +43,15 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
           </div>
 
           <div className="flex flex-col text-left min-w-0">
-            <span className="text-[11px] font-medium text-slate-300 truncate">
-              {tieneEnvioGratis ? (
-                <span className="text-emerald-400 font-bold">¡Envío gratis desbloqueado!</span>
-              ) : (
-                <>Te faltan <strong className="text-white">${faltaParaEnvioGratis.toLocaleString("es-AR")}</strong></>
-              )}
-            </span>
             <span className="text-xs font-bold text-white tracking-wide">
-              Ver Carrito
+              Ver Mi Carrito ({totalItems} {totalItems === 1 ? 'prod.' : 'prods.'})
+            </span>
+            <span className="text-[10px] font-medium text-slate-300 truncate">
+              {tieneEnvioGratis ? (
+                <span className="text-emerald-400 font-bold">✨ ¡Envío gratis conseguido!</span>
+              ) : (
+                <span>Faltan <strong className="text-white">${faltaParaEnvioGratis.toLocaleString("es-AR")}</strong> para envío gratis</span>
+              )}
             </span>
           </div>
         </div>
