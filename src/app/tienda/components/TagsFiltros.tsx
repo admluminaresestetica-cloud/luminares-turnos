@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Tag } from 'lucide-react';
 
 interface TagBusqueda {
   id: string;
@@ -18,46 +19,50 @@ export default function TagsFiltros({ tags, tagSeleccionado, onSelectTag }: Tags
   if (!tags || tags.length === 0) return null;
 
   return (
-    <div className="w-full overflow-x-auto no-scrollbar py-2 mb-4">
-      <div className="flex items-center gap-2 px-1">
-        {/* Acceso directo: catálogo completo */}
+    <div className="w-full overflow-x-auto no-scrollbar py-3 mb-3">
+      <div className="flex items-center gap-3 px-1">
+        
+        {/* Botón inicial "Todo" */}
         <button
           onClick={() => onSelectTag(null)}
-          className={`group relative whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-bold cursor-pointer
-            transition-all duration-300 ease-out
-            hover:-translate-y-0.5 active:translate-y-0
-            ${
-              tagSeleccionado === null
-                ? 'text-white shadow-md shadow-black/10 bg-gradient-to-br from-[#22252D] to-[#12151B] scale-[1.03]'
-                : 'text-[#12151B] bg-gradient-to-br from-[#FDFDFC] to-[#F1F0EC] border border-[#E7E5E0] hover:border-[#12151B]/20 hover:shadow-sm'
-            }`}
+          className={`flex flex-col items-center justify-center min-w-[76px] h-[76px] p-2 rounded-2xl transition-all duration-200 shrink-0 cursor-pointer border ${
+            tagSeleccionado === null
+              ? 'bg-[#12151B] text-white border-[#12151B] shadow-md scale-105'
+              : 'bg-white text-gray-700 border-[#E7E5E0] hover:border-gray-300 hover:bg-gray-50 shadow-2xs'
+          }`}
         >
-          <span className="relative z-10 inline-flex items-center gap-1.5">
-            <span className="text-[13px] leading-none">⚡</span>
-            Destacados
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${
+            tagSeleccionado === null ? 'bg-white/10 text-amber-400' : 'bg-[#F7F7F5] text-[#0E6E55]'
+          }`}>
+            <Tag className="w-4 h-4" />
+          </div>
+          <span className="text-[11px] font-bold tracking-tight text-center truncate w-full">
+            Todo
           </span>
         </button>
 
-        {/* Separador sutil entre accesos directos y tags */}
-        <span className="h-4 w-px bg-[#E7E5E0] mx-0.5 shrink-0" />
-
-        {/* Tags dinámicos */}
+        {/* Tags Dinámicos */}
         {tags.map((tag) => {
           const estaActivo = tagSeleccionado === tag.slug;
+
           return (
             <button
               key={tag.id}
               onClick={() => onSelectTag(estaActivo ? null : tag.slug)}
-              className={`relative whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-bold cursor-pointer
-                transition-all duration-300 ease-out
-                hover:-translate-y-0.5 active:translate-y-0
-                ${
-                  estaActivo
-                    ? 'text-white shadow-md shadow-black/10 bg-gradient-to-br from-[#22252D] to-[#12151B] scale-[1.03]'
-                    : 'text-[#3A3D45] bg-[#F7F7F5] border border-[#E7E5E0] hover:border-[#12151B]/20 hover:bg-[#F1F0EC] hover:shadow-sm'
-                }`}
+              className={`flex flex-col items-center justify-center min-w-[76px] h-[76px] p-2 rounded-2xl transition-all duration-200 shrink-0 cursor-pointer border ${
+                estaActivo
+                  ? 'bg-[#12151B] text-white border-[#12151B] shadow-md scale-105'
+                  : 'bg-white text-gray-700 border-[#E7E5E0] hover:border-gray-300 hover:bg-gray-50 shadow-2xs'
+              }`}
             >
-              {tag.nombre}
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-1 ${
+                estaActivo ? 'bg-white/10 text-amber-400' : 'bg-[#F7F7F5] text-[#0E6E55]'
+              }`}>
+                <Tag className="w-4 h-4" />
+              </div>
+              <span className="text-[11px] font-bold tracking-tight text-center truncate w-full">
+                {tag.nombre}
+              </span>
             </button>
           );
         })}
