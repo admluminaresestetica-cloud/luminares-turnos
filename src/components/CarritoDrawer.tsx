@@ -243,8 +243,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     </span>
                   ) : (
                     <span>
-                      Te faltan <strong className="text-[#0E6E55]">${faltaParaEnvioGratis.toLocaleString("es-AR")}</strong> para **ENVÍO GRATIS**
-                    </span>
+  Te faltan <strong className="text-[#0E6E55]">${faltaParaEnvioGratis.toLocaleString("es-AR")}</strong> para <strong>ENVÍO GRATIS</strong>
+</span>
+
                   )}
                   <span className="text-[10px] text-gray-500 font-bold">{Math.round(porcentajeProgreso)}%</span>
                 </div>
