@@ -1,4 +1,4 @@
- "use client";
+"use client";
 import { useState, useEffect } from "react";
 
 interface FormularioProductoProps {
@@ -24,6 +24,7 @@ export default function FormularioProducto({
   const [categoria, setCategoria] = useState("");
   const [imagenUrl, setImagenUrl] = useState("");
   const [imagenFile, setImagenFile] = useState<File | null>(null);
+  const [mostrarUltimasUnidades, setMostrarUltimasUnidades] = useState(false); // <- Nuevo estado
   const [cargando, setCargando] = useState(false);
 
   // Cargar datos si estamos editando
@@ -36,6 +37,7 @@ export default function FormularioProducto({
       setStock(productoEditando.stock || "");
       setCategoria(productoEditando.categoria || "");
       setImagenUrl(productoEditando.imagen_url || "");
+      setMostrarUltimasUnidades(productoEditando.mostrar_ultimas_unidades || false);
       setImagenFile(null);
     } else {
       limpiarFormulario();
@@ -50,6 +52,7 @@ export default function FormularioProducto({
     setStock("");
     setCategoria("");
     setImagenUrl("");
+    setMostrarUltimasUnidades(false);
     setImagenFile(null);
   };
 
@@ -70,7 +73,7 @@ export default function FormularioProducto({
       const filePath = `productos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("productos") // Asegúrate de usar el nombre de tu bucket de Supabase
+        .from("productos")
         .upload(filePath, imagenFile);
 
       if (uploadError) {
@@ -96,6 +99,7 @@ export default function FormularioProducto({
       stock: stock ? Number(stock) : 0,
       categoria: categoria || "General",
       imagen_url: finalImagenUrl || null,
+      mostrar_ultimas_unidades: mostrarUltimasUnidades, // <- Incluido al guardar
     };
 
     let error;
@@ -200,6 +204,20 @@ export default function FormularioProducto({
               </option>
             ))}
           </select>
+        </div>
+
+        {/* Checkbox de Últimas Unidades */}
+        <div className="sm:col-span-2 flex items-center gap-3 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3">
+          <input
+            type="checkbox"
+            id="mostrarUltimasUnidades"
+            checked={mostrarUltimasUnidades}
+            onChange={(e) => setMostrarUltimasUnidades(e.target.checked)}
+            className="h-4 w-4 rounded accent-[#0E6E55] cursor-pointer"
+          />
+          <label htmlFor="mostrarUltimasUnidades" className="text-xs font-medium text-[#12151B] cursor-pointer">
+            🔥 Mostrar distintivo <span className="font-bold text-[#D97706]">"¡Últimas unidades!"</span> en la tarjeta del producto
+          </label>
         </div>
 
         {/* Carga de Imagen al Bucket */}
