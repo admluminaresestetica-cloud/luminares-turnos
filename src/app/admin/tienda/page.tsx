@@ -8,6 +8,7 @@ import PedidosTab, { Pedido } from "./components/PedidosTab";
 import MetricasHeader from "./components/MetricasHeader";
 import CategoriasTab from "./components/CategoriasTab";
 import BannersTab from "./components/BannersTab";
+import TagsTab from "./components/TagsTab"; // <--- 1. Importamos el componente de Tags
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,7 +16,8 @@ const supabase = createClient(
 );
 
 export default function AdminTiendaPage() {
-  const [activeTab, setActiveTab] = useState<"catalogo" | "pedidos" | "banners">("catalogo");
+  // 2. Agregamos "tags" al tipo de pestaña activa
+  const [activeTab, setActiveTab] = useState<"catalogo" | "pedidos" | "banners" | "tags">("catalogo");
   const [mounted, setMounted] = useState(false);
 
   // Estados de datos
@@ -191,18 +193,11 @@ export default function AdminTiendaPage() {
     setProcesandoPedidoId(null);
   };
 
-  // NUEVO: Handler para eliminar pedidos definitivamente de la base de datos
   const handleEliminarPedido = async (pedidoId: string) => {
     try {
-      // 1. Borrar los ítems asociados primero por la relación de llave foránea
       await supabase.from("pedido_items").delete().eq("pedido_id", pedidoId);
-
-      // 2. Borrar el pedido principal
       const { error } = await supabase.from("pedidos").delete().eq("id", pedidoId);
-
       if (error) throw error;
-
-      // 3. Actualizar la lista localmente
       setPedidos(pedidos.filter((p) => p.id !== pedidoId));
     } catch (error) {
       console.error("Error al eliminar el pedido:", error);
@@ -290,6 +285,18 @@ export default function AdminTiendaPage() {
           >
             🖼️ Banners Promocionales
           </button>
+
+          {/* 3. Botón de la pestaña Tags de Búsqueda */}
+          <button
+            onClick={() => setActiveTab("tags")}
+            className={`pb-3 text-sm font-bold transition-colors ${
+              activeTab === "tags"
+                ? "border-b-2 border-[#0E6E55] text-[#0E6E55]"
+                : "text-[#6B675F] hover:text-[#12151B]"
+            }`}
+          >
+            🏷️ Tags de Búsqueda
+          </button>
         </div>
 
         {/* Tab 1: Catálogo y Stock */}
@@ -338,6 +345,9 @@ export default function AdminTiendaPage() {
 
         {/* Tab 3: Banners Promocionales */}
         {activeTab === "banners" && <BannersTab />}
+
+        {/* Tab 4: Tags de Búsqueda */}
+        {activeTab === "tags" && <TagsTab />}
       </div>
     </div>
   );
