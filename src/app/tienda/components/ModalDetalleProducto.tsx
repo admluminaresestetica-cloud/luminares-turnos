@@ -77,12 +77,15 @@ export default function ModalDetalleProducto({
     ? Math.round(((precioOriginal - producto.precio) / precioOriginal) * 100)
     : 0;
 
-  // Función para Compartir Enlace Inteligente
+    // Función para Compartir Enlace Inteligente
   const handleCompartir = async () => {
+    // Armamos la URL con el parámetro 'producto' e ID único
+    const urlProducto = `${window.location.origin}${window.location.pathname}?producto=${producto.id}`;
+
     const shareData = {
       title: producto.nombre,
       text: `¡Mirá este producto en Luminares! ${producto.nombre} a $${producto.precio.toLocaleString("es-AR")}`,
-      url: window.location.href,
+      url: urlProducto,
     };
 
     if (navigator.share) {
@@ -91,15 +94,16 @@ export default function ModalDetalleProducto({
       } catch (err) {
         console.log("Error al compartir:", err);
       }
-    } else {
+        } else {
       // Fallback si la Web Share API no está disponible en PC/navegador antiguo
       try {
-        await navigator.clipboard.writeText(window.location.href);
-        alert("¡Enlace copiado al portapapeles!");
+        await navigator.clipboard.writeText(urlProducto);
+        alert("¡Enlace del producto copiado al portapapeles!");
       } catch (err) {
         console.error("Error al copiar enlace:", err);
       }
     }
+
   };
 
   const handleAgregarPrincipal = () => {
