@@ -3,10 +3,10 @@
 import React from "react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Flame } from "lucide-react";
 
 interface TarjetaProductoProps {
-  producto: Producto;
+  producto: Producto & { mostrar_ultimas_unidades?: boolean; stock_minimo_aviso?: number };
   onVerDetalle?: (producto: Producto) => void;
 }
 
@@ -22,6 +22,12 @@ export default function TarjetaProducto({
 
   const stockDisponible = producto.stock ?? 0;
   const sinStock = stockDisponible <= 0;
+
+  // Lógica para el distintivo de últimas unidades (activado desde el panel o por stock bajo ej. menor o igual a 3 o 5)
+  const stockMinimoAviso = producto.stock_minimo_aviso ?? 3;
+  const esUltimasUnidades = 
+    !sinStock && 
+    (producto.mostrar_ultimas_unidades || stockDisponible <= stockMinimoAviso);
 
   const itemEnCarrito = Array.isArray(items) 
     ? items.find((item: any) => item.id === producto.id) 
@@ -80,12 +86,19 @@ export default function TarjetaProducto({
       onClick={() => onVerDetalle && onVerDetalle(producto)}
       className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white p-2.5 sm:p-3.5 shadow-sm transition-all hover:shadow-md cursor-pointer"
     >
-      {/* Badge de Porcentaje OFF */}
-      {tieneOferta && !sinStock && (
-        <span className="absolute top-4 right-4 z-10 rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
-          {porcentajeDescuento}% OFF
-        </span>
-      )}
+      {/* Badges superiores (Descuento u Últimas unidades) */}
+      <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1 pointer-events-none">
+        {tieneOferta && !sinStock && (
+          <span className="rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
+            {porcentajeDescuento}% OFF
+          </span>
+        )}
+        {esUltimasUnidades && (
+          <span className="flex items-center gap-1 rounded-md bg-amber-500 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm animate-pulse">
+            <Flame className="h-3 w-3" /> ¡Últimas unidades!
+          </span>
+        )}
+      </div>
 
       {/* Imagen del Producto */}
       <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[#F7F7F5] flex items-center justify-center">
