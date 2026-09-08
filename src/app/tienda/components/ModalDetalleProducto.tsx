@@ -289,16 +289,17 @@ export default function ModalDetalleProducto({
 
               {/* Botón de Comprar Ahora (Estilo Mercado Libre, Limpio) */}
               <button
-                  onClick={handleComprarAhora}
-                  disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-                  className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all mt-2.5 ${
-                  sinStock || maximoPermitidoParaAgregar <= 0
-                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  : "bg-[#009EE3] text-white hover:bg-[#008AC7] active:scale-[0.98] shadow-md shadow-[#009EE3]/25 cursor-pointer"
-   }`}
-               >
-             <span>Comprar ahora</span>
-             </button>
+  onClick={handleComprarAhora}
+  disabled={sinStock || maximoPermitidoParaAgregar <= 0}
+  className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all mt-2.5 ${
+    sinStock || maximoPermitidoParaAgregar <= 0
+      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+      : "bg-[#12151B] text-white hover:bg-[#12151B]/90 active:scale-[0.98] shadow-md shadow-[#12151B]/10 cursor-pointer"
+  }`}
+>
+  <span>Comprar ahora</span>
+</button>
+
 
             </div>
           </div>
