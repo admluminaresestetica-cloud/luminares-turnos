@@ -41,15 +41,16 @@ export async function POST(request: Request) {
       };
     });
 
-    const { data: pedido, error: errorPedido } = await supabase
+        const { data: pedido, error: errorPedido } = await supabase
       .from("pedidos")
       .insert({
-        cliente_nombre: cliente?.nombre || "Cliente Tienda",
+        nombre_cliente: cliente?.nombre || "Cliente Tienda",
+        telefono_cliente: cliente?.telefono || "",
         cliente_email: cliente?.email || "",
-        cliente_telefono: cliente?.telefono || "",
         total: totalPedido,
         estado: "pendiente",
         items: itemsCarrito,
+        metodo_envio: cliente?.metodoEntrega || "retiro", // Si guardas esto en el cliente
       })
       .select()
       .single();
