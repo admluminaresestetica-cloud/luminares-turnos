@@ -24,7 +24,7 @@ import { getConfiguracionSistema } from '@/lib/supabase/configuracion';
 import { buscarReserva, cancelarReserva } from '@/lib/supabase/reservas';
 import type { Reserva } from '@/lib/types';
 
-// Reemplazá con el número de WhatsApp de tu estética (con código de país sin +)
+// Número de WhatsApp de la estética (con código de país sin +)
 const NUMERO_WHATSAPP = '5493413954355'; 
 
 export default function MisTurnosPage() {
@@ -36,7 +36,7 @@ export default function MisTurnosPage() {
   const [error, setError] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [ventanaHoras, setVentanaHoras] = useState(24);
-  
+
   // Estado para controlar la apertura del modal (pop-up)
   const [modalCancelarOpen, setModalCancelarOpen] = useState(false);
 
@@ -45,23 +45,36 @@ export default function MisTurnosPage() {
     setError(null);
     setMensaje(null);
     setReserva(null);
-    setBuscando(true);
 
-    const [found, config] = await Promise.all([
-      buscarReserva(celular, codigo),
-      getConfiguracionSistema(),
-    ]);
-
-    if (config) setVentanaHoras(config.ventana_horas_cancelacion);
-
-    setBuscando(false);
-
-    if (!found) {
-      setError('No encontramos una reserva con esos datos. Verificá el celular y el código.');
+    // Validación básica previa
+    if (!celular.trim() || !codigo.trim()) {
+      setError('Por favor, completá ambos campos.');
       return;
     }
 
-    setReserva(found);
+    setBuscando(true);
+
+    try {
+      const [found, config] = await Promise.all([
+        buscarReserva(celular, codigo),
+        getConfiguracionSistema(),
+      ]);
+
+      if (config) setVentanaHoras(config.ventana_horas_cancelacion);
+
+      if (!found) {
+        setError('No encontramos una reserva con esos datos. Verificá el celular y el código.');
+        return;
+      }
+
+      setReserva(found);
+    } catch (err) {
+      console.error('Error durante la búsqueda:', err);
+      setError('Ocurrió un inconveniente al consultar el turno. Por favor, reintentá.');
+    } finally {
+      // Garantizamos que el spinner de carga se desactive siempre
+      setBuscando(false);
+    }
   };
 
   const handleCancelar = async () => {
@@ -70,16 +83,21 @@ export default function MisTurnosPage() {
     setError(null);
     setMensaje(null);
 
-    const ok = await cancelarReserva(reserva.id);
-    setCancelando(false);
+    try {
+      const ok = await cancelarReserva(reserva.id);
+      if (!ok) {
+        setError('No pudimos cancelar la reserva. Intentá de nuevo.');
+        return;
+      }
 
-    if (!ok) {
-      setError('No pudimos cancelar la reserva. Intentá de nuevo.');
-      return;
+      setReserva({ ...reserva, estado: 'cancelado' });
+      setMensaje('Tu reserva fue cancelada correctamente.');
+    } catch (err) {
+      console.error('Error al cancelar:', err);
+      setError('Ocurrió un error al procesar la cancelación.');
+    } finally {
+      setCancelando(false);
     }
-
-    setReserva({ ...reserva, estado: 'cancelado' });
-    setMensaje('Tu reserva fue cancelada correctamente.');
   };
 
   const fechaReserva = reserva ? new Date(reserva.fecha_hora_inicio) : null;
@@ -106,7 +124,7 @@ export default function MisTurnosPage() {
   return (
     <main className="min-h-screen bg-slate-100 p-4 sm:p-6 md:p-12 relative">
       <div className="max-w-md mx-auto space-y-6">
-        
+
         {/* Volver */}
         <Link 
           href="/" 
@@ -255,7 +273,7 @@ export default function MisTurnosPage() {
             {/* Acciones para turnos activos */}
             {reserva.estado !== 'cancelado' && (
               <div className="pt-2 space-y-2">
-                
+
                 {/* Opción 1: Reprogramar vía WhatsApp */}
                 <a
                   href={urlWhatsAppReprogramar}
