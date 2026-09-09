@@ -177,12 +177,12 @@ export default function FormConfirmacion({
           <div className="relative">
             <User className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
-              type="text"
-              placeholder="Ej: María González"
-              value={nombre}
-              onChange={(e) => onNombreChange(e.target.value)}
-              className={`w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-[15px] sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all ${styles.focusRing}`}
-            />
+                type="text"
+                placeholder="Ej: María González"
+                value={nombre}
+                onChange={(e) => onNombreChange(e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''))}
+                className={`w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-[15px] sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all ${styles.focusRing}`}
+                 />
           </div>
         </div>
 
@@ -193,12 +193,14 @@ export default function FormConfirmacion({
           <div className="relative">
             <Phone className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
-              type="tel"
-              placeholder="Ej: 3411234567"
-              value={celular}
-              onChange={(e) => onCelularChange(e.target.value)}
-              className={`w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-[15px] sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all ${styles.focusRing}`}
-            />
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="Ej: 3411234567"
+                value={celular}
+                onChange={(e) => onCelularChange(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                className={`w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-[15px] sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all ${styles.focusRing}`}
+               />
           </div>
         </div>
 
