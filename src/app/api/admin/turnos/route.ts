@@ -1,9 +1,33 @@
 import { NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
+import { cookies } from 'next/headers'
 
 export async function GET() {
   try {
-    // Creamos un cliente específico para el servidor usando la Service Role Key (evita bloqueos de RLS)
+    const cookieStore = cookies()
+
+    // 1. Verificamos la sesión del usuario que está haciendo la petición
+    const supabaseAuth = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+        },
+      }
+    )
+
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
+
+    // 2. Si no hay sesión o no está logueado, rechazamos el acceso inmediatamente
+    if (authError || !user) {
+      return NextResponse.json({ error: 'No autorizado. Debe iniciar sesión.' }, { status: 401 })
+    }
+
+    // 3. Si está autenticado, usamos el cliente con Service Role para traer los datos protegidos
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || '',
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
