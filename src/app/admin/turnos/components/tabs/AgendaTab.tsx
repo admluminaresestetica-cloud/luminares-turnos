@@ -1,7 +1,7 @@
 // src/app/admin/turnos/components/tabs/AgendaTab.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Search, CalendarDays, Plus, Gift, CreditCard, Trash2 } from 'lucide-react'
 import ResumenAgenda from '@/app/admin/turnos/components/ResumenAgenda'
 import { Reserva, renderDetalle, renderFechaHora } from '@/app/admin/turnos/components/types';
@@ -46,6 +46,18 @@ export default function AgendaTab({
   onEliminarTurno
 }: AgendaTabProps) {
   const [filtroMedioPago, setFiltroMedioPago] = useState<string>('todos')
+
+  // Referencias para sincronizar los scrolls superior e inferior
+  const topScrollRef = useRef<HTMLDivElement>(null)
+  const bottomScrollRef = useRef<HTMLDivElement>(null)
+
+  const handleScroll = (source: 'top' | 'bottom') => {
+    if (source === 'top' && topScrollRef.current && bottomScrollRef.current) {
+      bottomScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft
+    } else if (source === 'bottom' && topScrollRef.current && bottomScrollRef.current) {
+      topScrollRef.current.scrollLeft = bottomScrollRef.current.scrollLeft
+    }
+  }
 
   const turnosFinales = turnosFiltrados.filter((t) => {
     if (busqueda.trim()) {
@@ -180,128 +192,143 @@ export default function AgendaTab({
           <p className="text-gray-400 text-sm font-medium">No se encontraron reservas con los filtros aplicados.</p>
         </div>
       ) : (
-        /* Envoltorio con scrollbar horizontal interno acotado a la tabla */
-        <div className="w-full overflow-x-auto p-4 sm:p-6">
-          <table className="w-full min-w-[850px] text-left text-sm border-collapse">
-            <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase text-[11px] font-semibold tracking-wider">
-              <tr>
-                <th className="px-4 py-3.5 rounded-l-xl">Código</th>
-                <th className="px-4 py-3.5">Cliente</th>
-                <th className="px-4 py-3.5">Fecha y Hora</th>
-                <th className="px-4 py-3.5">Detalle / Zonas</th>
-                <th className="px-4 py-3.5">Monto</th>
-                <th className="px-4 py-3.5">Estado / Medio Pago</th>
-                <th className="px-4 py-3.5 text-right rounded-r-xl">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {turnosFinales.map((t) => (
-                <tr key={t.id} className="hover:bg-gray-50/60 transition-colors">
-                  <td className="px-4 py-4 font-mono text-xs text-gray-400 whitespace-nowrap">
-                    {t.codigo_unico || '-'}
-                  </td>
-                  <td className="px-4 py-4 font-medium whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-900">{t.cliente_nombre || 'Sin nombre'}</span>
+        <div className="p-4 sm:p-6">
+          {/* BARRA DE SCROLL SUPERIOR */}
+          <div
+            ref={topScrollRef}
+            onScroll={() => handleScroll('top')}
+            className="overflow-x-auto overflow-y-hidden mb-2 h-3.5 bg-gray-50 rounded-lg border border-gray-100"
+          >
+            <div className="min-w-[950px] h-full" />
+          </div>
 
-                      {(t as any).codigo_referido_propio && (
-                        <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold" title="Código de referido propio del cliente">
-                          {(t as any).codigo_referido_propio}
-                        </span>
-                      )}
-
-                      {t.codigo_referido_usado && (
-                        <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-[11px] font-semibold" title="Descuento aplicado con código">
-                          <Gift className="w-3 h-3" />
-                          {t.codigo_referido_usado}
-                        </span>
-                      )}
-                    </div>
-                    {t.cliente_celular && (
-                      <div className="text-xs text-gray-400 mt-0.5">{t.cliente_celular}</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-4 text-xs text-gray-600 whitespace-nowrap">
-                    {renderFechaHora(t.fecha_hora_inicio)}
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="text-xs bg-gray-100 px-2.5 py-1 rounded-lg text-gray-700 font-medium">
-                      {renderDetalle(t)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 font-extrabold text-gray-900 whitespace-nowrap">
-                    ${(Number(t.precio_total) || 0).toLocaleString('es-AR')}
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="flex flex-col items-start gap-1">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-[11px] font-bold capitalize ${
-                          t.estado === 'confirmado'
-                            ? 'bg-blue-100 text-blue-700'
-                            : t.estado === 'completado'
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : t.estado === 'cancelado'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                        }`}
-                      >
-                        {t.estado || 'pendiente'}
-                      </span>
-
-                      {(t.medio_pago || t.tipo_pago_elegido) && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize">
-                          <CreditCard className="w-3 h-3" />
-                          {t.medio_pago || t.tipo_pago_elegido}
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-right whitespace-nowrap">
-                    <div className="inline-flex items-center gap-1.5">
-                      <button
-                        onClick={() => onEditarTurno(t)}
-                        className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-all"
-                      >
-                        Editar
-                      </button>
-                      {t.estado !== 'confirmado' && t.estado !== 'completado' && (
-                        <button
-                          onClick={() => onActualizarEstado(t.id, 'confirmado')}
-                          className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 font-bold transition-all"
-                        >
-                          Confirmar
-                        </button>
-                      )}
-                      {t.estado !== 'completado' && (
-                        <button
-                          onClick={() => onActualizarEstado(t.id, 'completado')}
-                          className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 font-bold transition-all"
-                        >
-                          Completar
-                        </button>
-                      )}
-                      {t.estado !== 'cancelado' && (
-                        <button
-                          onClick={() => onActualizarEstado(t.id, 'cancelado')}
-                          className="text-xs bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-100 font-bold transition-all"
-                        >
-                          Cancelar
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-1"
-                        title="Eliminar reserva permanentemente"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+          {/* TABLA PRINCIPAL */}
+          <div
+            ref={bottomScrollRef}
+            onScroll={() => handleScroll('bottom')}
+            className="w-full overflow-x-auto"
+          >
+            <table className="w-full min-w-[950px] text-left text-sm border-collapse">
+              <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase text-[11px] font-semibold tracking-wider">
+                <tr>
+                  <th className="px-4 py-3.5 rounded-l-xl">Código</th>
+                  <th className="px-4 py-3.5">Cliente</th>
+                  <th className="px-4 py-3.5">Fecha y Hora</th>
+                  <th className="px-4 py-3.5">Detalle / Zonas</th>
+                  <th className="px-4 py-3.5">Monto</th>
+                  <th className="px-4 py-3.5">Estado / Medio Pago</th>
+                  <th className="px-4 py-3.5 text-right rounded-r-xl">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {turnosFinales.map((t) => (
+                  <tr key={t.id} className="hover:bg-gray-50/60 transition-colors">
+                    <td className="px-4 py-4 font-mono text-xs text-gray-400 whitespace-nowrap">
+                      {t.codigo_unico || '-'}
+                    </td>
+                    <td className="px-4 py-4 font-medium whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-900">{t.cliente_nombre || 'Sin nombre'}</span>
+
+                        {(t as any).codigo_referido_propio && (
+                          <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold" title="Código de referido propio del cliente">
+                            {(t as any).codigo_referido_propio}
+                          </span>
+                        )}
+
+                        {t.codigo_referido_usado && (
+                          <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-[11px] font-semibold" title="Descuento aplicado con código">
+                            <Gift className="w-3 h-3" />
+                            {t.codigo_referido_usado}
+                          </span>
+                        )}
+                      </div>
+                      {t.cliente_celular && (
+                        <div className="text-xs text-gray-400 mt-0.5">{t.cliente_celular}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 text-xs text-gray-600 whitespace-nowrap">
+                      {renderFechaHora(t.fecha_hora_inicio)}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="text-xs bg-gray-100 px-2.5 py-1 rounded-lg text-gray-700 font-medium">
+                        {renderDetalle(t)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 font-extrabold text-gray-900 whitespace-nowrap">
+                      ${(Number(t.precio_total) || 0).toLocaleString('es-AR')}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col items-start gap-1">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold capitalize ${
+                            t.estado === 'confirmado'
+                              ? 'bg-blue-100 text-blue-700'
+                              : t.estado === 'completado'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : t.estado === 'cancelado'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          }`}
+                        >
+                          {t.estado || 'pendiente'}
+                        </span>
+
+                        {(t.medio_pago || t.tipo_pago_elegido) && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize">
+                            <CreditCard className="w-3 h-3" />
+                            {t.medio_pago || t.tipo_pago_elegido}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={() => onEditarTurno(t)}
+                          className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-all"
+                        >
+                          Editar
+                        </button>
+                        {t.estado !== 'confirmado' && t.estado !== 'completado' && (
+                          <button
+                            onClick={() => onActualizarEstado(t.id, 'confirmado')}
+                            className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 font-bold transition-all"
+                          >
+                            Confirmar
+                          </button>
+                        )}
+                        {t.estado !== 'completado' && (
+                          <button
+                            onClick={() => onActualizarEstado(t.id, 'completado')}
+                            className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 font-bold transition-all"
+                          >
+                            Completar
+                          </button>
+                        )}
+                        {t.estado !== 'cancelado' && (
+                          <button
+                            onClick={() => onActualizarEstado(t.id, 'cancelado')}
+                            className="text-xs bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-100 font-bold transition-all"
+                          >
+                            Cancelar
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-1"
+                          title="Eliminar reserva permanentemente"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
