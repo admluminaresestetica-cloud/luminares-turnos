@@ -58,25 +58,51 @@ export async function buscarReserva(
   celular: string,
   codigo: string
 ): Promise<Reserva | null> {
-  const celularNorm = celular.replace(/\D/g, '');
-  const codigoNorm = codigo.startsWith('#') ? codigo : `#${codigo}`;
+  try {
+    const celularNorm = celular.replace(/\D/g, '');
+    const numeroCodigo = codigo.replace('#', '').trim();
 
-  const { data, error } = await supabase
-    .from('reservas')
-    .select('*')
-    .eq('codigo_unico', codigoNorm);
+    console.log('--- BUSCANDO RESERVA ---');
+    console.log('Ingresado -> Celular limpia:', celularNorm, '| Código limpia:', numeroCodigo);
 
-  if (error) {
-    console.error('Error al buscar reserva:', error);
+    if (!numeroCodigo) return null;
+
+    // Consultamos en Supabase buscando los registros cuyo código contenga o coincida con la parte numérica
+    const { data, error } = await supabase
+      .from('reservas')
+      .select('*')
+      .ilike('codigo_unico', `%${numeroCodigo}%`);
+
+    if (error) {
+      console.error('Error de Supabase al buscar reserva:', error);
+      return null;
+    }
+
+    console.log('Registros encontrados en Supabase por código:', data);
+
+    if (!data || data.length === 0) {
+      console.log('No se encontró ninguna reserva en Supabase con ese código.');
+      return null;
+    }
+
+    // Comparamos el celular
+    const reserva = data.find((r) => {
+      if (!r.cliente_celular) return false;
+      const celReserva = r.cliente_celular.replace(/\D/g, '');
+      console.log('Comparando cel DB:', celReserva, 'vs cel buscado:', celularNorm);
+      return (
+        celReserva === celularNorm ||
+        celReserva.endsWith(celularNorm) ||
+        celularNorm.endsWith(celReserva)
+      );
+    });
+
+    console.log('Reserva final matcheada:', reserva);
+    return reserva ?? null;
+  } catch (err) {
+    console.error('Error inesperado en buscarReserva:', err);
     return null;
   }
-
-  const reserva = (data ?? []).find((r) => {
-    const celReserva = r.cliente_celular.replace(/\D/g, '');
-    return celReserva === celularNorm || celReserva.endsWith(celularNorm) || celularNorm.endsWith(celReserva);
-  });
-
-  return reserva ?? null;
 }
 
 export async function cancelarReserva(id: string): Promise<boolean> {
