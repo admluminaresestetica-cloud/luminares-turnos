@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, ArrowLeft } from "lucide-react"; // 👈 1. Agregamos ArrowLeft acá
 import CarritoDrawer from "@/components/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
 import FooterTienda from "@/components/FooterTienda";
@@ -17,7 +17,7 @@ import Fuse from "fuse.js";
 import BuscadorYCategorias from "./components/BuscadorYCategorias";
 import GridProductos from "./components/GridProductos";
 import ModalDetalleProducto from "./components/ModalDetalleProducto";
-import TagsFiltros from "./components/TagsFiltros"; // 👈 1. Importamos el componente de Tags
+import TagsFiltros from "./components/TagsFiltros";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -88,7 +88,6 @@ export default function TiendaPage() {
       }
     };
 
-    // 2. Función para traer los tags activos de Supabase
     const fetchTags = async () => {
       try {
         const { data, error } = await supabase
@@ -109,10 +108,9 @@ export default function TiendaPage() {
 
     fetchProductos();
     fetchCategorias();
-    fetchTags(); // Ejecutamos la carga de tags
+    fetchTags();
   }, []);
   
-  // Abrir modal automáticamente si la URL trae ?producto=ID
   useEffect(() => {
     if (productos.length > 0) {
       const params = new URLSearchParams(window.location.search);
@@ -129,11 +127,9 @@ export default function TiendaPage() {
     }
   }, [productos]);
 
-  // Lógica de filtrado inteligente con Fuse.js (soporta errores de tipeo como "uggies")
   const productosFiltrados = useMemo(() => {
     let resultado = productos;
 
-    // 1. Filtrar si hay un Tag seleccionado (Búsqueda rápida por regla/slug)
     if (tagSeleccionado) {
       const criterio = tagSeleccionado.toLowerCase();
       resultado = resultado.filter((p) => {
@@ -144,7 +140,6 @@ export default function TiendaPage() {
       });
     }
 
-    // 2. Filtrar por Búsqueda Tradicional (Fuse.js)
     if (busqueda.trim() !== "") {
       const fuseOptions = {
         keys: ["nombre", "categoria"],
@@ -156,7 +151,6 @@ export default function TiendaPage() {
       resultado = fuse.search(busqueda).map((res) => res.item);
     }
 
-    // 3. Filtrar por Categoría / Ofertas
     if (categoriaFiltro === "Ofertas") {
       resultado = resultado.filter((p) => {
         const precioBase = Number(p.precio_original ?? p.precio_anterior) || 0;
@@ -169,7 +163,6 @@ export default function TiendaPage() {
     return resultado;
   }, [productos, busqueda, categoriaFiltro, tagSeleccionado]);
 
-  // Lógica de Ordenamiento
   const productosOrdenados = useMemo(() => {
     return [...productosFiltrados].sort((a, b) => {
       if (ordenarPor === "precio-asc") {
@@ -199,39 +192,51 @@ export default function TiendaPage() {
     setBusqueda("");
     setCategoriaFiltro("Todos");
     setOrdenarPor("destacados");
-    setTagSeleccionado(null); // Resetea el tag también
+    setTagSeleccionado(null);
   };
 
   return (
     <div className="min-h-screen bg-[#F7F7F5] text-[#12151B] flex flex-col justify-between">
       <div>
-        {/* Navbar */}
+        {/* Navbar con botón de retorno al inicio integrado */}
         <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0] bg-white/90 px-4 py-3 backdrop-blur-md sm:px-10 sm:py-4">
-          <Link
-            href="https://www.mireservalumin.com.ar/tienda"
-            onClick={resetearFiltros}
-            className="flex min-w-0 items-center gap-2 sm:gap-3 cursor-pointer transition-opacity hover:opacity-80 active:scale-[0.98]"
-          >
-            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center sm:h-12 sm:w-12">
-              <Image
-                src="/logotiendanegro.svg"
-                alt="Logo Luminares"
-                width={48}
-                height={48}
-                className="h-full w-full object-contain"
-                priority
-              />
-            </div>
+          <div className="flex items-center gap-3">
+            {/* 👈 Botón para volver al inicio general */}
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B675F] hover:text-[#12151B] bg-[#F7F7F5] hover:bg-[#E7E5E0]/60 px-2.5 py-2 rounded-xl transition-all border border-[#E7E5E0]"
+              title="Volver a la selección principal"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden md:inline">Inicio</span>
+            </Link>
 
-            <div className="flex min-w-0 flex-col leading-tight">
-              <h2 className="m-0 truncate text-base font-bold tracking-tight text-[#12151B] sm:text-lg">
-                Luminares
-              </h2>
-              <span className="hidden truncate text-[11px] font-medium text-[#6B675F] sm:block sm:text-sm">
-                Tienda Oficial
-              </span>
-            </div>
-          </Link>
+            <Link
+              href="/tienda"
+              onClick={resetearFiltros}
+              className="flex min-w-0 items-center gap-2 sm:gap-3 cursor-pointer transition-opacity hover:opacity-80 active:scale-[0.98]"
+            >
+              <div className="relative flex h-9 w-9 shrink-0 items-center justify-center sm:h-12 sm:w-12">
+                <Image
+                  src="/logotiendanegro.svg"
+                  alt="Logo Luminares"
+                  width={48}
+                  height={48}
+                  className="h-full w-full object-contain"
+                  priority
+                />
+              </div>
+
+              <div className="flex min-w-0 flex-col leading-tight">
+                <h2 className="m-0 truncate text-base font-bold tracking-tight text-[#12151B] sm:text-lg">
+                  Luminares
+                </h2>
+                <span className="hidden truncate text-[11px] font-medium text-[#6B675F] sm:block sm:text-sm">
+                  Tienda Oficial
+                </span>
+              </div>
+            </Link>
+          </div>
 
           {/* Botón del Carrito en Navbar */}
           <button
@@ -253,7 +258,6 @@ export default function TiendaPage() {
         <div className="mx-auto max-w-[1150px] px-4 pb-28 pt-4 sm:px-10 sm:pb-16">
           <BannerCarousel />
 
-          {/* 3. Componente de Tags Inteligentes justo debajo del banner */}
           <TagsFiltros
             tags={tags}
             tagSeleccionado={tagSeleccionado}
