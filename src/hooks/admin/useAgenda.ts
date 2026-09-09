@@ -31,48 +31,54 @@ export function useAgenda() {
   const fetchTurnos = async () => {
     setLoading(true)
 
-    // 1. Obtener reservas y la lista de clientes
-    const { data: reservasData, error } = await supabase
-      .from('reservas')
-      .select('*')
-      .order('fecha_hora_inicio', { ascending: true })
+    try {
+      // 🔄 Ahora llamamos a nuestra API segura del servidor
+      const response = await fetch('/api/admin/turnos')
+      const data = await response.json()
 
-    const { data: clientesData } = await supabase
-      .from('clientes')
-      .select('celular, codigo_referido')
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al obtener los turnos')
+      }
 
-    // 🔍 LOGS DE DIAGNÓSTICO
-    console.log('--- DIAGNÓSTICO REFERIDOS ---')
-    console.log('1. Clientes desde Supabase:', clientesData)
-    console.log('2. Reservas desde Supabase:', reservasData)
+      const reservasData = data.reservas
+      const clientesData = data.clientes
 
-    if (!error && reservasData) {
-      const turnosConCodigoPropio = reservasData.map((reserva) => {
-        const celReserva = (reserva.cliente_celular || '').replace(/\D/g, '')
+      // 🔍 LOGS DE DIAGNÓSTICO
+      console.log('--- DIAGNÓSTICO REFERIDOS ---')
+      console.log('1. Clientes desde API:', clientesData)
+      console.log('2. Reservas desde API:', reservasData)
 
-        const clienteMatch = (clientesData || []).find((c) => {
-          const celCliente = (c.celular || '').replace(/\D/g, '')
-          if (!celCliente || !celReserva) return false
+      if (reservasData) {
+        const turnosConCodigoPropio = reservasData.map((reserva: any) => {
+          const celReserva = (reserva.cliente_celular || '').replace(/\D/g, '')
 
-          return (
-            celReserva.endsWith(celCliente) || 
-            celCliente.endsWith(celReserva) ||
-            celReserva.slice(-8) === celCliente.slice(-8)
-          )
+          const clienteMatch = (clientesData || []).find((c: any) => {
+            const celCliente = (c.celular || '').replace(/\D/g, '')
+            if (!celCliente || !celReserva) return false
+
+            return (
+              celReserva.endsWith(celCliente) || 
+              celCliente.endsWith(celReserva) ||
+              celReserva.slice(-8) === celCliente.slice(-8)
+            )
+          })
+
+          return {
+            ...reserva,
+            codigo_referido_propio: clienteMatch?.codigo_referido || null
+          }
         })
 
-        return {
-          ...reserva,
-          codigo_referido_propio: clienteMatch?.codigo_referido || null
-        }
-      })
-
-      console.log('3. Turnos procesados con código:', turnosConCodigoPropio)
-      setTurnos(turnosConCodigoPropio as Reserva[])
+        console.log('3. Turnos procesados con código:', turnosConCodigoPropio)
+        setTurnos(turnosConCodigoPropio as Reserva[])
+      }
+    } catch (err: any) {
+      console.error('Error en fetchTurnos:', err.message)
     }
 
     setLoading(false)
   }
+
   useEffect(() => {
     fetchTurnos()
   }, [])
@@ -236,7 +242,6 @@ export function useAgenda() {
     }
   }
 
-  // 🔴 Nueva función para eliminar reservas permanentemente en Supabase
   const eliminarTurno = async (id: string) => {
     const { error } = await supabase
       .from('reservas')
@@ -248,7 +253,6 @@ export function useAgenda() {
       return
     }
 
-    // Remueve el turno del estado local para actualizar la vista al instante
     setTurnos((prev) => prev.filter((t) => t.id !== id))
   }
 
@@ -313,7 +317,7 @@ export function useAgenda() {
     guardarEdicionTurno,
 
     actualizarEstado,
-    eliminarTurno, // 👈 Ahora está disponible para page.tsx
+    eliminarTurno,
 
     turnoACobrar,
     medioPagoSeleccionado, setMedioPagoSeleccionado,
