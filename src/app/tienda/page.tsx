@@ -218,7 +218,7 @@ export default function TiendaPage() {
             >
               <div className="relative flex h-9 w-9 shrink-0 items-center justify-center sm:h-12 sm:w-12">
                 <Image
-                  src="/logotiendanegro.svg"
+                  src="/logodoradoo.svg"
                   alt="Logo Luminares"
                   width={48}
                   height={48}

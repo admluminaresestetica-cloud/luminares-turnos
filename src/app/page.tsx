@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Calendar, ShoppingBag, Sparkles, MessageCircle } from 'lucide-react';
+import Image from 'next/image';
+import { Calendar, ShoppingBag, MessageCircle } from 'lucide-react';
 
 export default function LandingPage() {
   const whatsappUrl = "https://wa.me/5493413954355?text=Hola!%20Tengo%20una%20consulta.";
@@ -13,8 +14,16 @@ export default function LandingPage() {
         
         {/* Encabezado / Logo */}
         <header className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-white shadow-[0_8px_20px_rgba(0,0,0,0.06)] border border-slate-100 text-[#024128] mb-4">
-            <Sparkles className="w-7 h-7 text-[#0E6E55]" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-white shadow-[0_8px_20px_rgba(0,0,0,0.06)] border border-slate-100 mb-4 overflow-hidden p-3">
+            {/* Imagen desde la carpeta public */}
+            <Image 
+              src="/logodoradoo.svg" 
+              alt="Logo Luminares" 
+              width={40} 
+              height={40} 
+              className="object-contain w-auto h-auto"
+              priority
+            />
           </div>
           <p className="text-xs font-black tracking-[0.25em] uppercase text-emerald-800 mb-1">
             LUMINARES ESTÉTICA

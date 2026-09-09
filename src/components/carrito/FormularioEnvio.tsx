@@ -65,31 +65,41 @@ export default function FormularioEnvio({
       </div>
 
       <h3 className="mb-2.5 text-sm font-semibold text-[#12151B]">
-        Datos del Comprador
-      </h3>
+  Datos del Comprador
+</h3>
 
-      <div className="flex flex-col gap-2.5">
-        <div className="relative">
-          <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
-          <input
-            type="text"
-            placeholder="Tu Nombre completo *"
-            value={datosEnvio.nombreCliente}
-            onChange={(e) => setDatosEnvio({ ...datosEnvio, nombreCliente: e.target.value })}
-            className={inputClass}
-          />
-        </div>
+<div className="flex flex-col gap-2.5">
+  {/* Campo Nombre y Apellido: Solo letras, espacios y tildes */}
+  <div className="relative">
+    <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
+    <input
+      type="text"
+      placeholder="Tu Nombre completo *"
+      value={datosEnvio.nombreCliente}
+      onChange={(e) => setDatosEnvio({ 
+        ...datosEnvio, 
+        nombreCliente: e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '') 
+      })}
+      className={inputClass}
+    />
+  </div>
 
-        <div className="relative">
-          <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
-          <input
-            type="text"
-            placeholder="Tu Teléfono / WhatsApp"
-            value={datosEnvio.telefonoCliente}
-            onChange={(e) => setDatosEnvio({ ...datosEnvio, telefonoCliente: e.target.value })}
-            className={inputClass}
-          />
-        </div>
+  {/* Campo Teléfono: Solo números, máximo 10 dígitos y teclado numérico en celulares */}
+  <div className="relative">
+    <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
+    <input
+      type="tel"
+      inputMode="numeric"
+      maxLength={10}
+      placeholder="Tu Teléfono / WhatsApp *"
+      value={datosEnvio.telefonoCliente}
+      onChange={(e) => setDatosEnvio({ 
+        ...datosEnvio, 
+        telefonoCliente: e.target.value.replace(/\D/g, '').slice(0, 10) 
+      })}
+      className={inputClass}
+    />
+  </div>
 
         {/* Selector de método de envío tipo tarjeta */}
         <div className="grid grid-cols-2 gap-2.5">

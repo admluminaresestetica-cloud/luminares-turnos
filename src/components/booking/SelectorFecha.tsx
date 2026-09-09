@@ -109,7 +109,7 @@ export default function SelectorFecha({
                 ${seleccionada
                   ? 'bg-slate-900 text-white shadow-md scale-105 z-10'
                   : habilitada
-                    ? 'bg-white border border-slate-200/80 text-slate-800 hover:border-slate-900 hover:bg-slate-50 shadow-2xs'
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30 scale-105 ring-2 ring-emerald-400/50'
                     : 'bg-slate-100/50 text-slate-300 border border-transparent cursor-not-allowed'
                 }
               `}
