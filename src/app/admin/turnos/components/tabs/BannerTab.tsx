@@ -22,7 +22,6 @@ export default function BannerTab() {
 
   const cargarBanners = async () => {
     setCargando(true)
-    // Cambiado 'banners_tienda' por 'banners' (o 'banners_inicio')
     const { data, error } = await supabase
       .from('banners')
       .select('*')
@@ -42,15 +41,14 @@ export default function BannerTab() {
 
   const handleSubirBanner = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!archivo) return alert('Por favor seleccioná una imagen.')
+    if (!archivo) return alert('Por favor seleccioná un archivo.')
 
     setSubiendo(true)
 
     try {
       const fileExt = archivo.name.split('.').pop()
-      const fileName = `${Date.now()}.${fileExt}`
+      const fileName = `banner_${Date.now()}.${fileExt}`
 
-      // Cambiado 'bannersprincipaltienda' por 'imagenes-banner'
       const { error: uploadError } = await supabase.storage
         .from('imagenes-banner')
         .upload(fileName, archivo)
@@ -61,7 +59,6 @@ export default function BannerTab() {
         .from('imagenes-banner')
         .getPublicUrl(fileName)
 
-      // Cambiado insert a la tabla 'banners'
       const { error: dbError } = await supabase.from('banners').insert([
         {
           imagen_url: publicUrlData.publicUrl,
@@ -119,6 +116,11 @@ export default function BannerTab() {
     }
   }
 
+  // Función para detectar si el archivo es un video
+  const esVideo = (url: string) => {
+    return url?.toLowerCase().endsWith('.mp4') || url?.toLowerCase().endsWith('.webm')
+  }
+
   return (
     <div className="space-y-6">
       {/* Formulario de Carga */}
@@ -137,18 +139,18 @@ export default function BannerTab() {
               type="text"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Ej: 20% OFF en Cremas"
+              placeholder="Ej: Promo de la semana"
               className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-300 transition"
             />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              Imagen del Banner
+              Imagen o Video del Banner
             </label>
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/webm"
               onChange={(e) => setArchivo(e.target.files?.[0] || null)}
               className="w-full text-sm text-gray-500 file:mr-4 file:rounded-xl file:border-0 file:bg-gray-900 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-black file:transition-colors file:cursor-pointer"
             />
@@ -182,11 +184,23 @@ export default function BannerTab() {
                 className="relative overflow-hidden rounded-2xl border border-gray-100 bg-gray-50/60 p-3 hover:shadow-sm transition-shadow"
               >
                 <div className="relative h-32 w-full overflow-hidden rounded-xl bg-gray-200">
-                  <img
-                    src={b.imagen_url}
-                    alt={b.titulo}
-                    className="h-full w-full object-cover"
-                  />
+                  {esVideo(b.imagen_url) ? (
+                    <video
+                      src={b.imagen_url}
+                      className="h-full w-full object-cover"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={b.imagen_url}
+                      alt={b.titulo}
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+
                   <span
                     className={`absolute right-2 top-2 rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm ${
                       b.activo ? 'bg-emerald-500' : 'bg-gray-500'
