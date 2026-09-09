@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   try {
     const { itemsCarrito, cliente } = await request.json();
 
-    if (!itemsCarrito || itemsCarrito.length === 0) {
+    if (!itemsCarrito || !Array.isArray(itemsCarrito) || itemsCarrito.length === 0) {
       return NextResponse.json(
         { error: "El carrito está vacío" },
         { status: 400 }
@@ -23,25 +23,71 @@ export async function POST(request: Request) {
     }
 
     const PORCENTAJE_RECARGO = 0.10;
-
     let totalPedido = 0;
+    const itemsMP = [];
+    const itemsValidados = [];
 
-    const itemsMP = itemsCarrito.map((item: any) => {
-      const precioUnitario = Math.round((Number(item.precio) || 0) * (1 + PORCENTAJE_RECARGO));
+    // Lista de todas las tablas posibles donde podés tener ítems con precio
+    const tablasASecundar = ["servicios_laser", "promos_laser", "productos", "servicios_generales"];
+
+    for (const item of itemsCarrito) {
+      const productoId = item.id;
       const cantidad = Number(item.cantidad) || 1;
-      
-      totalPedido += precioUnitario * cantidad;
 
-      return {
-        id: String(item.id || "prod"),
-        title: String(item.nombre || "Producto"),
-        unit_price: precioUnitario,
+      if (!productoId) {
+        return NextResponse.json(
+          { error: "Hay un producto sin ID válido en el carrito" },
+          { status: 400 }
+        );
+      }
+
+      let productoDb = null;
+
+      // 🔍 Búsqueda automática: probamos en qué tabla de Supabase está este ID
+      for (const tabla of tablasASecundar) {
+        const { data, error } = await supabase
+          .from(tabla)
+          .select("id, nombre, precio")
+          .eq("id", productoId)
+          .single();
+
+        if (data && !error) {
+          productoDb = data;
+          break; // Encontramos el producto, salimos del bucle de tablas
+        }
+      }
+
+      // Si no se encuentra en ninguna tabla, por seguridad frenamos la compra
+      if (!productoDb) {
+        return NextResponse.json(
+          { error: `El producto o servicio con ID ${productoId} no es válido.` },
+          { status: 400 }
+        );
+      }
+
+      // 🛡️ Usamos estrictamente el precio oficial de la base de datos con su recargo
+      const precioOficial = Number(productoDb.precio) || 0;
+      const precioUnitarioConRecargo = Math.round(precioOficial * (1 + PORCENTAJE_RECARGO));
+      
+      totalPedido += precioUnitarioConRecargo * cantidad;
+
+      itemsMP.push({
+        id: String(productoDb.id),
+        title: String(productoDb.nombre),
+        unit_price: precioUnitarioConRecargo,
         quantity: cantidad,
         currency_id: "ARS",
-      };
-    });
+      });
 
-        const { data: pedido, error: errorPedido } = await supabase
+      itemsValidados.push({
+        nombre_producto: String(productoDb.nombre),
+        cantidad: cantidad,
+        precio_unitario: precioUnitarioConRecargo,
+      });
+    }
+
+    // 1. Registramos el pedido en Supabase
+    const { data: pedido, error: errorPedido } = await supabase
       .from("pedidos")
       .insert({
         nombre_cliente: cliente?.nombre || "Cliente Tienda",
@@ -49,8 +95,8 @@ export async function POST(request: Request) {
         cliente_email: cliente?.email || "",
         total: totalPedido,
         estado: "pendiente",
-        items: itemsCarrito,
-        metodo_envio: cliente?.metodoEntrega || "retiro", // Si guardas esto en el cliente
+        items: itemsValidados,
+        metodo_envio: cliente?.metodoEntrega || "retiro",
       })
       .select()
       .single();
@@ -63,24 +109,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const itemsParaInsertar = itemsCarrito.map((item: any) => {
-      const precioUnitario = Math.round((Number(item.precio) || 0) * (1 + PORCENTAJE_RECARGO));
-      return {
-        pedido_id: pedido.id,
-        nombre_producto: String(item.nombre || "Producto"),
-        cantidad: Number(item.cantidad) || 1,
-        precio_unitario: precioUnitario,
-      };
-    });
+    // 2. Insertamos los ítems relacionados
+    const itemsParaInsertarConId = itemsValidados.map((item) => ({
+      ...item,
+      pedido_id: pedido.id,
+    }));
 
     const { error: errorItems } = await supabase
       .from("pedido_items")
-      .insert(itemsParaInsertar);
+      .insert(itemsParaInsertarConId);
 
     if (errorItems) {
-      console.error("Error al registrar los ítems del pedido en pedido_items:", errorItems);
+      console.error("Error al registrar los ítems del pedido:", errorItems);
     }
 
+    // 3. Creamos la preferencia en Mercado Pago
     const preference = new Preference(client);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
 
