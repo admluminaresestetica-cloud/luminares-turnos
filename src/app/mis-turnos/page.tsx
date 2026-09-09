@@ -104,33 +104,33 @@ export default function MisTurnosPage() {
   const urlWhatsAppReprogramar = `https://wa.me/${NUMERO_WHATSAPP}?text=${mensajeReprogramar}`;
 
   return (
-    <main className="min-h-screen bg-slate-50/50 p-4 sm:p-6 md:p-12 relative">
+    <main className="min-h-screen bg-slate-100 p-4 sm:p-6 md:p-12 relative">
       <div className="max-w-md mx-auto space-y-6">
         
         {/* Volver */}
         <Link 
           href="/" 
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-900 hover:text-slate-950 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
           <span>Volver al inicio</span>
         </Link>
 
         {/* Header */}
         <div className="text-center space-y-1.5">
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
             Mis Turnos
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-700 font-semibold leading-relaxed">
             Consultá o gestioná el estado de tu reserva de forma rápida.
           </p>
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleBuscar} className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+        <form onSubmit={handleBuscar} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
           <div className="space-y-3.5">
             <div>
-              <label htmlFor="celular" className="block text-xs font-bold text-slate-800 mb-1.5">
+              <label htmlFor="celular" className="block text-xs font-bold text-slate-900 mb-1.5">
                 Celular (WhatsApp)
               </label>
               <div className="relative">
@@ -144,13 +144,13 @@ export default function MisTurnosPage() {
                   onChange={(e) => setCelular(e.target.value)}
                   placeholder="Ej: 11 2345-6789"
                   required
-                  className="w-full pl-10 pr-3.5 py-3 text-xs sm:text-sm bg-white border border-slate-200/80 rounded-xl text-slate-900 placeholder:text-slate-400 transition-all outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                  className="w-full pl-10 pr-3.5 py-3 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 transition-all outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="codigo" className="block text-xs font-bold text-slate-800 mb-1.5">
+              <label htmlFor="codigo" className="block text-xs font-bold text-slate-900 mb-1.5">
                 Código de reserva
               </label>
               <div className="relative">
@@ -164,7 +164,7 @@ export default function MisTurnosPage() {
                   onChange={(e) => setCodigo(e.target.value)}
                   placeholder="#7842"
                   required
-                  className="w-full pl-10 pr-3.5 py-3 text-xs sm:text-sm bg-white border border-slate-200/80 rounded-xl text-slate-900 placeholder:text-slate-400 transition-all outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                  className="w-full pl-10 pr-3.5 py-3 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 transition-all outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                 />
               </div>
             </div>
@@ -191,22 +191,22 @@ export default function MisTurnosPage() {
 
         {/* Alertas */}
         {error && (
-          <div className="bg-rose-50 border border-rose-200/80 rounded-2xl p-4 flex items-start gap-3">
+          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-start gap-3">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-            <p className="text-xs font-semibold text-rose-800 leading-relaxed">{error}</p>
+            <p className="text-xs font-semibold text-rose-900 leading-relaxed">{error}</p>
           </div>
         )}
 
         {mensaje && (
-          <div className="bg-emerald-50 border border-emerald-200/80 rounded-2xl p-4 flex items-start gap-3">
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            <p className="text-xs font-semibold text-emerald-800 leading-relaxed">{mensaje}</p>
+            <p className="text-xs font-semibold text-emerald-900 leading-relaxed">{mensaje}</p>
           </div>
         )}
 
         {/* Detalle del Turno */}
         {reserva && estadoInfo && (
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4 animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4 animate-in fade-in duration-200">
             <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
@@ -222,23 +222,23 @@ export default function MisTurnosPage() {
             </div>
 
             <div className="space-y-2.5 text-xs">
-              <div className="flex items-center gap-2.5 text-slate-700 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/60">
+              <div className="flex items-center gap-2.5 text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
                 <User className="w-4 h-4 text-slate-400 shrink-0" />
                 <span>Cliente: <strong className="text-slate-900">{reserva.cliente_nombre}</strong></span>
               </div>
 
-              <div className="flex items-center gap-2.5 text-slate-700 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/60">
+              <div className="flex items-center gap-2.5 text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
                 <Sparkles className="w-4 h-4 text-slate-400 shrink-0" />
                 <span>Servicio: <strong className="text-slate-900">{formatDetalleReservaDisplay(reserva)}</strong></span>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center gap-2 text-slate-700 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/60">
+                <div className="flex items-center gap-2 text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
                   <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span className="truncate font-semibold text-slate-900">{formatFechaDisplay(fechaStr)}</span>
                 </div>
 
-                <div className="flex items-center gap-2 text-slate-700 bg-slate-50/70 p-2.5 rounded-xl border border-slate-200/60">
+                <div className="flex items-center gap-2 text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
                   <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span className="font-semibold text-slate-900">{horaStr} hs <span className="text-slate-400 font-normal">({reserva.duracion_total}m)</span></span>
                 </div>
@@ -261,7 +261,7 @@ export default function MisTurnosPage() {
                   href={urlWhatsAppReprogramar}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-800 font-bold py-3 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 shadow-2xs"
+                  className="w-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-bold py-3 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 shadow-2xs"
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-600 fill-current" />
                   <span>Reprogramar por WhatsApp</span>
@@ -303,7 +303,7 @@ export default function MisTurnosPage() {
       {/* POP-UP / MODAL DE CONFIRMACIÓN DE CANCELACIÓN */}
       {modalCancelarOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-xl">
+          <div className="bg-white border border-slate-200 rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-xl">
             <div className="flex flex-col items-center text-center space-y-2">
               <div className="p-3 bg-amber-50 rounded-full border border-amber-200/60 text-amber-600">
                 <HelpCircle className="w-6 h-6" />
@@ -318,7 +318,7 @@ export default function MisTurnosPage() {
               <button
                 type="button"
                 onClick={() => setModalCancelarOpen(false)}
-                className="flex-1 py-3 px-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-bold text-xs rounded-xl transition-all"
+                className="flex-1 py-3 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all"
               >
                 Volver atrás
               </button>
