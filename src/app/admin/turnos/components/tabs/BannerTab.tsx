@@ -60,13 +60,13 @@ export default function BannerTab() {
         .getPublicUrl(fileName)
 
       const { error: dbError } = await supabase.from('banners').insert([
-        {
-          imagen_url: publicUrlData.publicUrl,
-          titulo: titulo || 'Banner Promocional',
-          activo: true,
-          orden: banners.length + 1,
-        },
-      ])
+  {
+    imagen_url: publicUrlData.publicUrl,
+    titulo: titulo.trim() ? titulo : null, // 👈 si no pones nada, guarda null sin inventar nada
+    activo: true,
+    orden: banners.length + 1,
+  },
+])
 
       if (dbError) throw dbError
 
