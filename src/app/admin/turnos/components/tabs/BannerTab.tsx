@@ -22,8 +22,9 @@ export default function BannerTab() {
 
   const cargarBanners = async () => {
     setCargando(true)
+    // Cambiado 'banners_tienda' por 'banners' (o 'banners_inicio')
     const { data, error } = await supabase
-      .from('banners_tienda')
+      .from('banners')
       .select('*')
       .order('orden', { ascending: true })
 
@@ -49,17 +50,19 @@ export default function BannerTab() {
       const fileExt = archivo.name.split('.').pop()
       const fileName = `${Date.now()}.${fileExt}`
 
+      // Cambiado 'bannersprincipaltienda' por 'imagenes-banner'
       const { error: uploadError } = await supabase.storage
-        .from('bannersprincipaltienda')
+        .from('imagenes-banner')
         .upload(fileName, archivo)
 
       if (uploadError) throw uploadError
 
       const { data: publicUrlData } = supabase.storage
-        .from('bannersprincipaltienda')
+        .from('imagenes-banner')
         .getPublicUrl(fileName)
 
-      const { error: dbError } = await supabase.from('banners_tienda').insert([
+      // Cambiado insert a la tabla 'banners'
+      const { error: dbError } = await supabase.from('banners').insert([
         {
           imagen_url: publicUrlData.publicUrl,
           titulo: titulo || 'Banner Promocional',
@@ -83,7 +86,7 @@ export default function BannerTab() {
 
   const toggleEstado = async (id: string, estadoActual: boolean) => {
     const { error } = await supabase
-      .from('banners_tienda')
+      .from('banners')
       .update({ activo: !estadoActual })
       .eq('id', id)
 
@@ -100,11 +103,11 @@ export default function BannerTab() {
     try {
       const fileName = imagenUrl.split('/').pop()
       if (fileName) {
-        await supabase.storage.from('bannersprincipaltienda').remove([fileName])
+        await supabase.storage.from('imagenes-banner').remove([fileName])
       }
 
       const { error } = await supabase
-        .from('banners_tienda')
+        .from('banners')
         .delete()
         .eq('id', id)
 
