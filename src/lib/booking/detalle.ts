@@ -16,7 +16,7 @@ export function buildDetalleTextoLaser(
 ): string {
   if (detalle.modo === 'promo' || detalle.modo === 'promo_mas_extra') {
     const promo = promos.find((p) => p.id === detalle.promo_id);
-    const swaps = (detalle.swaps ?? {}) as SwapsMap;
+    const swaps = ((detalle as unknown as { swaps?: SwapsMap }).swaps ?? {}) as SwapsMap;
     const nombresPromo = promo
       ? getZonasPromoResueltas(promo, zonas, swaps).map((z) => z.nombre_zona)
       : [];
@@ -38,10 +38,16 @@ export function buildDetalleTextoGeneral(detalle: DetalleReservaGeneral): string
 }
 
 export function formatEstadoReserva(estado: string): { label: string; className: string } {
-  switch (estado) {
+  const est = estado?.toLowerCase();
+  switch (est) {
     case 'confirmado':
+    case 'confirmada':
+    case 'completado':
+    case 'completada':
+    case 'pagado':
       return { label: 'Confirmado', className: 'bg-emerald-100 text-emerald-700' };
     case 'cancelado':
+    case 'cancelada':
       return { label: 'Cancelado', className: 'bg-slate-100 text-slate-600' };
     default:
       return { label: 'Pendiente de seña', className: 'bg-amber-100 text-amber-700' };
@@ -61,11 +67,11 @@ export function formatDetalleReservaDisplay(
   }
 
   if (reserva.servicio_tipo === 'laser' && zonas && promos) {
-    return buildDetalleTextoLaser(detalle as DetalleReservaLaser, zonas, promos);
+    return buildDetalleTextoLaser(detalle as unknown as DetalleReservaLaser, zonas, promos);
   }
 
   if (reserva.servicio_tipo === 'general') {
-    const d = detalle as DetalleReservaGeneral;
+    const d = detalle as unknown as DetalleReservaGeneral;
     if (d.servicios?.length) return buildDetalleTextoGeneral(d);
     if (servicios) {
       const ids = (detalle as { servicios_ids?: string[] }).servicios_ids ?? [];
