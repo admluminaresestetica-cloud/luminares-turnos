@@ -57,6 +57,9 @@ export interface ConfiguracionSistema {
   porcentaje_sena: number;
   ventana_horas_cancelacion: number;
   whatsapp_numero: string;
+  referidos_activo?: boolean;
+  referidos_tipo_descuento?: 'porcentaje' | 'monto_fijo';
+  referidos_valor_descuento?: number;
 }
 
 export interface DetalleReservaLaser {
@@ -110,11 +113,4 @@ export interface CrearReservaInput {
   precio_total: number;
   duracion_total: number;
   fecha_hora_inicio: string;
-}
-
-export interface ConfiguracionSistema {
-  // ... tus campos existentes ...
-  referidos_activo?: boolean;
-  referidos_tipo_descuento?: 'porcentaje' | 'monto_fijo';
-  referidos_valor_descuento?: number;
 }
