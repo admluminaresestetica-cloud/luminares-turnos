@@ -25,10 +25,11 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const { carrito, agregarAlCarrito, restarUnidad, eliminarDelCarrito, vaciarCarrito } = useCarrito();
   const searchParams = useSearchParams();
 
-  // Lectura de variables desde la DB
+  // Mapeo exacto con la tabla configuracion_empresa
   const montoEnvioGratis = Number((config as any)?.monto_envio_gratis ?? 40000);
-  const costoEnvioBase = Number((config as any)?.costo_envio ?? 0); // 👈 Costo de cadetería
+  const costoEnvioBase = Number((config as any)?.costo_envio_base ?? 0); // 👈 Nombre exacto de la columna
   const envioDomicilioActivo = (config as any)?.envio_domicilio_activo ?? true;
+  const envioGratisActivo = (config as any)?.envio_gratis_activo ?? true;
 
   const rawNumber = config?.whatsapp_numero || "5493413954355";
   const telefonoWhatsApp = rawNumber.replace(/[^0-9]/g, "");
@@ -62,19 +63,19 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   if (!isOpen && !mostrarModalExito) return null;
 
-  // Cálculo de Subtotal de Productos
+  // Cálculo del Subtotal
   const subtotalProductos = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
 
   // Verificación de Envío Gratis
-  const tieneEnvioGratis = subtotalProductos >= montoEnvioGratis;
+  const tieneEnvioGratis = envioGratisActivo && subtotalProductos >= montoEnvioGratis;
   const faltaParaEnvioGratis = Math.max(0, montoEnvioGratis - subtotalProductos);
   const porcentajeProgreso = Math.min(100, (subtotalProductos / montoEnvioGratis) * 100);
 
-  // Cálculo del Costo de Envío aplicado
+  // Costo de envío a aplicar
   const costoEnvioAplicado =
     datosEnvio.metodoEnvio === "envio" && !tieneEnvioGratis ? costoEnvioBase : 0;
 
-  // Total base (Productos + Envío si aplica)
+  // Total base
   const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
 
   // Recargo MP (10%)
@@ -154,7 +155,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     });
 
     if (costoEnvioAplicado > 0) {
-      mensaje += `- Envío / Cadetería: $${costoEnvioAplicado}\n`;
+      mensaje += `- Cadetería / Envío: $${costoEnvioAplicado}\n`;
     }
 
     mensaje += `\n*Total a pagar (Transferencia / Efectivo):* $${totalBaseConEnvio}\n\n`;
@@ -176,10 +177,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     await guardarPedidoEnDB(totalConRecargo, "Mercado Pago");
 
     try {
-      // Si hay envío se puede agregar como ítem al checkout
       const itemsEnvio = costoEnvioAplicado > 0 ? [{
         id: "envio-cadeteria",
-        nombre: "Costo de Envío / Cadetería",
+        nombre: "Costo de Cadetería / Envío",
         precio: costoEnvioAplicado,
         cantidad: 1,
       }] : [];
@@ -260,7 +260,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             </div>
 
             {/* Barra de Envío Gratis */}
-            {carrito.length > 0 && envioDomicilioActivo && (
+            {carrito.length > 0 && envioDomicilioActivo && envioGratisActivo && (
               <div className="border-b border-[#E7E5E0] bg-[#0E6E55]/5 px-5 py-3">
                 <div className="flex items-center justify-between text-xs font-semibold text-[#12151B] mb-1.5">
                   {tieneEnvioGratis ? (
