@@ -8,10 +8,12 @@ import {
   guardarConfiguracion,
   ConfiguracionEmpresa,
 } from '@/lib/supabase/configuracion-empresa';
+import { supabase } from '@/lib/supabase'; // Asegurate de importar tu cliente supabase
 
 export default function AjustesAdminPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [subiendoLogo, setSubiendoLogo] = useState(false);
   const [mensaje, setMensaje] = useState<{ tipo: 'exito' | 'error'; texto: string } | null>(null);
 
   const [form, setForm] = useState<ConfiguracionEmpresa>({
@@ -41,6 +43,42 @@ export default function AjustesAdminPage() {
       ...form,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleSubirLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSubiendoLogo(true);
+    setMensaje(null);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+      const filePath = `branding/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('imagenes')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('imagenes')
+        .getPublicUrl(filePath);
+
+      setForm((prev) => ({
+        ...prev,
+        logo_url: publicUrlData.publicUrl,
+      }));
+
+      setMensaje({ tipo: 'exito', texto: 'Logo cargado. Presioná "Guardar Cambios" para aplicar.' });
+    } catch (err: any) {
+      console.error(err);
+      setMensaje({ tipo: 'error', texto: 'Error al subir la imagen a Supabase Storage.' });
+    } finally {
+      setSubiendoLogo(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,16 +161,28 @@ export default function AjustesAdminPage() {
             </div>
             <div className="md:col-span-2">
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                URL del Logo
+                Logo del Negocio
               </label>
-              <input
-                type="text"
-                name="logo_url"
-                value={form.logo_url}
-                onChange={handleChange}
-                placeholder="https://..."
-                className="w-full border rounded-lg p-2.5 text-sm"
-              />
+              <div className="flex gap-3 items-center">
+                <input
+                  type="text"
+                  name="logo_url"
+                  value={form.logo_url}
+                  onChange={handleChange}
+                  placeholder="https://... o subí un archivo"
+                  className="w-full border rounded-lg p-2.5 text-sm"
+                />
+                <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-4 py-2.5 rounded-lg border whitespace-nowrap transition-colors">
+                  {subiendoLogo ? 'Subiendo...' : 'Subir imagen'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleSubirLogo}
+                    className="hidden"
+                    disabled={subiendoLogo}
+                  />
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -211,7 +261,7 @@ export default function AjustesAdminPage() {
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || subiendoLogo}
             className="bg-black text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
           >
             {saving ? 'Guardando...' : 'Guardar Cambios'}
