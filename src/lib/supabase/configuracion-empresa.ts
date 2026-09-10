@@ -7,6 +7,7 @@ export interface ConfiguracionEmpresa {
   logo_url: string;
   whatsapp_numero: string;
   google_maps_url: string;
+  direccion?: string;          
   mp_access_token: string;
   mp_alias: string;
 }
