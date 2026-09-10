@@ -4,29 +4,38 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, ShoppingBag, MessageCircle } from 'lucide-react';
+import { useConfig } from '@/context/ConfigContext';
 
 export default function LandingPage() {
-  const whatsappUrl = "https://wa.me/5493413954355?text=Hola!%20Tengo%20una%20consulta.";
+  const { config } = useConfig();
+
+  // Nombre y logo dinámicos
+  const nombreEmpresa = config?.nombre_empresa || 'LUMINARES ESTÉTICA';
+  const logoUrl = config?.logo_url || '/logodoradoo.svg';
+
+  // WhatsApp dinámico
+  const rawNumber = config?.whatsapp_numero || '5493413954355';
+  const numeroLimpio = rawNumber.replace(/[^0-9]/g, '');
+  const whatsappUrl = `https://wa.me/${numeroLimpio}?text=Hola!%20Tengo%20una%20consulta.`;
 
   return (
     <main className="min-h-screen bg-[#F2F4F7] flex flex-col items-center justify-center p-6 md:p-12">
       <div className="max-w-md w-full flex flex-col items-center">
         
         {/* Encabezado / Logo */}
-        <header className="text-center mb-8">
+        <header className="text-center mb-8 flex flex-col items-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-white shadow-[0_8px_20px_rgba(0,0,0,0.06)] border border-slate-100 mb-4 overflow-hidden p-3">
-            {/* Imagen desde la carpeta public */}
             <Image 
-              src="/logodoradoo.svg" 
-              alt="Logo Luminares" 
+              src={logoUrl} 
+              alt={`Logo ${nombreEmpresa}`} 
               width={40} 
               height={40} 
-              className="object-contain w-auto h-auto"
+              className="object-contain w-auto h-auto max-h-10"
               priority
             />
           </div>
           <p className="text-xs font-black tracking-[0.25em] uppercase text-emerald-800 mb-1">
-            LUMINARES ESTÉTICA
+            {nombreEmpresa}
           </p>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             ¿Qué te gustaría hacer hoy?
@@ -78,7 +87,7 @@ export default function LandingPage() {
         </div>
 
         <footer className="text-center text-[11px] text-slate-400 mt-6 tracking-wide">
-          Luminares Estética
+          {nombreEmpresa}
         </footer>
 
       </div>

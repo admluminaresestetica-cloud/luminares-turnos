@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
+import { useConfig } from '@/context/ConfigContext';
 
 interface ReservaDetalle {
   codigo_unico: string;
@@ -30,6 +31,7 @@ interface ReservaDetalle {
 }
 
 function ContenidoReservaExitosa() {
+  const { config } = useConfig();
   const searchParams = useSearchParams();
   const reservaId = searchParams.get('reserva_id');
 
@@ -126,7 +128,8 @@ function ContenidoReservaExitosa() {
     `📅 *Fecha:* ${fechaFormateada} - ${horaFormateada} hs\n\n` +
     `Te adjunto por aquí mi comprobante de pago.`;
 
-  const urlWhatsapp = buildWhatsAppUrl('5493413954355', mensajeWS);
+  const numeroTelefono = config?.whatsapp_numero || '5493413954355';
+  const urlWhatsapp = buildWhatsAppUrl(numeroTelefono, mensajeWS);
 
   return (
     <div className="min-h-screen bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">

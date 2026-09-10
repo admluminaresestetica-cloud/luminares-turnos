@@ -3,15 +3,21 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MapPin, Wallet, ShieldCheck } from 'lucide-react';
+import { useConfig } from '@/context/ConfigContext';
 
 export default function Footer() {
   const pathname = usePathname();
   const anioActual = new Date().getFullYear();
+  const { config } = useConfig();
 
   // Si el usuario está en la tienda, este footer NO se renderiza
   if (pathname?.startsWith('/tienda')) {
     return null;
   }
+
+  const direccionTexto = config?.direccion || "Rosario, Santa Fe";
+  const mapsUrl = config?.google_maps_url || "https://maps.google.com";
+  const nombreEmpresa = config?.nombre_empresa || "Luminares Estética";
 
   return (
     <footer className="w-full border-t border-slate-200 bg-slate-50 py-8 mt-auto forced-color-adjust-none">
@@ -20,13 +26,13 @@ export default function Footer() {
         {/* Ubicación y Medios de Pago */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 text-xs font-medium text-slate-700">
           <a
-            href="https://www.google.com/maps/place//data=!4m2!3m1!1s0x95b6530031ebfef9:0xc7bf7db44f73adf7?entry=gemini&utm_source=gemini&utm_campaign=gem-default" 
+            href={mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-xs"
           >
             <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-            <span>Rosario, Santa Fe · Ver mapa</span>
+            <span>{direccionTexto} · Ver mapa</span>
           </a>
 
           <div className="inline-flex items-center gap-1.5 bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-xs">
@@ -49,7 +55,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <p className="text-[11px] text-slate-500 font-medium">
-          © {anioActual} Luminares Estética. Todos los derechos reservados.
+          © {anioActual} {nombreEmpresa}. Todos los derechos reservados.
         </p>
 
       </div>

@@ -1,8 +1,16 @@
+'use client';
+
 import { MessageCircle } from 'lucide-react';
+import { useConfig } from '@/context/ConfigContext';
 
 export default function WhatsAppButton() {
-  // Reemplazá el número por el tuyo (con 549 y sin +, ni guiones, ni espacios)
-  const whatsappUrl = "https://wa.me/5493413954355?text=Hola!%20Tengo%20una%20consulta%20sobre%20la%20reserva.";
+  const { config } = useConfig();
+
+  // Limpiamos espacios, guiones o signos '+' por si el cliente ingresa el número con formato
+  const rawNumber = config?.whatsapp_numero || '5493413954355';
+  const numeroLimpio = rawNumber.replace(/[^0-9]/g, '');
+
+  const whatsappUrl = `https://wa.me/${numeroLimpio}?text=Hola!%20Tengo%20una%20consulta%20sobre%20la%20reserva.`;
 
   return (
     <a

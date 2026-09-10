@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { MercadoPagoConfig, Preference } from "mercadopago";
 import { createClient } from "@supabase/supabase-js";
-
-const client = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN || "",
-});
+import { obtenerConfiguracion } from "@/lib/supabase/configuracion-empresa";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +10,19 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
+    // 1. Obtenemos credenciales dinámicas de la DB o .env como respaldo
+    const configEmpresa = await obtenerConfiguracion();
+    const accessToken = configEmpresa?.mp_access_token || process.env.MP_ACCESS_TOKEN || "";
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "No se configuró el Token de Mercado Pago." },
+        { status: 500 }
+      );
+    }
+
+    const client = new MercadoPagoConfig({ accessToken });
+
     const { itemsCarrito, cliente } = await request.json();
 
     if (!itemsCarrito || !Array.isArray(itemsCarrito) || itemsCarrito.length === 0) {
@@ -27,7 +37,6 @@ export async function POST(request: Request) {
     const itemsMP = [];
     const itemsValidados = [];
 
-    // Lista de todas las tablas posibles donde podés tener ítems con precio
     const tablasASecundar = ["servicios_laser", "promos_laser", "productos", "servicios_generales"];
 
     for (const item of itemsCarrito) {
@@ -41,9 +50,32 @@ export async function POST(request: Request) {
         );
       }
 
+      // Si es el ítem especial de Envío / Cadetería, lo procesamos directo sin consultar a la DB
+      if (productoId === "envio-cadeteria") {
+        const precioOficial = Number(item.precio) || 0;
+        const precioUnitarioConRecargo = Math.round(precioOficial * (1 + PORCENTAJE_RECARGO));
+
+        totalPedido += precioUnitarioConRecargo * cantidad;
+
+        itemsMP.push({
+          id: "envio-cadeteria",
+          title: String(item.nombre || "Costo de Cadetería / Envío"),
+          unit_price: precioUnitarioConRecargo,
+          quantity: cantidad,
+          currency_id: "ARS",
+        });
+
+        itemsValidados.push({
+          nombre_producto: String(item.nombre || "Costo de Cadetería / Envío"),
+          cantidad: cantidad,
+          precio_unitario: precioUnitarioConRecargo,
+        });
+
+        continue; // Pasa al siguiente ítem
+      }
+
       let productoDb = null;
 
-      // 🔍 Búsqueda automática: probamos en qué tabla de Supabase está este ID
       for (const tabla of tablasASecundar) {
         const { data, error } = await supabase
           .from(tabla)
@@ -53,11 +85,10 @@ export async function POST(request: Request) {
 
         if (data && !error) {
           productoDb = data;
-          break; // Encontramos el producto, salimos del bucle de tablas
+          break;
         }
       }
 
-      // Si no se encuentra en ninguna tabla, por seguridad frenamos la compra
       if (!productoDb) {
         return NextResponse.json(
           { error: `El producto o servicio con ID ${productoId} no es válido.` },
@@ -65,10 +96,9 @@ export async function POST(request: Request) {
         );
       }
 
-      // 🛡️ Usamos estrictamente el precio oficial de la base de datos con su recargo
       const precioOficial = Number(productoDb.precio) || 0;
       const precioUnitarioConRecargo = Math.round(precioOficial * (1 + PORCENTAJE_RECARGO));
-      
+
       totalPedido += precioUnitarioConRecargo * cantidad;
 
       itemsMP.push({
@@ -86,7 +116,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // 1. Registramos el pedido en Supabase
+    // Registramos el pedido
     const { data: pedido, error: errorPedido } = await supabase
       .from("pedidos")
       .insert({
@@ -96,7 +126,7 @@ export async function POST(request: Request) {
         total: totalPedido,
         estado: "pendiente",
         items: itemsValidados,
-        metodo_envio: cliente?.metodoEntrega || "retiro",
+        metodo_envio: cliente?.metodoEnvio || cliente?.metodoEntrega || "retiro",
       })
       .select()
       .single();
@@ -109,7 +139,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Insertamos los ítems relacionados
     const itemsParaInsertarConId = itemsValidados.map((item) => ({
       ...item,
       pedido_id: pedido.id,
@@ -123,7 +152,7 @@ export async function POST(request: Request) {
       console.error("Error al registrar los ítems del pedido:", errorItems);
     }
 
-    // 3. Creamos la preferencia en Mercado Pago
+    // Creamos la preferencia con la instancia dinámica de MP
     const preference = new Preference(client);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
 

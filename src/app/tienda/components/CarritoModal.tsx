@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   X,
   ShoppingBag,
@@ -12,10 +12,17 @@ import {
   Trash2,
   Send,
   Check,
+  Sparkles,
 } from "lucide-react";
+import {
+  obtenerConfiguracion,
+  ConfiguracionEmpresa,
+} from "@/lib/supabase/configuracion-empresa";
 
 export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
-  const total = carrito.reduce(
+  const [config, setConfig] = useState<ConfiguracionEmpresa | null>(null);
+
+  const subtotalProductos = carrito.reduce(
     (acc: number, p: any) => acc + Number(p.precio) * (p.cantidad || 1),
     0
   );
@@ -28,46 +35,83 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
   const [celular, setCelular] = useState("");
   const [direccion, setDireccion] = useState("");
 
-  // Función para construir y enviar el mensaje ordenado a WhatsApp
+  useEffect(() => {
+    async function cargarConfig() {
+      const data = await obtenerConfiguracion();
+      if (data) {
+        setConfig(data);
+        // Si no están habilitados los envíos, forzar "retiro"
+        if (!data.envio_domicilio_activo) {
+          setMetodoEntrega("retiro");
+        }
+      }
+    }
+    cargarConfig();
+  }, []);
+
+  // Lógica de envíos
+  const envioGratisActivo = Boolean(config?.envio_gratis_activo && config?.monto_envio_gratis);
+  const montoMinimoEnvioGratis = config?.monto_envio_gratis || 0;
+  const calificaEnvioGratis = envioGratisActivo && subtotalProductos >= montoMinimoEnvioGratis;
+  
+  const costoEnvioBase = config?.costo_envio_base || 0;
+  const costoEnvioAplicado =
+    metodoEntrega === "envio"
+      ? calificaEnvioGratis
+        ? 0
+        : costoEnvioBase
+      : 0;
+
+  const totalFinal = subtotalProductos + costoEnvioAplicado;
+
+  // Porcentaje de la barra de envío gratis
+  const porcentajeEnvioGratis = envioGratisActivo
+    ? Math.min(100, Math.round((subtotalProductos / montoMinimoEnvioGratis) * 100))
+    : 0;
+  const montoFaltanteEnvioGratis = Math.max(0, montoMinimoEnvioGratis - subtotalProductos);
+
   const handleFinalizarPedido = () => {
-    // Número oficial de la tienda Luminares (formato internacional sin signos)
-    const numeroWhatsApp = "5493415555555"; // Reemplazá por tu número real de WhatsApp
+    const numeroWhatsApp = config?.whatsapp_numero || "5493415555555";
 
-    // Formateo visual para el método de pago y entrega
-    const entregaTexto = metodoEntrega === "retiro" ? "🏪 Retiro en local" : `🚚 Envío a domicilio (${direccion || "Dirección no especificada"})`;
-    
-    const pagoTexto = 
-      metodoPago === "transferencia" ? "🏛️ Transferencia / Alias" :
-      metodoPago === "mercadopago" ? "💳 Mercado Pago" : "💬 Coordinar por WhatsApp";
+    const entregaTexto =
+      metodoEntrega === "retiro"
+        ? "🏪 Retiro en local"
+        : `🚚 Envío a domicilio (${direccion || "Dirección no especificada"})`;
 
-    // 1. Encabezado del pedido
-    let mensaje = `🛍️ *NUEVO PEDIDO - LUMINARES TIENDA*\n`;
+    const pagoTexto =
+      metodoPago === "transferencia"
+        ? "🏛️ Transferencia / Alias"
+        : metodoPago === "mercadopago"
+        ? "💳 Mercado Pago"
+        : "💬 Coordinar por WhatsApp";
+
+    let mensaje = `🛍️ *NUEVO PEDIDO - ${config?.nombre_empresa || "TIENDA"}*\n`;
     mensaje += `-----------------------------------\n\n`;
 
-    // 2. Datos del cliente
     mensaje += `👤 *Cliente:* ${nombre || "No especificado"}\n`;
     if (celular) mensaje += `📱 *Teléfono:* ${celular}\n`;
     mensaje += `🚚 *Modalidad:* ${entregaTexto}\n`;
     mensaje += `💳 *Pago:* ${pagoTexto}\n\n`;
 
-    // 3. Detalle de productos
     mensaje += `📦 *PRODUCTOS:* \n`;
     carrito.forEach((p: any) => {
       const cant = p.cantidad || 1;
-      const subtotal = Number(p.precio) * cant;
-      mensaje += `• ${cant}x ${p.nombre} - *$${subtotal.toLocaleString("es-AR")}*\n`;
+      const sub = Number(p.precio) * cant;
+      mensaje += `• ${cant}x ${p.nombre} - *$${sub.toLocaleString("es-AR")}*\n`;
     });
 
-    // 4. Total final
+    if (metodoEntrega === "envio") {
+      mensaje += `\n🚚 *Costo de envío:* ${
+        costoEnvioAplicado === 0 ? "GRATIS" : `$${costoEnvioAplicado.toLocaleString("es-AR")}`
+      }\n`;
+    }
+
     mensaje += `\n-----------------------------------\n`;
-    mensaje += `💰 *TOTAL A PAGAR:* *$${total.toLocaleString("es-AR")}*\n`;
+    mensaje += `💰 *TOTAL A PAGAR:* *$${totalFinal.toLocaleString("es-AR")}*\n`;
     mensaje += `-----------------------------------\n\n`;
     mensaje += `¡Hola! Quisiera confirmar este pedido. Quedo a la espera para coordinar. ✨`;
 
-    // Convertir el texto para URL
     const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-    
-    // Abrir WhatsApp en una nueva pestaña
     window.open(url, "_blank");
   };
 
@@ -115,12 +159,37 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
             </div>
           ) : (
             <div className="flex flex-col gap-7">
+
+              {/* Barra de Progreso Envío Gratis */}
+              {envioGratisActivo && (
+                <div className="rounded-2xl border border-[#E7E5E0] bg-[#FAF9F7] p-4 shadow-xs">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <p className="text-xs font-semibold text-[#12151B] m-0">
+                      {calificaEnvioGratis ? (
+                        <span className="text-emerald-700">¡Tenés Envío GRATIS asegurado! 🎉</span>
+                      ) : (
+                        <>
+                          Agregá <span className="font-bold text-black">${montoFaltanteEnvioGratis.toLocaleString("es-AR")}</span> más para envío gratis
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <div className="w-full h-2 bg-[#E7E5E0] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500 transition-all duration-300 rounded-full"
+                      style={{ width: `${porcentajeEnvioGratis}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Método de Entrega */}
               <section>
                 <h3 className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-[#9E9A92]">
                   Método de entrega
                 </h3>
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className={`grid ${config?.envio_domicilio_activo ? "grid-cols-2" : "grid-cols-1"} gap-2.5`}>
                   <button
                     type="button"
                     onClick={() => setMetodoEntrega("retiro")}
@@ -133,18 +202,21 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
                     <Store className="h-4.5 w-4.5" strokeWidth={2} />
                     <span className="text-[13px] font-semibold">Retiro en local</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setMetodoEntrega("envio")}
-                    className={`flex flex-col items-center gap-1.5 rounded-2xl border px-3 py-3.5 text-center transition-all duration-200 ${
-                      metodoEntrega === "envio"
-                        ? "border-[#12151B] bg-[#12151B] text-white shadow-md shadow-[#12151B]/15"
-                        : "border-[#E7E5E0] bg-white text-[#524F4A] hover:border-[#12151B]/25 hover:bg-[#FAF9F7]"
-                    }`}
-                  >
-                    <Truck className="h-4.5 w-4.5" strokeWidth={2} />
-                    <span className="text-[13px] font-semibold">Envío a domicilio</span>
-                  </button>
+
+                  {config?.envio_domicilio_activo && (
+                    <button
+                      type="button"
+                      onClick={() => setMetodoEntrega("envio")}
+                      className={`flex flex-col items-center gap-1.5 rounded-2xl border px-3 py-3.5 text-center transition-all duration-200 ${
+                        metodoEntrega === "envio"
+                          ? "border-[#12151B] bg-[#12151B] text-white shadow-md shadow-[#12151B]/15"
+                          : "border-[#E7E5E0] bg-white text-[#524F4A] hover:border-[#12151B]/25 hover:bg-[#FAF9F7]"
+                      }`}
+                    >
+                      <Truck className="h-4.5 w-4.5" strokeWidth={2} />
+                      <span className="text-[13px] font-semibold">Envío a domicilio</span>
+                    </button>
+                  )}
                 </div>
               </section>
 
@@ -291,16 +363,38 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
 
         {/* Total y checkout */}
         {carrito.length > 0 && (
-          <div className="border-t border-[#E7E5E0] px-6 py-5">
-            <div className="mb-4 flex items-center justify-between">
+          <div className="border-t border-[#E7E5E0] px-6 py-5 space-y-3">
+            <div className="space-y-1.5 text-xs text-[#6B675F]">
+              <div className="flex justify-between">
+                <span>Subtotal productos</span>
+                <span className="font-semibold text-[#12151B]">
+                  ${subtotalProductos.toLocaleString("es-AR")}
+                </span>
+              </div>
+              {metodoEntrega === "envio" && (
+                <div className="flex justify-between">
+                  <span>Envío a domicilio</span>
+                  <span className="font-semibold text-[#12151B]">
+                    {costoEnvioAplicado === 0 ? (
+                      <span className="text-emerald-600 font-bold">GRATIS</span>
+                    ) : (
+                      `$${costoEnvioAplicado.toLocaleString("es-AR")}`
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between border-t border-[#E7E5E0] pt-2">
               <span className="text-[15px] font-medium text-[#12151B]">Total a pagar</span>
               <span
                 className="text-xl font-bold text-[#12151B]"
                 style={{ fontFamily: "'Space Grotesk', ui-sans-serif, sans-serif" }}
               >
-                ${total.toLocaleString("es-AR")}
+                ${totalFinal.toLocaleString("es-AR")}
               </span>
             </div>
+
             <button
               onClick={handleFinalizarPedido}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#12151B] py-3.5 text-[15px] font-bold text-white shadow-lg shadow-[#12151B]/25 transition-all duration-200 hover:bg-[#1E222B] active:scale-[0.98]"

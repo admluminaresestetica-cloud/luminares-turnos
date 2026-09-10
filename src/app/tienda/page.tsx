@@ -4,11 +4,12 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { ShoppingBag, ArrowLeft } from "lucide-react"; // 👈 1. Agregamos ArrowLeft acá
+import { ShoppingBag, ArrowLeft } from "lucide-react";
 import CarritoDrawer from "@/components/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
 import FooterTienda from "@/components/FooterTienda";
 import { useCarrito } from "@/context/CarritoContext";
+import { useConfig } from "@/context/ConfigContext"; // 👈 1. Importamos el hook de configuración
 import { Producto } from "@/types/tienda";
 import BotonFlotanteCarrito from "./components/BotonFlotanteCarrito";
 import Fuse from "fuse.js";
@@ -24,6 +25,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function TiendaPage() {
+  const { config } = useConfig(); // 👈 2. Obtenemos la configuración global
   const [mounted, setMounted] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -201,7 +203,7 @@ export default function TiendaPage() {
         {/* Navbar con botón de retorno al inicio integrado */}
         <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0] bg-white/90 px-4 py-3 backdrop-blur-md sm:px-10 sm:py-4">
           <div className="flex items-center gap-3">
-            {/* 👈 Botón para volver al inicio general */}
+            {/* Botón para volver al inicio general */}
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B675F] hover:text-[#12151B] bg-[#F7F7F5] hover:bg-[#E7E5E0]/60 px-2.5 py-2 rounded-xl transition-all border border-[#E7E5E0]"
@@ -218,8 +220,8 @@ export default function TiendaPage() {
             >
               <div className="relative flex h-9 w-9 shrink-0 items-center justify-center sm:h-12 sm:w-12">
                 <Image
-                  src="/logodoradoo.svg"
-                  alt="Logo Luminares"
+                  src={config?.logo_url || "/logodoradoo.svg"}
+                  alt={config?.nombre_empresa || "Logo"}
                   width={48}
                   height={48}
                   className="h-full w-full object-contain"
@@ -229,10 +231,10 @@ export default function TiendaPage() {
 
               <div className="flex min-w-0 flex-col leading-tight">
                 <h2 className="m-0 truncate text-base font-bold tracking-tight text-[#12151B] sm:text-lg">
-                  Luminares
+                  {config?.nombre_empresa || "Luminares"}
                 </h2>
                 <span className="hidden truncate text-[11px] font-medium text-[#6B675F] sm:block sm:text-sm">
-                  Tienda Oficial
+                  {config?.subtitulo_tienda || "Tienda Oficial"}
                 </span>
               </div>
             </Link>

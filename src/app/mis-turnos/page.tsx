@@ -23,11 +23,10 @@ import { formatFechaDisplay, puedeCancelarReserva } from '@/lib/calendario/slots
 import { getConfiguracionSistema } from '@/lib/supabase/configuracion';
 import { buscarReserva, cancelarReserva } from '@/lib/supabase/reservas';
 import type { Reserva } from '@/lib/types';
-
-// Número de WhatsApp de la estética (con código de país sin +)
-const NUMERO_WHATSAPP = '5493413954355'; 
+import { useConfig } from '@/context/ConfigContext';
 
 export default function MisTurnosPage() {
+  const { config } = useConfig();
   const [celular, setCelular] = useState('');
   const [codigo, setCodigo] = useState('');
   const [reserva, setReserva] = useState<Reserva | null>(null);
@@ -39,6 +38,10 @@ export default function MisTurnosPage() {
 
   // Estado para controlar la apertura del modal (pop-up)
   const [modalCancelarOpen, setModalCancelarOpen] = useState(false);
+
+  // WhatsApp dinámico
+  const rawNumber = config?.whatsapp_numero || '5493413954355';
+  const numeroWhatsApp = rawNumber.replace(/[^0-9]/g, '');
 
   const handleBuscar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,12 +58,12 @@ export default function MisTurnosPage() {
     setBuscando(true);
 
     try {
-      const [found, config] = await Promise.all([
+      const [found, configSys] = await Promise.all([
         buscarReserva(celular, codigo),
         getConfiguracionSistema(),
       ]);
 
-      if (config) setVentanaHoras(config.ventana_horas_cancelacion);
+      if (configSys) setVentanaHoras(configSys.ventana_horas_cancelacion);
 
       if (!found) {
         setError('No encontramos una reserva con esos datos. Verificá el celular y el código.');
@@ -119,7 +122,7 @@ export default function MisTurnosPage() {
   const mensajeReprogramar = reserva
     ? encodeURIComponent(`Hola! Quisiera reprogramar mi turno (Código: ${reserva.codigo_unico}) reservado a nombre de ${reserva.cliente_nombre}.`)
     : '';
-  const urlWhatsAppReprogramar = `https://wa.me/${NUMERO_WHATSAPP}?text=${mensajeReprogramar}`;
+  const urlWhatsAppReprogramar = `https://wa.me/${numeroWhatsApp}?text=${mensajeReprogramar}`;
 
   return (
     <main className="min-h-screen bg-slate-100 p-4 sm:p-6 md:p-12 relative">

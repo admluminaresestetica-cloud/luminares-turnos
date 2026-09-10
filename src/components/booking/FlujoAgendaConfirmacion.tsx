@@ -15,6 +15,7 @@ import { crearReserva, getReservasPorFecha } from '@/lib/supabase/reservas';
 import { supabase } from '@/lib/supabase';
 import { generarCodigoReferido } from '@/lib/admin/helpers';
 import { buildMensajeReserva, buildWhatsAppUrl, calcularMontoSena } from '@/lib/whatsapp';
+import { useConfig } from '@/context/ConfigContext';
 
 import type { ConfiguracionCalendario, ConfiguracionSistema, TipoServicio, DetalleReservaGeneral, DetalleReservaLaser } from '@/lib/types';
 
@@ -66,6 +67,7 @@ export default function FlujoAgendaConfirmacion({
   colorAccent = 'violet',
   titulo = 'Agenda tu turno',
 }: Props) {
+  const { config } = useConfig();
   const [paso, setPaso] = useState<Paso>('agenda');
   const [configCalendario, setConfigCalendario] = useState<ConfiguracionCalendario | null>(null);
   const [configSistema, setConfigSistema] = useState<ConfiguracionSistema | null>(null);
@@ -229,11 +231,12 @@ export default function FlujoAgendaConfirmacion({
       });
 
       if (descuentoMonto > 0) {
-        mensaje += `\n🎟️ *Descuento applied:* -$${descuentoMonto.toLocaleString('es-AR')} (Ref: ${codigoUsadoLimpio})`;
+        mensaje += `\n🎟️ *Descuento aplicado:* -$${descuentoMonto.toLocaleString('es-AR')} (Ref: ${codigoUsadoLimpio})`;
       }
       mensaje += `\n\n🎁 *Tu código de recomendada:* ${codigoReferidoPropio}`;
 
-      const urlWhatsapp = buildWhatsAppUrl('5493413954355', mensaje);
+      const numeroTelefono = config?.whatsapp_numero || '5493413954355';
+      const urlWhatsapp = buildWhatsAppUrl(numeroTelefono, mensaje);
       window.open(urlWhatsapp, '_blank') || (window.location.href = urlWhatsapp);
     } catch (e) {
       console.error(e);

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
-import { UserCheck, Sparkles, CalendarDays, ShoppingBag, LogOut } from 'lucide-react';
+import { UserCheck, Sparkles, CalendarDays, ShoppingBag, Settings, LogOut } from 'lucide-react';
 
 // Cliente configurado para manejar cookies de sesión en el navegador
 const supabase = createBrowserClient(
@@ -65,6 +65,14 @@ export default function AdminHubPage() {
       bgHover: 'hover:bg-teal-50/60 hover:border-teal-300 hover:shadow-teal-500/10',
       iconBg: 'bg-teal-100/70 text-teal-600 group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-white',
       textColor: 'group-hover:text-teal-700',
+    },
+    {
+      titulo: 'Ajustes',
+      icono: Settings,
+      ruta: '/admin/ajustes',
+      bgHover: 'hover:bg-slate-100/80 hover:border-slate-300 hover:shadow-slate-500/10',
+      iconBg: 'bg-slate-100 text-slate-600 group-hover:scale-110 group-hover:bg-slate-800 group-hover:text-white',
+      textColor: 'group-hover:text-slate-800',
     },
   ];
 

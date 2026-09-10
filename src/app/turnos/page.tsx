@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from 'next/link';
 import { Zap, Sparkles, Calendar, HelpCircle, MessageCircle, ArrowLeft } from 'lucide-react';
 import BannerPrincipal from '@/components/BannerPrincipal';
+import { useConfig } from '@/context/ConfigContext';
 
 const ACCESOS = [
   {
@@ -45,6 +46,13 @@ function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isAdmin = searchParams.get("admin") === "true";
+  const { config } = useConfig();
+
+  // Datos dinámicos desde la BD
+  const nombreEmpresa = config?.nombre_empresa || 'LUMINARES ESTÉTICA';
+  const rawNumber = config?.whatsapp_numero || '5493413954355';
+  const numeroLimpio = rawNumber.replace(/[^0-9]/g, '');
+  const whatsappUrl = `https://wa.me/${numeroLimpio}?text=Hola!%20Tengo%20una%20consulta.`;
 
   useEffect(() => {
     if (isAdmin) {
@@ -60,8 +68,6 @@ function HomeContent() {
       </div>
     );
   }
-
-  const whatsappUrl = "https://wa.me/5493413954355?text=Hola!%20Tengo%20una%20consulta.";
 
   return (
     <main className="min-h-screen bg-[#F2F4F7] flex flex-col items-center justify-center p-6 md:p-12">
@@ -83,7 +89,7 @@ function HomeContent() {
         <header className="text-center my-6">
           <p className="text-xs font-black tracking-[0.2em] uppercase mb-1">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-indigo-500">
-              LUMINARES ESTÉTICA
+              {nombreEmpresa}
             </span>
           </p>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
