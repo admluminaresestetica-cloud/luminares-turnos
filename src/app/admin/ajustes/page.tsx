@@ -58,13 +58,13 @@ export default function AjustesAdminPage() {
       const filePath = `branding/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('imagenes')
+        .from('ajustes') // 👈 Apuntando al bucket nuevo
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: publicUrlData } = supabase.storage
-        .from('imagenes')
+        .from('ajustes') // 👈 Apuntando al bucket nuevo
         .getPublicUrl(filePath);
 
       setForm((prev) => ({
