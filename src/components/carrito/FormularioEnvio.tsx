@@ -13,22 +13,26 @@ interface DatosEnvio {
 
 interface FormularioEnvioProps {
   totalPrecio: number;
+  costoEnvio: number;
+  tieneEnvioGratis: boolean;
   datosEnvio: DatosEnvio;
   setDatosEnvio: React.Dispatch<React.SetStateAction<DatosEnvio>>;
   guardandoPedido: boolean;
   metodoPago: "whatsapp" | "mercadopago";
   onConfirmar: () => void;
-  envioDomicilioActivo?: boolean; // 👈 1. Nueva prop agregada
+  envioDomicilioActivo?: boolean;
 }
 
 export default function FormularioEnvio({
   totalPrecio,
+  costoEnvio,
+  tieneEnvioGratis,
   datosEnvio,
   setDatosEnvio,
   guardandoPedido,
   metodoPago,
   onConfirmar,
-  envioDomicilioActivo = true, // 👈 2. Valor por defecto en true
+  envioDomicilioActivo = true,
 }: FormularioEnvioProps) {
   const inputClass =
     "w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] py-2.5 pl-10 pr-3.5 text-sm text-[#12151B] placeholder:text-gray-400 outline-none transition-all duration-200 focus:border-[#12151B] focus:bg-white focus:ring-4 focus:ring-[#12151B]/[0.06]";
@@ -103,7 +107,7 @@ export default function FormularioEnvio({
           />
         </div>
 
-        {/* Selector de método de envío tipo tarjeta */}
+        {/* Selector de método de envío */}
         <div className={`grid gap-2.5 ${envioDomicilioActivo ? "grid-cols-2" : "grid-cols-1"}`}>
           <label
             className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
@@ -124,7 +128,6 @@ export default function FormularioEnvio({
             Retiro
           </label>
 
-          {/* 👈 3. Se evalúa el interruptor del admin */}
           {envioDomicilioActivo && (
             <label
               className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
@@ -147,7 +150,7 @@ export default function FormularioEnvio({
           )}
         </div>
 
-        {/* Campo de dirección + Cartel informativo de envío */}
+        {/* Campo de dirección + Cartel informativo de costo de envío */}
         {envioDomicilioActivo && datosEnvio.metodoEnvio === "envio" && (
           <div className="flex flex-col gap-2 animate-[fadeIn_0.2s_ease-out]">
             <div className="relative">
@@ -161,11 +164,23 @@ export default function FormularioEnvio({
               />
             </div>
 
-            {/* Aviso de zonas de envío */}
+            {/* Cartel de Costo de Envío */}
             <div className="flex items-start gap-2.5 rounded-xl border border-amber-200/70 bg-amber-50/80 p-3 text-xs text-amber-900 shadow-2xs">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={2} />
               <p className="m-0 leading-relaxed">
-                <strong className="font-semibold text-amber-950">Envío bonificado</strong> en zonas cercanas a nuestro local. Por otras distancias, consultanos por WhatsApp.
+                {tieneEnvioGratis ? (
+                  <strong className="font-semibold text-emerald-800">
+                    ¡Tenés envío gratis bonificado!
+                  </strong>
+                ) : (
+                  <>
+                    Costo de envío / cadetería:{" "}
+                    <strong className="font-bold text-amber-950">
+                      ${costoEnvio.toLocaleString("es-AR")}
+                    </strong>{" "}
+                    (sumado al total).
+                  </>
+                )}
               </p>
             </div>
           </div>

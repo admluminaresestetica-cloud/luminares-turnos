@@ -25,16 +25,17 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const { carrito, agregarAlCarrito, restarUnidad, eliminarDelCarrito, vaciarCarrito } = useCarrito();
   const searchParams = useSearchParams();
 
-  // Lectura de la configuración global
-  const montoEnvioGratis = (config as any)?.monto_envio_gratis ?? 35000;
-  const envioDomicilioActivo = (config as any)?.envio_domicilio_activo ?? true; // 👈 Leemos el estado del interruptor
+  // Lectura de variables desde la DB
+  const montoEnvioGratis = Number((config as any)?.monto_envio_gratis ?? 40000);
+  const costoEnvioBase = Number((config as any)?.costo_envio ?? 0); // 👈 Costo de cadetería
+  const envioDomicilioActivo = (config as any)?.envio_domicilio_activo ?? true;
+
   const rawNumber = config?.whatsapp_numero || "5493413954355";
   const telefonoWhatsApp = rawNumber.replace(/[^0-9]/g, "");
 
   const [guardandoPedido, setGuardandoPedido] = useState(false);
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
 
-  // Detecta el retorno de Mercado Pago en la URL
   useEffect(() => {
     const status = searchParams.get("status");
     if (status === "success") {
@@ -43,7 +44,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     }
   }, [searchParams]);
 
-  // Selección de método de pago: 'whatsapp' o 'mercadopago'
   const [metodoPago, setMetodoPago] = useState<"whatsapp" | "mercadopago">("whatsapp");
 
   const [datosEnvio, setDatosEnvio] = useState({
@@ -54,7 +54,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     notaAdicional: "",
   });
 
-  // 👈 Garantiza que si el admin desactiva envíos, el formulario cambie automáticamente a 'retiro'
   useEffect(() => {
     if (!envioDomicilioActivo && datosEnvio.metodoEnvio === "envio") {
       setDatosEnvio((prev) => ({ ...prev, metodoEnvio: "retiro", direccion: "" }));
@@ -63,17 +62,26 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   if (!isOpen && !mostrarModalExito) return null;
 
-  // Monto base
-  const totalPrecio = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+  // Cálculo de Subtotal de Productos
+  const subtotalProductos = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
 
-  // Cálculos de Envío Gratis
-  const faltaParaEnvioGratis = Math.max(0, montoEnvioGratis - totalPrecio);
-  const porcentajeProgreso = Math.min(100, (totalPrecio / montoEnvioGratis) * 100);
-  const tieneEnvioGratis = totalPrecio >= montoEnvioGratis;
+  // Verificación de Envío Gratis
+  const tieneEnvioGratis = subtotalProductos >= montoEnvioGratis;
+  const faltaParaEnvioGratis = Math.max(0, montoEnvioGratis - subtotalProductos);
+  const porcentajeProgreso = Math.min(100, (subtotalProductos / montoEnvioGratis) * 100);
 
-  // Recargo por tarjeta / MP (10%)
+  // Cálculo del Costo de Envío aplicado
+  const costoEnvioAplicado =
+    datosEnvio.metodoEnvio === "envio" && !tieneEnvioGratis ? costoEnvioBase : 0;
+
+  // Total base (Productos + Envío si aplica)
+  const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
+
+  // Recargo MP (10%)
   const PORCENTAJE_RECARGO = 0.10;
-  const totalConRecargo = Math.round(totalPrecio * (1 + PORCENTAJE_RECARGO));
+  const totalConRecargo = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_RECARGO));
+
+  const totalFinalAbonar = metodoPago === "mercadopago" ? totalConRecargo : totalBaseConEnvio;
 
   const validarFormulario = () => {
     if (!datosEnvio.nombreCliente.trim()) {
@@ -116,23 +124,18 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           cantidad: item.cantidad,
         }));
 
-        const { error: itemsError } = await supabase
-          .from("pedido_items")
-          .insert(itemsParaInsertar);
-
-        if (itemsError) console.error("Error al insertar items:", itemsError);
+        await supabase.from("pedido_items").insert(itemsParaInsertar);
       }
     } catch (err) {
       console.error("Excepción en DB:", err);
     }
   };
 
-  // Procesar flujo de WhatsApp
   const procesarWhatsApp = async () => {
     if (!validarFormulario()) return;
 
     setGuardandoPedido(true);
-    await guardarPedidoEnDB(totalPrecio, "WhatsApp / Transferencia");
+    await guardarPedidoEnDB(totalBaseConEnvio, "WhatsApp / Transferencia");
 
     let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
     mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
@@ -150,7 +153,11 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       mensaje += `- ${item.cantidad}x ${item.nombre} ($${item.precio * item.cantidad})\n`;
     });
 
-    mensaje += `\n*Total a pagar (Transferencia / Efectivo):* $${totalPrecio}\n\n`;
+    if (costoEnvioAplicado > 0) {
+      mensaje += `- Envío / Cadetería: $${costoEnvioAplicado}\n`;
+    }
+
+    mensaje += `\n*Total a pagar (Transferencia / Efectivo):* $${totalBaseConEnvio}\n\n`;
     mensaje += `Quedo a la espera del alias para realizar la transferencia.`;
 
     const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
@@ -162,7 +169,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     setMostrarModalExito(true);
   };
 
-  // Procesar flujo de Mercado Pago
   const procesarMercadoPago = async () => {
     if (!validarFormulario()) return;
 
@@ -170,16 +176,27 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     await guardarPedidoEnDB(totalConRecargo, "Mercado Pago");
 
     try {
+      // Si hay envío se puede agregar como ítem al checkout
+      const itemsEnvio = costoEnvioAplicado > 0 ? [{
+        id: "envio-cadeteria",
+        nombre: "Costo de Envío / Cadetería",
+        precio: costoEnvioAplicado,
+        cantidad: 1,
+      }] : [];
+
       const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          itemsCarrito: carrito.map((item) => ({
-            id: item.id,
-            nombre: item.nombre,
-            precio: item.precio,
-            cantidad: item.cantidad,
-          })),
+          itemsCarrito: [
+            ...carrito.map((item) => ({
+              id: item.id,
+              nombre: item.nombre,
+              precio: item.precio,
+              cantidad: item.cantidad,
+            })),
+            ...itemsEnvio,
+          ],
           cliente: {
             nombre: datosEnvio.nombreCliente.trim(),
             telefono: datosEnvio.telefonoCliente.trim(),
@@ -194,13 +211,11 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
       if (data.init_point) {
         vaciarCarrito();
-        const checkoutUrl = data.mobile_search_url || data.init_point;
-        window.location.href = checkoutUrl;
+        window.location.href = data.mobile_search_url || data.init_point;
       } else {
         alert("Error del servidor: " + (data.error || "Desconocido"));
       }
     } catch (error: any) {
-      console.error("Error al procesar pago:", error);
       alert("Error en la solicitud: " + error.message);
     } finally {
       setGuardandoPedido(false);
@@ -226,7 +241,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out]">
           <div className="flex h-full w-full max-w-[420px] flex-col justify-between overflow-y-auto bg-white shadow-2xl animate-[slideIn_0.28s_cubic-bezier(0.16,1,0.3,1)]">
 
-            {/* Cabecera */}
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E5E0] bg-white/95 px-5 py-4 shadow-sm backdrop-blur-sm">
               <h2 className="text-lg font-bold tracking-tight text-[#12151B]">
                 Tu Carrito
@@ -276,12 +290,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#F7F7F5] text-4xl">
                     🛒
                   </div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Tu carrito está vacío
-                  </p>
-                  <p className="max-w-[220px] text-xs text-gray-400">
-                    Agregá productos para verlos reflejados acá.
-                  </p>
+                  <p className="text-sm font-medium text-gray-500">Tu carrito está vacío</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -298,11 +307,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
               )}
             </div>
 
-            {/* Opciones de Pago y Formulario */}
             {carrito.length > 0 && (
               <div className="px-5 pb-5 space-y-4">
-
-                {/* Selector de Método de Pago */}
                 <div className="rounded-2xl border border-[#E7E5E0] p-3 bg-slate-50/60 space-y-2">
                   <label className="text-xs font-bold text-[#12151B] uppercase tracking-wider block">
                     Método de Pago
@@ -338,13 +344,15 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                 </div>
 
                 <FormularioEnvio
-                  totalPrecio={metodoPago === "mercadopago" ? totalConRecargo : totalPrecio}
+                  totalPrecio={totalFinalAbonar}
+                  costoEnvio={costoEnvioBase}
+                  tieneEnvioGratis={tieneEnvioGratis}
                   datosEnvio={datosEnvio}
                   setDatosEnvio={setDatosEnvio}
                   guardandoPedido={guardandoPedido}
                   metodoPago={metodoPago}
                   onConfirmar={manejarSubmit}
-                  envioDomicilioActivo={envioDomicilioActivo} // 👈 Pasamos la prop al formulario
+                  envioDomicilioActivo={envioDomicilioActivo}
                 />
               </div>
             )}
