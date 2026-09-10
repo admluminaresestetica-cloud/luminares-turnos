@@ -26,7 +26,8 @@ export async function getReservasPorFecha(fecha: string): Promise<Reserva[]> {
     .select('*')
     .gte('fecha_hora_inicio', inicio)
     .lte('fecha_hora_inicio', fin)
-    .neq('estado', 'cancelado');
+    .neq('estado', 'cancelado')
+    .or('eliminado.is.null,eliminado.eq.false'); // <-- IGNORA LAS RESERVAS CON SOFT DELETE
 
   if (error) {
     console.error('Error al obtener reservas del día:', error);
@@ -42,6 +43,7 @@ export async function crearReserva(input: CrearReservaInput): Promise<Reserva | 
     .insert({
       ...input,
       estado: 'pendiente_sena',
+      eliminado: false, // <-- SE CREA POR DEFECTO NO ELIMINADO
     })
     .select()
     .single();
@@ -67,11 +69,12 @@ export async function buscarReserva(
 
     if (!numeroCodigo) return null;
 
-    // Consultamos en Supabase buscando los registros cuyo código contenga o coincida con la parte numérica
+    // Consultamos en Supabase buscando registros no eliminados
     const { data, error } = await supabase
       .from('reservas')
       .select('*')
-      .ilike('codigo_unico', `%${numeroCodigo}%`);
+      .ilike('codigo_unico', `%${numeroCodigo}%`)
+      .or('eliminado.is.null,eliminado.eq.false'); // <-- FILTRO SOFT DELETE
 
     if (error) {
       console.error('Error de Supabase al buscar reserva:', error);
@@ -113,6 +116,24 @@ export async function cancelarReserva(id: string): Promise<boolean> {
 
   if (error) {
     console.error('Error al cancelar reserva:', error);
+    return false;
+  }
+
+  return true;
+}
+
+// NUEVA FUNCIÓN: ELIMINACIÓN LÓGICA (SOFT DELETE)
+export async function eliminarReservaLógica(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('reservas')
+    .update({ 
+      eliminado: true,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error al realizar borrado lógico de reserva:', error);
     return false;
   }
 
