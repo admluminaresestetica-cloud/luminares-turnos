@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { MercadoPagoConfig, Preference } from "mercadopago";
 import { createClient } from "@supabase/supabase-js";
+import { obtenerConfiguracion } from "@/lib/supabase/configuracion-empresa";
 
 export const dynamic = "force-dynamic";
-
-const client = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN || "",
-});
 
 export async function POST(request: Request) {
   try {
@@ -22,6 +19,19 @@ export async function POST(request: Request) {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // 1. Leemos el token de Mercado Pago desde la base de datos o el .env
+    const configEmpresa = await obtenerConfiguracion();
+    const accessToken = configEmpresa?.mp_access_token || process.env.MP_ACCESS_TOKEN || "";
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "No se configuró el Token de Mercado Pago." },
+        { status: 500 }
+      );
+    }
+
+    const client = new MercadoPagoConfig({ accessToken });
 
     const {
       reservaId,
@@ -42,7 +52,6 @@ export async function POST(request: Request) {
     const preference = new Preference(client);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
 
-    // Crear la preferencia en Mercado Pago usando el reservaId como external_reference
     const result = await preference.create({
       body: {
         items: [
@@ -60,7 +69,6 @@ export async function POST(request: Request) {
           email: clienteEmail || "cliente@reserva.com",
         },
         back_urls: {
-          // Cambiado para redirigir a la nueva pantalla /reserva-exitosa
           success: `${baseUrl}/reserva-exitosa?reserva_id=${reservaId}`,
           failure: `${baseUrl}/?status=failure`,
           pending: `${baseUrl}/?status=pending`,
@@ -70,7 +78,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Opcional: Actualizamos el mp_preference_id en la reserva existente
     if (result.id) {
       await supabase
         .from("reservas")

@@ -24,7 +24,7 @@ export function buildMensajeReserva(params: {
   ].join('\n');
 }
 
-export function buildWhatsAppUrl(numero: string, mensaje: string): string {
-  const numeroLimpio = numero.replace(/\D/g, '');
+export function buildWhatsAppUrl(numero: string = '', mensaje: string = ''): string {
+  const numeroLimpio = (numero || '').replace(/\D/g, '');
   return `https://wa.me/${numeroLimpio}?text=${encodeURIComponent(mensaje)}`;
 }

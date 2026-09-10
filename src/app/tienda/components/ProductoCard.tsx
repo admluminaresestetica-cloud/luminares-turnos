@@ -3,12 +3,14 @@
 import React, { useState } from 'react';
 import { Producto } from '@/types/tienda';
 import { useCarrito } from '@/context/CarritoContext';
+import { useConfig } from '@/context/ConfigContext';
 
 interface ProductoCardProps {
   producto: Producto;
 }
 
 export default function ProductoCard({ producto }: ProductoCardProps) {
+  const { config } = useConfig();
   const { carrito, agregarAlCarrito, restarUnidad } = useCarrito();
 
   const itemEnCarrito = carrito.find((item) => item.id === producto.id);
@@ -30,8 +32,9 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
     }, 1000); // Vuelve al estado normal de contador después de 1 segundo
   };
 
-  // WhatsApp para consulta de reingreso
-  const numeroTelefono = "5493413954355";
+  // WhatsApp dinámico para consulta de reingreso
+  const rawNumber = config?.whatsapp_numero || '5493413954355';
+  const numeroTelefono = rawNumber.replace(/[^0-9]/g, '');
   const mensajeWA = encodeURIComponent(
     `¡Hola! Quería consultar cuándo vuelve a ingresar el producto: ${producto.nombre}`
   );

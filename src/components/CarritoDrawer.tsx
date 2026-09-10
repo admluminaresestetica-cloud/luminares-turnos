@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCarrito } from "@/context/CarritoContext";
+import { useConfig } from "@/context/ConfigContext";
 import { createClient } from "@supabase/supabase-js";
 
 import CarritoItem from "./carrito/CarritoItem";
@@ -14,18 +15,21 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const MONTO_ENVIO_GRATIS = 35000;
-
 interface CarritoDrawerProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
+  const { config } = useConfig();
   const { carrito, agregarAlCarrito, restarUnidad, eliminarDelCarrito, vaciarCarrito } = useCarrito();
   const searchParams = useSearchParams();
 
-  const [telefonoWhatsApp] = useState("5493413954355");
+  // Acceso seguro para evitar error de tipo si 'monto_envio_gratis' no está en la interfaz ConfiguracionEmpresa
+  const montoEnvioGratis = (config as any)?.monto_envio_gratis ?? 35000;
+  const rawNumber = config?.whatsapp_numero || "5493413954355";
+  const telefonoWhatsApp = rawNumber.replace(/[^0-9]/g, "");
+
   const [guardandoPedido, setGuardandoPedido] = useState(false);
   const [mostrarModalExito, setMostrarModalExito] = useState(false);
 
@@ -55,9 +59,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const totalPrecio = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
 
   // Cálculos de Envío Gratis
-  const faltaParaEnvioGratis = Math.max(0, MONTO_ENVIO_GRATIS - totalPrecio);
-  const porcentajeProgreso = Math.min(100, (totalPrecio / MONTO_ENVIO_GRATIS) * 100);
-  const tieneEnvioGratis = totalPrecio >= MONTO_ENVIO_GRATIS;
+  const faltaParaEnvioGratis = Math.max(0, montoEnvioGratis - totalPrecio);
+  const porcentajeProgreso = Math.min(100, (totalPrecio / montoEnvioGratis) * 100);
+  const tieneEnvioGratis = totalPrecio >= montoEnvioGratis;
 
   // Recargo por tarjeta / MP (10%)
   const PORCENTAJE_RECARGO = 0.10;
@@ -243,9 +247,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     </span>
                   ) : (
                     <span>
-  Te faltan <strong className="text-[#0E6E55]">${faltaParaEnvioGratis.toLocaleString("es-AR")}</strong> para <strong>ENVÍO GRATIS</strong>
-</span>
-
+                      Te faltan <strong className="text-[#0E6E55]">${faltaParaEnvioGratis.toLocaleString("es-AR")}</strong> para <strong>ENVÍO GRATIS</strong>
+                    </span>
                   )}
                   <span className="text-[10px] text-gray-500 font-bold">{Math.round(porcentajeProgreso)}%</span>
                 </div>
