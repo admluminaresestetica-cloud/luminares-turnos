@@ -8,7 +8,7 @@ import {
   guardarConfiguracion,
   ConfiguracionEmpresa,
 } from '@/lib/supabase/configuracion-empresa';
-import { supabase } from '@/lib/supabase'; // Asegurate de importar tu cliente supabase
+import { supabase } from '@/lib/supabase';
 
 export default function AjustesAdminPage() {
   const [loading, setLoading] = useState(true);
@@ -24,6 +24,10 @@ export default function AjustesAdminPage() {
     google_maps_url: '',
     mp_access_token: '',
     mp_alias: '',
+    envio_domicilio_activo: false,
+    costo_envio_base: 0,
+    envio_gratis_activo: false,
+    monto_envio_gratis: 0,
   });
 
   useEffect(() => {
@@ -31,7 +35,13 @@ export default function AjustesAdminPage() {
       setLoading(true);
       const data = await obtenerConfiguracion();
       if (data) {
-        setForm(data);
+        setForm({
+          ...data,
+          envio_domicilio_activo: data.envio_domicilio_activo ?? false,
+          costo_envio_base: data.costo_envio_base ?? 0,
+          envio_gratis_activo: data.envio_gratis_activo ?? false,
+          monto_envio_gratis: data.monto_envio_gratis ?? 0,
+        });
       }
       setLoading(false);
     }
@@ -39,10 +49,12 @@ export default function AjustesAdminPage() {
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value, type, checked } = e.target;
+    
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : type === 'number' ? (value === '' ? 0 : Number(value)) : value,
+    }));
   };
 
   const handleSubirLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,13 +70,13 @@ export default function AjustesAdminPage() {
       const filePath = `branding/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('ajustes') // 👈 Apuntando al bucket nuevo
+        .from('ajustes')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: publicUrlData } = supabase.storage
-        .from('ajustes') // 👈 Apuntando al bucket nuevo
+        .from('ajustes')
         .getPublicUrl(filePath);
 
       setForm((prev) => ({
@@ -109,7 +121,7 @@ export default function AjustesAdminPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Ajustes del Negocio</h1>
         <p className="text-sm text-gray-500">
-          Administrá la información dinámica de tu marca, datos de contacto y cobros.
+          Administrá la información dinámica de tu marca, datos de contacto, cobros y envíos.
         </p>
       </div>
 
@@ -220,6 +232,83 @@ export default function AjustesAdminPage() {
                 className="w-full border rounded-lg p-2.5 text-sm"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Envíos y Entregas */}
+        <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+          <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">
+            Configuración de Envíos
+          </h2>
+          
+          <div className="space-y-4">
+            {/* Habilitar / Deshabilitar envíos a domicilio */}
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+              <div>
+                <p className="text-sm font-medium text-gray-800">Ofrecer Envío a Domicilio</p>
+                <p className="text-xs text-gray-500">Permite a los clientes seleccionar entrega a domicilio en el carrito.</p>
+              </div>
+              <input
+                type="checkbox"
+                name="envio_domicilio_activo"
+                checked={form.envio_domicilio_activo}
+                onChange={handleChange}
+                className="w-5 h-5 accent-black cursor-pointer"
+              />
+            </div>
+
+            {/* Costo base de envío */}
+            {form.envio_domicilio_activo && (
+              <div className="pl-4 border-l-2 border-gray-200 space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Costo Base de Cadetería / Envío ($)
+                  </label>
+                  <input
+                    type="number"
+                    name="costo_envio_base"
+                    value={form.costo_envio_base}
+                    onChange={handleChange}
+                    placeholder="0"
+                    min="0"
+                    className="w-full md:w-1/2 border rounded-lg p-2.5 text-sm"
+                  />
+                </div>
+
+                {/* Habilitar Envío Gratis */}
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">Ofrecer Envío Gratis por Monto Mínimo</p>
+                    <p className="text-xs text-gray-500">Bonifica el costo de envío cuando el pedido alcanza cierto monto.</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    name="envio_gratis_activo"
+                    checked={form.envio_gratis_activo}
+                    onChange={handleChange}
+                    className="w-5 h-5 accent-black cursor-pointer"
+                  />
+                </div>
+
+                {/* Monto para Envío Gratis */}
+                {form.envio_gratis_activo && (
+                  <div className="pl-4 border-l-2 border-gray-200">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Monto Mínimo de Compra para Envío Gratis ($)
+                    </label>
+                    <input
+                      type="number"
+                      name="monto_envio_gratis"
+                      value={form.monto_envio_gratis}
+                      onChange={handleChange}
+                      placeholder="0"
+                      min="0"
+                      className="w-full md:w-1/2 border rounded-lg p-2.5 text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

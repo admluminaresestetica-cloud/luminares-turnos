@@ -10,6 +10,11 @@ export interface ConfiguracionEmpresa {
   direccion?: string;          
   mp_access_token: string;
   mp_alias: string;
+  // Campos de configuración de Envíos
+  envio_domicilio_activo?: boolean;
+  costo_envio_base?: number;
+  envio_gratis_activo?: boolean;
+  monto_envio_gratis?: number;
 }
 
 // Obtener la configuración actual
