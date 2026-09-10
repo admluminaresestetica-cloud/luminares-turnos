@@ -25,8 +25,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const { carrito, agregarAlCarrito, restarUnidad, eliminarDelCarrito, vaciarCarrito } = useCarrito();
   const searchParams = useSearchParams();
 
-  // Acceso seguro para evitar error de tipo si 'monto_envio_gratis' no está en la interfaz ConfiguracionEmpresa
+  // Lectura de la configuración global
   const montoEnvioGratis = (config as any)?.monto_envio_gratis ?? 35000;
+  const envioDomicilioActivo = (config as any)?.envio_domicilio_activo ?? true; // 👈 Leemos el estado del interruptor
   const rawNumber = config?.whatsapp_numero || "5493413954355";
   const telefonoWhatsApp = rawNumber.replace(/[^0-9]/g, "");
 
@@ -48,10 +49,17 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const [datosEnvio, setDatosEnvio] = useState({
     nombreCliente: "",
     telefonoCliente: "",
-    metodoEnvio: "retiro" as "retiro" | "envio",
+    metodoEnvio: (envioDomicilioActivo ? "envio" : "retiro") as "retiro" | "envio",
     direccion: "",
     notaAdicional: "",
   });
+
+  // 👈 Garantiza que si el admin desactiva envíos, el formulario cambie automáticamente a 'retiro'
+  useEffect(() => {
+    if (!envioDomicilioActivo && datosEnvio.metodoEnvio === "envio") {
+      setDatosEnvio((prev) => ({ ...prev, metodoEnvio: "retiro", direccion: "" }));
+    }
+  }, [envioDomicilioActivo, datosEnvio.metodoEnvio]);
 
   if (!isOpen && !mostrarModalExito) return null;
 
@@ -238,7 +246,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             </div>
 
             {/* Barra de Envío Gratis */}
-            {carrito.length > 0 && (
+            {carrito.length > 0 && envioDomicilioActivo && (
               <div className="border-b border-[#E7E5E0] bg-[#0E6E55]/5 px-5 py-3">
                 <div className="flex items-center justify-between text-xs font-semibold text-[#12151B] mb-1.5">
                   {tieneEnvioGratis ? (
@@ -336,6 +344,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   guardandoPedido={guardandoPedido}
                   metodoPago={metodoPago}
                   onConfirmar={manejarSubmit}
+                  envioDomicilioActivo={envioDomicilioActivo} // 👈 Pasamos la prop al formulario
                 />
               </div>
             )}
