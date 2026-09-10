@@ -50,6 +50,30 @@ export async function POST(request: Request) {
         );
       }
 
+      // Si es el ítem especial de Envío / Cadetería, lo procesamos directo sin consultar a la DB
+      if (productoId === "envio-cadeteria") {
+        const precioOficial = Number(item.precio) || 0;
+        const precioUnitarioConRecargo = Math.round(precioOficial * (1 + PORCENTAJE_RECARGO));
+
+        totalPedido += precioUnitarioConRecargo * cantidad;
+
+        itemsMP.push({
+          id: "envio-cadeteria",
+          title: String(item.nombre || "Costo de Cadetería / Envío"),
+          unit_price: precioUnitarioConRecargo,
+          quantity: cantidad,
+          currency_id: "ARS",
+        });
+
+        itemsValidados.push({
+          nombre_producto: String(item.nombre || "Costo de Cadetería / Envío"),
+          cantidad: cantidad,
+          precio_unitario: precioUnitarioConRecargo,
+        });
+
+        continue; // Pasa al siguiente ítem
+      }
+
       let productoDb = null;
 
       for (const tabla of tablasASecundar) {
@@ -74,7 +98,7 @@ export async function POST(request: Request) {
 
       const precioOficial = Number(productoDb.precio) || 0;
       const precioUnitarioConRecargo = Math.round(precioOficial * (1 + PORCENTAJE_RECARGO));
-      
+
       totalPedido += precioUnitarioConRecargo * cantidad;
 
       itemsMP.push({
@@ -102,7 +126,7 @@ export async function POST(request: Request) {
         total: totalPedido,
         estado: "pendiente",
         items: itemsValidados,
-        metodo_envio: cliente?.metodoEntrega || "retiro",
+        metodo_envio: cliente?.metodoEnvio || cliente?.metodoEntrega || "retiro",
       })
       .select()
       .single();
