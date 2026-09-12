@@ -10,13 +10,31 @@ import VisorAnamnesisDia from './components/VisorAnamnesisDia';
 import FormularioCargaTecnica from './components/FormularioCargaTecnica';
 import CronometroSesion from './components/CronometroSesion';
 
+// Tipos sugeridos para mayor seguridad técnica
+export interface Paciente {
+  id?: string;
+  nombre_paciente?: string;
+  nombre_completo?: string;
+  nombre?: string;
+  dni?: string;
+  telefono?: string;
+}
+
+export interface Sesion {
+  id: string;
+  nombre_paciente?: string;
+  zonas_realizadas?: string[] | string;
+  zonas_preasignadas?: string[] | string;
+  [key: string]: any;
+}
+
 export default function GabinetePage() {
   const [operadoraActual, setOperadoraActual] = useState<string>('');
-  const [pacienteSeleccionado, setPacienteSeleccionado] = useState<any>(null);
-  const [sesionActual, setSesionActual] = useState<any>(null);
+  const [pacienteSeleccionado, setPacienteSeleccionado] = useState<Paciente | null>(null);
+  const [sesionActual, setSesionActual] = useState<Sesion | null>(null);
   const [zonasSeleccionadas, setZonasSeleccionadas] = useState<string[]>([]);
 
-  // Cada vez que cambia la sesión actual (ficha del paciente en espera), sincronizamos las zonas realizadas/previas
+  // Cada vez que cambia la sesión actual (ficha del paciente en espera), sincronizamos las zonas
   useEffect(() => {
     if (sesionActual) {
       const rawZonas = sesionActual.zonas_realizadas || sesionActual.zonas_preasignadas || [];
@@ -49,9 +67,12 @@ export default function GabinetePage() {
     setZonasSeleccionadas([]);
   };
 
-  const nombrePacienteActivo = pacienteSeleccionado
-    ? pacienteSeleccionado.nombre_paciente || pacienteSeleccionado.nombre_completo || pacienteSeleccionado.nombre
-    : 'Paciente';
+  const nombrePacienteActivo =
+    pacienteSeleccionado?.nombre_paciente ||
+    pacienteSeleccionado?.nombre_completo ||
+    pacienteSeleccionado?.nombre ||
+    sesionActual?.nombre_paciente ||
+    'Paciente';
 
   return (
     <div className="min-h-screen bg-slate-50">
