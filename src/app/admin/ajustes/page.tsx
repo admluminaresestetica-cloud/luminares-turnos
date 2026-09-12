@@ -9,6 +9,7 @@ import {
   ConfiguracionEmpresa,
 } from '@/lib/supabase/configuracion-empresa';
 import { supabase } from '@/lib/supabase';
+import FaqTab from './components/FaqTab';
 
 export default function AjustesAdminPage() {
   const [loading, setLoading] = useState(true);
@@ -242,7 +243,6 @@ export default function AjustesAdminPage() {
           </h2>
           
           <div className="space-y-4">
-            {/* Habilitar / Deshabilitar envíos a domicilio */}
             <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
               <div>
                 <p className="text-sm font-medium text-gray-800">Ofrecer Envío a Domicilio</p>
@@ -257,7 +257,6 @@ export default function AjustesAdminPage() {
               />
             </div>
 
-            {/* Costo base de envío */}
             {form.envio_domicilio_activo && (
               <div className="pl-4 border-l-2 border-gray-200 space-y-4">
                 <div>
@@ -275,7 +274,6 @@ export default function AjustesAdminPage() {
                   />
                 </div>
 
-                {/* Habilitar Envío Gratis */}
                 <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                   <div>
                     <p className="text-sm font-medium text-gray-800">Ofrecer Envío Gratis por Monto Mínimo</p>
@@ -290,7 +288,6 @@ export default function AjustesAdminPage() {
                   />
                 </div>
 
-                {/* Monto para Envío Gratis */}
                 {form.envio_gratis_activo && (
                   <div className="pl-4 border-l-2 border-gray-200">
                     <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -357,6 +354,14 @@ export default function AjustesAdminPage() {
           </button>
         </div>
       </form>
+
+      {/* Preguntas Frecuentes (FAQ) */}
+      <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
+        <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">
+          Preguntas Frecuentes (FAQ)
+        </h2>
+        <FaqTab />
+      </div>
     </div>
   );
 }
