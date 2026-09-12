@@ -1,4 +1,3 @@
-// src/components/admin/tabs/FaqTab.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -17,45 +16,53 @@ export default function FaqTab() {
   }, [])
 
   const fetchFaqs = async () => {
-    const { data } = await supabase
-      .from('preguntas_frecuentes')
-      .select('*')
-      .order('created_at', { ascending: false })
-    if (data) setFaqs(data)
+    try {
+      const { data, error } = await supabase
+        .from('preguntas_frecuentes')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      if (data) setFaqs(data)
+    } catch (err: any) {
+      console.error('Error al obtener FAQs:', err.message)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
-    if (editingId !== null) {
-      const { error } = await supabase
-        .from('preguntas_frecuentes')
-        .update({ pregunta, respuesta })
-        .eq('id', editingId)
+    try {
+      if (editingId !== null) {
+        const { error } = await supabase
+          .from('preguntas_frecuentes')
+          .update({ pregunta, respuesta })
+          .eq('id', editingId)
 
-      if (!error) {
+        if (error) throw error
+
         setEditingId(null)
         setPregunta('')
         setRespuesta('')
-        fetchFaqs()
+        await fetchFaqs()
       } else {
-        alert('Error al actualizar la pregunta')
-      }
-    } else {
-      const { error } = await supabase
-        .from('preguntas_frecuentes')
-        .insert([{ pregunta, respuesta }])
+        const { error } = await supabase
+          .from('preguntas_frecuentes')
+          .insert([{ pregunta, respuesta }])
 
-      if (!error) {
+        if (error) throw error
+
         setPregunta('')
         setRespuesta('')
-        fetchFaqs()
-      } else {
-        alert('Error al guardar la pregunta')
+        await fetchFaqs()
       }
+    } catch (err: any) {
+      console.error('Error en Supabase:', err)
+      alert(`Error al guardar: ${err.message || 'Verificá los permisos o la conexión'}`)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleEditClick = (faq: any) => {
@@ -72,8 +79,18 @@ export default function FaqTab() {
 
   const handleDelete = async (id: number) => {
     if (confirm('¿Estás segura de eliminar esta pregunta?')) {
-      await supabase.from('preguntas_frecuentes').delete().eq('id', id)
-      fetchFaqs()
+      try {
+        const { error } = await supabase
+          .from('preguntas_frecuentes')
+          .delete()
+          .eq('id', id)
+
+        if (error) throw error
+        await fetchFaqs()
+      } catch (err: any) {
+        console.error('Error al eliminar FAQ:', err)
+        alert(`Error al eliminar: ${err.message}`)
+      }
     }
   }
 
@@ -121,7 +138,7 @@ export default function FaqTab() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gray-900 hover:bg-black text-white font-medium text-sm py-2.5 px-4 rounded-xl transition-all active:scale-[0.99] disabled:opacity-50"
+            className="w-full bg-gray-900 hover:bg-black text-white font-medium text-sm py-2.5 px-4 rounded-xl transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
           >
             {loading ? 'Guardando...' : editingId !== null ? 'Actualizar Pregunta' : 'Guardar Pregunta'}
           </button>
@@ -145,16 +162,18 @@ export default function FaqTab() {
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
+                  type="button"
                   onClick={() => handleEditClick(faq)}
                   title="Editar"
-                  className="text-gray-600 hover:text-gray-900 p-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  className="text-gray-600 hover:text-gray-900 p-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleDelete(faq.id)}
                   title="Eliminar"
-                  className="text-red-500 hover:text-red-700 p-1.5 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                  className="text-red-500 hover:text-red-700 p-1.5 bg-red-50 hover:bg-red-100 rounded-lg transition-colors cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>

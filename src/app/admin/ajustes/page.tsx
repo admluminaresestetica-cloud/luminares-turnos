@@ -118,7 +118,7 @@ export default function AjustesAdminPage() {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="p-6 max-w-4xl mx-auto space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Ajustes del Negocio</h1>
         <p className="text-sm text-gray-500">
@@ -138,6 +138,7 @@ export default function AjustesAdminPage() {
         </div>
       )}
 
+      {/* Formulario de Ajustes Generales */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Identidad de Marca */}
         <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
@@ -355,7 +356,7 @@ export default function AjustesAdminPage() {
         </div>
       </form>
 
-      {/* Preguntas Frecuentes (FAQ) */}
+      {/* Sección Independiente de Preguntas Frecuentes */}
       <div className="bg-white p-6 rounded-xl border shadow-sm space-y-4">
         <h2 className="text-lg font-semibold text-gray-800 border-b pb-2">
           Preguntas Frecuentes (FAQ)
