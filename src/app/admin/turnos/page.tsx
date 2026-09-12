@@ -12,7 +12,6 @@ import PreciosTab from './components/tabs/PreciosTab'
 import GeneralesTab from './components/tabs/GeneralesTab'
 import HorariosTab from './components/tabs/HorariosTab'
 import BannerTab from './components/tabs/BannerTab'
-import FaqTab from './components/tabs/FaqTab'
 import ReferidosTab from './components/tabs/ReferidosTab'
 
 import ModalServicioLaser from './components/modals/ModalServicioLaser'
@@ -180,7 +179,6 @@ export default function AdminDashboard() {
 
         {activeTab === 'banner' && <BannerTab />}
         {activeTab === 'referidos' && <ReferidosTab />}
-        {activeTab === 'faq' && <FaqTab />}
         
       </div>
 
