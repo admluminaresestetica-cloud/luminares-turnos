@@ -115,8 +115,8 @@ export default function FormularioCargaTecnica({
       }
       setObservacionesGabinete(
         sesionActual.observaciones_gabinete ||
-        sesionActual.parametros_tecnicos?.observaciones_gabinete ||
-        ''
+          sesionActual.parametros_tecnicos?.observaciones_gabinete ||
+          ''
       );
     }
   }, [sesionActual]);
@@ -200,8 +200,8 @@ export default function FormularioCargaTecnica({
 
   if (!sesionActual) {
     return (
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm text-center">
-        <p className="text-xs text-slate-400">
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-6 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <p className="text-xs text-slate-400 dark:text-zinc-500">
           Seleccioná un paciente para habilitar la carga de parámetros técnicos.
         </p>
       </div>
@@ -308,58 +308,58 @@ export default function FormularioCargaTecnica({
   return (
     <form onSubmit={handleGuardarYFinalizar} className="space-y-4 sm:space-y-5">
       {/* SECCIÓN SUPERIOR: CATÁLOGO DE ZONAS NO SELECCIONADAS */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <button
           type="button"
           onClick={() => setDesplegadoCatalogo(!desplegadoCatalogo)}
-          className="w-full flex items-center justify-between p-4 hover:bg-slate-50/80 transition-colors active:bg-slate-100"
+          className="flex w-full items-center justify-between p-4 transition-colors hover:bg-slate-50/80 active:bg-slate-100 dark:hover:bg-zinc-800/50 dark:active:bg-zinc-800"
         >
-          <div className="flex items-center gap-2.5 text-slate-800">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
-              <Layers className="w-3.5 h-3.5 text-emerald-600" />
+          <div className="flex items-center gap-2.5 text-slate-800 dark:text-zinc-100">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/50">
+              <Layers className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h3 className="text-xs font-semibold text-slate-700">
+            <h3 className="text-xs font-semibold text-slate-700 dark:text-zinc-200">
               Agregar zonas a la sesión
             </h3>
           </div>
 
           <div className="flex items-center gap-2.5">
-            <span className="text-[10px] font-medium bg-slate-100 text-slate-500 px-2 py-1 rounded-full">
+            <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-500 dark:bg-zinc-800 dark:text-zinc-400">
               {zonasDisponiblesNoSeleccionadas.length} disponibles
             </span>
-            <span className="text-slate-400">
-              {desplegadoCatalogo ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            <span className="text-slate-400 dark:text-zinc-500">
+              {desplegadoCatalogo ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </span>
           </div>
         </button>
 
         {desplegadoCatalogo && (
-          <div className="px-4 pb-4 pt-1 border-t border-slate-100 space-y-3">
-            <p className="text-xs text-slate-400 pt-3">
+          <div className="space-y-3 border-t border-slate-100 px-4 pb-4 pt-1 dark:border-zinc-800">
+            <p className="pt-3 text-xs text-slate-400 dark:text-zinc-500">
               Tocá una zona para añadirla a la tabla de trabajo.
             </p>
 
             {cargandoCatalogo ? (
-              <p className="text-xs text-slate-400 py-2">Cargando catálogo…</p>
+              <p className="py-2 text-xs text-slate-400 dark:text-zinc-500">Cargando catálogo…</p>
             ) : zonasDisponiblesNoSeleccionadas.length === 0 ? (
-              <p className="text-xs text-slate-400 py-2">
+              <p className="py-2 text-xs text-slate-400 dark:text-zinc-500">
                 Todas las zonas del catálogo están cargadas en la tabla.
               </p>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
                 {zonasDisponiblesNoSeleccionadas.map((item) => {
                   const esFem = item.genero === 'femenino';
                   const esMasc = item.genero === 'masculino';
 
                   let clasesBoton =
-                    'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100';
+                    'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100 dark:bg-zinc-800/60 dark:border-zinc-700/60 dark:text-zinc-300 dark:hover:bg-zinc-800';
 
                   if (esFem) {
                     clasesBoton =
-                      'bg-rose-50/60 border-rose-100 text-rose-900 hover:bg-rose-50';
+                      'bg-rose-50/60 border-rose-100 text-rose-900 hover:bg-rose-50 dark:bg-rose-950/30 dark:border-rose-900/40 dark:text-rose-200 dark:hover:bg-rose-950/50';
                   } else if (esMasc) {
                     clasesBoton =
-                      'bg-sky-50/60 border-sky-100 text-sky-900 hover:bg-sky-50';
+                      'bg-sky-50/60 border-sky-100 text-sky-900 hover:bg-sky-50 dark:bg-sky-950/30 dark:border-sky-900/40 dark:text-sky-200 dark:hover:bg-sky-950/50';
                   }
 
                   return (
@@ -367,15 +367,15 @@ export default function FormularioCargaTecnica({
                       key={item.nombre}
                       type="button"
                       onClick={() => agregarZona(item.nombre)}
-                      className={`min-h-[52px] p-2.5 rounded-xl border text-xs font-medium flex items-center justify-between gap-1 transition-all active:scale-95 ${clasesBoton}`}
+                      className={`flex min-h-[52px] items-center justify-between gap-1 rounded-xl border p-2.5 text-xs font-medium transition-all active:scale-95 ${clasesBoton}`}
                     >
                       <span className="flex flex-col items-start truncate text-left">
-                        <span className="truncate w-full capitalize">{item.nombre}</span>
+                        <span className="w-full truncate capitalize">{item.nombre}</span>
                         <span className="text-[9px] font-normal opacity-60">
                           {esFem ? 'Femenino' : esMasc ? 'Masculino' : 'General'}
                         </span>
                       </span>
-                      <Plus className="w-3.5 h-3.5 shrink-0 opacity-50" />
+                      <Plus className="h-3.5 w-3.5 shrink-0 opacity-50" />
                     </button>
                   );
                 })}
@@ -386,60 +386,60 @@ export default function FormularioCargaTecnica({
       </div>
 
       {/* SECCIÓN INFERIOR: PARÁMETROS TÉCNICOS Y NOTAS DE GABINETE */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-sm space-y-5">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-2.5 text-slate-800">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
-              <Settings className="w-3.5 h-3.5 text-emerald-600" />
+      <div className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-zinc-800">
+          <div className="flex items-center gap-2.5 text-slate-800 dark:text-zinc-100">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/50">
+              <Settings className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h3 className="text-xs font-semibold text-slate-700">
+            <h3 className="text-xs font-semibold text-slate-700 dark:text-zinc-200">
               Parámetros técnicos y notas de gabinete
             </h3>
           </div>
-          <span className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full">
+          <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
             {zonasSeleccionadas.length} zonas
           </span>
         </div>
 
         {/* Campo Equipo */}
         <div className="max-w-xs">
-          <label className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600 mb-1.5">
-            <Zap className="w-3 h-3 text-slate-400" />
+          <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+            <Zap className="h-3 w-3 text-slate-400 dark:text-zinc-500" />
             Equipo / Tecnología
           </label>
           <input
             type="text"
             value={equipo}
             onChange={(e) => setEquipo(e.target.value)}
-            className="w-full text-xs border border-slate-200/80 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
+            className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 p-2.5 text-xs focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             placeholder="Ej: Diodo Soprano"
           />
         </div>
 
         {/* TABLA DINÁMICA DE ZONAS */}
         <div>
-          <label className="block text-[11px] font-medium text-slate-600 mb-2">
+          <label className="mb-2 block text-[11px] font-medium text-slate-600 dark:text-zinc-400">
             Detalle por zona
           </label>
           {zonasSeleccionadas.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-6 border border-dashed border-slate-200 rounded-xl">
+            <p className="rounded-xl border border-dashed border-slate-200 py-6 text-center text-xs text-slate-400 dark:border-zinc-800 dark:text-zinc-500">
               No hay zonas seleccionadas. Elegí zonas arriba para ingresar sus parámetros.
             </p>
           ) : (
             <>
               {/* Vista tabla — desktop / tablet */}
               <div className="hidden sm:block overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[520px]">
+                <table className="w-full min-w-[520px] border-collapse text-left">
                   <thead>
-                    <tr className="text-slate-500 text-[11px] font-medium uppercase tracking-wide">
-                      <th className="p-2.5 border-b border-slate-200">Zona</th>
-                      <th className="p-2.5 border-b border-slate-200">Afluencia / Frecuencia</th>
-                      <th className="p-2.5 border-b border-slate-200">Energy</th>
-                      <th className="p-2.5 border-b border-slate-200">Pasadas</th>
-                      <th className="p-2.5 border-b border-slate-200 w-10"></th>
+                    <tr className="text-[11px] font-medium uppercase tracking-wide text-slate-500 dark:text-zinc-400">
+                      <th className="border-b border-slate-200 p-2.5 dark:border-zinc-800">Zona</th>
+                      <th className="border-b border-slate-200 p-2.5 dark:border-zinc-800">Afluencia / Frecuencia</th>
+                      <th className="border-b border-slate-200 p-2.5 dark:border-zinc-800">Energy</th>
+                      <th className="border-b border-slate-200 p-2.5 dark:border-zinc-800">Pasadas</th>
+                      <th className="w-10 border-b border-slate-200 p-2.5 dark:border-zinc-800"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 text-xs">
+                  <tbody className="divide-y divide-slate-100 text-xs dark:divide-zinc-800">
                     {zonasSeleccionadas.map((zona) => {
                       const param = parametrosZonas[zona] || {
                         afluencia: '',
@@ -448,15 +448,15 @@ export default function FormularioCargaTecnica({
                       };
 
                       return (
-                        <tr key={zona} className="hover:bg-slate-50/60 transition-colors">
-                          <td className="p-2 font-medium text-slate-800 capitalize">{zona}</td>
+                        <tr key={zona} className="transition-colors hover:bg-slate-50/60 dark:hover:bg-zinc-800/40">
+                          <td className="p-2 font-medium capitalize text-slate-800 dark:text-zinc-200">{zona}</td>
                           <td className="p-1.5">
                             <input
                               type="text"
                               placeholder="Ej: 12 J/cm² / 10Hz"
                               value={param.afluencia}
                               onChange={(e) => cambiarParametro(zona, 'afluencia', e.target.value)}
-                              className="w-full p-2 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
+                              className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 p-2 text-xs focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                             />
                           </td>
                           <td className="p-1.5">
@@ -465,7 +465,7 @@ export default function FormularioCargaTecnica({
                               placeholder="Ej: 40 ms"
                               value={param.energy}
                               onChange={(e) => cambiarParametro(zona, 'energy', e.target.value)}
-                              className="w-full p-2 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
+                              className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 p-2 text-xs focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                             />
                           </td>
                           <td className="p-1.5">
@@ -474,7 +474,7 @@ export default function FormularioCargaTecnica({
                               placeholder="Ej: 2 pasadas"
                               value={param.pasadas}
                               onChange={(e) => cambiarParametro(zona, 'pasadas', e.target.value)}
-                              className="w-full p-2 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50"
+                              className="w-full rounded-lg border border-slate-200/80 bg-slate-50/50 p-2 text-xs focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                             />
                           </td>
                           <td className="p-1.5 text-center">
@@ -482,9 +482,9 @@ export default function FormularioCargaTecnica({
                               type="button"
                               onClick={() => quitarZona(zona)}
                               title="Quitar zona de la sesión"
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-90"
+                              className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 active:scale-90 dark:text-zinc-500 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           </td>
                         </tr>
@@ -495,7 +495,7 @@ export default function FormularioCargaTecnica({
               </div>
 
               {/* Vista tarjetas — mobile */}
-              <div className="sm:hidden space-y-3">
+              <div className="space-y-3 sm:hidden">
                 {zonasSeleccionadas.map((zona) => {
                   const param = parametrosZonas[zona] || {
                     afluencia: '',
@@ -506,16 +506,18 @@ export default function FormularioCargaTecnica({
                   return (
                     <div
                       key={zona}
-                      className="border border-slate-200/80 rounded-xl p-3 space-y-2.5 bg-slate-50/40"
+                      className="space-y-2.5 rounded-xl border border-slate-200/80 bg-slate-50/40 p-3 dark:border-zinc-800 dark:bg-zinc-800/30"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-slate-800 capitalize">{zona}</span>
+                        <span className="text-xs font-semibold capitalize text-slate-800 dark:text-zinc-200">
+                          {zona}
+                        </span>
                         <button
                           type="button"
                           onClick={() => quitarZona(zona)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors active:scale-90"
+                          className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 active:scale-90 dark:text-zinc-500 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                       <div className="grid grid-cols-1 gap-2">
@@ -524,21 +526,21 @@ export default function FormularioCargaTecnica({
                           placeholder="Afluencia / Frecuencia — Ej: 12 J/cm² / 10Hz"
                           value={param.afluencia}
                           onChange={(e) => cambiarParametro(zona, 'afluencia', e.target.value)}
-                          className="w-full p-2.5 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-white"
+                          className="w-full rounded-lg border border-slate-200/80 bg-white p-2.5 text-xs focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                         />
                         <input
                           type="text"
                           placeholder="Energy — Ej: 40 ms"
                           value={param.energy}
                           onChange={(e) => cambiarParametro(zona, 'energy', e.target.value)}
-                          className="w-full p-2.5 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-white"
+                          className="w-full rounded-lg border border-slate-200/80 bg-white p-2.5 text-xs focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                         />
                         <input
                           type="text"
                           placeholder="Pasadas — Ej: 2 pasadas"
                           value={param.pasadas}
                           onChange={(e) => cambiarParametro(zona, 'pasadas', e.target.value)}
-                          className="w-full p-2.5 text-xs border border-slate-200/80 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-white"
+                          className="w-full rounded-lg border border-slate-200/80 bg-white p-2.5 text-xs focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder:text-zinc-500"
                         />
                       </div>
                     </div>
@@ -551,34 +553,34 @@ export default function FormularioCargaTecnica({
 
         {/* Observaciones */}
         <div>
-          <label className="flex items-center gap-1.5 text-[11px] font-medium text-slate-600 mb-1.5">
-            <NotebookPen className="w-3 h-3 text-slate-400" />
+          <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-slate-600 dark:text-zinc-400">
+            <NotebookPen className="h-3 w-3 text-slate-400 dark:text-zinc-500" />
             Observaciones de gabinete
           </label>
           <textarea
             rows={3}
             value={observacionesGabinete}
             onChange={(e) => setObservacionesGabinete(e.target.value)}
-            className="w-full text-xs border border-slate-200/80 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 bg-slate-50/50 resize-none"
+            className="w-full resize-none rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 text-xs focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-100 dark:placeholder:text-zinc-500"
             placeholder="Escribí notas relevantes sobre la piel, tolerancia al tratamiento o recomendaciones dadas…"
           />
         </div>
 
         {/* Botón Submit */}
-        <div className="flex justify-end pt-3 border-t border-slate-100">
+        <div className="flex justify-end border-t border-slate-100 pt-3 dark:border-zinc-800">
           <button
             type="submit"
             disabled={guardando}
-            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm disabled:opacity-50 disabled:active:scale-100"
+            className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-xs font-semibold text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50 disabled:active:scale-100"
           >
             {guardando ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 <span>Guardando en ficha…</span>
               </>
             ) : (
               <>
-                <CheckCircle2 className="w-4 h-4" />
+                <CheckCircle2 className="h-4 w-4" />
                 <span>Guardar y finalizar atención</span>
               </>
             )}
