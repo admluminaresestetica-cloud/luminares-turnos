@@ -1,27 +1,35 @@
 export interface Producto {
-  id: string;
+  id: number;
   nombre: string;
   descripcion?: string;
   precio: number;
-  precio_anterior?: number;
   precio_original?: number;
   stock: number;
+  stock_minimo?: number;
+  codigo_barras?: string | null;
   imagen_url?: string;
-  categoria_id?: string;
   categoria?: string;
   activo?: boolean;
-  cantidad?: number;
-  mostrar_ultimas_unidades?: boolean; // <- Nuevo campo
+  mostrar_ultimas_unidades?: boolean;
+  created_at?: string;
 }
 
 export interface CarritoItem extends Producto {
   cantidad: number;
 }
 
-export interface Categoria {
+export interface TagBusqueda {
   id: string;
   nombre: string;
+  slug: string;
+  orden?: number;
   activo?: boolean;
+}
+
+export interface Categoria {
+  id: number;
+  nombre: string;
+  created_at?: string;
 }
 
 export interface DatosEnvio {

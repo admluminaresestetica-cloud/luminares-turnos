@@ -155,7 +155,7 @@ export default function TiendaPage() {
 
     if (categoriaFiltro === "Ofertas") {
       resultado = resultado.filter((p) => {
-        const precioBase = Number(p.precio_original ?? p.precio_anterior) || 0;
+        const precioBase = Number(p.precio_original) || 0;
         return precioBase > p.precio;
       });
     } else if (categoriaFiltro !== "Todos") {
@@ -174,8 +174,8 @@ export default function TiendaPage() {
         return b.precio - a.precio;
       }
       if (ordenarPor === "descuento") {
-        const descA = ((Number(a.precio_original ?? a.precio_anterior) || a.precio) - a.precio);
-        const descB = ((Number(b.precio_original ?? b.precio_anterior) || b.precio) - b.precio);
+        const descA = (Number(a.precio_original) || a.precio) - a.precio;
+        const descB = (Number(b.precio_original) || b.precio) - b.precio;
         return descB - descA;
       }
       return 0;

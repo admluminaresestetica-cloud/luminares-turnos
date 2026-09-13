@@ -8,7 +8,8 @@ import PedidosTab, { Pedido } from "./components/PedidosTab";
 import MetricasHeader from "./components/MetricasHeader";
 import CategoriasTab from "./components/CategoriasTab";
 import BannersTab from "./components/BannersTab";
-import TagsTab from "./components/TagsTab"; // <--- 1. Importamos el componente de Tags
+import TagsTab from "./components/TagsTab";
+import PuntoVentaTab from "./components/PuntoVentaTab";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,22 +17,18 @@ const supabase = createClient(
 );
 
 export default function AdminTiendaPage() {
-  // 2. Agregamos "tags" al tipo de pestaña activa
-  const [activeTab, setActiveTab] = useState<"catalogo" | "pedidos" | "banners" | "tags">("catalogo");
+  const [activeTab, setActiveTab] = useState<"catalogo" | "pos" | "pedidos" | "banners" | "tags">("catalogo");
   const [mounted, setMounted] = useState(false);
 
-  // Estados de datos
   const [productos, setProductos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
 
-  // Estados de carga e interacción
   const [cargandoCat, setCargandoCat] = useState(false);
   const [productoEditando, setProductoEditando] = useState<any | null>(null);
   const [cargandoPedidos, setCargandoPedidos] = useState(false);
   const [procesandoPedidoId, setProcesandoPedidoId] = useState<string | null>(null);
 
-  // Fetchers
   const fetchProductos = async () => {
     const { data, error } = await supabase
       .from("productos")
@@ -71,148 +68,12 @@ export default function AdminTiendaPage() {
 
   if (!mounted) return null;
 
-  // Handlers Categorías
-  const handleCrearCategoria = async (nombreLimpio: string) => {
-    setCargandoCat(true);
-    const { error } = await supabase
-      .from("categorias")
-      .insert([{ nombre: nombreLimpio }]);
-
-    if (error) {
-      alert("Error al crear categoría: " + error.message);
-    } else {
-      fetchCategorias();
-    }
-    setCargandoCat(false);
-  };
-
-  const handleEliminarCategoria = async (cat: any) => {
-    const productosAfectados = productos.filter((p) => p.categoria === cat.nombre);
-
-    if (productosAfectados.length > 0) {
-      const confirmar = confirm(
-        `Hay ${productosAfectados.length} producto(s) usando la categoría "${cat.nombre}". ¿Deseás eliminarla de todas formas?`
-      );
-      if (!confirmar) return;
-
-      await supabase
-        .from("productos")
-        .update({ categoria: "General" })
-        .eq("categoria", cat.nombre);
-    } else {
-      if (!confirm(`¿Eliminar la categoría "${cat.nombre}"?`)) return;
-    }
-
-    const { error } = await supabase.from("categorias").delete().eq("id", cat.id);
-    if (error) alert("Error al eliminar categoría");
-    else {
-      fetchCategorias();
-      fetchProductos();
-    }
-  };
-
-  // Handlers Productos
-  const handleDeleteProducto = async (id: any) => {
-    if (!confirm("¿Estás segura de eliminar este producto?")) return;
-    const { error } = await supabase.from("productos").delete().eq("id", id);
-    if (error) alert("Error al eliminar");
-    else fetchProductos();
-  };
-
-  // Handler para sumar o restar unidades al stock (Restock/Ajuste)
-  const handleRestock = async (id: any, cantidadAjuste: number) => {
-    const productoActual = productos.find((p) => p.id === id);
-    if (!productoActual) return;
-
-    const stockActual = Number(productoActual.stock) || 0;
-    const nuevoStock = Math.max(0, stockActual + Number(cantidadAjuste));
-
-    const { error } = await supabase
-      .from("productos")
-      .update({ stock: nuevoStock })
-      .eq("id", id);
-
-    if (error) {
-      console.error("Error al ajustar stock:", error);
-      alert("No se pudo actualizar el stock.");
-    } else {
-      fetchProductos();
-    }
-  };
-
-  // Handler para alternar entre Activo y Pausado
-  const handleToggleActivo = async (id: any, estaPausado: boolean) => {
-    const nuevoEstado = estaPausado;
-
-    const { error } = await supabase
-      .from("productos")
-      .update({ activo: nuevoEstado })
-      .eq("id", id);
-
-    if (error) {
-      console.error("Error al cambiar estado:", error);
-      alert("No se pudo cambiar el estado del producto.");
-    } else {
-      fetchProductos();
-    }
-  };
-
-  // Handlers Pedidos
-  const handleAprobarPedido = async (pedidoId: string) => {
-    if (!confirm("¿Confirmás la aprobación del pedido? Esto descontará las unidades del stock actual.")) {
-      return;
-    }
-
-    setProcesandoPedidoId(pedidoId);
-    const { error } = await supabase.rpc("aprobar_pedido_y_descontar_stock", {
-      p_pedido_id: pedidoId,
-    });
-
-    if (error) {
-      alert(`Error al aprobar pedido: ${error.message}`);
-    } else {
-      alert("¡Pedido aprobado y stock descontado con éxito!");
-      fetchPedidos();
-      fetchProductos();
-    }
-    setProcesandoPedidoId(null);
-  };
-
-  const handleCancelarPedido = async (pedidoId: string) => {
-    if (!confirm("¿Estás seguro de cancelar este pedido?")) return;
-
-    setProcesandoPedidoId(pedidoId);
-    const { error } = await supabase
-      .from("pedidos")
-      .update({ estado: "cancelado" })
-      .eq("id", pedidoId);
-
-    if (error) alert("Error al cancelar el pedido.");
-    else fetchPedidos();
-
-    setProcesandoPedidoId(null);
-  };
-
-  const handleEliminarPedido = async (pedidoId: string) => {
-    try {
-      await supabase.from("pedido_items").delete().eq("pedido_id", pedidoId);
-      const { error } = await supabase.from("pedidos").delete().eq("id", pedidoId);
-      if (error) throw error;
-      setPedidos(pedidos.filter((p) => p.id !== pedidoId));
-    } catch (error) {
-      console.error("Error al eliminar el pedido:", error);
-      alert("Hubo un error al intentar eliminar el pedido.");
-    }
-  };
-
-  // Cálculo de Métricas
   const totalProductos = productos.length;
   const stockTotal = productos.reduce((acc, p) => acc + (Number(p.stock) || 0), 0);
   const pedidosPendientes = pedidos.filter((p) => p.estado === "pendiente").length;
 
   return (
     <div className="min-h-screen bg-[#F7F7F5]">
-      {/* Header */}
       <header className="border-b border-[#E7E5E0] bg-white px-6 py-6 sm:px-10">
         <div className="mx-auto flex max-w-[1100px] items-center justify-between">
           <div>
@@ -226,7 +87,7 @@ export default function AdminTiendaPage() {
           <div className="flex items-center gap-3">
             <Link 
               href="/admin" 
-              className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-4 py-2 rounded-xl text-sm transition-colors shadow-sm inline-flex items-center gap-2 border border-[#E7E5E0]"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#E7E5E0] bg-gray-100 px-4 py-2 text-sm font-medium text-gray-800 shadow-sm transition-colors hover:bg-gray-200"
             >
               ← Menú Admin
             </Link>
@@ -238,7 +99,6 @@ export default function AdminTiendaPage() {
       </header>
 
       <div className="mx-auto max-w-[1100px] px-6 py-8 sm:px-10">
-        {/* Métricas rápidas */}
         <MetricasHeader
           totalProductos={totalProductos}
           stockTotal={stockTotal}
@@ -246,8 +106,7 @@ export default function AdminTiendaPage() {
           totalCategorias={categorias.length}
         />
 
-        {/* Navigation Tabs */}
-        <div className="mb-6 flex gap-4 border-b border-[#E7E5E0]">
+        <div className="mb-6 flex flex-wrap gap-4 border-b border-[#E7E5E0]">
           <button
             onClick={() => setActiveTab("catalogo")}
             className={`pb-3 text-sm font-bold transition-colors ${
@@ -256,7 +115,18 @@ export default function AdminTiendaPage() {
                 : "text-[#6B675F] hover:text-[#12151B]"
             }`}
           >
-            📦 Catálogo y Stock
+            📦 Catálogo
+          </button>
+
+          <button
+            onClick={() => setActiveTab("pos")}
+            className={`pb-3 text-sm font-bold transition-colors ${
+              activeTab === "pos"
+                ? "border-b-2 border-[#0E6E55] text-[#0E6E55]"
+                : "text-[#6B675F] hover:text-[#12151B]"
+            }`}
+          >
+            📷 Escáner / POS
           </button>
           
           <button
@@ -269,7 +139,7 @@ export default function AdminTiendaPage() {
           >
             <span>📋 Historial de Pedidos</span>
             {pedidosPendientes > 0 && (
-              <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#C84343] px-1.5 text-[11px] font-extrabold text-white animate-pulse">
+              <span className="flex h-5 min-w-[20px] animate-pulse items-center justify-center rounded-full bg-[#C84343] px-1.5 text-[11px] font-extrabold text-white">
                 {pedidosPendientes}
               </span>
             )}
@@ -283,10 +153,9 @@ export default function AdminTiendaPage() {
                 : "text-[#6B675F] hover:text-[#12151B]"
             }`}
           >
-            🖼️ Banners Promocionales
+            🖼️ Banners
           </button>
 
-          {/* 3. Botón de la pestaña Tags de Búsqueda */}
           <button
             onClick={() => setActiveTab("tags")}
             className={`pb-3 text-sm font-bold transition-colors ${
@@ -295,18 +164,25 @@ export default function AdminTiendaPage() {
                 : "text-[#6B675F] hover:text-[#12151B]"
             }`}
           >
-            🏷️ Tags de Búsqueda
+            🏷️ Tags
           </button>
         </div>
 
-        {/* Tab 1: Catálogo y Stock */}
         {activeTab === "catalogo" && (
           <>
             <CategoriasTab
               categorias={categorias}
               cargandoCat={cargandoCat}
-              onCrearCategoria={handleCrearCategoria}
-              onEliminarCategoria={handleEliminarCategoria}
+              onCrearCategoria={async (nombre) => {
+                setCargandoCat(true);
+                await supabase.from("categorias").insert([{ nombre }]);
+                fetchCategorias();
+                setCargandoCat(false);
+              }}
+              onEliminarCategoria={async (cat) => {
+                await supabase.from("categorias").delete().eq("id", cat.id);
+                fetchCategorias();
+              }}
             />
 
             <FormularioProducto
@@ -319,34 +195,52 @@ export default function AdminTiendaPage() {
 
             <ListaProductos
               productos={productos}
-              onEliminar={handleDeleteProducto}
+              onEliminar={async (id) => {
+                if (confirm("¿Eliminar producto?")) {
+                  await supabase.from("productos").delete().eq("id", id);
+                  fetchProductos();
+                }
+              }}
               onEditar={(prod) => {
                 setProductoEditando(prod);
                 window.scrollTo({ top: 300, behavior: "smooth" });
               }}
-              onRestock={handleRestock}
-              onToggleActivo={handleToggleActivo}
             />
           </>
         )}
 
-        {/* Tab 2: Historial de Pedidos */}
+        {activeTab === "pos" && (
+          <PuntoVentaTab
+            productos={productos}
+            supabase={supabase}
+            onActualizarProductos={fetchProductos}
+          />
+        )}
+
         {activeTab === "pedidos" && (
           <PedidosTab
             pedidos={pedidos}
             cargandoPedidos={cargandoPedidos}
             procesandoPedidoId={procesandoPedidoId}
             onFetchPedidos={fetchPedidos}
-            onAprobarPedido={handleAprobarPedido}
-            onCancelarPedido={handleCancelarPedido}
-            onEliminarPedido={handleEliminarPedido}
+            onAprobarPedido={async (id) => {
+              await supabase.rpc("aprobar_pedido_y_descontar_stock", { p_pedido_id: id });
+              fetchPedidos();
+              fetchProductos();
+            }}
+            onCancelarPedido={async (id) => {
+              await supabase.from("pedidos").update({ estado: "cancelado" }).eq("id", id);
+              fetchPedidos();
+            }}
+            onEliminarPedido={async (id) => {
+              await supabase.from("pedido_items").delete().eq("pedido_id", id);
+              await supabase.from("pedidos").delete().eq("id", id);
+              fetchPedidos();
+            }}
           />
         )}
 
-        {/* Tab 3: Banners Promocionales */}
         {activeTab === "banners" && <BannersTab />}
-
-        {/* Tab 4: Tags de Búsqueda */}
         {activeTab === "tags" && <TagsTab />}
       </div>
     </div>
