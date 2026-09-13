@@ -1,69 +1,7 @@
 📦src
  ┣ 📂app
  ┃ ┣ 📂admin
- ┃ ┃ ┣ 📂ajustes
- ┃ ┃ ┃ ┗ 📜page.tsx
- ┃ ┃ ┣ 📂gestion
- ┃ ┃ ┃ ┣ 📂components
- ┃ ┃ ┃ ┃ ┣ 📜BannerAlertasClinicas.tsx
- ┃ ┃ ┃ ┃ ┗ 📜ModalHistorialSesiones.tsx
- ┃ ┃ ┃ ┣ 📂gabinete
- ┃ ┃ ┃ ┃ ┣ 📂components
- ┃ ┃ ┃ ┃ ┃ ┣ 📜CronometroSesion.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜FormularioCargaTecnica.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜HeaderOperadoraReloj.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜NotificacionNuevoCliente.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜SelectorPacientesDoble.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜SelectorZonasGabinete.tsx
- ┃ ┃ ┃ ┃ ┃ ┗ 📜VisorAnamnesisDia.tsx
- ┃ ┃ ┃ ┃ ┗ 📜page.tsx
- ┃ ┃ ┃ ┗ 📂recepcion
- ┃ ┃ ┃ ┃ ┣ 📂components
- ┃ ┃ ┃ ┃ ┃ ┣ 📜BuscadorMulticoincidencia.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜ChecklistAnamnesis.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜ConfiguracionAnamnesis.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜ResumenReservaCobro.tsx
- ┃ ┃ ┃ ┃ ┃ ┗ 📜SelectorZonasBotones.tsx
- ┃ ┃ ┃ ┃ ┗ 📜page.tsx
- ┃ ┃ ┣ 📂login
- ┃ ┃ ┃ ┗ 📜page.tsx
- ┃ ┃ ┣ 📂tienda
- ┃ ┃ ┃ ┣ 📂components
- ┃ ┃ ┃ ┃ ┣ 📜BannersTab.tsx
- ┃ ┃ ┃ ┃ ┣ 📜CategoriasTab.tsx
- ┃ ┃ ┃ ┃ ┣ 📜FormularioProducto.tsx
- ┃ ┃ ┃ ┃ ┣ 📜ListaProductos.tsx
- ┃ ┃ ┃ ┃ ┣ 📜MetricasHeader.tsx
- ┃ ┃ ┃ ┃ ┣ 📜PedidosTab.tsx
- ┃ ┃ ┃ ┃ ┗ 📜TagsTab.tsx
- ┃ ┃ ┃ ┗ 📜page.tsx
- ┃ ┃ ┣ 📂turnos
- ┃ ┃ ┃ ┣ 📂components
- ┃ ┃ ┃ ┃ ┣ 📂modals
- ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalCobro.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalEditarTurno.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalNuevoTurno.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalPromo.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalServicioGeneral.tsx
- ┃ ┃ ┃ ┃ ┃ ┗ 📜ModalServicioLaser.tsx
- ┃ ┃ ┃ ┃ ┣ 📂tabs
- ┃ ┃ ┃ ┃ ┃ ┣ 📜AgendaTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜BannerTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜FaqTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜GeneralesTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜HorariosTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜OverviewTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜PreciosTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┗ 📜ReferidosTab.tsx
- ┃ ┃ ┃ ┃ ┣ 📜AdminTabs.tsx
- ┃ ┃ ┃ ┃ ┣ 📜AgendaPanel.tsx
- ┃ ┃ ┃ ┃ ┣ 📜DashboardOverview.tsx
- ┃ ┃ ┃ ┃ ┣ 📜ModalEditarReserva.tsx
- ┃ ┃ ┃ ┃ ┣ 📜ResumenAgenda.tsx
- ┃ ┃ ┃ ┃ ┗ 📜types.ts
- ┃ ┃ ┃ ┣ 📜AdminHeader.tsx
- ┃ ┃ ┃ ┗ 📜page.tsx
- ┃ ┃ ┗ 📜page.tsx
+ ┃ ┃ ┣ 
  ┃ ┣ 📂api
  ┃ ┃ ┣ 📂admin
  ┃ ┃ ┃ ┗ 📂turnos
@@ -151,6 +89,8 @@
  ┃ ┣ 📜footer.tsx
  ┃ ┣ 📜FooterTienda.tsx
  ┃ ┣ 📜ProductoCard.tsx
+ ┃ ┣ 📜ThemeProvider.tsx
+ ┃ ┣ 📜ThemeToggle.tsx
  ┃ ┗ 📜WhatsAppButton.tsx
  ┣ 📂context
  ┃ ┣ 📜CarritoContext.tsx

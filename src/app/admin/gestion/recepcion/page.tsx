@@ -1,4 +1,5 @@
 'use client';
+
 import { ejecutarAccionAdmin } from '@/lib/admin/api';
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
@@ -252,7 +253,7 @@ export default function RecepcionPage() {
     : `Enviar a Gabinete${zonasSeleccionadas.length ? ` (${zonasSeleccionadas.length})` : ''}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100/60 transition-colors dark:from-zinc-950 dark:to-zinc-900/60">
+    <div className="min-h-screen bg-slate-50 transition-colors dark:bg-zinc-950">
       <div
         className={`mx-auto max-w-7xl space-y-6 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 ${
           hayPacienteActivo && !mostrarConfigAnamnesis ? 'pb-28 lg:pb-8' : 'pb-8'

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Plus, Trash2, CheckCircle2, XCircle, Settings, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, XCircle, Settings } from 'lucide-react';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -94,18 +94,18 @@ export default function ConfiguracionAnamnesis({ onClose }: ConfiguracionAnamnes
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm max-w-3xl mx-auto my-6">
-      <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-4 mb-6">
+    <div className="mx-auto my-6 max-w-3xl rounded-2xl border border-slate-200/85 bg-white p-6 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4 dark:border-zinc-800">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-            <Settings className="w-5 h-5" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-teal-200 bg-teal-50 text-teal-600 dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-400">
+            <Settings className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white">
               Configuración de Anamnesis / Check Clínico
             </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Agrega o deshabilita las preguntas que se le realizan al paciente en recepción.
+            <p className="text-xs text-slate-500 dark:text-zinc-400">
+              Agregá o deshabilita las preguntas que se le realizan al paciente en recepción.
             </p>
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function ConfiguracionAnamnesis({ onClose }: ConfiguracionAnamnes
         {onClose && (
           <button
             onClick={onClose}
-            className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-xl transition-colors"
+            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
           >
             Volver
           </button>
@@ -121,20 +121,20 @@ export default function ConfiguracionAnamnesis({ onClose }: ConfiguracionAnamnes
       </div>
 
       {/* Formulario para agregar nueva pregunta */}
-      <form onSubmit={agregarPregunta} className="mb-8 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Agregar Nueva Pregunta</h3>
-        <div className="flex flex-col sm:flex-row gap-3">
+      <form onSubmit={agregarPregunta} className="mb-8 space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/60 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
+        <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Agregar Nueva Pregunta</h3>
+        <div className="flex flex-col gap-3 sm:flex-row">
           <input
             type="text"
             placeholder="Ej: ¿Toma alguna medicación habitual?"
             value={nuevaPregunta}
             onChange={(e) => setNuevaPregunta(e.target.value)}
-            className="flex-1 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-teal-400 dark:focus:ring-teal-400/20"
           />
           <select
             value={categoria}
             onChange={(e) => setCategoria(e.target.value)}
-            className="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-teal-400 dark:focus:ring-teal-400/20"
           >
             <option value="Salud">Salud</option>
             <option value="Piel">Piel</option>
@@ -143,9 +143,9 @@ export default function ConfiguracionAnamnesis({ onClose }: ConfiguracionAnamnes
           </select>
           <button
             type="submit"
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium flex items-center justify-center space-x-2 transition-colors"
+            className="flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:from-emerald-500 hover:to-teal-500"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
             <span>Añadir</span>
           </button>
         </div>
@@ -153,27 +153,27 @@ export default function ConfiguracionAnamnesis({ onClose }: ConfiguracionAnamnes
 
       {/* Listado de Preguntas */}
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Preguntas Registradas</h3>
+        <h3 className="mb-2 text-sm font-semibold text-slate-800 dark:text-white">Preguntas Registradas</h3>
         {loading ? (
-          <p className="text-xs text-gray-500 text-center py-6">Cargando preguntas...</p>
+          <p className="py-6 text-center text-xs text-slate-400">Cargando preguntas...</p>
         ) : preguntas.length === 0 ? (
-          <p className="text-xs text-gray-500 text-center py-6">No hay preguntas cargadas todavía.</p>
+          <p className="py-6 text-center text-xs text-slate-400">No hay preguntas cargadas todavía.</p>
         ) : (
           preguntas.map((item) => (
             <div
               key={item.id}
-              className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
+              className={`flex items-center justify-between rounded-xl border p-4 transition-all ${
                 item.activo
-                  ? 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800'
-                  : 'bg-gray-100 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700 opacity-60'
+                  ? 'border-slate-200 bg-white dark:border-zinc-800 dark:bg-zinc-900'
+                  : 'border-slate-200 bg-slate-100 opacity-60 dark:border-zinc-800 dark:bg-zinc-800/30'
               }`}
             >
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900">
+                  <span className="rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-600 dark:border-teal-900 dark:bg-teal-950/50 dark:text-teal-400">
                     {item.categoria}
                   </span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <span className="text-sm font-medium text-slate-800 dark:text-white">
                     {item.pregunta}
                   </span>
                 </div>
@@ -182,21 +182,21 @@ export default function ConfiguracionAnamnesis({ onClose }: ConfiguracionAnamnes
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => toggleActivo(item.id, item.activo)}
-                  className={`p-2 rounded-lg text-xs font-medium flex items-center space-x-1 transition-colors ${
+                  className={`flex items-center space-x-1 rounded-lg p-2 text-xs font-medium transition-colors ${
                     item.activo
                       ? 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
-                      : 'text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800'
+                      : 'text-slate-400 hover:bg-slate-200 dark:hover:bg-zinc-800'
                   }`}
                   title={item.activo ? 'Desactivar pregunta' : 'Activar pregunta'}
                 >
-                  {item.activo ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                  {item.activo ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
                 </button>
                 <button
                   onClick={() => eliminarPregunta(item.id)}
-                  className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors"
+                  className="rounded-lg p-2 text-rose-500 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/30"
                   title="Eliminar pregunta"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>

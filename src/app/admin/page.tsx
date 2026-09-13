@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { UserCheck, Sparkles, CalendarDays, ShoppingBag, Settings, LogOut } from 'lucide-react';
-import ThemeToggle from '@/components/ThemeToggle'; // 👈 Importamos el botón
+import ThemeToggle from '@/components/ThemeToggle';
 
 // Cliente configurado para manejar cookies de sesión en el navegador
 const supabase = createBrowserClient(
@@ -83,7 +83,6 @@ export default function AdminHubPage() {
       {/* ENCABEZADO SUPERIOR CON BOTÓN DE CERRAR SESIÓN Y THEME TOGGLE */}
       <header className="w-full max-w-xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {/* 👈 Botón selector a la izquierda del título */}
           <ThemeToggle />
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-zinc-100">
@@ -109,13 +108,18 @@ export default function AdminHubPage() {
       {/* GRILLA DE BOTONES CUADRADOS */}
       <main className="w-full max-w-xl mx-auto my-auto py-8">
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
-          {modulos.map((modulo) => {
+          {modulos.map((modulo, index) => {
             const IconoComponente = modulo.icono;
+            // Si es el último elemento en cantidad impar, centrarlo si se desea o dejar en su lugar natural
+            const esUltimoImpar = index === modulos.length - 1 && modulos.length % 2 !== 0;
+
             return (
               <Link
                 key={modulo.ruta}
                 href={modulo.ruta}
-                className={`group flex flex-col items-center justify-center p-6 sm:p-8 aspect-square bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl shadow-sm transition-all duration-200 active:scale-95 hover:-translate-y-1 ${modulo.bgHover}`}
+                className={`group flex flex-col items-center justify-center p-6 sm:p-8 aspect-square bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl shadow-sm transition-all duration-200 active:scale-95 hover:-translate-y-1 ${
+                  modulo.bgHover
+                } ${esUltimoImpar ? 'col-span-2 sm:col-span-1 sm:col-start-1' : ''}`}
               >
                 <div
                   className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-inner mb-3 sm:mb-4 ${modulo.iconBg}`}
