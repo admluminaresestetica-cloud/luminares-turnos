@@ -9,7 +9,7 @@ import MetricasHeader from "./components/MetricasHeader";
 import CategoriasTab from "./components/CategoriasTab";
 import BannersTab from "./components/BannersTab";
 import TagsTab from "./components/TagsTab";
-import PuntoVentaTab from "./components/PuntoVentaTab";
+import PuntoVentaTab from "./components/pos/PuntoVentaTab";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
