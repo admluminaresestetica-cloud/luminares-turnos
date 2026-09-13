@@ -21,26 +21,26 @@ export default function ModalEditarTurno({
 }: ModalEditarTurnoProps) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 relative max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 relative max-h-[90vh] overflow-y-auto dark:bg-zinc-900 dark:border-zinc-800">
         
         {/* Botón Cerrar */}
         <button
           type="button"
           onClick={onClose}
           disabled={guardandoEdicionTurno}
-          className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-all disabled:opacity-50"
+          className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-all disabled:opacity-50 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-800"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Cabecera del Modal */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-gray-100 rounded-2xl text-gray-800 shrink-0">
+          <div className="p-3 bg-gray-100 rounded-2xl text-gray-800 shrink-0 dark:bg-zinc-800 dark:text-zinc-200">
             <Edit3 className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900 leading-tight">Editar Turno</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Modifica los detalles de la reserva</p>
+            <h2 className="text-lg font-bold text-gray-900 leading-tight dark:text-zinc-100">Editar Turno</h2>
+            <p className="text-xs text-gray-500 mt-0.5 dark:text-zinc-400">Modifica los detalles de la reserva</p>
           </div>
         </div>
 
@@ -48,8 +48,8 @@ export default function ModalEditarTurno({
           
           {/* Nombre del Cliente */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-gray-400" />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5 dark:text-zinc-400">
+              <User className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
               Nombre del Cliente
             </label>
             <input
@@ -57,30 +57,30 @@ export default function ModalEditarTurno({
               required
               value={turnoEdit.cliente_nombre}
               onChange={(e) => setTurnoEdit({ ...turnoEdit, cliente_nombre: e.target.value })}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
               placeholder="Ej: María González"
             />
           </div>
 
           {/* Celular */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5 text-gray-400" />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5 dark:text-zinc-400">
+              <Phone className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
               Celular
             </label>
             <input
               type="text"
               value={turnoEdit.cliente_celular}
               onChange={(e) => setTurnoEdit({ ...turnoEdit, cliente_celular: e.target.value })}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
               placeholder="Ej: +54 9 11 1234-5678"
             />
           </div>
 
           {/* Fecha y Hora */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-gray-400" />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5 dark:text-zinc-400">
+              <Calendar className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
               Fecha y Hora
             </label>
             <input
@@ -88,20 +88,20 @@ export default function ModalEditarTurno({
               required
               value={turnoEdit.fecha_hora_local}
               onChange={(e) => setTurnoEdit({ ...turnoEdit, fecha_hora_local: e.target.value })}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
             />
           </div>
 
           {/* Detalle / Zonas */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-gray-400" />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5 dark:text-zinc-400">
+              <FileText className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
               Detalle / Zonas
             </label>
             <textarea
               value={turnoEdit.detalle_texto}
               onChange={(e) => setTurnoEdit({ ...turnoEdit, detalle_texto: e.target.value })}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
               rows={2}
               placeholder="Ej: Pierna entera + Axilas"
             />
@@ -110,8 +110,8 @@ export default function ModalEditarTurno({
           {/* Precio y Método de Pago */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-gray-400" />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5 dark:text-zinc-400">
+                <DollarSign className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
                 Precio ($)
               </label>
               <input
@@ -120,20 +120,20 @@ export default function ModalEditarTurno({
                 min={0}
                 value={turnoEdit.precio_total}
                 onChange={(e) => setTurnoEdit({ ...turnoEdit, precio_total: Number(e.target.value) })}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
-                <CreditCard className="w-3.5 h-3.5 text-gray-400" />
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5 dark:text-zinc-400">
+                <CreditCard className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
                 Método Pago
               </label>
               <input
                 type="text"
                 value={turnoEdit.metodo_pago}
                 onChange={(e) => setTurnoEdit({ ...turnoEdit, metodo_pago: e.target.value })}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
                 placeholder="Efectivo, MP, etc."
               />
             </div>
@@ -141,14 +141,14 @@ export default function ModalEditarTurno({
 
           {/* Estado */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-gray-400" />
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5 dark:text-zinc-400">
+              <CheckCircle2 className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
               Estado del Turno
             </label>
             <select
               value={turnoEdit.estado}
               onChange={(e) => setTurnoEdit({ ...turnoEdit, estado: e.target.value })}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
             >
               <option value="pendiente_sena">⏳ Pendiente Seña</option>
               <option value="confirmado">✅ Confirmado</option>
@@ -158,19 +158,19 @@ export default function ModalEditarTurno({
           </div>
 
           {/* Acciones */}
-          <div className="flex justify-end gap-2.5 pt-4 border-t border-gray-100">
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-gray-100 dark:border-zinc-800">
             <button
               type="button"
               onClick={onClose}
               disabled={guardandoEdicionTurno}
-              className="px-4 py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-all disabled:opacity-50"
+              className="px-4 py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-all disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={guardandoEdicionTurno}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               {guardandoEdicionTurno ? (
                 <>
