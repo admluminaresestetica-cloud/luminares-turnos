@@ -1,6 +1,6 @@
-// src/components/admin/DashboardOverview.tsx
 'use client';
 
+import { useMemo } from 'react';
 import { Calendar, AlertCircle, Sparkles, ArrowRight, DollarSign, Clock, CheckCircle2 } from 'lucide-react';
 import type { Reserva } from '@/lib/types';
 import { citasHoy, pendientesSena, proximaJornadaLaser, proximosTurnos } from '@/lib/admin/metricas';
@@ -15,10 +15,11 @@ interface Props {
 }
 
 export default function DashboardOverview({ reservas, configLaser, onNavigate }: Props) {
-  const hoy = citasHoy(reservas);
-  const pendientes = pendientesSena(reservas);
-  const proxima = proximaJornadaLaser(reservas, configLaser);
-  const proximos = proximosTurnos(reservas);
+  // Memoizamos el cálculo de métricas para optimizar rendimiento
+  const hoy = useMemo(() => citasHoy(reservas), [reservas]);
+  const pendientes = useMemo(() => pendientesSena(reservas), [reservas]);
+  const proxima = useMemo(() => proximaJornadaLaser(reservas, configLaser), [reservas, configLaser]);
+  const proximos = useMemo(() => proximosTurnos(reservas), [reservas]);
 
   return (
     <div className="space-y-6">
@@ -44,7 +45,7 @@ export default function DashboardOverview({ reservas, configLaser, onNavigate }:
               <Sparkles className="w-4 h-4" />
             </div>
           </div>
-          {proxima.fecha ? (
+          {proxima?.fecha ? (
             <div className="mt-2">
               <p className="text-xl font-bold text-purple-700 dark:text-purple-400">
                 {proxima.ocupacionPct}% ocupación
@@ -76,7 +77,7 @@ export default function DashboardOverview({ reservas, configLaser, onNavigate }:
         <button
           type="button"
           onClick={() => onNavigate('agenda')}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-white transition-all shadow-sm"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-white active:scale-[0.98] transition-all shadow-sm"
         >
           <span>Ver agenda completa</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -84,7 +85,7 @@ export default function DashboardOverview({ reservas, configLaser, onNavigate }:
         <button
           type="button"
           onClick={() => onNavigate('precios')}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-200 text-xs font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-200 text-xs font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 active:scale-[0.98] transition-all"
         >
           <DollarSign className="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400" />
           <span>Gestionar precios</span>

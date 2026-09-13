@@ -74,7 +74,7 @@ export default function HorariosTab({
           <button
             onClick={onGuardarConfigLaser}
             disabled={guardandoLaser}
-            className="w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold bg-black text-white rounded-xl hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-50 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold bg-black text-white rounded-xl hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-50 disabled:active:scale-100 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             <Save className="w-3.5 h-3.5" />
             {guardandoLaser ? 'Guardando...' : 'Guardar Cambios'}
@@ -83,28 +83,28 @@ export default function HorariosTab({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Rango Horario */}
-          <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 dark:bg-zinc-850 dark:border-zinc-800">
+          <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 dark:bg-zinc-950/50 dark:border-zinc-800/80">
             <label className="block text-xs font-bold text-gray-800 mb-3 dark:text-zinc-200">
               Rango Horario de Atención
             </label>
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="flex-1">
-                <span className="block text-[11px] font-semibold text-gray-400 mb-1 dark:text-zinc-500">Desde</span>
+                <span className="block text-[11px] font-semibold text-gray-400 mb-1 dark:text-zinc-400">Desde</span>
                 <input
                   type="time"
                   value={configLaser.horarios_atencion?.inicio || '09:00'}
                   onChange={(e) => onActualizarRangoLaser('inicio', e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold text-gray-800 outline-none focus:border-black transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:border-zinc-100"
+                  className="w-full bg-white border border-gray-200 rounded-xl p-2.5 text-xs font-bold text-gray-800 outline-none focus:border-black focus:ring-2 focus:ring-rose-500/20 transition-all [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800/80 dark:border-zinc-700 dark:text-zinc-100 dark:focus:border-zinc-400"
                 />
               </div>
               <span className="text-gray-300 font-bold mt-4 dark:text-zinc-600">—</span>
               <div className="flex-1">
-                <span className="block text-[11px] font-semibold text-gray-400 mb-1 dark:text-zinc-500">Hasta</span>
+                <span className="block text-[11px] font-semibold text-gray-400 mb-1 dark:text-zinc-400">Hasta</span>
                 <input
                   type="time"
                   value={configLaser.horarios_atencion?.fin || '18:00'}
                   onChange={(e) => onActualizarRangoLaser('fin', e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-xl p-2 text-xs font-bold text-gray-800 outline-none focus:border-black transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:border-zinc-100"
+                  className="w-full bg-white border border-gray-200 rounded-xl p-2.5 text-xs font-bold text-gray-800 outline-none focus:border-black focus:ring-2 focus:ring-rose-500/20 transition-all [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800/80 dark:border-zinc-700 dark:text-zinc-100 dark:focus:border-zinc-400"
                 />
               </div>
             </div>
@@ -114,7 +114,7 @@ export default function HorariosTab({
           </div>
 
           {/* Fechas Habilitadas */}
-          <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 flex flex-col dark:bg-zinc-850 dark:border-zinc-800">
+          <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 flex flex-col dark:bg-zinc-950/50 dark:border-zinc-800/80">
             <label className="block text-xs font-bold text-gray-800 mb-3 dark:text-zinc-200">
               Fechas Habilitadas para Turnos
             </label>
@@ -123,32 +123,32 @@ export default function HorariosTab({
                 type="date"
                 value={nuevaFechaLaser}
                 onChange={(e) => setNuevaFechaLaser(e.target.value)}
-                className="bg-white border border-gray-200 rounded-xl p-2 text-xs font-medium text-gray-800 outline-none focus:border-black flex-1 transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:border-zinc-100"
+                className="bg-white border border-gray-200 rounded-xl p-2.5 text-xs font-medium text-gray-800 outline-none focus:border-black focus:ring-2 focus:ring-rose-500/20 flex-1 transition-all [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800/80 dark:border-zinc-700 dark:text-zinc-100 dark:focus:border-zinc-400"
               />
               <button
                 onClick={onAgregarFechaLaser}
-                className="justify-center px-3 py-2 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-black transition-all flex items-center gap-1 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                className="justify-center px-3.5 py-2.5 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-black transition-all flex items-center gap-1 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Agregar
               </button>
             </div>
-            
-            <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-xl bg-white divide-y divide-gray-50 flex-1 dark:bg-zinc-800 dark:border-zinc-700 dark:divide-zinc-700">
+
+            <div className="max-h-48 overflow-y-auto scroll-smooth border border-gray-100 rounded-xl bg-white divide-y divide-gray-50 flex-1 dark:bg-zinc-900 dark:border-zinc-800 dark:divide-zinc-800">
               {(configLaser.fechas_habilitadas_laser || []).length === 0 ? (
                 <div className="p-4 text-xs text-gray-400 text-center font-medium dark:text-zinc-500">
                   No hay fechas habilitadas todavía.
                 </div>
               ) : (
                 (configLaser.fechas_habilitadas_laser || []).map((fecha) => (
-                  <div key={fecha} className="flex items-center justify-between px-3.5 py-2.5 text-xs hover:bg-gray-50/60 transition-colors dark:hover:bg-zinc-750">
-                    <span className="capitalize font-bold text-gray-700 flex items-center gap-2 dark:text-zinc-300">
+                  <div key={fecha} className="flex items-center justify-between px-3.5 py-2.5 text-xs hover:bg-gray-50/60 transition-colors dark:hover:bg-zinc-800/50">
+                    <span className="capitalize font-bold text-gray-700 flex items-center gap-2 dark:text-zinc-200">
                       <Calendar className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
                       {formatFecha(fecha)}
                     </span>
                     <button
                       onClick={() => onQuitarFechaLaser(fecha)}
-                      className="text-rose-500 hover:text-rose-700 font-bold p-1 rounded-lg hover:bg-rose-50 transition-all dark:text-rose-400 dark:hover:bg-rose-950/60"
+                      className="text-rose-500 hover:text-rose-700 font-bold p-1.5 rounded-lg hover:bg-rose-50 transition-all active:scale-95 dark:text-rose-400 dark:hover:bg-rose-950/60 dark:hover:text-rose-300"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -177,7 +177,7 @@ export default function HorariosTab({
           <button
             onClick={onGuardarConfigGeneral}
             disabled={guardandoGeneral}
-            className="w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold bg-black text-white rounded-xl hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-50 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold bg-black text-white rounded-xl hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-50 disabled:active:scale-100 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             <Save className="w-3.5 h-3.5" />
             {guardandoGeneral ? 'Guardando...' : 'Guardar Cambios'}
@@ -185,10 +185,13 @@ export default function HorariosTab({
         </div>
 
         {/* Tabla Semanal */}
-        <div className="overflow-x-auto -mx-4 sm:mx-0 mb-6">
+        <p className="sm:hidden text-[11px] text-gray-400 dark:text-zinc-500 font-medium mb-2">
+          ↔ Deslizá la tabla hacia los costados para ver más columnas
+        </p>
+        <div className="overflow-x-auto scroll-smooth -mx-4 sm:mx-0 mb-6">
           <div className="inline-block min-w-full align-middle px-4 sm:px-0">
             <table className="min-w-full text-left text-xs">
-              <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase tracking-wider text-[11px] font-semibold dark:bg-zinc-850 dark:border-zinc-800 dark:text-zinc-400">
+              <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase tracking-wider text-[11px] font-semibold dark:bg-zinc-950/60 dark:border-zinc-800 dark:text-zinc-400">
                 <tr>
                   <th className="px-3 sm:px-4 py-3.5 rounded-l-xl">Día</th>
                   <th className="px-3 sm:px-4 py-3.5">Estado</th>
@@ -196,18 +199,18 @@ export default function HorariosTab({
                   <th className="px-3 sm:px-4 py-3.5 rounded-r-xl">Hasta</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-zinc-800">
+              <tbody className="divide-y divide-gray-50 dark:divide-zinc-800/60">
                 {DIAS_SEMANA.map(({ key, label }) => {
                   const horario: HorarioDia =
                     configGeneral.horarios_atencion?.[key] || horarioDiaDefault()
                   return (
-                    <tr key={key} className="hover:bg-gray-50/60 transition-colors dark:hover:bg-zinc-850/50">
+                    <tr key={key} className="hover:bg-gray-50/60 transition-colors dark:hover:bg-zinc-800/40">
                       <td className="px-3 sm:px-4 py-3.5 font-bold text-gray-800 whitespace-nowrap dark:text-zinc-200">{label}</td>
-                      
+
                       <td className="px-3 sm:px-4 py-3.5 whitespace-nowrap">
                         <button
                           onClick={() => onToggleDiaGeneral(key)}
-                          className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all flex items-center gap-1 ${
+                          className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all active:scale-95 flex items-center gap-1 ${
                             horario.abierto
                               ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-400 dark:hover:bg-emerald-900/60'
                               : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
@@ -233,7 +236,7 @@ export default function HorariosTab({
                           disabled={!horario.abierto}
                           value={horario.inicio}
                           onChange={(e) => onActualizarHorarioGeneral(key, 'inicio', e.target.value)}
-                          className="border border-gray-200 rounded-xl p-1.5 text-xs font-bold text-gray-800 outline-none focus:border-black disabled:bg-gray-50 disabled:text-gray-300 transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:disabled:bg-zinc-850 dark:disabled:text-zinc-600 dark:focus:border-zinc-100"
+                          className="border border-gray-200 rounded-xl p-1.5 text-xs font-bold text-gray-800 outline-none focus:border-black focus:ring-2 focus:ring-rose-500/20 disabled:bg-gray-50 disabled:text-gray-300 transition-all [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800/80 dark:border-zinc-700 dark:text-zinc-100 dark:disabled:bg-zinc-900 dark:disabled:text-zinc-600 dark:focus:border-zinc-400"
                         />
                       </td>
 
@@ -243,7 +246,7 @@ export default function HorariosTab({
                           disabled={!horario.abierto}
                           value={horario.fin}
                           onChange={(e) => onActualizarHorarioGeneral(key, 'fin', e.target.value)}
-                          className="border border-gray-200 rounded-xl p-1.5 text-xs font-bold text-gray-800 outline-none focus:border-black disabled:bg-gray-50 disabled:text-gray-300 transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:disabled:bg-zinc-850 dark:disabled:text-zinc-600 dark:focus:border-zinc-100"
+                          className="border border-gray-200 rounded-xl p-1.5 text-xs font-bold text-gray-800 outline-none focus:border-black focus:ring-2 focus:ring-rose-500/20 disabled:bg-gray-50 disabled:text-gray-300 transition-all [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800/80 dark:border-zinc-700 dark:text-zinc-100 dark:disabled:bg-zinc-900 dark:disabled:text-zinc-600 dark:focus:border-zinc-400"
                         />
                       </td>
                     </tr>
@@ -255,7 +258,7 @@ export default function HorariosTab({
         </div>
 
         {/* Excepciones */}
-        <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 dark:bg-zinc-850 dark:border-zinc-800">
+        <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 dark:bg-zinc-950/50 dark:border-zinc-800/80">
           <label className="block text-xs font-bold text-gray-800 mb-3 dark:text-zinc-200">
             Días de Excepción / Bloqueados
           </label>
@@ -264,11 +267,11 @@ export default function HorariosTab({
               type="date"
               value={nuevaExcepcionGeneral}
               onChange={(e) => setNuevaExcepcionGeneral(e.target.value)}
-              className="bg-white border border-gray-200 rounded-xl p-2 text-xs font-medium text-gray-800 outline-none focus:border-black transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:border-zinc-100"
+              className="bg-white border border-gray-200 rounded-xl p-2.5 text-xs font-medium text-gray-800 outline-none focus:border-black focus:ring-2 focus:ring-rose-500/20 transition-all [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800/80 dark:border-zinc-700 dark:text-zinc-100 dark:focus:border-zinc-400"
             />
             <button
               onClick={onAgregarExcepcionGeneral}
-              className="justify-center px-3 py-2 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-black transition-all flex items-center gap-1 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              className="justify-center px-3.5 py-2.5 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-black transition-all flex items-center gap-1 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               <Plus className="w-3.5 h-3.5" />
               Agregar Excepción
@@ -290,7 +293,7 @@ export default function HorariosTab({
                   })}
                   <button
                     onClick={() => onQuitarExcepcionGeneral(fecha)}
-                    className="text-rose-400 hover:text-rose-700 font-bold ml-1 p-0.5 rounded transition-all dark:text-rose-400 dark:hover:text-rose-300"
+                    className="text-rose-400 hover:text-rose-700 font-bold ml-1 p-0.5 rounded transition-all active:scale-90 dark:text-rose-400 dark:hover:text-rose-300"
                   >
                     ×
                   </button>

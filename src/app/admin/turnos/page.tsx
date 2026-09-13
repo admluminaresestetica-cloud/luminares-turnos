@@ -3,7 +3,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Store } from 'lucide-react'
 
 import AdminHeader from '@/app/admin/turnos/AdminHeader'
 import AdminTabs from './components/AdminTabs';
@@ -52,31 +52,35 @@ export default function AdminDashboard() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans text-gray-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-zinc-950 font-sans text-gray-900 dark:text-zinc-100 transition-colors">
       <AdminHeader onLogout={handleLogout} />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-10">
         {/* Encabezado superior del Panel con acceso directo a Admin Tienda y Menú Admin */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 bg-white p-4 rounded-xl border border-gray-200 shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight dark:text-zinc-100">Panel de Control</h1>
-            <p className="text-xs text-gray-500 dark:text-zinc-400">Gestión integral de turnos, agenda y productos</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-zinc-100 tracking-tight">
+              Panel de Control
+            </h1>
+            <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+              Gestión integral de turnos, agenda y productos
+            </p>
           </div>
-          
+
           <div className="flex items-center gap-2 shrink-0">
-            <Link 
-              href="/admin" 
-              className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2.5 rounded-lg transition-all shadow-xs hover:shadow flex items-center justify-center gap-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-750"
+            <Link
+              href="/admin"
+              className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-95 shadow-xs hover:shadow flex items-center justify-center gap-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700"
             >
               <ArrowLeft className="h-4 w-4 text-slate-500 dark:text-zinc-400" />
               <span>Menú Admin</span>
             </Link>
 
-            <Link 
-              href="/admin/tienda" 
-              className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-all shadow-xs hover:shadow flex items-center justify-center gap-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            <Link
+              href="/admin/tienda"
+              className="flex-1 sm:flex-none bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-95 shadow-xs hover:shadow flex items-center justify-center gap-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
-              <span>🛒</span>
+              <Store className="h-4 w-4" />
               <span>Admin Tienda</span>
             </Link>
           </div>
@@ -180,7 +184,7 @@ export default function AdminDashboard() {
 
         {activeTab === 'banner' && <BannerTab />}
         {activeTab === 'referidos' && <ReferidosTab />}
-        
+
       </div>
 
       {/* MODALES */}

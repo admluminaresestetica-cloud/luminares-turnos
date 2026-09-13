@@ -81,16 +81,19 @@ export default function ModalEditarReserva({
 
   return (
     <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 backdrop-blur-sm transition-all">
-      <div className="bg-white dark:bg-zinc-900 rounded-t-2xl sm:rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100 dark:border-zinc-800 max-h-[90vh] overflow-y-auto transition-colors">
+      <div className="bg-white dark:bg-zinc-900 rounded-t-3xl sm:rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-xl border border-gray-100 dark:border-zinc-800 max-h-[92vh] overflow-y-auto transition-colors">
+        {/* Handle visual estilo bottom sheet, solo mobile */}
+        <div className="sm:hidden w-10 h-1.5 bg-gray-200 dark:bg-zinc-700 rounded-full mx-auto mb-4" />
+
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-zinc-100">Editar reserva</h2>
             <p className="text-xs text-slate-500 dark:text-zinc-400 font-mono">{reserva.codigo_unico}</p>
           </div>
-          <button 
-            type="button" 
-            onClick={onClose} 
-            className="text-slate-400 hover:text-slate-600 dark:text-zinc-500 dark:hover:text-zinc-300 text-xl leading-none transition-colors"
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 dark:text-zinc-500 dark:hover:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-90 w-8 h-8 flex items-center justify-center rounded-full text-xl leading-none transition-all -mt-1 -mr-1"
           >
             ×
           </button>
@@ -112,7 +115,7 @@ export default function ModalEditarReserva({
                 onChange={(e) => setNombre(e.target.value)}
                 disabled={readonly}
                 required
-                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
@@ -123,7 +126,7 @@ export default function ModalEditarReserva({
                 onChange={(e) => setCelular(e.target.value)}
                 disabled={readonly}
                 required
-                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
               />
             </div>
           </div>
@@ -137,7 +140,7 @@ export default function ModalEditarReserva({
                 onChange={(e) => setFecha(e.target.value)}
                 disabled={readonly}
                 required
-                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all [color-scheme:light] dark:[color-scheme:dark]"
               />
             </div>
             <div>
@@ -148,12 +151,12 @@ export default function ModalEditarReserva({
                 onChange={(e) => setHora(e.target.value)}
                 disabled={readonly}
                 required
-                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all [color-scheme:light] dark:[color-scheme:dark]"
               />
             </div>
           </div>
 
-          <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
+          <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium bg-slate-50 dark:bg-zinc-800/50 px-3 py-2 rounded-lg">
             Duración del turno: {reserva.duracion_total} min · Tipo: {reserva.servicio_tipo}
           </p>
 
@@ -164,7 +167,7 @@ export default function ModalEditarReserva({
                 value={estado}
                 onChange={(e) => setEstado(e.target.value as typeof estado)}
                 disabled={readonly}
-                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
               >
                 {ESTADOS_RESERVA.map((e) => (
                   <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100">
@@ -179,7 +182,7 @@ export default function ModalEditarReserva({
                 value={asistencia}
                 onChange={(e) => setAsistencia(e.target.value as typeof asistencia)}
                 disabled={readonly}
-                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
               >
                 {ESTADOS_ASISTENCIA.map((e) => (
                   <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100">
@@ -197,7 +200,7 @@ export default function ModalEditarReserva({
                 value={medioPago}
                 onChange={(e) => setMedioPago(e.target.value)}
                 disabled={readonly}
-                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
               >
                 <option value="" className="bg-white dark:bg-zinc-900 text-slate-900 dark:text-zinc-100">Sin asignar</option>
                 {MEDIOS_PAGO.map((m) => (
@@ -214,7 +217,7 @@ export default function ModalEditarReserva({
                 value={precio}
                 onChange={(e) => setPrecio(Number(e.target.value))}
                 disabled={readonly}
-                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+                className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 text-sm bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 disabled:bg-slate-50 dark:disabled:bg-zinc-800/50 disabled:text-slate-400 dark:disabled:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
               />
             </div>
           </div>
@@ -225,11 +228,11 @@ export default function ModalEditarReserva({
             </p>
           )}
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-2 sticky bottom-0 bg-white dark:bg-zinc-900 sm:static sm:bg-transparent -mx-5 sm:mx-0 px-5 sm:px-0 pb-1 sm:pb-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl transition-colors font-medium"
+              className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-95 rounded-xl transition-all font-medium"
             >
               {readonly ? 'Cerrar' : 'Cancelar'}
             </button>
@@ -237,7 +240,7 @@ export default function ModalEditarReserva({
               <button
                 type="submit"
                 disabled={guardando}
-                className="px-4 py-2 text-sm bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold rounded-xl hover:bg-slate-800 dark:hover:bg-white disabled:opacity-50 transition-all shadow-sm"
+                className="w-full sm:w-auto px-4 py-3 sm:py-2 text-sm bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold rounded-xl hover:bg-slate-800 dark:hover:bg-white disabled:opacity-50 disabled:active:scale-100 active:scale-95 transition-all shadow-sm"
               >
                 {guardando ? 'Guardando...' : 'Guardar cambios'}
               </button>

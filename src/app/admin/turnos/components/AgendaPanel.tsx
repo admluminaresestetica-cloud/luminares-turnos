@@ -119,10 +119,10 @@ export default function AgendaPanel({
   return (
     <div className="space-y-5">
       {/* Control de Jornada / Cierre */}
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 p-5 shadow-sm transition-colors">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 p-4 sm:p-5 shadow-sm transition-colors">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex flex-wrap items-center gap-3">
-            <div>
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div className="flex-1 min-w-[140px] md:flex-none">
               <label className="block text-xs font-semibold text-gray-500 dark:text-zinc-400 mb-1 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
                 Fecha jornada
@@ -131,11 +131,11 @@ export default function AgendaPanel({
                 type="date"
                 value={fechaVista}
                 onChange={(e) => setFechaVista(e.target.value)}
-                className="border border-gray-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-medium text-gray-800 dark:text-zinc-100 bg-gray-50/50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+                className="w-full border border-gray-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-800 dark:text-zinc-100 bg-gray-50/50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all [color-scheme:light] dark:[color-scheme:dark]"
               />
             </div>
 
-            <div>
+            <div className="flex-1 min-w-[120px] md:flex-none">
               <label className="block text-xs font-semibold text-gray-500 dark:text-zinc-400 mb-1 flex items-center gap-1">
                 {tipoJornada === 'laser' ? (
                   <Sparkles className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400" />
@@ -147,7 +147,7 @@ export default function AgendaPanel({
               <select
                 value={tipoJornada}
                 onChange={(e) => setTipoJornada(e.target.value as 'laser' | 'general')}
-                className="border border-gray-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-medium text-gray-800 dark:text-zinc-100 bg-gray-50/50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+                className="w-full border border-gray-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-800 dark:text-zinc-100 bg-gray-50/50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
               >
                 <option value="laser" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">Láser</option>
                 <option value="general" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">General</option>
@@ -155,17 +155,17 @@ export default function AgendaPanel({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-end md:self-auto">
+          <div className="flex items-center gap-2 self-stretch md:self-auto w-full md:w-auto">
             {jornadaCerrada ? (
               <>
-                <span className="inline-flex items-center gap-1.5 text-xs bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 px-3.5 py-2 rounded-xl font-medium border border-gray-200 dark:border-zinc-700">
+                <span className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 text-xs bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl font-medium border border-gray-200 dark:border-zinc-700">
                   <Lock className="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400" />
                   Jornada cerrada
                 </span>
                 <button
                   type="button"
                   onClick={handleDesbloquear}
-                  className="inline-flex items-center gap-1.5 text-xs px-3.5 py-2 border border-gray-200 dark:border-zinc-700 rounded-xl font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white transition-all"
+                  className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 text-xs px-3.5 py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white active:scale-95 transition-all"
                 >
                   <Unlock className="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400" />
                   Desbloquear
@@ -176,7 +176,7 @@ export default function AgendaPanel({
                 type="button"
                 onClick={handleCerrarJornada}
                 disabled={cerrando}
-                className="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2.5 bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl hover:bg-gray-800 dark:hover:bg-white disabled:opacity-50 transition-all shadow-sm"
+                className="w-full md:w-auto justify-center inline-flex items-center gap-2 text-xs font-semibold px-4 py-2.5 bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl hover:bg-gray-800 dark:hover:bg-white disabled:opacity-50 disabled:active:scale-100 active:scale-95 transition-all shadow-sm"
               >
                 <Lock className="w-3.5 h-3.5" />
                 {cerrando ? 'Cerrando...' : 'Cerrar jornada del día'}
@@ -203,7 +203,7 @@ export default function AgendaPanel({
               placeholder="Buscar por nombre, celular, código (#7842) o fecha..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 dark:border-zinc-700 rounded-xl text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
             />
           </div>
 
@@ -211,7 +211,7 @@ export default function AgendaPanel({
             <button
               type="button"
               onClick={() => setVista('proximos')}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all active:scale-95 ${
                 vista === 'proximos'
                   ? 'bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white'
@@ -223,7 +223,7 @@ export default function AgendaPanel({
             <button
               type="button"
               onClick={() => setVista('historial')}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all active:scale-95 ${
                 vista === 'historial'
                   ? 'bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white'
@@ -241,100 +241,105 @@ export default function AgendaPanel({
             <p className="text-gray-500 dark:text-zinc-400 text-xs font-medium">No se encontraron reservas con los filtros seleccionados.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50/80 dark:bg-zinc-800/50 text-gray-500 dark:text-zinc-400 font-semibold uppercase tracking-wider text-[11px] border-b border-gray-100 dark:border-zinc-800">
-                <tr>
-                  <th className="px-4 py-3 w-8" />
-                  <th className="px-4 py-3">Código</th>
-                  <th className="px-4 py-3">Cliente</th>
-                  <th className="px-4 py-3">Fecha / Hora</th>
-                  <th className="px-4 py-3">Servicio</th>
-                  <th className="px-4 py-3">Medio Pago</th>
-                  <th className="px-4 py-3">Asistencia</th>
-                  <th className="px-4 py-3">Estado</th>
-                  <th className="px-4 py-3 text-right">Acción</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/60">
-                {filtradas.map((r) => {
-                  const cerrada = isJornadaCerrada(fechaDeReserva(r.fecha_hora_inicio), r.servicio_tipo, cierres);
-                  return (
-                    <tr 
-                      key={r.id} 
-                      className={`hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-colors ${cerrada ? 'bg-gray-50/50 dark:bg-zinc-800/30 opacity-75' : ''}`}
-                    >
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-block w-2.5 h-2.5 rounded-full ${
-                            r.fue_modificado ? 'bg-amber-500' : 'bg-emerald-500'
-                          }`}
-                          title={r.fue_modificado ? 'Modificado por admin' : 'Reserva original'}
-                        />
-                      </td>
-                      <td className="px-4 py-3 font-mono font-bold text-gray-700 dark:text-zinc-300">{r.codigo_unico}</td>
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-gray-800 dark:text-zinc-100">{r.cliente_nombre}</div>
-                        <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">{r.cliente_celular}</div>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-zinc-300 font-medium">
-                        {renderFechaHora(r.fecha_hora_inicio)}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-zinc-300 max-w-[150px] truncate" title={renderDetalleReserva(r)}>
-                        {renderDetalleReserva(r)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <select
-                          value={r.medio_pago || ''}
-                          onChange={(e) => handleCampo(r.id, { medio_pago: e.target.value || null })}
-                          disabled={cerrada}
-                          className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none max-w-[110px]"
-                        >
-                          <option value="" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">—</option>
-                          {MEDIOS_PAGO.map((m) => (
-                            <option key={m.value} value={m.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{m.label}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-4 py-3">
-                        <select
-                          value={r.estado_asistencia || 'pendiente'}
-                          onChange={(e) => handleCampo(r.id, { estado_asistencia: e.target.value as typeof r.estado_asistencia })}
-                          disabled={cerrada}
-                          className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none"
-                        >
-                          {ESTADOS_ASISTENCIA.map((e) => (
-                            <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-4 py-3">
-                        <select
-                          value={r.estado}
-                          onChange={(e) => handleCampo(r.id, { estado: e.target.value as typeof r.estado })}
-                          disabled={cerrada}
-                          className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none font-medium"
-                        >
-                          {ESTADOS_RESERVA.map((e) => (
-                            <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => setEditReserva(r)}
-                          className="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2.5 py-1.5 rounded-lg transition-all"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          Editar
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="p-3 sm:p-0">
+            <p className="sm:hidden text-[11px] text-gray-400 dark:text-zinc-500 font-medium mb-2 px-1">
+              ↔ Deslizá la tabla hacia los costados para ver más columnas
+            </p>
+            <div className="overflow-x-auto scroll-smooth">
+              <table className="w-full text-left text-xs min-w-[900px] sm:min-w-0">
+                <thead className="bg-gray-50/80 dark:bg-zinc-800/50 text-gray-500 dark:text-zinc-400 font-semibold uppercase tracking-wider text-[11px] border-b border-gray-100 dark:border-zinc-800">
+                  <tr>
+                    <th className="px-4 py-3 w-8" />
+                    <th className="px-4 py-3">Código</th>
+                    <th className="px-4 py-3">Cliente</th>
+                    <th className="px-4 py-3">Fecha / Hora</th>
+                    <th className="px-4 py-3">Servicio</th>
+                    <th className="px-4 py-3">Medio Pago</th>
+                    <th className="px-4 py-3">Asistencia</th>
+                    <th className="px-4 py-3">Estado</th>
+                    <th className="px-4 py-3 text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/60">
+                  {filtradas.map((r) => {
+                    const cerrada = isJornadaCerrada(fechaDeReserva(r.fecha_hora_inicio), r.servicio_tipo, cierres);
+                    return (
+                      <tr 
+                        key={r.id} 
+                        className={`hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-colors ${cerrada ? 'bg-gray-50/50 dark:bg-zinc-800/30 opacity-75' : ''}`}
+                      >
+                        <td className="px-4 py-3">
+                          <span
+                            className={`inline-block w-2.5 h-2.5 rounded-full ${
+                              r.fue_modificado ? 'bg-amber-500' : 'bg-emerald-500'
+                            }`}
+                            title={r.fue_modificado ? 'Modificado por admin' : 'Reserva original'}
+                          />
+                        </td>
+                        <td className="px-4 py-3 font-mono font-bold text-gray-700 dark:text-zinc-300">{r.codigo_unico}</td>
+                        <td className="px-4 py-3">
+                          <div className="font-semibold text-gray-800 dark:text-zinc-100">{r.cliente_nombre}</div>
+                          <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">{r.cliente_celular}</div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-zinc-300 font-medium">
+                          {renderFechaHora(r.fecha_hora_inicio)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600 dark:text-zinc-300 max-w-[150px] truncate" title={renderDetalleReserva(r)}>
+                          {renderDetalleReserva(r)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={r.medio_pago || ''}
+                            onChange={(e) => handleCampo(r.id, { medio_pago: e.target.value || null })}
+                            disabled={cerrada}
+                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none max-w-[110px] transition-all"
+                          >
+                            <option value="" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">—</option>
+                            {MEDIOS_PAGO.map((m) => (
+                              <option key={m.value} value={m.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{m.label}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={r.estado_asistencia || 'pendiente'}
+                            onChange={(e) => handleCampo(r.id, { estado_asistencia: e.target.value as typeof r.estado_asistencia })}
+                            disabled={cerrada}
+                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none transition-all"
+                          >
+                            {ESTADOS_ASISTENCIA.map((e) => (
+                              <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={r.estado}
+                            onChange={(e) => handleCampo(r.id, { estado: e.target.value as typeof r.estado })}
+                            disabled={cerrada}
+                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none font-medium transition-all"
+                          >
+                            {ESTADOS_RESERVA.map((e) => (
+                              <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => setEditReserva(r)}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2.5 py-1.5 rounded-lg transition-all active:scale-95"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            Editar
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

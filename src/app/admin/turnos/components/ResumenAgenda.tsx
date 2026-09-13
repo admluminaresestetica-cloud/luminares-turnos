@@ -1,7 +1,7 @@
 // src/components/admin/ResumenAgenda.tsx
 'use client'
 
-import { DollarSign, ClockCheck } from 'lucide-react'
+import { DollarSign, Clock } from 'lucide-react'
 
 interface ReservaResumen {
   estado?: string
@@ -26,11 +26,11 @@ export default function ResumenAgenda({ turnos, esFechaPasada }: ResumenAgendaPr
     .reduce((acc, t) => acc + (Number(t.precio_total) || 0), 0)
 
   return (
-    <div className="p-4 bg-gray-50/50 dark:bg-zinc-900/50 border border-gray-100 dark:border-zinc-800 mb-6 rounded-2xl transition-colors">
+    <div className="p-4 sm:p-4 bg-gray-50/50 dark:bg-zinc-900/50 border border-gray-100 dark:border-zinc-800 mb-6 rounded-2xl transition-colors">
       <div className={`grid gap-3 ${esFechaPasada ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
 
         {/* Recaudación Real */}
-        <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+        <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md active:scale-[0.98] transition-all flex items-center justify-between">
           <div>
             <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider block">
               {esFechaPasada ? 'Recaudación Real del Período' : 'Recaudación Real (Completados)'}
@@ -46,7 +46,7 @@ export default function ResumenAgenda({ turnos, esFechaPasada }: ResumenAgendaPr
 
         {/* Pendiente / Estimado */}
         {!esFechaPasada && (
-          <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+          <div className="bg-white dark:bg-zinc-900 p-4 rounded-xl border border-gray-100 dark:border-zinc-800 shadow-sm hover:shadow-md active:scale-[0.98] transition-all flex items-center justify-between">
             <div>
               <span className="text-xs font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wider block">
                 Pendiente / Estimado
@@ -56,7 +56,7 @@ export default function ResumenAgenda({ turnos, esFechaPasada }: ResumenAgendaPr
               </p>
             </div>
             <div className="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl text-blue-600 dark:text-blue-400 shrink-0">
-              <ClockCheck className="w-5 h-5" />
+              <Clock className="w-5 h-5" />
             </div>
           </div>
         )}

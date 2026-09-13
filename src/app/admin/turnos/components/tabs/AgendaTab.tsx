@@ -131,7 +131,7 @@ export default function AgendaTab({
               type="date"
               value={fechaEspecifica}
               onChange={(e) => setFechaEspecifica(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
+              className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
             />
           )}
 
@@ -181,8 +181,13 @@ export default function AgendaTab({
         </div>
       ) : (
         <div className="p-4 sm:p-6">
+          {/* Indicador de scroll horizontal, visible solo en mobile */}
+          <p className="sm:hidden text-[11px] text-gray-400 dark:text-zinc-500 font-medium mb-2 flex items-center gap-1">
+            ↔ Deslizá la tabla hacia los costados para ver más columnas
+          </p>
+
           {/* Contenedor con altura delimitada y scroll en ambas direcciones */}
-          <div className="w-full max-h-[70vh] overflow-auto border border-gray-100 rounded-2xl relative dark:border-zinc-800">
+          <div className="w-full max-h-[70vh] overflow-auto scroll-smooth border border-gray-100 rounded-2xl relative dark:border-zinc-800">
             <table className="w-full min-w-[950px] text-left text-sm border-collapse">
               <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase text-[11px] font-semibold tracking-wider sticky top-0 z-10 backdrop-blur-md dark:bg-zinc-900/90 dark:border-zinc-800 dark:text-zinc-500">
                 <tr>
@@ -197,7 +202,7 @@ export default function AgendaTab({
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-zinc-800">
                 {turnosFinales.map((t) => (
-                  <tr key={t.id} className="hover:bg-gray-50/60 transition-colors dark:hover:bg-zinc-850">
+                  <tr key={t.id} className="hover:bg-gray-50/60 transition-colors dark:hover:bg-zinc-800/50">
                     <td className="px-4 py-4 font-mono text-xs text-gray-400 whitespace-nowrap dark:text-zinc-500">
                       {t.codigo_unico || '-'}
                     </td>
@@ -261,14 +266,14 @@ export default function AgendaTab({
                       <div className="inline-flex items-center gap-1.5">
                         <button
                           onClick={() => onEditarTurno(t)}
-                          className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-all dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                          className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-all active:scale-95 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                         >
                           Editar
                         </button>
                         {t.estado !== 'confirmado' && t.estado !== 'completado' && (
                           <button
                             onClick={() => onActualizarEstado(t.id, 'confirmado')}
-                            className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 font-bold transition-all dark:bg-blue-950/60 dark:text-blue-400 dark:hover:bg-blue-900/60"
+                            className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 font-bold transition-all active:scale-95 dark:bg-blue-950/60 dark:text-blue-400 dark:hover:bg-blue-900/60"
                           >
                             Confirmar
                           </button>
@@ -276,7 +281,7 @@ export default function AgendaTab({
                         {t.estado !== 'completado' && (
                           <button
                             onClick={() => onActualizarEstado(t.id, 'completado')}
-                            className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 font-bold transition-all dark:bg-emerald-950/60 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
+                            className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 font-bold transition-all active:scale-95 dark:bg-emerald-950/60 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
                           >
                             Completar
                           </button>
@@ -284,7 +289,7 @@ export default function AgendaTab({
                         {t.estado !== 'cancelado' && (
                           <button
                             onClick={() => onActualizarEstado(t.id, 'cancelado')}
-                            className="text-xs bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-100 font-bold transition-all dark:bg-red-950/60 dark:text-red-400 dark:hover:bg-red-900/60"
+                            className="text-xs bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-100 font-bold transition-all active:scale-95 dark:bg-red-950/60 dark:text-red-400 dark:hover:bg-red-900/60"
                           >
                             Cancelar
                           </button>
@@ -292,7 +297,7 @@ export default function AgendaTab({
 
                         <button
                           onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-1 dark:text-zinc-500 dark:hover:text-red-400 dark:hover:bg-red-950/60"
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-95 ml-1 dark:text-zinc-500 dark:hover:text-red-400 dark:hover:bg-red-950/60"
                           title="Eliminar reserva permanentemente"
                         >
                           <Trash2 className="w-4 h-4" />

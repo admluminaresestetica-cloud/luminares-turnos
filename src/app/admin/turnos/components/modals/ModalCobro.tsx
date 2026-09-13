@@ -22,15 +22,18 @@ export default function ModalCobro({
   onClose
 }: ModalCobroProps) {
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-100 relative overflow-hidden dark:bg-zinc-900 dark:border-zinc-800">
-        
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 animate-in fade-in duration-200">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-gray-100 relative overflow-hidden max-h-[92vh] overflow-y-auto dark:bg-zinc-900 dark:border-zinc-800">
+
+        {/* Handle visual, solo mobile */}
+        <div className="sm:hidden w-10 h-1.5 bg-gray-200 dark:bg-zinc-700 rounded-full mx-auto mb-4" />
+
         {/* Botón Cerrar */}
         <button
           type="button"
           onClick={onClose}
           disabled={guardandoCobro}
-          className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-all disabled:opacity-50 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-800"
+          className="absolute top-4 sm:top-5 right-4 sm:right-5 text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 active:scale-90 transition-all disabled:opacity-50 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-800"
         >
           <X className="w-5 h-5" />
         </button>
@@ -40,14 +43,14 @@ export default function ModalCobro({
           <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600 shrink-0 dark:bg-emerald-950/50 dark:text-emerald-400">
             <Banknote className="w-6 h-6" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="text-lg font-bold text-gray-900 leading-tight dark:text-zinc-100">
               Completar y Cobrar Turno
             </h3>
             <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1.5 dark:text-zinc-400">
-              <User className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
+              <User className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
               <span>Cliente:</span>
-              <strong className="text-gray-800 font-semibold dark:text-zinc-200">{turnoACobrar.cliente_nombre}</strong>
+              <strong className="text-gray-800 font-semibold truncate dark:text-zinc-200">{turnoACobrar.cliente_nombre}</strong>
             </p>
           </div>
         </div>
@@ -84,7 +87,7 @@ export default function ModalCobro({
             value={medioPagoSeleccionado}
             onChange={(e) => setMedioPagoSeleccionado(e.target.value)}
             disabled={guardandoCobro}
-            className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
+            className="w-full px-3.5 py-3 sm:py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           >
             <option value="efectivo">💵 Efectivo</option>
             <option value="transferencia">🏦 Transferencia Bancaria</option>
@@ -95,12 +98,12 @@ export default function ModalCobro({
         </div>
 
         {/* Acciones del Modal */}
-        <div className="flex justify-end gap-2.5 pt-2 border-t border-gray-100 dark:border-zinc-800">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-2.5 pt-2 border-t border-gray-100 dark:border-zinc-800">
           <button
             type="button"
             onClick={onClose}
             disabled={guardandoCobro}
-            className="px-4 py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-all disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+            className="w-full sm:w-auto px-4 py-3 sm:py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 active:scale-95 rounded-xl transition-all disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
           >
             Cancelar
           </button>
@@ -108,7 +111,7 @@ export default function ModalCobro({
             type="button"
             onClick={onConfirm}
             disabled={guardandoCobro}
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none dark:bg-emerald-600 dark:hover:bg-emerald-500"
+            className="w-full sm:w-auto justify-center inline-flex items-center gap-2 px-5 py-3 sm:py-2.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none dark:bg-emerald-600 dark:hover:bg-emerald-500"
           >
             {guardandoCobro ? (
               <>

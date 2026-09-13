@@ -2,7 +2,7 @@
 'use client'
 
 import { Sparkles, X, Clock, DollarSign, Users, Folder, CheckCircle2 } from 'lucide-react'
-import { ServicioLaser } from '@/app/admin/turnos/components/types';
+import { ServicioLaser } from '../types'
 
 interface ModalServicioLaserProps {
   servicioEdit: Partial<ServicioLaser>

@@ -1,7 +1,6 @@
-// src/components/admin/tabs/ReferidosTab.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getConfiguracionSistema, updateConfiguracionSistema } from '@/lib/supabase/configuracion';
 import type { ConfiguracionSistema } from '@/lib/types';
@@ -25,17 +24,8 @@ interface Cliente {
   descuentos_disponibles: number;
 }
 
-interface ReferidosTabProps {
-  referidosActivo?: boolean;
-  setReferidosActivo?: React.Dispatch<React.SetStateAction<boolean>>;
-  referidosTipoDescuento?: 'porcentaje' | 'monto_fijo';
-  setReferidosTipoDescuento?: React.Dispatch<React.SetStateAction<'porcentaje' | 'monto_fijo'>>;
-  referidosValorDescuento?: number;
-  setReferidosValorDescuento?: React.Dispatch<React.SetStateAction<number>>;
-}
-
-export default function ReferidosTab(_props?: ReferidosTabProps) {
-  const [config, setConfig] = useState<ConfiguracionSistema | null>(null);
+export default function ReferidosTab() {
+  const [, setConfig] = useState<ConfiguracionSistema | null>(null);
   const [cargandoConfig, setCargandoConfig] = useState(true);
   const [guardandoConfig, setGuardandoConfig] = useState(false);
   const [mensajeExito, setMensajeExito] = useState(false);
@@ -43,14 +33,20 @@ export default function ReferidosTab(_props?: ReferidosTabProps) {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [busqueda, setBusqueda] = useState('');
   const [cargandoClientes, setCargandoClientes] = useState(true);
+  const [actualizandoClienteId, setActualizandoClienteId] = useState<string | null>(null);
 
   // Formulario local de config
   const [activo, setActivo] = useState(false);
   const [tipoDescuento, setTipoDescuento] = useState<'monto_fijo' | 'porcentaje'>('monto_fijo');
   const [valorDescuento, setValorDescuento] = useState(0);
 
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     cargarDatos();
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, []);
 
   async function cargarDatos() {
@@ -88,7 +84,8 @@ export default function ReferidosTab(_props?: ReferidosTabProps) {
     setGuardandoConfig(false);
     if (exito) {
       setMensajeExito(true);
-      setTimeout(() => setMensajeExito(false), 3000);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setMensajeExito(false), 3000);
     }
   };
 
@@ -97,6 +94,7 @@ export default function ReferidosTab(_props?: ReferidosTabProps) {
     if (!cliente) return;
 
     const nuevoValor = Math.max(0, (cliente.descuentos_disponibles || 0) + delta);
+    setActualizandoClienteId(clienteId);
 
     const { error } = await supabase
       .from('clientes')
@@ -108,6 +106,7 @@ export default function ReferidosTab(_props?: ReferidosTabProps) {
         prev.map((c) => (c.id === clienteId ? { ...c, descuentos_disponibles: nuevoValor } : c))
       );
     }
+    setActualizandoClienteId(null);
   };
 
   const clientesFiltrados = clientes.filter(
@@ -254,54 +253,63 @@ export default function ReferidosTab(_props?: ReferidosTabProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-zinc-800">
-                  {clientesFiltrados.map((cliente) => (
-                    <tr key={cliente.id} className="hover:bg-gray-50/60 transition-colors dark:hover:bg-zinc-850/50">
-                      <td className="py-3 px-3 font-semibold text-gray-900 whitespace-nowrap dark:text-zinc-100">
-                        {cliente.nombre}
-                      </td>
-                      <td className="py-3 px-3 text-gray-500 font-mono whitespace-nowrap dark:text-zinc-400">
-                        {cliente.celular}
-                      </td>
-                      <td className="py-3 px-3 whitespace-nowrap">
-                        <span className="font-mono bg-rose-50 text-rose-700 px-2 py-0.5 rounded-md font-bold text-[11px] dark:bg-rose-950/60 dark:text-rose-300">
-                          {cliente.codigo_referido || '—'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1 font-bold px-2.5 py-1 rounded-full text-xs ${
-                            (cliente.descuentos_disponibles || 0) > 0
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60'
-                              : 'bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400'
-                          }`}
-                        >
-                          <Sparkles className="w-3 h-3" />
-                          {cliente.descuentos_disponibles || 0} dispon.
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-right whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1">
-                          <button
-                            type="button"
-                            title="Descontar 1 beneficio"
-                            onClick={() => modificarDescuentosCliente(cliente.id, -1)}
-                            disabled={(cliente.descuentos_disponibles || 0) <= 0}
-                            className="p-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:disabled:hover:bg-transparent"
+                  {clientesFiltrados.map((cliente) => {
+                    const isUpdating = actualizandoClienteId === cliente.id;
+                    return (
+                      <tr key={cliente.id} className="hover:bg-gray-50/60 transition-colors dark:hover:bg-zinc-850/50">
+                        <td className="py-3 px-3 font-semibold text-gray-900 whitespace-nowrap dark:text-zinc-100">
+                          {cliente.nombre}
+                        </td>
+                        <td className="py-3 px-3 text-gray-500 font-mono whitespace-nowrap dark:text-zinc-400">
+                          {cliente.celular}
+                        </td>
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <span className="font-mono bg-rose-50 text-rose-700 px-2 py-0.5 rounded-md font-bold text-[11px] dark:bg-rose-950/60 dark:text-rose-300">
+                            {cliente.codigo_referido || '—'}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-center whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center gap-1 font-bold px-2.5 py-1 rounded-full text-xs ${
+                              (cliente.descuentos_disponibles || 0) > 0
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60'
+                                : 'bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400'
+                            }`}
                           >
-                            <Minus className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            title="Acreditar 1 beneficio"
-                            onClick={() => modificarDescuentosCliente(cliente.id, 1)}
-                            className="p-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            <Sparkles className="w-3 h-3" />
+                            {cliente.descuentos_disponibles || 0} dispon.
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-right whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1">
+                            {isUpdating ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-gray-400 my-1 mx-2" />
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  title="Descontar 1 beneficio"
+                                  onClick={() => modificarDescuentosCliente(cliente.id, -1)}
+                                  disabled={(cliente.descuentos_disponibles || 0) <= 0}
+                                  className="p-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:disabled:hover:bg-transparent transition-colors"
+                                >
+                                  <Minus className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Acreditar 1 beneficio"
+                                  onClick={() => modificarDescuentosCliente(cliente.id, 1)}
+                                  className="p-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

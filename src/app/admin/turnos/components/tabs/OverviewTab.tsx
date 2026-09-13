@@ -1,19 +1,34 @@
-// src/components/admin/tabs/OverviewTab.tsx
 'use client'
 
 import { ClipboardList, Wallet, Clock3 } from 'lucide-react'
 
 interface OverviewTabProps {
-  totalReservas: number
-  ingresosCobrados: number
-  ingresosPendientes: number
+  totalReservas?: number
+  ingresosCobrados?: number
+  ingresosPendientes?: number
 }
 
-export default function OverviewTab({ totalReservas, ingresosCobrados, ingresosPendientes }: OverviewTabProps) {
+const formatCurrency = (amount: number = 0) => {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    maximumFractionDigits: 0
+  }).format(amount)
+}
+
+const formatNumber = (value: number = 0) => {
+  return value.toLocaleString('es-AR')
+}
+
+export default function OverviewTab({
+  totalReservas = 0,
+  ingresosCobrados = 0,
+  ingresosPendientes = 0
+}: OverviewTabProps) {
   const stats = [
     {
       label: 'Total Reservas Creadas',
-      value: totalReservas.toLocaleString('es-AR'),
+      value: formatNumber(totalReservas),
       icon: ClipboardList,
       iconBg: 'bg-gray-100 dark:bg-zinc-800',
       iconColor: 'text-gray-600 dark:text-zinc-400',
@@ -21,7 +36,7 @@ export default function OverviewTab({ totalReservas, ingresosCobrados, ingresosP
     },
     {
       label: 'Recaudación Real (Completados)',
-      value: `$${ingresosCobrados.toLocaleString('es-AR')}`,
+      value: formatCurrency(ingresosCobrados),
       icon: Wallet,
       iconBg: 'bg-emerald-50 dark:bg-emerald-950/60',
       iconColor: 'text-emerald-600 dark:text-emerald-400',
@@ -29,7 +44,7 @@ export default function OverviewTab({ totalReservas, ingresosCobrados, ingresosP
     },
     {
       label: 'Pendiente de Cobro / Estimado',
-      value: `$${ingresosPendientes.toLocaleString('es-AR')}`,
+      value: formatCurrency(ingresosPendientes),
       icon: Clock3,
       iconBg: 'bg-blue-50 dark:bg-blue-950/60',
       iconColor: 'text-blue-600 dark:text-blue-400',
@@ -50,7 +65,7 @@ export default function OverviewTab({ totalReservas, ingresosCobrados, ingresosP
               <Icon className={`w-5 h-5 ${stat.iconColor}`} />
             </div>
             <span className="text-sm font-medium text-gray-500 dark:text-zinc-400">{stat.label}</span>
-            <p className={`text-3xl font-extrabold mt-1 ${stat.valueColor}`}>{stat.value}</p>
+            <p className={`text-3xl font-extrabold mt-1 tracking-tight ${stat.valueColor}`}>{stat.value}</p>
           </div>
         )
       })}
