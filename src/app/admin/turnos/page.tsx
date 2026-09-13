@@ -1,3 +1,4 @@
+// src/app/admin/turnos/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -51,29 +52,29 @@ export default function AdminDashboard() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans text-gray-900">
+    <div className="min-h-screen bg-gray-100 font-sans text-gray-900 dark:bg-zinc-950 dark:text-zinc-100">
       <AdminHeader onLogout={handleLogout} />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
         {/* Encabezado superior del Panel con acceso directo a Admin Tienda y Menú Admin */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 bg-white p-4 rounded-xl border border-gray-200 shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Panel de Control</h1>
-            <p className="text-xs text-gray-500">Gestión integral de turnos, agenda y productos</p>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight dark:text-zinc-100">Panel de Control</h1>
+            <p className="text-xs text-gray-500 dark:text-zinc-400">Gestión integral de turnos, agenda y productos</p>
           </div>
           
           <div className="flex items-center gap-2 shrink-0">
             <Link 
               href="/admin" 
-              className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2.5 rounded-lg transition-all shadow-xs hover:shadow flex items-center justify-center gap-2"
+              className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2.5 rounded-lg transition-all shadow-xs hover:shadow flex items-center justify-center gap-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-750"
             >
-              <ArrowLeft className="h-4 w-4 text-slate-500" />
+              <ArrowLeft className="h-4 w-4 text-slate-500 dark:text-zinc-400" />
               <span>Menú Admin</span>
             </Link>
 
             <Link 
               href="/admin/tienda" 
-              className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-all shadow-xs hover:shadow flex items-center justify-center gap-2"
+              className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition-all shadow-xs hover:shadow flex items-center justify-center gap-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
               <span>🛒</span>
               <span>Admin Tienda</span>
@@ -97,25 +98,25 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'agenda' && (
-  <AgendaTab
-    loading={agenda.loading}
-    turnosFiltrados={agenda.turnosFiltrados}
-    turnosAgendaResumen={agenda.turnosAgendaResumen}
-    esFechaAgendaPasada={agenda.esFechaAgendaPasada}
-    busqueda={agenda.busqueda}
-    setBusqueda={agenda.setBusqueda}
-    filtroFechaTipo={agenda.filtroFechaTipo}
-    setFiltroFechaTipo={agenda.setFiltroFechaTipo}
-    fechaEspecifica={agenda.fechaEspecifica}
-    setFechaEspecifica={agenda.setFechaEspecifica}
-    filtroEstado={agenda.filtroEstado}
-    setFiltroEstado={agenda.setFiltroEstado}
-    onNuevoTurno={nuevoTurno.abrirModalNuevoTurno}
-    onEditarTurno={agenda.abrirModalEditarTurno}
-    onActualizarEstado={agenda.actualizarEstado}
-    onEliminarTurno={(id) => agenda.eliminarTurno(id)}
-  />
-)}
+          <AgendaTab
+            loading={agenda.loading}
+            turnosFiltrados={agenda.turnosFiltrados}
+            turnosAgendaResumen={agenda.turnosAgendaResumen}
+            esFechaAgendaPasada={agenda.esFechaAgendaPasada}
+            busqueda={agenda.busqueda}
+            setBusqueda={agenda.setBusqueda}
+            filtroFechaTipo={agenda.filtroFechaTipo}
+            setFiltroFechaTipo={agenda.setFiltroFechaTipo}
+            fechaEspecifica={agenda.fechaEspecifica}
+            setFechaEspecifica={agenda.setFechaEspecifica}
+            filtroEstado={agenda.filtroEstado}
+            setFiltroEstado={agenda.setFiltroEstado}
+            onNuevoTurno={nuevoTurno.abrirModalNuevoTurno}
+            onEditarTurno={agenda.abrirModalEditarTurno}
+            onActualizarEstado={agenda.actualizarEstado}
+            onEliminarTurno={(id) => agenda.eliminarTurno(id)}
+          />
+        )}
 
         {activeTab === 'precios' && (
           <PreciosTab
