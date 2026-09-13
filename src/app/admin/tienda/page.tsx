@@ -106,13 +106,15 @@ export default function AdminTiendaPage() {
           totalCategorias={categorias.length}
         />
 
-        <div className="mb-6 flex flex-wrap gap-4 border-b border-[#E7E5E0]">
+        
+                 {/* Pestañas con Scroll Horizontal para Mobile */}
+        <div className="no-scrollbar -mx-6 mb-6 flex items-center gap-2 overflow-x-auto border-b border-[#E7E5E0] px-6 sm:mx-0 sm:px-0">
           <button
             onClick={() => setActiveTab("catalogo")}
-            className={`pb-3 text-sm font-bold transition-colors ${
+            className={`flex whitespace-nowrap items-center gap-2 border-b-2 px-3.5 py-3 text-xs font-bold transition-all sm:text-sm ${
               activeTab === "catalogo"
-                ? "border-b-2 border-[#0E6E55] text-[#0E6E55]"
-                : "text-[#6B675F] hover:text-[#12151B]"
+                ? "border-[#0E6E55] text-[#0E6E55]"
+                : "border-transparent text-[#6B675F] hover:text-[#12151B]"
             }`}
           >
             📦 Catálogo
@@ -120,21 +122,21 @@ export default function AdminTiendaPage() {
 
           <button
             onClick={() => setActiveTab("pos")}
-            className={`pb-3 text-sm font-bold transition-colors ${
+            className={`flex whitespace-nowrap items-center gap-2 border-b-2 px-3.5 py-3 text-xs font-bold transition-all sm:text-sm ${
               activeTab === "pos"
-                ? "border-b-2 border-[#0E6E55] text-[#0E6E55]"
-                : "text-[#6B675F] hover:text-[#12151B]"
+                ? "border-[#0E6E55] text-[#0E6E55]"
+                : "border-transparent text-[#6B675F] hover:text-[#12151B]"
             }`}
           >
             📷 Escáner / POS
           </button>
-          
+
           <button
             onClick={() => setActiveTab("pedidos")}
-            className={`flex items-center gap-2 pb-3 text-sm font-bold transition-colors ${
+            className={`flex whitespace-nowrap items-center gap-2 border-b-2 px-3.5 py-3 text-xs font-bold transition-all sm:text-sm ${
               activeTab === "pedidos"
-                ? "border-b-2 border-[#0E6E55] text-[#0E6E55]"
-                : "text-[#6B675F] hover:text-[#12151B]"
+                ? "border-[#0E6E55] text-[#0E6E55]"
+                : "border-transparent text-[#6B675F] hover:text-[#12151B]"
             }`}
           >
             <span>📋 Historial de Pedidos</span>
@@ -147,10 +149,10 @@ export default function AdminTiendaPage() {
 
           <button
             onClick={() => setActiveTab("banners")}
-            className={`pb-3 text-sm font-bold transition-colors ${
+            className={`flex whitespace-nowrap items-center gap-2 border-b-2 px-3.5 py-3 text-xs font-bold transition-all sm:text-sm ${
               activeTab === "banners"
-                ? "border-b-2 border-[#0E6E55] text-[#0E6E55]"
-                : "text-[#6B675F] hover:text-[#12151B]"
+                ? "border-[#0E6E55] text-[#0E6E55]"
+                : "border-transparent text-[#6B675F] hover:text-[#12151B]"
             }`}
           >
             🖼️ Banners
@@ -158,16 +160,17 @@ export default function AdminTiendaPage() {
 
           <button
             onClick={() => setActiveTab("tags")}
-            className={`pb-3 text-sm font-bold transition-colors ${
+            className={`flex whitespace-nowrap items-center gap-2 border-b-2 px-3.5 py-3 text-xs font-bold transition-all sm:text-sm ${
               activeTab === "tags"
-                ? "border-b-2 border-[#0E6E55] text-[#0E6E55]"
-                : "text-[#6B675F] hover:text-[#12151B]"
+                ? "border-[#0E6E55] text-[#0E6E55]"
+                : "border-transparent text-[#6B675F] hover:text-[#12151B]"
             }`}
           >
             🏷️ Tags
           </button>
         </div>
-
+ 
+ 
         {activeTab === "catalogo" && (
           <>
             <CategoriasTab
