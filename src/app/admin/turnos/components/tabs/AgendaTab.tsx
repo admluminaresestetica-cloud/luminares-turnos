@@ -101,17 +101,17 @@ export default function AgendaTab({
   }
 
   return (
-    <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 overflow-hidden transition-all">
+    <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 overflow-hidden transition-all dark:bg-zinc-900 dark:border-zinc-800">
       {/* Barra de filtros */}
-      <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+      <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between dark:border-zinc-800">
         <div className="relative w-full lg:w-64">
-          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 dark:text-zinc-500" />
           <input
             type="text"
             placeholder="Buscar cliente, tel o código..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50"
+            className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
           />
         </div>
 
@@ -119,7 +119,7 @@ export default function AgendaTab({
           <select
             value={filtroFechaTipo}
             onChange={(e) => setFiltroFechaTipo(e.target.value as any)}
-            className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50"
+            className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
           >
             <option value="todos">Todas las fechas</option>
             <option value="hoy">Ver solo Hoy</option>
@@ -131,14 +131,14 @@ export default function AgendaTab({
               type="date"
               value={fechaEspecifica}
               onChange={(e) => setFechaEspecifica(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50"
+              className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
             />
           )}
 
           <select
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50"
+            className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
           >
             <option value="todos">Todos los estados</option>
             <option value="pendiente_sena">⏳ Pendiente Seña</option>
@@ -150,7 +150,7 @@ export default function AgendaTab({
           <select
             value={filtroMedioPago}
             onChange={(e) => setFiltroMedioPago(e.target.value)}
-            className="border border-blue-200 bg-blue-50/50 text-blue-900 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+            className="border border-blue-200 bg-blue-50/50 text-blue-900 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/30 transition-all dark:bg-blue-950/60 dark:border-blue-900 dark:text-blue-300"
           >
             <option value="todos">Todos los medios de pago</option>
             <option value="mercadopago">💳 Mercado Pago</option>
@@ -160,7 +160,7 @@ export default function AgendaTab({
 
           <button
             onClick={onNuevoTurno}
-            className="px-4 py-2.5 text-xs sm:text-sm bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+            className="px-4 py-2.5 text-xs sm:text-sm bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             <Plus className="w-4 h-4" />
             Nuevo Turno
@@ -171,20 +171,20 @@ export default function AgendaTab({
       <ResumenAgenda turnos={turnosAgendaResumen} esFechaPasada={esFechaAgendaPasada} />
 
       {loading ? (
-        <div className="p-12 text-center text-gray-400 text-xs font-medium animate-pulse">
+        <div className="p-12 text-center text-gray-400 text-xs font-medium animate-pulse dark:text-zinc-500">
           Cargando turnos...
         </div>
       ) : turnosFinales.length === 0 ? (
         <div className="p-12 text-center">
-          <CalendarDays className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-          <p className="text-gray-400 text-sm font-medium">No se encontraron reservas con los filtros aplicados.</p>
+          <CalendarDays className="w-8 h-8 text-gray-300 mx-auto mb-2 dark:text-zinc-700" />
+          <p className="text-gray-400 text-sm font-medium dark:text-zinc-400">No se encontraron reservas con los filtros aplicados.</p>
         </div>
       ) : (
         <div className="p-4 sm:p-6">
           {/* Contenedor con altura delimitada y scroll en ambas direcciones */}
-          <div className="w-full max-h-[70vh] overflow-auto border border-gray-100 rounded-2xl relative">
+          <div className="w-full max-h-[70vh] overflow-auto border border-gray-100 rounded-2xl relative dark:border-zinc-800">
             <table className="w-full min-w-[950px] text-left text-sm border-collapse">
-              <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase text-[11px] font-semibold tracking-wider sticky top-0 z-10 backdrop-blur-md">
+              <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase text-[11px] font-semibold tracking-wider sticky top-0 z-10 backdrop-blur-md dark:bg-zinc-900/90 dark:border-zinc-800 dark:text-zinc-500">
                 <tr>
                   <th className="px-4 py-3.5 rounded-l-xl">Código</th>
                   <th className="px-4 py-3.5">Cliente</th>
@@ -195,42 +195,42 @@ export default function AgendaTab({
                   <th className="px-4 py-3.5 text-right rounded-r-xl">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-zinc-800">
                 {turnosFinales.map((t) => (
-                  <tr key={t.id} className="hover:bg-gray-50/60 transition-colors">
-                    <td className="px-4 py-4 font-mono text-xs text-gray-400 whitespace-nowrap">
+                  <tr key={t.id} className="hover:bg-gray-50/60 transition-colors dark:hover:bg-zinc-850">
+                    <td className="px-4 py-4 font-mono text-xs text-gray-400 whitespace-nowrap dark:text-zinc-500">
                       {t.codigo_unico || '-'}
                     </td>
                     <td className="px-4 py-4 font-medium whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-900">{t.cliente_nombre || 'Sin nombre'}</span>
+                        <span className="text-gray-900 dark:text-zinc-100">{t.cliente_nombre || 'Sin nombre'}</span>
 
                         {(t as any).codigo_referido_propio && (
-                          <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold" title="Código de referido propio del cliente">
+                          <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300" title="Código de referido propio del cliente">
                             {(t as any).codigo_referido_propio}
                           </span>
                         )}
 
                         {t.codigo_referido_usado && (
-                          <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-[11px] font-semibold" title="Descuento aplicado con código">
+                          <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-[11px] font-semibold dark:bg-purple-950/60 dark:border-purple-900 dark:text-purple-300" title="Descuento aplicado con código">
                             <Gift className="w-3 h-3" />
                             {t.codigo_referido_usado}
                           </span>
                         )}
                       </div>
                       {t.cliente_celular && (
-                        <div className="text-xs text-gray-400 mt-0.5">{t.cliente_celular}</div>
+                        <div className="text-xs text-gray-400 mt-0.5 dark:text-zinc-400">{t.cliente_celular}</div>
                       )}
                     </td>
-                    <td className="px-4 py-4 text-xs text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-4 text-xs text-gray-600 whitespace-nowrap dark:text-zinc-400">
                       {renderFechaHora(t.fecha_hora_inicio)}
                     </td>
                     <td className="px-4 py-4">
-                      <span className="text-xs bg-gray-100 px-2.5 py-1 rounded-lg text-gray-700 font-medium">
+                      <span className="text-xs bg-gray-100 px-2.5 py-1 rounded-lg text-gray-700 font-medium dark:bg-zinc-800 dark:text-zinc-300">
                         {renderDetalle(t)}
                       </span>
                     </td>
-                    <td className="px-4 py-4 font-extrabold text-gray-900 whitespace-nowrap">
+                    <td className="px-4 py-4 font-extrabold text-gray-900 whitespace-nowrap dark:text-zinc-100">
                       ${(Number(t.precio_total) || 0).toLocaleString('es-AR')}
                     </td>
                     <td className="px-4 py-4">
@@ -238,19 +238,19 @@ export default function AgendaTab({
                         <span
                           className={`px-2.5 py-1 rounded-full text-[11px] font-bold capitalize ${
                             t.estado === 'confirmado'
-                              ? 'bg-blue-100 text-blue-700'
+                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300'
                               : t.estado === 'completado'
-                              ? 'bg-emerald-100 text-emerald-700'
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'
                               : t.estado === 'cancelado'
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-yellow-100 text-yellow-700'
+                              ? 'bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300'
+                              : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/80 dark:text-yellow-300'
                           }`}
                         >
                           {t.estado || 'pendiente'}
                         </span>
 
                         {(t.medio_pago || t.tipo_pago_elegido) && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300">
                             <CreditCard className="w-3 h-3" />
                             {t.medio_pago || t.tipo_pago_elegido}
                           </span>
@@ -261,14 +261,14 @@ export default function AgendaTab({
                       <div className="inline-flex items-center gap-1.5">
                         <button
                           onClick={() => onEditarTurno(t)}
-                          className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-all"
+                          className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-all dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                         >
                           Editar
                         </button>
                         {t.estado !== 'confirmado' && t.estado !== 'completado' && (
                           <button
                             onClick={() => onActualizarEstado(t.id, 'confirmado')}
-                            className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 font-bold transition-all"
+                            className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 font-bold transition-all dark:bg-blue-950/60 dark:text-blue-400 dark:hover:bg-blue-900/60"
                           >
                             Confirmar
                           </button>
@@ -276,7 +276,7 @@ export default function AgendaTab({
                         {t.estado !== 'completado' && (
                           <button
                             onClick={() => onActualizarEstado(t.id, 'completado')}
-                            className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 font-bold transition-all"
+                            className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 font-bold transition-all dark:bg-emerald-950/60 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
                           >
                             Completar
                           </button>
@@ -284,7 +284,7 @@ export default function AgendaTab({
                         {t.estado !== 'cancelado' && (
                           <button
                             onClick={() => onActualizarEstado(t.id, 'cancelado')}
-                            className="text-xs bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-100 font-bold transition-all"
+                            className="text-xs bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-100 font-bold transition-all dark:bg-red-950/60 dark:text-red-400 dark:hover:bg-red-900/60"
                           >
                             Cancelar
                           </button>
@@ -292,7 +292,7 @@ export default function AgendaTab({
 
                         <button
                           onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-1"
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all ml-1 dark:text-zinc-500 dark:hover:text-red-400 dark:hover:bg-red-950/60"
                           title="Eliminar reserva permanentemente"
                         >
                           <Trash2 className="w-4 h-4" />

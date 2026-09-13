@@ -15,25 +15,25 @@ export default function OverviewTab({ totalReservas, ingresosCobrados, ingresosP
       label: 'Total Reservas Creadas',
       value: totalReservas.toLocaleString('es-AR'),
       icon: ClipboardList,
-      iconBg: 'bg-gray-100',
-      iconColor: 'text-gray-600',
-      valueColor: 'text-gray-900',
+      iconBg: 'bg-gray-100 dark:bg-zinc-800',
+      iconColor: 'text-gray-600 dark:text-zinc-400',
+      valueColor: 'text-gray-900 dark:text-zinc-100',
     },
     {
       label: 'Recaudación Real (Completados)',
       value: `$${ingresosCobrados.toLocaleString('es-AR')}`,
       icon: Wallet,
-      iconBg: 'bg-emerald-50',
-      iconColor: 'text-emerald-600',
-      valueColor: 'text-emerald-600',
+      iconBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
+      valueColor: 'text-emerald-600 dark:text-emerald-400',
     },
     {
       label: 'Pendiente de Cobro / Estimado',
       value: `$${ingresosPendientes.toLocaleString('es-AR')}`,
       icon: Clock3,
-      iconBg: 'bg-blue-50',
-      iconColor: 'text-blue-600',
-      valueColor: 'text-blue-600',
+      iconBg: 'bg-blue-50 dark:bg-blue-950/60',
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      valueColor: 'text-blue-600 dark:text-blue-400',
     },
   ]
 
@@ -44,12 +44,12 @@ export default function OverviewTab({ totalReservas, ingresosCobrados, ingresosP
         return (
           <div
             key={stat.label}
-            className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all duration-200"
+            className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all duration-200 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
           >
             <div className={`w-10 h-10 rounded-xl ${stat.iconBg} flex items-center justify-center mb-4`}>
               <Icon className={`w-5 h-5 ${stat.iconColor}`} />
             </div>
-            <span className="text-sm font-medium text-gray-500">{stat.label}</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-zinc-400">{stat.label}</span>
             <p className={`text-3xl font-extrabold mt-1 ${stat.valueColor}`}>{stat.value}</p>
           </div>
         )

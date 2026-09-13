@@ -60,13 +60,13 @@ export default function BannerTab() {
         .getPublicUrl(fileName)
 
       const { error: dbError } = await supabase.from('banners').insert([
-  {
-    imagen_url: publicUrlData.publicUrl,
-    titulo: titulo.trim() ? titulo : null, // 👈 si no pones nada, guarda null sin inventar nada
-    activo: true,
-    orden: banners.length + 1,
-  },
-])
+        {
+          imagen_url: publicUrlData.publicUrl,
+          titulo: titulo.trim() ? titulo : null,
+          activo: true,
+          orden: banners.length + 1,
+        },
+      ])
 
       if (dbError) throw dbError
 
@@ -116,7 +116,6 @@ export default function BannerTab() {
     }
   }
 
-  // Función para detectar si el archivo es un video
   const esVideo = (url: string) => {
     return url?.toLowerCase().endsWith('.mp4') || url?.toLowerCase().endsWith('.webm')
   }
@@ -124,15 +123,15 @@ export default function BannerTab() {
   return (
     <div className="space-y-6">
       {/* Formulario de Carga */}
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm dark:bg-zinc-900 dark:border-zinc-800 transition-all">
+        <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2 dark:text-zinc-100">
           <ImagePlus className="w-4 h-4 text-rose-500" />
           Añadir Nuevo Banner
         </h3>
 
         <form onSubmit={handleSubirBanner} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1 dark:text-zinc-300">
               Título Promocional (Opcional)
             </label>
             <input
@@ -140,19 +139,19 @@ export default function BannerTab() {
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               placeholder="Ej: Promo de la semana"
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-300 transition"
+              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-300 transition bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-gray-700 mb-1 dark:text-zinc-300">
               Imagen o Video del Banner
             </label>
             <input
               type="file"
               accept="image/*,video/mp4,video/webm"
               onChange={(e) => setArchivo(e.target.files?.[0] || null)}
-              className="w-full text-sm text-gray-500 file:mr-4 file:rounded-xl file:border-0 file:bg-gray-900 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-black file:transition-colors file:cursor-pointer"
+              className="w-full text-sm text-gray-500 dark:text-zinc-400 file:mr-4 file:rounded-xl file:border-0 file:bg-gray-900 file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-black file:transition-colors file:cursor-pointer dark:file:bg-zinc-100 dark:file:text-zinc-900 dark:hover:file:bg-zinc-200"
             />
           </div>
 
@@ -167,23 +166,23 @@ export default function BannerTab() {
       </div>
 
       {/* Lista de Banners */}
-      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-        <h3 className="text-base font-semibold text-gray-900 mb-4">
-          Banners Registrados {banners.length > 0 && <span className="text-gray-400 font-normal">({banners.length})</span>}
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm dark:bg-zinc-900 dark:border-zinc-800 transition-all">
+        <h3 className="text-base font-semibold text-gray-900 mb-4 dark:text-zinc-100">
+          Banners Registrados {banners.length > 0 && <span className="text-gray-400 font-normal dark:text-zinc-500">({banners.length})</span>}
         </h3>
 
         {cargando ? (
-          <p className="text-sm text-gray-500">Cargando banners...</p>
+          <p className="text-sm text-gray-500 dark:text-zinc-500 animate-pulse">Cargando banners...</p>
         ) : banners.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">No hay banners configurados todavía.</p>
+          <p className="text-sm text-gray-400 text-center py-8 dark:text-zinc-500">No hay banners configurados todavía.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {banners.map((b) => (
               <div
                 key={b.id}
-                className="relative overflow-hidden rounded-2xl border border-gray-100 bg-gray-50/60 p-3 hover:shadow-sm transition-shadow"
+                className="relative overflow-hidden rounded-2xl border border-gray-100 bg-gray-50/60 p-3 hover:shadow-sm transition-shadow dark:bg-zinc-850 dark:border-zinc-800"
               >
-                <div className="relative h-32 w-full overflow-hidden rounded-xl bg-gray-200">
+                <div className="relative h-32 w-full overflow-hidden rounded-xl bg-gray-200 dark:bg-zinc-800">
                   {esVideo(b.imagen_url) ? (
                     <video
                       src={b.imagen_url}
@@ -196,14 +195,14 @@ export default function BannerTab() {
                   ) : (
                     <img
                       src={b.imagen_url}
-                      alt={b.titulo}
+                      alt={b.titulo || 'Banner'}
                       className="h-full w-full object-cover"
                     />
                   )}
 
                   <span
                     className={`absolute right-2 top-2 rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm ${
-                      b.activo ? 'bg-emerald-500' : 'bg-gray-500'
+                      b.activo ? 'bg-emerald-500' : 'bg-gray-500 dark:bg-zinc-600'
                     }`}
                   >
                     {b.activo ? 'ACTIVO' : 'PAUSADO'}
@@ -211,7 +210,7 @@ export default function BannerTab() {
                 </div>
 
                 <div className="mt-3 flex items-center justify-between gap-2">
-                  <span className="truncate text-sm font-semibold text-gray-900">
+                  <span className="truncate text-sm font-semibold text-gray-900 dark:text-zinc-100">
                     {b.titulo || 'Sin título'}
                   </span>
 
@@ -219,14 +218,14 @@ export default function BannerTab() {
                     <button
                       onClick={() => toggleEstado(b.id, b.activo)}
                       title={b.activo ? 'Pausar' : 'Activar'}
-                      className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700"
                     >
                       {b.activo ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
                     </button>
                     <button
                       onClick={() => eliminarBanner(b.id, b.imagen_url)}
                       title="Eliminar"
-                      className="flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
+                      className="flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors dark:bg-red-950/60 dark:text-red-400 dark:hover:bg-red-900/60"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
