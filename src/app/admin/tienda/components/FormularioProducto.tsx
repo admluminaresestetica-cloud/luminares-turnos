@@ -156,7 +156,7 @@ export default function FormularioProducto({
             type="text"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm outline-none focus:border-[#0E6E55]"
+            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
             required
           />
         </div>
@@ -170,7 +170,7 @@ export default function FormularioProducto({
               value={codigoBarras}
               onChange={(e) => setCodigoBarras(e.target.value)}
               placeholder="Ej: 779123456789"
-              className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm outline-none focus:border-[#0E6E55]"
+              className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
             />
             <button
               type="button"
@@ -188,11 +188,11 @@ export default function FormularioProducto({
           <select
             value={categoria}
             onChange={(e) => setCategoria(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm outline-none focus:border-[#0E6E55]"
+            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
           >
-            <option value="">General</option>
+            <option value="" className="text-[#12151B]">General</option>
             {categorias.map((c) => (
-              <option key={c.id} value={c.nombre}>
+              <option key={c.id} value={c.nombre} className="text-[#12151B]">
                 {c.nombre}
               </option>
             ))}
@@ -205,7 +205,7 @@ export default function FormularioProducto({
             type="number"
             value={precio}
             onChange={(e) => setPrecio(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm outline-none focus:border-[#0E6E55]"
+            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
             required
           />
         </div>
@@ -218,7 +218,7 @@ export default function FormularioProducto({
             type="number"
             value={precioOriginal}
             onChange={(e) => setPrecioOriginal(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm outline-none focus:border-[#0E6E55]"
+            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
           />
         </div>
 
@@ -228,7 +228,7 @@ export default function FormularioProducto({
             type="number"
             value={stock}
             onChange={(e) => setStock(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm outline-none focus:border-[#0E6E55]"
+            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
           />
         </div>
 
@@ -238,7 +238,7 @@ export default function FormularioProducto({
             type="number"
             value={stockMinimo}
             onChange={(e) => setStockMinimo(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm outline-none focus:border-[#0E6E55]"
+            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
           />
         </div>
 
@@ -263,7 +263,7 @@ export default function FormularioProducto({
             type="file"
             accept="image/*"
             onChange={(e) => setImagenFile(e.target.files?.[0] || null)}
-            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-2.5 text-sm text-[#6B675F] outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-[#12151B] file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-[#2C323E]"
+            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-2.5 text-sm text-[#12151B] outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-[#12151B] file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-[#2C323E]"
           />
         </div>
 
@@ -273,7 +273,7 @@ export default function FormularioProducto({
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
             rows={2}
-            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm outline-none focus:border-[#0E6E55]"
+            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
           />
         </div>
 
