@@ -3,6 +3,7 @@ import { useState } from "react";
 import PosHeader from "./PosHeader";
 import PosGridProductos from "./PosGridProductos";
 import PosCarrito from "./PosCarrito";
+import ModalCobro from "./ModalCobro";
 import { ProductoPOS, PosCartItem } from "./types";
 
 interface PuntoVentaTabProps {
@@ -18,8 +19,11 @@ export default function PuntoVentaTab({
 }: PuntoVentaTabProps) {
   const [busqueda, setBusqueda] = useState("");
   const [carrito, setCarrito] = useState<PosCartItem[]>([]);
+  
+  // Estado para el Modal de Cobro
+  const [isModalCobroOpen, setIsModalCobroOpen] = useState(false);
+  const [datosCobro, setDatosCobro] = useState({ subtotal: 0, descuentoCalculado: 0, totalFinal: 0 });
 
-  // Agregar un producto al carrito
   const handleAgregarAlCarrito = (prod: ProductoPOS) => {
     setCarrito((prev) => {
       const existe = prev.find((item) => item.producto_id === prod.id);
@@ -45,7 +49,6 @@ export default function PuntoVentaTab({
     });
   };
 
-  // Escaneo directo de código de barras
   const handleBarcodeScanned = (code: string) => {
     const encontrado = productos.find((p) => p.codigo_barras === code.trim());
     if (encontrado) {
@@ -55,7 +58,6 @@ export default function PuntoVentaTab({
     }
   };
 
-  // Modificar cantidad (+ / -)
   const handleModificarCantidad = (productoId: number, delta: number) => {
     setCarrito((prev) =>
       prev
@@ -70,9 +72,18 @@ export default function PuntoVentaTab({
     );
   };
 
-  // Eliminar un ítem
   const handleEliminarItem = (productoId: number) => {
     setCarrito((prev) => prev.filter((item) => item.producto_id !== productoId));
+  };
+
+  const handleIniciarCobro = (subtotal: number, descuentoCalculado: number, totalFinal: number) => {
+    setDatosCobro({ subtotal, descuentoCalculado, totalFinal });
+    setIsModalCobroOpen(true);
+  };
+
+  const handleVentaExitosa = () => {
+    setCarrito([]);
+    onActualizarProductos(); // Refresca el stock en Supabase y actualiza la grilla
   };
 
   return (
@@ -85,7 +96,6 @@ export default function PuntoVentaTab({
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Grilla principal de productos (2 columnas en desktop) */}
         <div className="lg:col-span-2">
           <PosGridProductos
             productos={productos}
@@ -94,19 +104,27 @@ export default function PuntoVentaTab({
           />
         </div>
 
-        {/* Panel lateral del carrito (1 columna en desktop) */}
         <div className="lg:col-span-1">
           <PosCarrito
             carrito={carrito}
             onModificarCantidad={handleModificarCantidad}
             onEliminarItem={handleEliminarItem}
             onVaciarCarrito={() => setCarrito([])}
-            onIniciarCobro={(subtotal, desc, total) => {
-              alert(`Listo para la Fase 3: Cobrar $${total}`);
-            }}
+            onIniciarCobro={handleIniciarCobro}
           />
         </div>
       </div>
+
+      <ModalCobro
+        isOpen={isModalCobroOpen}
+        onClose={() => setIsModalCobroOpen(false)}
+        carrito={carrito}
+        subtotal={datosCobro.subtotal}
+        descuentoCalculado={datosCobro.descuentoCalculado}
+        totalFinal={datosCobro.totalFinal}
+        supabase={supabase}
+        onVentaExitosa={handleVentaExitosa}
+      />
     </div>
   );
 }
