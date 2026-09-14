@@ -39,15 +39,15 @@ export default function NotificacionNuevoCliente() {
   if (!nuevoPacienteAlerta) return null;
 
   return (
-    <div className="bg-indigo-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center justify-between animate-bounce">
+    <div className="flex items-center justify-between rounded-xl bg-teal-600 px-4 py-3 text-white shadow-lg animate-bounce dark:bg-teal-700">
       <div className="flex items-center space-x-2">
-        <BellRing className="w-5 h-5 shrink-0" />
+        <BellRing className="h-5 w-5 shrink-0" />
         <span className="text-xs font-bold">{nuevoPacienteAlerta}</span>
       </div>
       <button
         type="button"
         onClick={() => setNuevoPacienteAlerta(null)}
-        className="text-xs bg-indigo-700 hover:bg-indigo-800 px-2 py-1 rounded font-bold cursor-pointer"
+        className="cursor-pointer rounded bg-teal-700 px-2 py-1 text-xs font-bold transition-colors hover:bg-teal-800 dark:bg-teal-800 dark:hover:bg-teal-900"
       >
         Cerrar
       </button>

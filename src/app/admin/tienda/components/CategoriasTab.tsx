@@ -37,12 +37,12 @@ export default function CategoriasTab({
 
       <form onSubmit={handleSubmit} className="mt-4 flex gap-3">
         <input
-          type="text"
-          placeholder="Nombre de la nueva categoría"
-          value={nuevaCategoria}
-          onChange={(e) => setNuevaCategoria(e.target.value)}
-          className="flex-1 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-4 py-2.5 text-sm outline-none focus:border-[#0E6E55] focus:bg-white"
-        />
+  type="text"
+  placeholder="Nombre de la categoría..."
+  value={nuevaCategoria}
+  onChange={(e) => setNuevaCategoria(e.target.value)}
+  className="w-full rounded-xl border border-[#E7E5E0] bg-white p-3 text-sm font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
+/>
         <button
           type="submit"
           disabled={cargandoCat || !nuevaCategoria.trim()}

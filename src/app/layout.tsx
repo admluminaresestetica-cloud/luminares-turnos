@@ -3,6 +3,7 @@ import "./globals.css";
 import Footer from "@/components/footer";
 import { CarritoProvider } from "@/context/CarritoContext";
 import { ConfigProvider } from "@/context/ConfigContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -33,16 +34,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <ConfigProvider>
-          <CarritoProvider>
-            {children}
-            <Footer />
-          </CarritoProvider>
-        </ConfigProvider>
+    <html lang="es" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ConfigProvider>
+            <CarritoProvider>
+              {children}
+              <Footer />
+            </CarritoProvider>
+          </ConfigProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

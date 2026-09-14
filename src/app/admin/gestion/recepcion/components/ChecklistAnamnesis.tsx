@@ -67,14 +67,14 @@ export default function ChecklistAnamnesis({
   return (
     <div className="space-y-5">
       <div>
-        <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-          <Droplet className="h-3.5 w-3.5 text-teal-500" />
+        <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+          <Droplet className="h-3.5 w-3.5 text-teal-500 dark:text-teal-400" />
           Fototipo de piel (Fitzpatrick)
         </label>
         <select
           value={fototipo}
           onChange={(e) => setFototipo(e.target.value)}
-          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-800 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+          className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-800 outline-none transition-all focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-teal-400 dark:focus:ring-teal-400/20"
         >
           <option value="Fototipo I">Fototipo I (Muy clara / pelirroja)</option>
           <option value="Fototipo II">Fototipo II (Clara / sensible)</option>
@@ -84,18 +84,18 @@ export default function ChecklistAnamnesis({
         </select>
       </div>
 
-      <div className="border-t border-slate-100 pt-4">
+      <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50 text-teal-600">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50 text-teal-600 dark:bg-teal-950/60 dark:text-teal-400">
               <ListChecks className="h-4 w-4" />
             </span>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
               Check clínico / anamnesis
             </span>
           </div>
           {totalMarcados > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-800">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
               {totalMarcados} marcado{totalMarcados > 1 ? 's' : ''}
             </span>
@@ -103,18 +103,17 @@ export default function ChecklistAnamnesis({
         </div>
 
         {cargando ? (
-          <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-xs italic text-slate-400">
-            <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-teal-500" />
+          <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-xs italic text-slate-400 dark:border-zinc-800 dark:bg-zinc-800/40 dark:text-zinc-500">
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-teal-500 dark:border-zinc-600 dark:border-t-teal-400" />
             Cargando preguntas de anamnesis...
           </div>
         ) : preguntasDinamicas.length === 0 ? (
-          <p className="rounded-xl border border-amber-200/80 bg-amber-50 p-3 text-xs text-amber-700">
+          <p className="rounded-xl border border-amber-200/80 bg-amber-50 p-3 text-xs text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/50 dark:text-amber-300">
             No hay preguntas configuradas. Usá el botón "Configurar Anamnesis" arriba para agregarlas.
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {preguntasDinamicas.map((item) => {
-              // USAMOS EL TÍTULO O PREGUNTA REAL COMO CLAVE PARA GUARDAR EN LA BD
               const claveLegible = item.titulo || item.pregunta || item.id;
               const marcado = !!antecedentes[claveLegible];
 
@@ -126,20 +125,20 @@ export default function ChecklistAnamnesis({
                   aria-pressed={marcado}
                   className={`flex min-h-11 items-center gap-2.5 rounded-xl border p-3 text-left text-xs transition-all active:scale-[0.98] ${
                     marcado
-                      ? 'border-teal-300 bg-teal-50 ring-1 ring-teal-200'
-                      : 'border-slate-200/80 bg-slate-50/60 hover:bg-slate-100'
+                      ? 'border-teal-300 bg-teal-50 ring-1 ring-teal-200 dark:border-teal-800 dark:bg-teal-950/60 dark:ring-teal-900'
+                      : 'border-slate-200/80 bg-slate-50/60 hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-800/40 dark:hover:bg-zinc-800/80'
                   }`}
                 >
                   <span
                     className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-md border transition-colors ${
                       marcado
-                        ? 'border-teal-600 bg-teal-600 text-white'
-                        : 'border-slate-300 bg-white text-transparent'
+                        ? 'border-teal-600 bg-teal-600 text-white dark:border-teal-500 dark:bg-teal-500'
+                        : 'border-slate-300 bg-white text-transparent dark:border-zinc-700 dark:bg-zinc-900'
                     }`}
                   >
                     <Check className="h-3 w-3" strokeWidth={3} />
                   </span>
-                  <span className={`font-medium leading-tight ${marcado ? 'text-teal-900' : 'text-slate-700'}`}>
+                  <span className={`font-medium leading-tight ${marcado ? 'text-teal-900 dark:text-teal-200' : 'text-slate-700 dark:text-zinc-300'}`}>
                     {item.titulo || item.pregunta}
                   </span>
                 </button>
@@ -149,8 +148,8 @@ export default function ChecklistAnamnesis({
         )}
       </div>
 
-      <div className="border-t border-slate-100 pt-4">
-        <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+      <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
+        <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
           Observaciones médicas fijas / permanentes
         </label>
         <input
@@ -158,7 +157,7 @@ export default function ChecklistAnamnesis({
           value={observacionesFijas}
           onChange={(e) => setObservacionesFijas(e.target.value)}
           placeholder="Ej: Alergia a gel conductor, lunares en espalda..."
-          className="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+          className="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-all focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-teal-400 dark:focus:ring-teal-400/20"
         />
       </div>
     </div>

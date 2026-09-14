@@ -58,16 +58,16 @@ export default function ResumenReservaCobro({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-indigo-100 bg-gradient-to-b from-indigo-50/80 to-white p-4 shadow-sm sm:p-5">
+    <div className="space-y-4 rounded-2xl border border-teal-100 bg-gradient-to-b from-teal-50/80 to-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
       <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-teal-700 ring-1 ring-teal-200 dark:bg-teal-950/60 dark:text-teal-400 dark:ring-teal-900">
           <CalendarClock className="h-4.5 w-4.5" />
         </span>
         <div className="min-w-0">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-500">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">
             Turno / reserva web
           </span>
-          <p className="mt-0.5 text-sm font-semibold text-indigo-950">
+          <p className="mt-0.5 text-sm font-semibold text-slate-900 dark:text-zinc-100">
             {obtenerDetalleReservaTexto(reserva)}
           </p>
         </div>

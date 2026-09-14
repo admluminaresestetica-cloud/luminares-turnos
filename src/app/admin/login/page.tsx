@@ -104,22 +104,22 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F9F8F6] px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-2xl shadow-sm border border-stone-200/80">
+    <div className="min-h-screen flex items-center justify-center bg-[#F9F8F6] dark:bg-stone-950 px-4 transition-colors">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-stone-900 p-8 sm:p-10 rounded-2xl shadow-sm border border-stone-200/80 dark:border-stone-800 transition-colors">
         <div className="text-center">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 text-stone-700">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
 
-          <span className="inline-block px-3 py-1 mb-3 text-xs font-medium tracking-widest text-stone-600 uppercase bg-stone-100 rounded-full">
+          <span className="inline-block px-3 py-1 mb-3 text-xs font-medium tracking-widest text-stone-600 dark:text-stone-400 uppercase bg-stone-100 dark:bg-stone-800 rounded-full">
             Panel Privado
           </span>
-          <h2 className="text-2xl font-semibold tracking-tight text-stone-900">
+          <h2 className="text-2xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
             Luminares Admin
           </h2>
-          <p className="mt-2 text-sm text-stone-500">
+          <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
             {step === 'credentials' 
               ? 'Ingresá tus datos para acceder al sistema' 
               : `Hemos enviado un código de 6 dígitos a ${email}`}
@@ -129,14 +129,14 @@ export default function AdminLogin() {
         {step === 'credentials' ? (
           <form className="mt-8 space-y-5" onSubmit={handleLogin}>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-xl">
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm p-3 rounded-xl">
                 {error}
               </div>
             )}
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-stone-700 mb-1.5">
+                <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1.5">
                   Correo Electrónico
                 </label>
                 <input
@@ -144,13 +144,13 @@ export default function AdminLogin() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-stone-900 text-sm focus:ring-2 focus:ring-stone-900 focus:outline-none transition"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 text-sm focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-400 focus:outline-none transition"
                   placeholder="admin@luminares.com"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-stone-700 mb-1.5">
+                <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1.5">
                   Contraseña
                 </label>
                 <input
@@ -158,7 +158,7 @@ export default function AdminLogin() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-stone-900 text-sm focus:ring-2 focus:ring-stone-900 focus:outline-none transition"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 text-sm focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-400 focus:outline-none transition"
                   placeholder="••••••••"
                 />
               </div>
@@ -167,7 +167,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white font-medium text-sm rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm"
+              className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-stone-200 text-white dark:text-stone-900 font-medium text-sm rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm"
             >
               {loading ? 'Verificando y enviando código...' : 'Continuar'}
             </button>
@@ -175,13 +175,13 @@ export default function AdminLogin() {
         ) : (
           <form className="mt-8 space-y-5" onSubmit={handleVerifyCode}>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-xl">
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm p-3 rounded-xl">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-stone-700 mb-1.5">
+              <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1.5">
                 Código de verificación (6 dígitos)
               </label>
               <input
@@ -190,7 +190,7 @@ export default function AdminLogin() {
                 required
                 value={codigo}
                 onChange={(e) => setCodigo(e.target.value)}
-                className="w-full text-center tracking-widest text-lg px-4 py-2.5 bg-white border border-stone-200 rounded-xl text-stone-900 focus:ring-2 focus:ring-stone-900 focus:outline-none transition"
+                className="w-full text-center tracking-widest text-lg px-4 py-2.5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-400 focus:outline-none transition"
                 placeholder="123456"
               />
             </div>
@@ -198,7 +198,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white font-medium text-sm rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm"
+              className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-stone-200 text-white dark:text-stone-900 font-medium text-sm rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm"
             >
               {loading ? 'Validando código...' : 'Ingresar al Panel'}
             </button>
@@ -206,7 +206,7 @@ export default function AdminLogin() {
             <button
               type="button"
               onClick={() => setStep('credentials')}
-              className="w-full text-center text-xs text-stone-500 hover:text-stone-800 mt-2"
+              className="w-full text-center text-xs text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200 mt-2 transition-colors"
             >
               Volver atrás
             </button>
