@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PosHeader from "./PosHeader";
 import PosGridProductos from "./PosGridProductos";
 import PosCarrito from "./PosCarrito";
 import ModalCobro from "./ModalCobro";
-import TicketVenta from "./TicketVenta"; // 1. Importamos el ticket
+import TicketVenta from "./TicketVenta";
 import { ProductoPOS, PosCartItem } from "./types";
+import { Keyboard, X, Info } from "lucide-react";
 
 interface PuntoVentaTabProps {
   productos: ProductoPOS[];
@@ -25,7 +26,7 @@ export default function PuntoVentaTab({
   const [isModalCobroOpen, setIsModalCobroOpen] = useState(false);
   const [datosCobro, setDatosCobro] = useState({ subtotal: 0, descuentoCalculado: 0, totalFinal: 0 });
 
-  // 2. Estados para controlar la visualización del Ticket
+  // Estados para controlar la visualización del Ticket
   const [isTicketOpen, setIsTicketOpen] = useState(false);
   const [datosTicket, setDatosTicket] = useState<{
     pedidoId: string;
@@ -36,6 +37,61 @@ export default function PuntoVentaTab({
     vuelto: number;
     nombreCliente: string;
   } | null>(null);
+
+  // Estado para Pop-up / Modal de Atajos de Teclado
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  // --------------------------------------------------------
+  // LÓGICA DE ATAJOS DE TECLADO (Pilar 1)
+  // --------------------------------------------------------
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Evitar que capture si el usuario está escribiendo en un input o textarea
+      const target = e.target as HTMLElement;
+      const isTyping =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      // 1. Enfocar buscador con "/" o "F4" (incluso si está tipeando en otro lado)
+      if (e.key === "F4" || (e.key === "/" && !isTyping)) {
+        e.preventDefault();
+        const searchInput = document.querySelector<HTMLInputElement>("input[type='text']");
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+        return;
+      }
+
+      // 2. Tecla F2 o Enter (cuando no se está tipeando) para abrir el Modal de Cobro
+      if ((e.key === "F2" || (e.key === "Enter" && !isTyping)) && carrito.length > 0 && !isModalCobroOpen && !isTicketOpen) {
+        e.preventDefault();
+        // Calculamos totales y abrimos el cobro
+        const subtotalCalc = carrito.reduce((acc, i) => acc + i.precio_unitario * i.cantidad, 0);
+        handleIniciarCobro(subtotalCalc, 0, subtotalCalc);
+        return;
+      }
+
+      // 3. Tecla Escape para cerrar modales o vaciar carrito
+      if (e.key === "Escape") {
+        if (isHelpOpen) {
+          setIsHelpOpen(false);
+        } else if (isModalCobroOpen) {
+          setIsModalCobroOpen(false);
+        } else if (isTicketOpen) {
+          setIsTicketOpen(false);
+        } else if (carrito.length > 0) {
+          if (confirm("¿Deseas vaciar el carrito actual?")) {
+            setCarrito([]);
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [carrito, isModalCobroOpen, isTicketOpen, isHelpOpen]);
 
   const handleAgregarAlCarrito = (prod: ProductoPOS) => {
     setCarrito((prev) => {
@@ -94,7 +150,6 @@ export default function PuntoVentaTab({
     setIsModalCobroOpen(true);
   };
 
-  // 3. Recibe la info del pedido completado desde ModalCobro
   const handleVentaExitosa = (infoTicket: {
     pedidoId: string;
     items: PosCartItem[];
@@ -105,13 +160,13 @@ export default function PuntoVentaTab({
     nombreCliente: string;
   }) => {
     setDatosTicket(infoTicket);
-    setIsTicketOpen(true); // Abre el modal del ticket
-    setCarrito([]); // Vacía el carrito
-    onActualizarProductos(); // Refresca el stock real en pantalla
+    setIsTicketOpen(true);
+    setCarrito([]);
+    onActualizarProductos();
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4">
       <PosHeader
         busqueda={busqueda}
         setBusqueda={setBusqueda}
@@ -139,6 +194,78 @@ export default function PuntoVentaTab({
         </div>
       </div>
 
+      {/* Botón Flotante de Ayuda de Atajos */}
+      <button
+        onClick={() => setIsHelpOpen(true)}
+        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[#12151B] px-3.5 py-2 text-xs font-semibold text-white shadow-lg transition-all hover:bg-[#0E6E55] hover:scale-105 active:scale-95"
+        title="Ver Atajos de Teclado"
+      >
+        <Keyboard className="h-4 w-4 text-emerald-400" />
+        <span>Atajos</span>
+      </button>
+
+      {/* Pop-up / Modal de Ayuda de Atajos */}
+      {isHelpOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
+            <button
+              onClick={() => setIsHelpOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-2.5 mb-4 border-b border-gray-100 pb-3">
+              <div className="p-2 bg-emerald-50 rounded-xl text-[#0E6E55]">
+                <Keyboard className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Atajos de Teclado Rápidos</h3>
+                <p className="text-xs text-gray-500">Agilizá las ventas en la caja sin usar el mouse</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
+                <span className="text-xs font-medium text-gray-700 flex items-center gap-2">
+                  <Info className="h-3.5 w-3.5 text-emerald-600" /> Buscar Productos
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-mono font-bold text-gray-800 border border-gray-200 shadow-sm">
+                  / <span className="text-gray-400">o</span> F4
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
+                <span className="text-xs font-medium text-gray-700 flex items-center gap-2">
+                  <Info className="h-3.5 w-3.5 text-emerald-600" /> Abrir Modal de Cobro
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-mono font-bold text-gray-800 border border-gray-200 shadow-sm">
+                  F2 <span className="text-gray-400">o</span> Enter
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
+                <span className="text-xs font-medium text-gray-700 flex items-center gap-2">
+                  <Info className="h-3.5 w-3.5 text-emerald-600" /> Cerrar / Vaciar Carrito
+                </span>
+                <span className="rounded-md bg-white px-2 py-1 text-xs font-mono font-bold text-gray-800 border border-gray-200 shadow-sm">
+                  Esc
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-gray-100 flex justify-end">
+              <button
+                onClick={() => setIsHelpOpen(false)}
+                className="w-full py-2.5 rounded-xl bg-[#12151B] text-white text-xs font-bold hover:bg-[#0E6E55] transition-colors"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Cobro */}
       <ModalCobro
         isOpen={isModalCobroOpen}
@@ -151,7 +278,7 @@ export default function PuntoVentaTab({
         onVentaExitosa={handleVentaExitosa}
       />
 
-      {/* 4. Modal de Comprobante / Ticket de Venta */}
+      {/* Modal de Comprobante / Ticket de Venta */}
       {datosTicket && (
         <TicketVenta
           isOpen={isTicketOpen}

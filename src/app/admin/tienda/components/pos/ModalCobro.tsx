@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PosCartItem } from "./types";
 
 interface ModalCobroProps {
@@ -10,7 +10,6 @@ interface ModalCobroProps {
   descuentoCalculado: number;
   totalFinal: number;
   supabase: any;
-  // CAMBIO 1: Recibe el objeto con los datos del ticket de venta
   onVentaExitosa: (datosTicket: {
     pedidoId: string;
     items: PosCartItem[];
@@ -37,11 +36,26 @@ export default function ModalCobro({
   const [nombreCliente, setNombreCliente] = useState<string>("Cliente Ocasional");
   const [loading, setLoading] = useState<boolean>(false);
 
+  // Referencia para hacer autofoco en el input de dinero al abrir
+  const inputPagoRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPagoCon(""); // Limpiamos valor previo
+      setMetodoPago("efectivo");
+      setTimeout(() => {
+        if (inputPagoRef.current) {
+          inputPagoRef.current.focus();
+        }
+      }, 100);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const montoEntregado = Number(pagoCon) || 0;
   const vuelto = metodoPago === "efectivo" ? Math.max(0, montoEntregado - totalFinal) : 0;
-  const esEfectivoInsuficiente = metodoPago === "efectivo" && montoEntregado > 0 && montoEntregado < totalFinal;
+  const esEfectivoInsuficiente = metodoPago === "efectivo" && montoEntregado < totalFinal;
 
   const handleConfirmarVenta = async () => {
     if (metodoPago === "efectivo" && montoEntregado < totalFinal) {
@@ -72,7 +86,6 @@ export default function ModalCobro({
         throw error;
       }
 
-      // CAMBIO 2: Pasamos toda la información necesaria para armar el ticket
       if (data && data.pedido_id) {
         onVentaExitosa({
           pedidoId: data.pedido_id,
@@ -93,15 +106,26 @@ export default function ModalCobro({
     }
   };
 
+  // Manejar ENTER dentro del formulario de cobro
+  const handleKeyDownForm = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !loading && !esEfectivoInsuficiente) {
+      e.preventDefault();
+      handleConfirmarVenta();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fadeIn">
+      <div 
+        className="w-full max-w-md rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-2xl"
+        onKeyDown={handleKeyDownForm}
+      >
         {/* Cabecera */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
           <h3 className="text-lg font-bold text-[#12151B]">💳 Procesar Pago POS</h3>
           <button
             onClick={onClose}
-            className="text-xs font-bold text-gray-400 hover:text-gray-600"
+            className="text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
           >
             ✕
           </button>
@@ -149,23 +173,34 @@ export default function ModalCobro({
           {/* Cálculo de Vuelto (Si es Efectivo) */}
           {metodoPago === "efectivo" && (
             <div className="mt-3 space-y-2 rounded-xl border border-gray-200 bg-[#FAFAFA] p-3">
-              <label className="text-xs font-bold text-[#12151B]">Paga con ($):</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-[#12151B]">Paga con ($):</label>
+                <button
+                  type="button"
+                  onClick={() => setPagoCon(totalFinal.toString())}
+                  className="text-[10px] font-bold text-[#0E6E55] hover:underline"
+                >
+                  Paga Justo Exacto
+                </button>
+              </div>
+
               <input
+                ref={inputPagoRef}
                 type="number"
                 value={pagoCon}
                 onChange={(e) => setPagoCon(e.target.value)}
                 placeholder="Ej: 10000"
-                className="w-full rounded-xl border border-[#E7E5E0] bg-white p-2.5 text-sm font-bold text-[#12151B] outline-none focus:border-[#0E6E55]"
+                className="w-full rounded-xl border border-[#E7E5E0] bg-white p-2.5 text-sm font-bold text-[#12151B] outline-none focus:border-[#0E6E55] focus:ring-1 focus:ring-[#0E6E55]"
               />
 
               {/* Botones rápidos de dinero billete */}
-              <div className="flex gap-1.5 pt-1">
+              <div className="grid grid-cols-5 gap-1 pt-1">
                 {[1000, 2000, 5000, 10000, 20000].map((monto) => (
                   <button
                     key={monto}
                     type="button"
                     onClick={() => setPagoCon(monto.toString())}
-                    className="flex-1 rounded-lg border border-gray-200 bg-white py-1 text-[10px] font-bold text-gray-700 hover:bg-gray-100"
+                    className="rounded-lg border border-gray-200 bg-white py-1.5 text-[10px] font-bold text-gray-700 hover:bg-emerald-50 hover:border-[#0E6E55] hover:text-[#0E6E55] transition-all"
                   >
                     ${monto / 1000}k
                   </button>
@@ -190,7 +225,7 @@ export default function ModalCobro({
           )}
 
           {/* Campo Opcional Cliente */}
-          <div className="pt-2">
+          <div className="pt-1">
             <label className="text-xs font-bold text-[#12151B]">Nombre Cliente (Opcional)</label>
             <input
               type="text"
@@ -207,17 +242,17 @@ export default function ModalCobro({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-[#E7E5E0] bg-white py-3 text-xs font-bold text-gray-700 hover:bg-gray-50"
+            className="flex-1 rounded-xl border border-[#E7E5E0] bg-white py-3 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            Cancelar
+            Cancelar (Esc)
           </button>
           <button
             type="button"
             disabled={loading || esEfectivoInsuficiente}
             onClick={handleConfirmarVenta}
-            className="flex-1 rounded-xl bg-[#0E6E55] py-3 text-xs font-bold text-white transition-all hover:bg-[#0A5340] disabled:opacity-50"
+            className="flex-1 rounded-xl bg-[#0E6E55] py-3 text-xs font-bold text-white transition-all hover:bg-[#0A5340] active:scale-[0.98] disabled:opacity-50"
           >
-            {loading ? "Procesando..." : "Finalizar Venta"}
+            {loading ? "Procesando..." : "Finalizar Venta (Enter)"}
           </button>
         </div>
       </div>
