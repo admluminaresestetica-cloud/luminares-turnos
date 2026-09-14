@@ -21,12 +21,12 @@ export default function PuntoVentaTab({
 }: PuntoVentaTabProps) {
   const [busqueda, setBusqueda] = useState("");
   const [carrito, setCarrito] = useState<PosCartItem[]>([]);
-  
+
   // Estado para el Modal de Cobro
   const [isModalCobroOpen, setIsModalCobroOpen] = useState(false);
   const [datosCobro, setDatosCobro] = useState({ subtotal: 0, descuentoCalculado: 0, totalFinal: 0 });
 
-  // Estados para controlar la visualización del Ticket con desglose de recargos/descuentos
+  // Estados para controlar la visualización del Ticket
   const [isTicketOpen, setIsTicketOpen] = useState(false);
   const [datosTicket, setDatosTicket] = useState<{
     pedidoId: string | null;
@@ -45,18 +45,91 @@ export default function PuntoVentaTab({
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   // --------------------------------------------------------
-  // LÓGICA DE ATAJOS DE TECLADO
+  // LÓGICA DE AGREGAR AL CARRITO
+  // --------------------------------------------------------
+  const handleAgregarAlCarrito = (prod: ProductoPOS) => {
+    if (prod.stock <= 0) {
+      alert(`El producto "${prod.nombre}" no tiene stock disponible.`);
+      return;
+    }
+
+    setCarrito((prev) => {
+      const existe = prev.find((item) => item.producto_id === prod.id);
+      if (existe) {
+        if (existe.cantidad >= prod.stock) {
+          alert(`Límite de stock alcanzado para "${prod.nombre}".`);
+          return prev;
+        }
+        return prev.map((item) =>
+          item.producto_id === prod.id
+            ? { ...item, cantidad: item.cantidad + 1 }
+            : item
+        );
+      }
+      return [
+        ...prev,
+        {
+          producto_id: prod.id,
+          titulo: prod.nombre,
+          precio_unitario: prod.precio,
+          cantidad: 1,
+          imagen_url: prod.imagen_url,
+          stock_disponible: prod.stock,
+        },
+      ];
+    });
+  };
+
+  // --------------------------------------------------------
+  // LÓGICA DE ESCANEO DIRECTO CON PISTOLA USB
+  // --------------------------------------------------------
+  const handleBarcodeScanned = (code: string) => {
+    const q = code.trim().toLowerCase();
+    if (!q) return;
+
+    // Busca coincidencia exacta por código de barras
+    const encontrado = productos.find(
+      (p) => p.codigo_barras && p.codigo_barras.trim().toLowerCase() === q
+    );
+
+    if (encontrado) {
+      handleAgregarAlCarrito(encontrado);
+      setBusqueda(""); // Limpia la búsqueda para dejar listo el siguiente escaneo
+    } else {
+      alert(`No se encontró ningún producto con el código: ${code}`);
+    }
+  };
+
+  // --------------------------------------------------------
+  // LÓGICA DE ATAJOS DE TECLADO Y ENTER EN BÚSQUEDA
   // --------------------------------------------------------
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      const isTyping =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
+      const isTypingInInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA";
+
+      // Manejo de la tecla Enter dentro del buscador (Pistola de escaneo)
+      if (e.key === "Enter" && isTypingInInput) {
+        const inputElem = target as HTMLInputElement;
+        const queryVal = inputElem.value.trim().toLowerCase();
+
+        if (queryVal) {
+          // Busca coincidencia exacta por código de barras
+          const prodExacto = productos.find(
+            (p) => p.codigo_barras && p.codigo_barras.trim().toLowerCase() === queryVal
+          );
+
+          if (prodExacto) {
+            e.preventDefault();
+            handleAgregarAlCarrito(prodExacto);
+            setBusqueda("");
+            return;
+          }
+        }
+      }
 
       // 1. Enfocar buscador con "/" o "F4"
-      if (e.key === "F4" || (e.key === "/" && !isTyping)) {
+      if (e.key === "F4" || (e.key === "/" && !isTypingInInput)) {
         e.preventDefault();
         const searchInput = document.querySelector<HTMLInputElement>("input[type='text']");
         if (searchInput) {
@@ -66,8 +139,8 @@ export default function PuntoVentaTab({
         return;
       }
 
-      // 2. Tecla F2 o Enter para abrir Modal de Cobro
-      if ((e.key === "F2" || (e.key === "Enter" && !isTyping)) && carrito.length > 0 && !isModalCobroOpen && !isTicketOpen) {
+      // 2. Tecla F2 o Enter (fuera del input) para abrir Modal de Cobro
+      if ((e.key === "F2" || (e.key === "Enter" && !isTypingInInput)) && carrito.length > 0 && !isModalCobroOpen && !isTicketOpen) {
         e.preventDefault();
         const subtotalCalc = carrito.reduce((acc, i) => acc + i.precio_unitario * i.cantidad, 0);
         handleIniciarCobro(subtotalCalc, 0, subtotalCalc);
@@ -92,41 +165,7 @@ export default function PuntoVentaTab({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [carrito, isModalCobroOpen, isTicketOpen, isHelpOpen]);
-
-  const handleAgregarAlCarrito = (prod: ProductoPOS) => {
-    setCarrito((prev) => {
-      const existe = prev.find((item) => item.producto_id === prod.id);
-      if (existe) {
-        if (existe.cantidad >= prod.stock) return prev;
-        return prev.map((item) =>
-          item.producto_id === prod.id
-            ? { ...item, cantidad: item.cantidad + 1 }
-            : item
-        );
-      }
-      return [
-        ...prev,
-        {
-          producto_id: prod.id,
-          titulo: prod.nombre,
-          precio_unitario: prod.precio,
-          cantidad: 1,
-          imagen_url: prod.imagen_url,
-          stock_disponible: prod.stock,
-        },
-      ];
-    });
-  };
-
-  const handleBarcodeScanned = (code: string) => {
-    const encontrado = productos.find((p) => p.codigo_barras === code.trim());
-    if (encontrado) {
-      handleAgregarAlCarrito(encontrado);
-    } else {
-      alert(`No se encontró ningún producto con el código: ${code}`);
-    }
-  };
+  }, [carrito, isModalCobroOpen, isTicketOpen, isHelpOpen, productos]);
 
   const handleModificarCantidad = (productoId: number, delta: number) => {
     setCarrito((prev) =>
@@ -233,7 +272,7 @@ export default function PuntoVentaTab({
             <div className="space-y-3">
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
                 <span className="text-xs font-medium text-gray-700 flex items-center gap-2">
-                  <Info className="h-3.5 w-3.5 text-emerald-600" /> Buscar Productos
+                  <Info className="h-3.5 w-3.5 text-emerald-600" /> Escanear / Buscar Producto
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-mono font-bold text-gray-800 border border-gray-200 shadow-sm">
                   / <span className="text-gray-400">o</span> F4
