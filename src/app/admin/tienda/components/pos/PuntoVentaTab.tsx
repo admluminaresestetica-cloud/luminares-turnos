@@ -91,14 +91,13 @@ export default function PuntoVentaTab({
     const q = code.trim().toLowerCase();
     if (!q) return;
 
-    // Busca coincidencia exacta por código de barras
     const encontrado = productos.find(
       (p) => p.codigo_barras && p.codigo_barras.trim().toLowerCase() === q
     );
 
     if (encontrado) {
       handleAgregarAlCarrito(encontrado);
-      setBusqueda(""); // Limpia la búsqueda para dejar listo el siguiente escaneo
+      setBusqueda("");
     } else {
       alert(`No se encontró ningún producto con el código: ${code}`);
     }
@@ -112,13 +111,11 @@ export default function PuntoVentaTab({
       const target = e.target as HTMLElement;
       const isTypingInInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA";
 
-      // Manejo de la tecla Enter dentro del buscador (Pistola de escaneo)
       if (e.key === "Enter" && isTypingInInput) {
         const inputElem = target as HTMLInputElement;
         const queryVal = inputElem.value.trim().toLowerCase();
 
         if (queryVal) {
-          // Busca coincidencia exacta por código de barras
           const prodExacto = productos.find(
             (p) => p.codigo_barras && p.codigo_barras.trim().toLowerCase() === queryVal
           );
@@ -132,7 +129,6 @@ export default function PuntoVentaTab({
         }
       }
 
-      // 1. Enfocar buscador con "/" o "F4"
       if (e.key === "F4" || (e.key === "/" && !isTypingInInput)) {
         e.preventDefault();
         const searchInput = document.querySelector<HTMLInputElement>("input[type='text']");
@@ -157,7 +153,6 @@ export default function PuntoVentaTab({
         return;
       }
 
-      // 3. Tecla Escape para cerrar modales o vaciar carrito
       if (e.key === "Escape") {
         if (isHelpOpen) {
           setIsHelpOpen(false);
@@ -330,6 +325,12 @@ export default function PuntoVentaTab({
         supabase={supabase}
         onVentaAnulada={onActualizarProductos}
       />
+<ModalHistorialVentas
+  isOpen={isHistorialOpen}
+  onClose={() => setIsHistorialOpen(false)}
+  supabase={supabase}
+  onVentaAnulada={onActualizarProductos}
+/>
 
       {/* Modal de Cobro */}
       <ModalCobro

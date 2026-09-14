@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { X, RotateCcw, AlertTriangle, FileText, CheckCircle, PackageX } from "lucide-react";
+import { X, FileText, RotateCcw, AlertTriangle, Calendar, Search } from "lucide-react";
 
 interface ModalHistorialVentasProps {
   isOpen: boolean;
@@ -15,192 +15,251 @@ export default function ModalHistorialVentas({
   supabase,
   onVentaAnulada,
 }: ModalHistorialVentasProps) {
+  // Función auxiliar para obtener hoy en formato YYYY-MM-DD
+  const obtenerFechaHoyLocal = () => {
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoy.getDate()).padStart(2, "0");
+    return `${año}-${mes}-${dia}`;
+  };
+
   const [ventas, setVentas] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-
-  // Estados para controlar la anulación de una venta específica
+  const [busqueda, setBusqueda] = useState("");
+  const [fechaFiltro, setFechaFiltro] = useState<string>(obtenerFechaHoyLocal());
   const [ventaAAnular, setVentaAAnular] = useState<any | null>(null);
-  const [motivo, setMotivo] = useState<"cancelacion" | "rotura">("cancelacion");
-  const [procesando, setProcesando] = useState(false);
+  const [motivoAnulacion, setMotivoAnulacion] = useState<"error" | "dano">("error");
+  const [procesandoAnulacion, setProcesandoAnulacion] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      cargarVentasDelDia();
-    }
-  }, [isOpen]);
-
-  const cargarVentasDelDia = async () => {
+  // Cargar ventas filtradas dinámicamente por la fecha elegida
+  const cargarVentasPorFecha = async (fechaElegida: string) => {
     setLoading(true);
     try {
-      // Obtiene el inicio del día actual
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
+      const inicioDiaUTC = new Date(`${fechaElegida}T00:00:00-03:00`).toISOString();
+      const finDiaUTC = new Date(`${fechaElegida}T23:59:59-03:00`).toISOString();
 
       const { data, error } = await supabase
         .from("pedidos")
-        .select("*, items:pedido_items(*)")
-        .gte("created_at", hoy.toISOString())
+        .select(`
+          id,
+          created_at,
+          total,
+          metodo_pago,
+          estado,
+          nombre_cliente,
+          cliente_nombre,
+          origen,
+          items
+        `)
+        .gte("created_at", inicioDiaUTC)
+        .lte("created_at", finDiaUTC)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       setVentas(data || []);
     } catch (err) {
-      console.error("Error al cargar ventas del día:", err);
+      console.error("Error al cargar ventas por fecha:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Escucha cambios en la apertura del modal o cambio de fecha
+  useEffect(() => {
+    if (isOpen && fechaFiltro) {
+      cargarVentasPorFecha(fechaFiltro);
+    }
+  }, [isOpen, fechaFiltro]);
+
+  if (!isOpen) return null;
+
+  // Lógica para procesar la anulación de una venta (Restablece stock desde JSONB)
   const handleConfirmarAnulacion = async () => {
     if (!ventaAAnular) return;
-    setProcesando(true);
+    setProcesandoAnulacion(true);
 
     try {
-      // 1. Si NO fue por rotura/falla, reintegramos el stock de cada ítem en Supabase
-      if (motivo === "cancelacion" && ventaAAnular.items) {
+      // 1. Reintegrar stock si es devolución / error de carga
+      if (motivoAnulacion === "error" && Array.isArray(ventaAAnular.items)) {
         for (const item of ventaAAnular.items) {
-          const { data: prod } = await supabase
-            .from("productos")
-            .select("stock")
-            .eq("id", item.producto_id)
-            .single();
-
-          if (prod) {
-            const nuevoStock = prod.stock + item.cantidad;
-            await supabase
+          const idProducto = item.producto_id || item.id;
+          if (idProducto) {
+            const { data: prodData } = await supabase
               .from("productos")
-              .update({ stock: nuevoStock })
-              .eq("id", item.producto_id);
+              .select("stock")
+              .eq("id", idProducto)
+              .single();
+
+            if (prodData) {
+              const nuevoStock = (prodData.stock || 0) + (item.cantidad || 1);
+              await supabase
+                .from("productos")
+                .update({ stock: nuevoStock })
+                .eq("id", idProducto);
+            }
           }
         }
       }
 
-      // 2. Marcar la venta como 'anulada' y guardar el motivo
-      const descMotivo =
-        motivo === "cancelacion"
-          ? "Error de cobro / Arrepentimiento (Stock devuelto)"
-          : "Producto fallado / Roto (Stock no devuelto)";
+      // 2. Cambiar estado a 'anulado' y registrar el motivo
+      const textoMotivo =
+        motivoAnulacion === "error"
+          ? "Error de carga / Devolución cliente (Stock reintegrado)"
+          : "Producto fallado / roto (Stock descartado)";
 
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from("pedidos")
         .update({
           estado: "anulado",
-          motivo_anulacion: descMotivo,
+          motivo_anulacion: textoMotivo,
         })
         .eq("id", ventaAAnular.id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      alert("La venta ha sido anulada correctamente.");
+      alert("Venta anulada correctamente.");
       setVentaAAnular(null);
-      cargarVentasDelDia();
-      onVentaAnulada(); // Notifica al POS para actualizar grilla de productos si devolvió stock
+      cargarVentasPorFecha(fechaFiltro);
+      onVentaAnulada();
     } catch (err: any) {
-      alert("Ocurrió un error al anular la venta: " + err.message);
+      console.error("Error anulando venta:", err);
+      alert("Ocurrió un error al intentar anular la venta.");
     } finally {
-      setProcesando(false);
+      setProcesandoAnulacion(false);
     }
   };
 
-  if (!isOpen) return null;
+  // Filtrado adicional por texto (cliente o ID de pedido)
+  const ventasFiltradas = ventas.filter((v) => {
+    const term = busqueda.toLowerCase();
+    const cliente = (v.cliente_nombre || v.nombre_cliente || "").toLowerCase();
+    const id = String(v.id).toLowerCase();
+    return cliente.includes(term) || id.includes(term);
+  });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl border border-gray-100 max-h-[85vh] flex flex-col">
-        {/* Cabecera */}
-        <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-[#0E6E55]" />
-            <h3 className="text-base font-bold text-gray-900">Historial de Ventas del Día</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fadeIn">
+      <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 bg-[#F7F7F5] px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-[#0E6E55]/10 p-2 text-[#0E6E55]">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-[#12151B]">Historial de Ventas</h3>
+              <p className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5" />
+                Ventas del día: <span className="font-bold text-gray-700">{fechaFiltro}</span>
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="rounded-xl p-2 text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-all"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Listado de Ventas */}
-        <div className="my-4 flex-1 overflow-y-auto space-y-3 pr-1">
+        {/* Controles de Búsqueda y Fecha */}
+        <div className="p-4 border-b border-gray-100 bg-white flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar por cliente o N° de ticket..."
+              className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] py-2 pl-10 pr-4 text-xs font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={fechaFiltro}
+              onChange={(e) => setFechaFiltro(e.target.value)}
+              className="rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] py-2 px-3 text-xs font-bold text-[#12151B] outline-none focus:border-[#0E6E55]"
+            />
+            {fechaFiltro !== obtenerFechaHoyLocal() && (
+              <button
+                onClick={() => setFechaFiltro(obtenerFechaHoyLocal())}
+                className="rounded-xl bg-gray-100 px-3 py-2 text-[11px] font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                Hoy
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Lista de Ventas */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {loading ? (
-            <p className="text-center py-8 text-xs text-gray-500">Cargando ventas...</p>
-          ) : ventas.length === 0 ? (
-            <div className="text-center py-8">
-              <span className="text-3xl">🧾</span>
-              <p className="mt-2 text-xs font-medium text-gray-500">
-                Aún no hay ventas registradas en el turno de hoy.
-              </p>
+            <div className="py-12 text-center text-xs text-gray-400">Cargando ventas...</div>
+          ) : ventasFiltradas.length === 0 ? (
+            <div className="py-12 text-center text-xs text-gray-400">
+              No se registraron ventas en la fecha seleccionada ({fechaFiltro}).
             </div>
           ) : (
-            ventas.map((v) => {
+            ventasFiltradas.map((v) => {
               const esAnulada = v.estado === "anulado";
+              const hora = new Date(v.created_at).toLocaleTimeString("es-AR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+              const nombreClienteDisplay = v.cliente_nombre || v.nombre_cliente || "Cliente Ocasional";
+
               return (
                 <div
                   key={v.id}
-                  className={`p-3.5 rounded-xl border transition-all ${
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border p-3.5 transition-all ${
                     esAnulada
-                      ? "bg-red-50/50 border-red-100 opacity-75"
-                      : "bg-gray-50 border-gray-200 hover:border-gray-300"
+                      ? "border-red-200 bg-red-50/50 opacity-75"
+                      : "border-[#E7E5E0] bg-white hover:border-gray-300"
                   }`}
                 >
-                  <div className="flex items-center justify-between border-b border-gray-200/60 pb-2 mb-2">
+                  <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-gray-700">
-                        #{v.id.toString().slice(0, 8)}
+                      <span className="font-mono text-xs font-bold text-gray-900">
+                        Ticket #{String(v.id).substring(0, 8)}...
                       </span>
-                      <span className="text-[11px] text-gray-400">
-                        {new Date(v.created_at).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+                      <span className="text-[11px] text-gray-400">({hora} hs)</span>
+                      {esAnulada && (
+                        <span className="rounded-md bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">
+                          ANULADA
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {esAnulada ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-[10px] font-bold text-red-700">
-                          <X className="h-3 w-3" /> Anulada
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                          <CheckCircle className="h-3 w-3" /> Completada
-                        </span>
-                      )}
+                    <div className="text-xs text-gray-600">
+                      Cliente: <span className="font-semibold">{nombreClienteDisplay}</span> | Método:{" "}
+                      <span className="capitalize font-medium">{v.metodo_pago || "Efectivo"}</span>
+                    </div>
 
-                      {!esAnulada && (
-                        <button
-                          onClick={() => setVentaAAnular(v)}
-                          className="flex items-center gap-1 rounded-lg bg-red-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-red-700 transition-colors"
-                        >
-                          <RotateCcw className="h-3 w-3" /> Anular
-                        </button>
-                      )}
+                    <div className="text-[11px] text-gray-500">
+                      {Array.isArray(v.items)
+                        ? v.items.map((i: any) => `${i.cantidad || 1}x ${i.titulo || i.nombre || "Producto"}`).join(", ")
+                        : "Sin detalle de productos"}
                     </div>
                   </div>
 
-                  {/* Detalle de productos y total */}
-                  <div className="flex justify-between items-end text-xs">
-                    <div className="space-y-0.5 text-gray-600">
-                      <p className="font-semibold text-gray-800">
-                        Cliente: {v.nombre_cliente || "Consumidor Final"}
-                      </p>
-                      <p className="text-[11px]">
-                        Pago: <span className="capitalize">{v.metodo_pago}</span>
-                      </p>
-                      {v.motivo_anulacion && (
-                        <p className="text-[10px] font-medium text-red-600">
-                          Motivo: {v.motivo_anulacion}
-                        </p>
-                      )}
-                    </div>
+                  <div className="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 pt-2 sm:pt-0">
+                    <span className="text-sm font-bold text-[#12151B]">
+                      ${Number(v.total).toLocaleString("es-AR")}
+                    </span>
 
-                    <div className="text-right">
-                      <span className="text-xs font-bold text-gray-400 block">Total</span>
-                      <span className="text-sm font-black text-gray-900">
-                        ${v.total?.toLocaleString("es-AR")}
-                      </span>
-                    </div>
+                    {!esAnulada && (
+                      <button
+                        onClick={() => setVentaAAnular(v)}
+                        className="flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100 transition-colors"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        <span>Anular</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -208,105 +267,75 @@ export default function ModalHistorialVentas({
           )}
         </div>
 
-        {/* Modal Secundario de Confirmación de Anulación */}
+        {/* Modal Confirmar Anulación */}
         {ventaAAnular && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl border border-gray-100">
-              <div className="flex items-center gap-2 text-amber-600 mb-3">
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100 space-y-4">
+              <div className="flex items-center gap-2 text-red-600">
                 <AlertTriangle className="h-5 w-5" />
-                <h4 className="font-bold text-sm text-gray-900">
-                  ¿Confirmar anulación de la venta?
-                </h4>
+                <h4 className="font-bold text-base text-gray-900">Anular Ticket #{String(ventaAAnular.id).substring(0, 8)}...</h4>
               </div>
 
-              <p className="text-xs text-gray-600 mb-4">
-                Se descontará el monto de <strong>${ventaAAnular.total?.toLocaleString("es-AR")}</strong> del reporte de ventas de la caja.
+              <p className="text-xs text-gray-600">
+                Seleccioná el motivo de la anulación para determinar el destino del stock:
               </p>
 
-              <div className="space-y-2 mb-5">
-                <label className="text-xs font-bold text-gray-700 block">
-                  Seleccioná el motivo de devolución:
-                </label>
-
-                <label
-                  onClick={() => setMotivo("cancelacion")}
-                  className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                    motivo === "cancelacion"
-                      ? "border-[#0E6E55] bg-emerald-50/40"
-                      : "border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
+              <div className="space-y-2">
+                <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                  motivoAnulacion === "error" ? "border-[#0E6E55] bg-[#0E6E55]/5" : "border-gray-200"
+                }`}>
                   <input
                     type="radio"
                     name="motivo"
-                    checked={motivo === "cancelacion"}
-                    onChange={() => setMotivo("cancelacion")}
-                    className="mt-0.5 text-[#0E6E55]"
+                    checked={motivoAnulacion === "error"}
+                    onChange={() => setMotivoAnulacion("error")}
+                    className="mt-0.5 accent-[#0E6E55]"
                   />
                   <div>
-                    <span className="text-xs font-bold text-gray-900 block">
-                      Error de cobro / Cliente se arrepintió
-                    </span>
-                    <span className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
-                      <RotateCcw className="h-3 w-3 text-emerald-600" /> Los productos VUELVEN al stock.
-                    </span>
+                    <span className="text-xs font-bold text-gray-900 block">Error de cobro / Arrepentimiento</span>
+                    <span className="text-[11px] text-gray-500 block">El producto se devuelve en buen estado. **Suma el stock de nuevo**.</span>
                   </div>
                 </label>
 
-                <label
-                  onClick={() => setMotivo("rotura")}
-                  className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                    motivo === "rotura"
-                      ? "border-red-500 bg-red-50/40"
-                      : "border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
+                <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                  motivoAnulacion === "dano" ? "border-red-500 bg-red-50" : "border-gray-200"
+                }`}>
                   <input
                     type="radio"
                     name="motivo"
-                    checked={motivo === "rotura"}
-                    onChange={() => setMotivo("rotura")}
-                    className="mt-0.5 text-red-600"
+                    checked={motivoAnulacion === "dano"}
+                    onChange={() => setMotivoAnulacion("dano")}
+                    className="mt-0.5 accent-red-600"
                   />
                   <div>
-                    <span className="text-xs font-bold text-gray-900 block">
-                      Producto fallado / Roto / Vencido
-                    </span>
-                    <span className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
-                      <PackageX className="h-3 w-3 text-red-500" /> Los productos NO vuelven al stock.
-                    </span>
+                    <span className="text-xs font-bold text-gray-900 block">Producto roto / Fallado / Vencido</span>
+                    <span className="text-[11px] text-gray-500 block">El producto no sirve para la venta. **NO recupera stock**.</span>
                   </div>
                 </label>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex items-center justify-end gap-2 pt-2">
                 <button
+                  type="button"
+                  disabled={procesandoAnulacion}
                   onClick={() => setVentaAAnular(null)}
-                  disabled={procesando}
-                  className="flex-1 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50"
+                  className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl"
                 >
                   Cancelar
                 </button>
                 <button
+                  type="button"
+                  disabled={procesandoAnulacion}
                   onClick={handleConfirmarAnulacion}
-                  disabled={procesando}
-                  className="flex-1 py-2 rounded-xl bg-red-600 text-xs font-bold text-white hover:bg-red-700"
+                  className="px-4 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors"
                 >
-                  {procesando ? "Anulando..." : "Confirmar Anulación"}
+                  {procesandoAnulacion ? "Procesando..." : "Confirmar Anulación"}
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        <div className="pt-3 border-t border-gray-100 text-right">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-gray-900 text-white text-xs font-bold hover:bg-gray-800"
-          >
-            Cerrar
-          </button>
-        </div>
       </div>
     </div>
   );
