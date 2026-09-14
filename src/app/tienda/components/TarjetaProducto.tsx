@@ -26,7 +26,7 @@ export default function TarjetaProducto({
   const stockDisponible = producto.stock ?? 0;
   const sinStock = stockDisponible <= 0;
 
-  // Verificamos exactamente el tilde que guardás desde el panel de administración
+  // Verificamos el tilde del panel de administración
   const esUltimasUnidades = !sinStock && (
     producto.mostrar_ultimas_unidades === true || 
     producto.ultimas_unidades === true ||
@@ -38,17 +38,16 @@ export default function TarjetaProducto({
     : null;
   const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
-  // Verificamos si alcanzó el límite del stock
   const limiteAlcanzado = cantidadEnCarrito >= stockDisponible;
 
   const precioFormateado = new Intl.NumberFormat("es-AR").format(
     producto.precio || 0
   );
 
-  // Obtener precio base tomando en cuenta ambos posibles nombres
-  const precioBaseNum = Number(producto.precio_original ?? producto.precio_anterior) || 0;
+  // Solución al error de TypeScript usando cast seguro para ambos nombres
+  const precioBaseNum = Number(producto.precio_original ?? (producto as any).precio_anterior) || 0;
 
-  // Lógica para descuento y precio anterior
+  // Lógica para descuento
   const tieneOferta = precioBaseNum > producto.precio;
 
   const porcentajeDescuento = tieneOferta
@@ -59,7 +58,6 @@ export default function TarjetaProducto({
     ? new Intl.NumberFormat("es-AR").format(precioBaseNum)
     : null;
 
-  // Handlers para sumar y restar desde la tarjeta
   const handleRestar = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (cantidadEnCarrito > 1 && actualizarCantidad) {
@@ -90,7 +88,7 @@ export default function TarjetaProducto({
       onClick={() => onVerDetalle && onVerDetalle(producto)}
       className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white p-2.5 sm:p-3.5 shadow-sm transition-all hover:shadow-md cursor-pointer"
     >
-      {/* Badges superiores (Descuento u Últimas unidades según panel) */}
+      {/* Badges superiores */}
       <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1 pointer-events-none">
         {tieneOferta && !sinStock && (
           <span className="rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
@@ -150,7 +148,7 @@ export default function TarjetaProducto({
           </p>
         </div>
 
-        {/* Botón Adaptativo / Control - y + */}
+        {/* Botón Adaptativo */}
         {sinStock ? (
           <button
             disabled
@@ -171,7 +169,6 @@ export default function TarjetaProducto({
             onClick={(e) => e.stopPropagation()}
             className="flex items-center justify-between w-full rounded-xl border border-[#0E6E55]/30 bg-[#0E6E55]/5 p-1"
           >
-            {/* Botón Restar */}
             <button
               onClick={handleRestar}
               className="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-[#0E6E55] shadow-sm hover:bg-[#0E6E55] hover:text-white transition-all cursor-pointer"
@@ -180,12 +177,10 @@ export default function TarjetaProducto({
               <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
             </button>
 
-            {/* Cantidad Actual */}
             <span className="text-xs font-extrabold text-[#0E6E55] px-1">
               {cantidadEnCarrito} en carrito
             </span>
 
-            {/* Botón Sumar */}
             <button
               onClick={handleSumar}
               disabled={limiteAlcanzado}
