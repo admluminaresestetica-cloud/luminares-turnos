@@ -133,12 +133,19 @@ export default function TicketVenta({
             <span className="text-[#0E6E55]">${total.toLocaleString("es-AR")}</span>
           </div>
 
-          <div className="flex justify-between text-gray-500 pt-1">
-            <span>Método de Pago:</span>
-            <span className="capitalize text-right max-w-[160px] truncate font-semibold text-gray-700">
-              {metodoPago}
-            </span>
-          </div>
+          <div className="flex flex-col gap-1 border-t border-b border-dashed border-gray-200 py-2 my-2 text-xs">
+          <div className="flex justify-between font-medium text-gray-700">
+          <span>Método de Pago:</span>
+          <span className="capitalize">{metodoPago.includes('Mixto') ? 'Pago Mixto' : metodoPago}</span>
+        </div>
+  
+  {/* Si viene con detalle de Mixto, lo mostrás abajo formateado */}
+  {metodoPago.includes('Mixto') && (
+    <p className="text-[11px] text-gray-500 text-right leading-tight bg-gray-50 p-1.5 rounded-md border border-gray-100">
+      {metodoPago}
+    </p>
+  )}
+</div>
 
           {metodoPago.toLowerCase().includes("efectivo") && pagoCon > 0 && (
             <>
