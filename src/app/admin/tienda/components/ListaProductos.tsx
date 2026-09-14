@@ -21,16 +21,18 @@ export default function ListaProductos({
   const [modalRestockId, setModalRestockId] = useState<number | string | null>(null);
   const [cantidadRestock, setCantidadRestock] = useState<string>("1");
 
-  // Buscador por nombre, categoría o precio
+  // Buscador por nombre, categoría, precio o CÓDIGO DE BARRAS
   const productosFiltrados = productos.filter((p) => {
-    const termino = busqueda.toLowerCase();
+    const termino = busqueda.toLowerCase().trim();
     const coincideNombre = p.nombre?.toLowerCase().includes(termino);
     const coincideCategoria = p.categoria?.toLowerCase().includes(termino);
     const coincidePrecio = p.precio?.toString().includes(termino);
-    return coincideNombre || coincideCategoria || coincidePrecio;
+    const coincideCodigoBarras = p.codigo_barras?.toLowerCase().includes(termino);
+
+    return coincideNombre || coincideCategoria || coincidePrecio || coincideCodigoBarras;
   });
 
-    const handleConfirmarRestock = (id: number | string) => {
+  const handleConfirmarRestock = (id: number | string) => {
     const num = Number(cantidadRestock);
     if (num === 0 || isNaN(num)) return;
     if (onRestock) {
@@ -47,13 +49,13 @@ export default function ListaProductos({
           📦 Listado de Productos
         </h2>
 
-        {/* Buscador Global */}
+        {/* Buscador Global (ahora soporta código de barras) */}
         <input
           type="text"
-          placeholder="Buscar por nombre, categoría o precio..."
+          placeholder="Buscar por nombre, categoría, precio o código..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-3 py-2 text-xs text-[#12151B] outline-none transition-all focus:border-[#0E6E55] sm:w-64"
+          className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-3 py-2 text-xs text-[#12151B] outline-none transition-all focus:border-[#0E6E55] sm:w-72"
         />
       </div>
 
@@ -95,6 +97,17 @@ export default function ListaProductos({
                   <h3 className="m-0 mt-3 text-base font-bold text-[#12151B]">
                     {p.nombre}
                   </h3>
+
+                  {/* Badge de Código de Barras en la tarjeta del Admin */}
+                  {p.codigo_barras && (
+                    <div className="mt-1.5 flex items-center gap-1 text-[11px] font-mono font-medium text-gray-500">
+                      <span>🏷️ EAN:</span>
+                      <span className="rounded bg-gray-200/60 px-1.5 py-0.2 text-gray-700">
+                        {p.codigo_barras}
+                      </span>
+                    </div>
+                  )}
+
                   <p className="m-0 mt-1 text-xs text-[#6B675F] line-clamp-2">
                     {p.descripcion}
                   </p>
