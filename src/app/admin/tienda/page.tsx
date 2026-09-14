@@ -10,6 +10,7 @@ import CategoriasTab from "./components/CategoriasTab";
 import BannersTab from "./components/BannersTab";
 import TagsTab from "./components/TagsTab";
 import PuntoVentaTab from "./components/pos/PuntoVentaTab";
+import ControlCajaTab from "./components/ControlCajaTab"; // 1. IMPORTANTE: Importar el componente de Caja
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,7 +18,8 @@ const supabase = createClient(
 );
 
 export default function AdminTiendaPage() {
-  const [activeTab, setActiveTab] = useState<"catalogo" | "pos" | "pedidos" | "banners" | "tags">("catalogo");
+  // 2. IMPORTANTE: Agregamos "caja" al tipo de activeTab
+  const [activeTab, setActiveTab] = useState<"catalogo" | "pos" | "caja" | "pedidos" | "banners" | "tags">("catalogo");
   const [mounted, setMounted] = useState(false);
 
   const [productos, setProductos] = useState<any[]>([]);
@@ -106,8 +108,7 @@ export default function AdminTiendaPage() {
           totalCategorias={categorias.length}
         />
 
-        
-                 {/* Pestañas con Scroll Horizontal para Mobile */}
+        {/* Pestañas con Scroll Horizontal para Mobile */}
         <div className="no-scrollbar -mx-6 mb-6 flex items-center gap-2 overflow-x-auto border-b border-[#E7E5E0] px-6 sm:mx-0 sm:px-0">
           <button
             onClick={() => setActiveTab("catalogo")}
@@ -129,6 +130,18 @@ export default function AdminTiendaPage() {
             }`}
           >
             📷 Escáner / POS
+          </button>
+
+          {/* 3. NUEVA PESTAÑA DE CAJA Y ARQUEO */}
+          <button
+            onClick={() => setActiveTab("caja")}
+            className={`flex whitespace-nowrap items-center gap-2 border-b-2 px-3.5 py-3 text-xs font-bold transition-all sm:text-sm ${
+              activeTab === "caja"
+                ? "border-[#0E6E55] text-[#0E6E55]"
+                : "border-transparent text-[#6B675F] hover:text-[#12151B]"
+            }`}
+          >
+            💵 Control de Caja
           </button>
 
           <button
@@ -169,8 +182,7 @@ export default function AdminTiendaPage() {
             🏷️ Tags
           </button>
         </div>
- 
- 
+
         {activeTab === "catalogo" && (
           <>
             <CategoriasTab
@@ -219,6 +231,9 @@ export default function AdminTiendaPage() {
             onActualizarProductos={fetchProductos}
           />
         )}
+
+        {/* 4. CONTENIDO DE LA PESTAÑA CAJA */}
+        {activeTab === "caja" && <ControlCajaTab supabase={supabase} />}
 
         {activeTab === "pedidos" && (
           <PedidosTab
