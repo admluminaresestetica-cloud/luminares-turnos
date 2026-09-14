@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import ScannerModal from "../ScannerModal";
+import { FileText } from "lucide-react";
 
 interface PosHeaderProps {
   busqueda: string;
@@ -9,6 +10,7 @@ interface PosHeaderProps {
   totalItemsCarrito: number;
   onAbrirCajaModal?: () => void;
   cajaAbierta?: boolean;
+  onAbrirHistorial?: () => void;
 }
 
 export default function PosHeader({
@@ -18,6 +20,7 @@ export default function PosHeader({
   totalItemsCarrito,
   onAbrirCajaModal,
   cajaAbierta = true,
+  onAbrirHistorial,
 }: PosHeaderProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
@@ -47,6 +50,18 @@ export default function PosHeader({
 
       {/* Botones de acción rápido */}
       <div className="flex items-center gap-2">
+        {onAbrirHistorial && (
+          <button
+            type="button"
+            onClick={onAbrirHistorial}
+            className="flex items-center gap-1.5 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-3.5 py-2.5 text-xs font-bold text-gray-700 transition-all hover:bg-gray-100 active:scale-95"
+            title="Ver Historial de Ventas del Día"
+          >
+            <FileText className="h-4 w-4 text-[#0E6E55]" />
+            <span>Historial</span>
+          </button>
+        )}
+
         <button
           type="button"
           onClick={() => setIsScannerOpen(true)}
