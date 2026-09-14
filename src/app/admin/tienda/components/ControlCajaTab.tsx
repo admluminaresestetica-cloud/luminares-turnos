@@ -18,7 +18,10 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
   const [efectivoContado, setEfectivoContado] = useState("");
 
   const [movimientos, setMovimientos] = useState<any[]>([]);
-  const [ventasMetodo, setVentasMetodo] = useState<{ [key: string]: number }>({});
+  
+  // Desglose de ventas
+  const [ventasEfectivoTotal, setVentasEfectivoTotal] = useState(0);
+  const [ventasDigitalesTotal, setVentasDigitalesTotal] = useState(0);
 
   const fetchCaja = async () => {
     setCargando(true);
@@ -48,16 +51,37 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
       // Cargar ventas realizadas desde la apertura
       const { data: pedidos } = await supabase
         .from("pedidos")
-        .select("total, metodo_pago")
-        .gte("created_at", caja.fecha_apertura);
+        .select("total, metodo_pago, estado")
+        .gte("created_at", caja.fecha_apertura)
+        .neq("estado", "cancelado");
 
       if (pedidos) {
-        const totales: { [key: string]: number } = {};
+        let efecSum = 0;
+        let digiSum = 0;
+
         pedidos.forEach((p) => {
-          const m = p.metodo_pago || "efectivo";
-          totales[m] = (totales[m] || 0) + Number(p.total);
+          const total = Number(p.total) || 0;
+          const metodo = (p.metodo_pago || "").toLowerCase();
+
+          if (metodo.startsWith("mixto")) {
+            // Extraer monto en efectivo del string tipo: mixto (Efectivo: $1000 + TRANSFERENCIA: $22980)
+            const matchEfectivo = metodo.match(/efectivo:\s*\$?(\d+(\.\d+)?)/i);
+            if (matchEfectivo) {
+              const efecMonto = parseFloat(matchEfectivo[1]);
+              efecSum += efecMonto;
+              digiSum += (total - efecMonto);
+            } else {
+              digiSum += total;
+            }
+          } else if (metodo.includes("efectivo")) {
+            efecSum += total;
+          } else {
+            digiSum += total;
+          }
         });
-        setVentasMetodo(totales);
+
+        setVentasEfectivoTotal(efecSum);
+        setVentasDigitalesTotal(digiSum);
       }
     }
 
@@ -154,11 +178,9 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
     .filter((m) => m.tipo === "egreso")
     .reduce((acc, m) => acc + Number(m.monto), 0);
 
-  const ventasEfectivo = ventasMetodo["efectivo"] || 0;
-
   const calcularEfectivoEsperado = () => {
     if (!cajaActual) return 0;
-    return Number(cajaActual.monto_inicial) + ventasEfectivo + totalIngresos - totalEgresos;
+    return Number(cajaActual.monto_inicial) + ventasEfectivoTotal + totalIngresos - totalEgresos;
   };
 
   if (cargando) {
@@ -203,23 +225,23 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
       {/* Resumen Superior */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="text-xs text-gray-500 font-medium">Monto Inicial</p>
+          <p className="text-xs font-medium text-gray-500">Monto Inicial</p>
           <p className="mt-1 text-xl font-extrabold text-gray-800">
             ${Number(cajaActual.monto_inicial).toLocaleString()}
           </p>
         </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="text-xs text-gray-500 font-medium">Ventas Efectivo</p>
+          <p className="text-xs font-medium text-gray-500">Ventas Efectivo</p>
           <p className="mt-1 text-xl font-extrabold text-emerald-600">
-            +${ventasEfectivo.toLocaleString()}
+            +${ventasEfectivoTotal.toLocaleString()}
           </p>
         </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="text-xs text-gray-500 font-medium">Otros Métodos (MP / Transf.)</p>
+          <p className="text-xs font-medium text-gray-500">Otros Métodos (MP / Transf.)</p>
           <p className="mt-1 text-xl font-extrabold text-blue-600">
-            +${((ventasMetodo["mercadopago"] || 0) + (ventasMetodo["transferencia"] || 0)).toLocaleString()}
+            +${ventasDigitalesTotal.toLocaleString()}
           </p>
         </div>
 
@@ -233,7 +255,7 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Registrar Movimiento Manual */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+        <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5">
           <h3 className="text-sm font-bold text-gray-800">Registrar Ingreso / Egreso Manual</h3>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -270,14 +292,14 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
           </div>
           <button
             onClick={registrarMovimiento}
-            className="w-full rounded-xl bg-gray-900 py-2 text-xs font-bold text-white hover:bg-black transition-colors"
+            className="w-full rounded-xl bg-gray-900 py-2 text-xs font-bold text-white transition-colors hover:bg-black"
           >
             Registrar Movimiento
           </button>
         </div>
 
         {/* Realizar Cierre de Caja */}
-        <div className="rounded-2xl border border-rose-100 bg-rose-50/30 p-5 space-y-4">
+        <div className="space-y-4 rounded-2xl border border-rose-100 bg-rose-50/30 p-5">
           <h3 className="text-sm font-bold text-gray-800">Cierre de Caja y Arqueo</h3>
           <p className="text-xs text-gray-500">
             Cuente el efectivo físico disponible en la caja e ingrese el total para verificar si existen diferencias.
@@ -298,10 +320,10 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
               <span
                 className={
                   Number(efectivoContado) - efectivoEsperado === 0
-                    ? "text-emerald-600 font-bold"
+                    ? "font-bold text-emerald-600"
                     : Number(efectivoContado) - efectivoEsperado > 0
-                    ? "text-blue-600 font-bold"
-                    : "text-rose-600 font-bold"
+                    ? "font-bold text-blue-600"
+                    : "font-bold text-rose-600"
                 }
               >
                 ${(Number(efectivoContado) - efectivoEsperado).toLocaleString()}
@@ -310,7 +332,7 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
           )}
           <button
             onClick={cerrarCaja}
-            className="w-full rounded-xl bg-rose-600 py-2.5 text-xs font-bold text-white hover:bg-rose-700 transition-colors"
+            className="w-full rounded-xl bg-rose-600 py-2.5 text-xs font-bold text-white transition-colors hover:bg-rose-700"
           >
             Cerrar Caja
           </button>
@@ -318,10 +340,10 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
       </div>
 
       {/* Historial de Movimientos de la Caja */}
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-3">
+      <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-5">
         <h3 className="text-sm font-bold text-gray-800">Movimientos Manuales Registrados</h3>
         {movimientos.length === 0 ? (
-          <p className="text-xs text-gray-400 py-2">No hay ingresos ni egresos manuales en esta sesión.</p>
+          <p className="py-2 text-xs text-gray-400">No hay ingresos ni egresos manuales en esta sesión.</p>
         ) : (
           <div className="divide-y divide-gray-100">
             {movimientos.map((m) => (

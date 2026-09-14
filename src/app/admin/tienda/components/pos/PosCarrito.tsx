@@ -33,6 +33,17 @@ export default function PosCarrito({
 
   const totalFinal = Math.max(0, subtotal - descuentoCalculado);
 
+  // Handlers para limpiar descuento
+  const handleVaciar = () => {
+    setDescuentoValor("");
+    onVaciarCarrito();
+  };
+
+  const handleIniciarCobro = () => {
+    onIniciarCobro(subtotal, descuentoCalculado, totalFinal);
+    setDescuentoValor(""); // Limpia el descuento para la próxima venta
+  };
+
   return (
     <div className="flex flex-col rounded-2xl border border-[#E7E5E0] bg-white p-4 shadow-sm lg:h-[calc(100vh-180px)] lg:sticky lg:top-4">
       {/* Cabecera del Carrito */}
@@ -40,7 +51,7 @@ export default function PosCarrito({
         <h3 className="text-base font-bold text-[#12151B]">🛒 Carrito de Venta</h3>
         {carrito.length > 0 && (
           <button
-            onClick={onVaciarCarrito}
+            onClick={handleVaciar}
             className="text-xs font-semibold text-[#C84343] hover:underline"
           >
             Vaciar
@@ -139,7 +150,7 @@ export default function PosCarrito({
 
           {/* Botón Principal de Cobro */}
           <button
-            onClick={() => onIniciarCobro(subtotal, descuentoCalculado, totalFinal)}
+            onClick={handleIniciarCobro}
             disabled={carrito.length === 0}
             className="mt-4 w-full rounded-xl bg-[#0E6E55] py-3 text-sm font-bold text-white transition-all hover:bg-[#0A5340] active:scale-[0.99] disabled:opacity-50"
           >
