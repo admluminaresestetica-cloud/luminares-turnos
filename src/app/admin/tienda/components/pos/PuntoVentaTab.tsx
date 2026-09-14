@@ -4,6 +4,7 @@ import PosHeader from "./PosHeader";
 import PosGridProductos from "./PosGridProductos";
 import PosCarrito from "./PosCarrito";
 import ModalCobro from "./ModalCobro";
+import TicketVenta from "./TicketVenta"; // 1. Importamos el ticket
 import { ProductoPOS, PosCartItem } from "./types";
 
 interface PuntoVentaTabProps {
@@ -23,6 +24,18 @@ export default function PuntoVentaTab({
   // Estado para el Modal de Cobro
   const [isModalCobroOpen, setIsModalCobroOpen] = useState(false);
   const [datosCobro, setDatosCobro] = useState({ subtotal: 0, descuentoCalculado: 0, totalFinal: 0 });
+
+  // 2. Estados para controlar la visualización del Ticket
+  const [isTicketOpen, setIsTicketOpen] = useState(false);
+  const [datosTicket, setDatosTicket] = useState<{
+    pedidoId: string;
+    items: PosCartItem[];
+    total: number;
+    metodoPago: string;
+    pagoCon: number;
+    vuelto: number;
+    nombreCliente: string;
+  } | null>(null);
 
   const handleAgregarAlCarrito = (prod: ProductoPOS) => {
     setCarrito((prev) => {
@@ -81,9 +94,20 @@ export default function PuntoVentaTab({
     setIsModalCobroOpen(true);
   };
 
-  const handleVentaExitosa = () => {
-    setCarrito([]);
-    onActualizarProductos(); // Refresca el stock en Supabase y actualiza la grilla
+  // 3. Recibe la info del pedido completado desde ModalCobro
+  const handleVentaExitosa = (infoTicket: {
+    pedidoId: string;
+    items: PosCartItem[];
+    total: number;
+    metodoPago: string;
+    pagoCon: number;
+    vuelto: number;
+    nombreCliente: string;
+  }) => {
+    setDatosTicket(infoTicket);
+    setIsTicketOpen(true); // Abre el modal del ticket
+    setCarrito([]); // Vacía el carrito
+    onActualizarProductos(); // Refresca el stock real en pantalla
   };
 
   return (
@@ -115,6 +139,7 @@ export default function PuntoVentaTab({
         </div>
       </div>
 
+      {/* Modal de Cobro */}
       <ModalCobro
         isOpen={isModalCobroOpen}
         onClose={() => setIsModalCobroOpen(false)}
@@ -125,6 +150,21 @@ export default function PuntoVentaTab({
         supabase={supabase}
         onVentaExitosa={handleVentaExitosa}
       />
+
+      {/* 4. Modal de Comprobante / Ticket de Venta */}
+      {datosTicket && (
+        <TicketVenta
+          isOpen={isTicketOpen}
+          onClose={() => setIsTicketOpen(false)}
+          pedidoId={datosTicket.pedidoId}
+          items={datosTicket.items}
+          total={datosTicket.total}
+          metodoPago={datosTicket.metodoPago}
+          pagoCon={datosTicket.pagoCon}
+          vuelto={datosTicket.vuelto}
+          nombreCliente={datosTicket.nombreCliente}
+        />
+      )}
     </div>
   );
 }

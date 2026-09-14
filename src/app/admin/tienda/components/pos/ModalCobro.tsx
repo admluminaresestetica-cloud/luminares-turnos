@@ -10,7 +10,16 @@ interface ModalCobroProps {
   descuentoCalculado: number;
   totalFinal: number;
   supabase: any;
-  onVentaExitosa: () => void;
+  // CAMBIO 1: Recibe el objeto con los datos del ticket de venta
+  onVentaExitosa: (datosTicket: {
+    pedidoId: string;
+    items: PosCartItem[];
+    total: number;
+    metodoPago: string;
+    pagoCon: number;
+    vuelto: number;
+    nombreCliente: string;
+  }) => void;
 }
 
 export default function ModalCobro({
@@ -43,7 +52,6 @@ export default function ModalCobro({
     setLoading(true);
 
     try {
-      // Formatear el JSON del carrito para la función RPC
       const itemsPayload = carrito.map((item) => ({
         producto_id: item.producto_id,
         titulo: item.titulo,
@@ -51,7 +59,6 @@ export default function ModalCobro({
         precio_unitario: item.precio_unitario,
       }));
 
-      // Llamada al procedimiento almacenado en Supabase
       const { data, error } = await supabase.rpc("registrar_venta_pos", {
         p_items: itemsPayload,
         p_metodo_pago: metodoPago,
@@ -65,8 +72,19 @@ export default function ModalCobro({
         throw error;
       }
 
-      alert("¡Venta registrada con éxito!");
-      onVentaExitosa();
+      // CAMBIO 2: Pasamos toda la información necesaria para armar el ticket
+      if (data && data.pedido_id) {
+        onVentaExitosa({
+          pedidoId: data.pedido_id,
+          items: carrito,
+          total: totalFinal,
+          metodoPago,
+          pagoCon: metodoPago === "efectivo" ? montoEntregado : totalFinal,
+          vuelto,
+          nombreCliente: nombreCliente.trim() || "Cliente Ocasional",
+        });
+      }
+
       onClose();
     } catch (err: any) {
       alert("Error al procesar la venta: " + (err.message || err));
