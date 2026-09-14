@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { PosCartItem } from "./types";
 
 interface TicketVentaProps {
@@ -30,12 +31,15 @@ export default function TicketVenta({
   vuelto,
   nombreCliente,
 }: TicketVentaProps) {
+  const [formatoImpresion, setFormatoImpresion] = useState<"80mm" | "58mm" | "a4">("80mm");
+
   if (!isOpen) return null;
 
   // Si no se envió subtotalInicial, calculamos la suma directa de los ítems
-  const baseSubtotal = subtotalInicial > 0 
-    ? subtotalInicial 
-    : items.reduce((acc, item) => acc + item.precio_unitario * item.cantidad, 0);
+  const baseSubtotal =
+    subtotalInicial > 0
+      ? subtotalInicial
+      : items.reduce((acc, item) => acc + item.precio_unitario * item.cantidad, 0);
 
   const handleImprimir = () => {
     window.print();
@@ -45,13 +49,15 @@ export default function TicketVenta({
     let mensaje = `*COMPROBANTE DE COMPRA - Luminares Estética*\n`;
     mensaje += `--------------------------------------\n`;
     if (pedidoId) mensaje += `Ticket ID: #${pedidoId.slice(0, 8)}\n`;
-    mensaje += `Cliente: ${nombreCliente}\n`;
+    if (nombreCliente) mensaje += `Cliente: ${nombreCliente}\n`;
     mensaje += `--------------------------------------\n`;
     items.forEach((item) => {
-      mensaje += `${item.cantidad}x ${item.titulo} - $${(item.precio_unitario * item.cantidad).toLocaleString("es-AR")}\n`;
+      mensaje += `${item.cantidad}x ${item.titulo} - $${(
+        item.precio_unitario * item.cantidad
+      ).toLocaleString("es-AR")}\n`;
     });
     mensaje += `--------------------------------------\n`;
-    
+
     if (descuentoMonto > 0 || recargoMonto > 0) {
       mensaje += `Subtotal Productos: $${baseSubtotal.toLocaleString("es-AR")}\n`;
       if (descuentoMonto > 0) {
@@ -65,7 +71,7 @@ export default function TicketVenta({
 
     mensaje += `*TOTAL FINAL: $${total.toLocaleString("es-AR")}*\n`;
     mensaje += `Medio de Pago: ${metodoPago.toUpperCase()}\n`;
-    
+
     if (metodoPago.toLowerCase().includes("efectivo") && pagoCon > 0) {
       mensaje += `Abonó con: $${pagoCon.toLocaleString("es-AR")}\n`;
       mensaje += `Vuelto: $${vuelto.toLocaleString("es-AR")}\n`;
@@ -77,92 +83,173 @@ export default function TicketVenta({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm print:p-0 print:bg-transparent print:static">
+      {/* Estilos CSS específicos para mandar a la ticketera */}
+      <style jsx global>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #ticket-print-area, #ticket-print-area * {
+            visibility: visible;
+          }
+          #ticket-print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: ${formatoImpresion === "80mm" ? "78mm" : formatoImpresion === "58mm" ? "54mm" : "100%"};
+            margin: 0;
+            padding: 4px;
+            box-shadow: none !important;
+            border: none !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+        }
+      `}</style>
+
       <div className="w-full max-w-sm rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-2xl">
-        {/* Cabecera Ticket */}
-        <div className="border-b border-dashed border-gray-300 pb-4 text-center">
-          <span className="text-2xl">✨</span>
-          <h3 className="text-base font-extrabold text-[#12151B]">Luminares Estética</h3>
-          <p className="text-[11px] text-gray-500">Ticket de Venta Presencial</p>
-          {pedidoId && (
-            <p className="mt-1 text-[10px] font-mono text-gray-400">
-              ID: {pedidoId.slice(0, 8)}
-            </p>
-          )}
+        {/* Selector de formato para impresión (No visible al imprimir) */}
+        <div className="no-print mb-4 rounded-xl border border-gray-100 bg-gray-50 p-2 text-center">
+          <p className="text-[11px] font-bold text-gray-500 mb-1">Formato de Ticketera:</p>
+          <div className="flex justify-center gap-1.5">
+            <button
+              onClick={() => setFormatoImpresion("80mm")}
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                formatoImpresion === "80mm"
+                  ? "bg-[#0E6E55] text-white shadow-sm"
+                  : "bg-white text-gray-600 border border-gray-200"
+              }`}
+            >
+              80mm (Estándar)
+            </button>
+            <button
+              onClick={() => setFormatoImpresion("58mm")}
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                formatoImpresion === "58mm"
+                  ? "bg-[#0E6E55] text-white shadow-sm"
+                  : "bg-white text-gray-600 border border-gray-200"
+              }`}
+            >
+              58mm (Mini)
+            </button>
+            <button
+              onClick={() => setFormatoImpresion("a4")}
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+                formatoImpresion === "a4"
+                  ? "bg-[#0E6E55] text-white shadow-sm"
+                  : "bg-white text-gray-600 border border-gray-200"
+              }`}
+            >
+              A4 / Hoja
+            </button>
+          </div>
         </div>
 
-        {/* Desglose de Ítems */}
-        <div className="my-4 max-h-48 overflow-y-auto space-y-2 border-b border-dashed border-gray-300 pb-4 text-xs">
-          {items.map((item, idx) => (
-            <div key={idx} className="flex justify-between font-medium text-[#12151B]">
-              <span>
-                {item.cantidad}x {item.titulo}
-              </span>
-              <span>${(item.precio_unitario * item.cantidad).toLocaleString("es-AR")}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Totales, Descuentos, Recargos y Métodos de Pago */}
-        <div className="space-y-1.5 border-b border-dashed border-gray-300 pb-4 text-xs">
-          {(descuentoMonto > 0 || recargoMonto > 0) && (
-            <>
-              <div className="flex justify-between text-gray-600">
-                <span>Subtotal:</span>
-                <span>${baseSubtotal.toLocaleString("es-AR")}</span>
-              </div>
-
-              {descuentoMonto > 0 && (
-                <div className="flex justify-between font-medium text-emerald-600">
-                  <span>Descuento:</span>
-                  <span>-${descuentoMonto.toLocaleString("es-AR")}</span>
-                </div>
-              )}
-
-              {recargoMonto > 0 && (
-                <div className="flex justify-between font-medium text-amber-600">
-                  <span>Recargo (Tarjeta/Medio Pago):</span>
-                  <span>+${recargoMonto.toLocaleString("es-AR")}</span>
-                </div>
-              )}
-            </>
-          )}
-
-          <div className="flex justify-between text-sm font-black text-[#12151B] pt-1 border-t border-gray-100">
-            <span>TOTAL:</span>
-            <span className="text-[#0E6E55]">${total.toLocaleString("es-AR")}</span>
+        {/* ÁREA IMPRIMIBLE DEL TICKET */}
+        <div id="ticket-print-area">
+          {/* Cabecera Ticket */}
+          <div className="border-b border-dashed border-gray-300 pb-4 text-center">
+            <span className="text-2xl print:hidden">✨</span>
+            <h3 className="text-base font-extrabold text-[#12151B] uppercase tracking-wide">
+              Luminares Estética
+            </h3>
+            <p className="text-[11px] text-gray-500 font-medium">Ticket de Venta Presencial</p>
+            {nombreCliente && (
+              <p className="mt-1 text-xs font-semibold text-gray-700">
+                Cliente: {nombreCliente}
+              </p>
+            )}
+            {pedidoId && (
+              <p className="mt-0.5 text-[10px] font-mono text-gray-400">
+                ID: #{pedidoId.slice(0, 8)}
+              </p>
+            )}
           </div>
 
-          <div className="flex flex-col gap-1 border-t border-b border-dashed border-gray-200 py-2 my-2 text-xs">
-          <div className="flex justify-between font-medium text-gray-700">
-          <span>Método de Pago:</span>
-          <span className="capitalize">{metodoPago.includes('Mixto') ? 'Pago Mixto' : metodoPago}</span>
-        </div>
-  
-  {/* Si viene con detalle de Mixto, lo mostrás abajo formateado */}
-  {metodoPago.includes('Mixto') && (
-    <p className="text-[11px] text-gray-500 text-right leading-tight bg-gray-50 p-1.5 rounded-md border border-gray-100">
-      {metodoPago}
-    </p>
-  )}
-</div>
-
-          {metodoPago.toLowerCase().includes("efectivo") && pagoCon > 0 && (
-            <>
-              <div className="flex justify-between text-gray-500">
-                <span>Paga con:</span>
-                <span>${pagoCon.toLocaleString("es-AR")}</span>
+          {/* Desglose de Ítems */}
+          <div className="my-3 max-h-48 overflow-y-auto print:max-h-none space-y-1.5 border-b border-dashed border-gray-300 pb-3 text-xs">
+            {items.map((item, idx) => (
+              <div key={idx} className="flex justify-between font-medium text-[#12151B]">
+                <span className="pr-2 leading-tight">
+                  {item.cantidad}x {item.titulo}
+                </span>
+                <span className="whitespace-nowrap font-bold">
+                  ${(item.precio_unitario * item.cantidad).toLocaleString("es-AR")}
+                </span>
               </div>
-              <div className="flex justify-between font-semibold text-emerald-700">
-                <span>Vuelto:</span>
-                <span>${vuelto.toLocaleString("es-AR")}</span>
+            ))}
+          </div>
+
+          {/* Totales, Descuentos, Recargos y Métodos de Pago */}
+          <div className="space-y-1.5 border-b border-dashed border-gray-300 pb-3 text-xs">
+            {(descuentoMonto > 0 || recargoMonto > 0) && (
+              <>
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal:</span>
+                  <span>${baseSubtotal.toLocaleString("es-AR")}</span>
+                </div>
+
+                {descuentoMonto > 0 && (
+                  <div className="flex justify-between font-medium text-emerald-600">
+                    <span>Descuento:</span>
+                    <span>-${descuentoMonto.toLocaleString("es-AR")}</span>
+                  </div>
+                )}
+
+                {recargoMonto > 0 && (
+                  <div className="flex justify-between font-medium text-amber-600">
+                    <span>Recargo:</span>
+                    <span>+${recargoMonto.toLocaleString("es-AR")}</span>
+                  </div>
+                )}
+              </>
+            )}
+
+            <div className="flex justify-between text-sm font-black text-[#12151B] pt-1 border-t border-gray-100">
+              <span>TOTAL:</span>
+              <span className="text-[#0E6E55] print:text-black">
+                ${total.toLocaleString("es-AR")}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-1 border-t border-b border-dashed border-gray-200 py-2 my-2 text-xs">
+              <div className="flex justify-between font-medium text-gray-700">
+                <span>Método de Pago:</span>
+                <span className="capitalize">
+                  {metodoPago.includes("Mixto") ? "Pago Mixto" : metodoPago}
+                </span>
               </div>
-            </>
-          )}
+
+              {metodoPago.includes("Mixto") && (
+                <p className="text-[11px] text-gray-500 text-right leading-tight bg-gray-50 p-1.5 rounded-md border border-gray-100 print:border-none print:bg-transparent">
+                  {metodoPago}
+                </p>
+              )}
+            </div>
+
+            {metodoPago.toLowerCase().includes("efectivo") && pagoCon > 0 && (
+              <>
+                <div className="flex justify-between text-gray-500">
+                  <span>Paga con:</span>
+                  <span>${pagoCon.toLocaleString("es-AR")}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-emerald-700 print:text-black">
+                  <span>Vuelto:</span>
+                  <span>${vuelto.toLocaleString("es-AR")}</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="mt-3 text-center text-[10px] text-gray-400">
+            <p>¡Gracias por tu preferencia! ✨</p>
+          </div>
         </div>
 
-        {/* Botones de Acción */}
-        <div className="mt-5 space-y-2">
+        {/* Botones de Acción (No se imprimen) */}
+        <div className="no-print mt-5 space-y-2">
           <button
             onClick={handleEnviarWhatsApp}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white transition-all hover:bg-emerald-700"
@@ -174,7 +261,7 @@ export default function TicketVenta({
               onClick={handleImprimir}
               className="flex-1 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] py-2 text-xs font-bold text-gray-700 hover:bg-gray-100"
             >
-              🖨️ Imprimir
+              🖨️ Imprimir Ticket
             </button>
             <button
               onClick={onClose}
@@ -188,3 +275,4 @@ export default function TicketVenta({
     </div>
   );
 }
+ 
