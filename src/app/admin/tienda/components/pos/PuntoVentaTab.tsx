@@ -26,11 +26,14 @@ export default function PuntoVentaTab({
   const [isModalCobroOpen, setIsModalCobroOpen] = useState(false);
   const [datosCobro, setDatosCobro] = useState({ subtotal: 0, descuentoCalculado: 0, totalFinal: 0 });
 
-  // Estados para controlar la visualización del Ticket
+  // Estados para controlar la visualización del Ticket con desglose de recargos/descuentos
   const [isTicketOpen, setIsTicketOpen] = useState(false);
   const [datosTicket, setDatosTicket] = useState<{
-    pedidoId: string;
+    pedidoId: string | null;
     items: PosCartItem[];
+    subtotalInicial?: number;
+    descuentoMonto?: number;
+    recargoMonto?: number;
     total: number;
     metodoPago: string;
     pagoCon: number;
@@ -42,18 +45,17 @@ export default function PuntoVentaTab({
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   // --------------------------------------------------------
-  // LÓGICA DE ATAJOS DE TECLADO (Pilar 1)
+  // LÓGICA DE ATAJOS DE TECLADO
   // --------------------------------------------------------
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Evitar que capture si el usuario está escribiendo en un input o textarea
       const target = e.target as HTMLElement;
       const isTyping =
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
         target.isContentEditable;
 
-      // 1. Enfocar buscador con "/" o "F4" (incluso si está tipeando en otro lado)
+      // 1. Enfocar buscador con "/" o "F4"
       if (e.key === "F4" || (e.key === "/" && !isTyping)) {
         e.preventDefault();
         const searchInput = document.querySelector<HTMLInputElement>("input[type='text']");
@@ -64,10 +66,9 @@ export default function PuntoVentaTab({
         return;
       }
 
-      // 2. Tecla F2 o Enter (cuando no se está tipeando) para abrir el Modal de Cobro
+      // 2. Tecla F2 o Enter para abrir Modal de Cobro
       if ((e.key === "F2" || (e.key === "Enter" && !isTyping)) && carrito.length > 0 && !isModalCobroOpen && !isTicketOpen) {
         e.preventDefault();
-        // Calculamos totales y abrimos el cobro
         const subtotalCalc = carrito.reduce((acc, i) => acc + i.precio_unitario * i.cantidad, 0);
         handleIniciarCobro(subtotalCalc, 0, subtotalCalc);
         return;
@@ -151,8 +152,11 @@ export default function PuntoVentaTab({
   };
 
   const handleVentaExitosa = (infoTicket: {
-    pedidoId: string;
+    pedidoId: string | null;
     items: PosCartItem[];
+    subtotalInicial?: number;
+    descuentoMonto?: number;
+    recargoMonto?: number;
     total: number;
     metodoPago: string;
     pagoCon: number;
@@ -161,6 +165,7 @@ export default function PuntoVentaTab({
   }) => {
     setDatosTicket(infoTicket);
     setIsTicketOpen(true);
+    setIsModalCobroOpen(false);
     setCarrito([]);
     onActualizarProductos();
   };
@@ -204,7 +209,7 @@ export default function PuntoVentaTab({
         <span>Atajos</span>
       </button>
 
-      {/* Pop-up / Modal de Ayuda de Atajos */}
+      {/* Pop-up de Ayuda */}
       {isHelpOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fadeIn">
           <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
@@ -285,6 +290,9 @@ export default function PuntoVentaTab({
           onClose={() => setIsTicketOpen(false)}
           pedidoId={datosTicket.pedidoId}
           items={datosTicket.items}
+          subtotalInicial={datosTicket.subtotalInicial}
+          descuentoMonto={datosTicket.descuentoMonto}
+          recargoMonto={datosTicket.recargoMonto}
           total={datosTicket.total}
           metodoPago={datosTicket.metodoPago}
           pagoCon={datosTicket.pagoCon}
