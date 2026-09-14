@@ -13,6 +13,9 @@ interface ModalCobroProps {
   onVentaExitosa: (datosTicket: {
     pedidoId: string;
     items: PosCartItem[];
+    subtotalInicial: number;
+    descuentoMonto: number;
+    recargoMonto: number;
     total: number;
     metodoPago: string;
     pagoCon: number;
@@ -34,14 +37,11 @@ export default function ModalCobro({
   const [esPagoMixto, setEsPagoMixto] = useState<boolean>(false);
   const [metodoPago, setMetodoPago] = useState<string>("efectivo");
   
-  // Estados para Pago Mixto
   const [montoEfectivoMixto, setMontoEfectivoMixto] = useState<string>("");
   const [montoDigitalMixto, setMontoDigitalMixto] = useState<string>("");
   const [metodoDigitalSecundario, setMetodoDigitalSecundario] = useState<string>("transferencia");
 
-  // Ajuste por Medio de Pago (Recargo / Descuento adicional)
-  const [porcentajeAjuste, setPorcentajeAjuste] = useState<number>(0); // Ej: -10 para 10% OFF, +10 para 10% recargo
-
+  const [porcentajeAjuste, setPorcentajeAjuste] = useState<number>(0);
   const [pagoCon, setPagoCon] = useState<string>("");
   const [nombreCliente, setNombreCliente] = useState<string>("Cliente Ocasional");
   const [loading, setLoading] = useState<boolean>(false);
@@ -66,30 +66,28 @@ export default function ModalCobro({
 
   if (!isOpen) return null;
 
-  // Cálculo del Total Final aplicando recargo/descuento del medio de pago
-  const montoAjuste = (totalBase * porcentajeAjuste) / 100;
-  const totalConAjuste = Math.max(0, Math.round(totalBase + montoAjuste));
+  // Cálculos de montos desglosados
+  const montoAjusteMedioPago = (totalBase * porcentajeAjuste) / 100;
+  const recargoMonto = montoAjusteMedioPago > 0 ? Math.round(montoAjusteMedioPago) : 0;
+  const descuentoAdicionalMonto = montoAjusteMedioPago < 0 ? Math.abs(Math.round(montoAjusteMedioPago)) : 0;
+  const descuentoTotalMonto = descuentoCalculado + descuentoAdicionalMonto;
 
-  // Cálculos para pago único
+  const totalConAjuste = Math.max(0, Math.round(totalBase + montoAjusteMedioPago));
+
   const montoEntregado = Number(pagoCon) || 0;
   const vuelto = !esPagoMixto && metodoPago === "efectivo" ? Math.max(0, montoEntregado - totalConAjuste) : 0;
   const esEfectivoInsuficiente = !esPagoMixto && metodoPago === "efectivo" && montoEntregado < totalConAjuste;
 
-  // Cálculos para pago mixto
   const numEfectivoMixto = Number(montoEfectivoMixto) || 0;
   const numDigitalMixto = Number(montoDigitalMixto) || 0;
   const sumaMixto = numEfectivoMixto + numDigitalMixto;
   const restanteMixto = totalConAjuste - sumaMixto;
   const esMixtoIncompleto = esPagoMixto && sumaMixto < totalConAjuste;
 
-  // Manejador de cambio de método de pago simple con sugerencias de ajuste
   const handleSeleccionarMetodo = (mId: string) => {
     setMetodoPago(mId);
-    // Auto-sugerir porcentaje común si se desea (o dejar en 0)
     if (mId === "tarjeta") {
-      setPorcentajeAjuste(10); // Ejemplo: 10% recargo en tarjeta
-    } else if (mId === "efectivo") {
-      setPorcentajeAjuste(0);
+      setPorcentajeAjuste(10);
     } else {
       setPorcentajeAjuste(0);
     }
@@ -116,7 +114,6 @@ export default function ModalCobro({
         precio_unitario: item.precio_unitario,
       }));
 
-      // Formatear el método de pago para registrar en BD
       const metodoFinal = esPagoMixto
         ? `mixto (Efectivo: $${numEfectivoMixto} + ${metodoDigitalSecundario.toUpperCase()}: $${numDigitalMixto})`
         : metodoPago;
@@ -134,6 +131,8 @@ export default function ModalCobro({
         p_pago_con: pagoConFinal,
         p_vuelto: vuelto,
         p_cliente_nombre: nombreCliente.trim() || "Cliente Ocasional",
+        p_descuento_monto: descuentoTotalMonto,
+        p_recargo_monto: recargoMonto,
       });
 
       if (error) throw error;
@@ -142,6 +141,9 @@ export default function ModalCobro({
         onVentaExitosa({
           pedidoId: data.pedido_id,
           items: carrito,
+          subtotalInicial: subtotal,
+          descuentoMonto: descuentoTotalMonto,
+          recargoMonto: recargoMonto,
           total: totalConAjuste,
           metodoPago: metodoFinal,
           pagoCon: pagoConFinal,
@@ -171,7 +173,6 @@ export default function ModalCobro({
         className="w-full max-w-md rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-2xl"
         onKeyDown={handleKeyDownForm}
       >
-        {/* Cabecera */}
         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
           <h3 className="text-lg font-bold text-[#12151B]">💳 Procesar Pago POS</h3>
           <button
@@ -182,7 +183,6 @@ export default function ModalCobro({
           </button>
         </div>
 
-        {/* Resumen de Total & Ajuste */}
         <div className="my-3 rounded-xl bg-[#F7F7F5] p-3 text-center">
           <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
             Total a Cobrar
@@ -193,12 +193,11 @@ export default function ModalCobro({
           
           {porcentajeAjuste !== 0 && (
             <span className={`text-[11px] font-bold ${porcentajeAjuste > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-              {porcentajeAjuste > 0 ? `+${porcentajeAjuste}% Recargo` : `${porcentajeAjuste}% Descuento`} (${montoAjuste > 0 ? '+' : ''}${Math.round(montoAjuste)})
+              {porcentajeAjuste > 0 ? `+${porcentajeAjuste}% Recargo` : `${porcentajeAjuste}% Descuento`} (${montoAjusteMedioPago > 0 ? '+' : ''}${Math.round(montoAjusteMedioPago)})
             </span>
           )}
         </div>
 
-        {/* Selector de Recargo / Descuento Manual Rápido */}
         <div className="mb-3 flex items-center justify-between gap-1.5 rounded-xl bg-gray-50 p-2 border border-gray-100">
           <span className="text-[11px] font-bold text-gray-700">Ajuste / Recargo:</span>
           <div className="flex gap-1">
@@ -219,7 +218,6 @@ export default function ModalCobro({
           </div>
         </div>
 
-        {/* Modalidad de Pago: Único vs Mixto */}
         <div className="mb-3 flex rounded-xl bg-gray-100 p-1">
           <button
             type="button"
@@ -241,7 +239,6 @@ export default function ModalCobro({
           </button>
         </div>
 
-        {/* SECCIÓN PAGO ÚNICO */}
         {!esPagoMixto ? (
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-2">
@@ -318,11 +315,9 @@ export default function ModalCobro({
             )}
           </div>
         ) : (
-          /* SECCIÓN PAGO MIXTO */
           <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3">
             <h4 className="text-xs font-extrabold text-[#0E6E55]">Desglose de Pago Mixto</h4>
 
-            {/* Monto Efectivo */}
             <div>
               <label className="text-[11px] font-bold text-gray-700">Monto en Efectivo ($):</label>
               <input
@@ -331,7 +326,6 @@ export default function ModalCobro({
                 onChange={(e) => {
                   const val = e.target.value;
                   setMontoEfectivoMixto(val);
-                  // Auto-calcular el resto digital
                   const num = Number(val) || 0;
                   if (num <= totalConAjuste) {
                     setMontoDigitalMixto((totalConAjuste - num).toString());
@@ -342,7 +336,6 @@ export default function ModalCobro({
               />
             </div>
 
-            {/* Monto Digital (Transfer/MP/Tarjeta) */}
             <div>
               <div className="flex items-center justify-between">
                 <label className="text-[11px] font-bold text-gray-700">Monto Digital ($):</label>
@@ -364,7 +357,6 @@ export default function ModalCobro({
               />
             </div>
 
-            {/* Indicador de Estado / Restante */}
             <div className="flex items-center justify-between border-t border-emerald-200 pt-2 text-xs">
               <span className="font-bold text-gray-600">Suma total ingresada:</span>
               <span
@@ -379,7 +371,6 @@ export default function ModalCobro({
           </div>
         )}
 
-        {/* Campo Opcional Cliente */}
         <div className="pt-2">
           <label className="text-xs font-bold text-[#12151B]">Nombre Cliente (Opcional)</label>
           <input
@@ -391,7 +382,6 @@ export default function ModalCobro({
           />
         </div>
 
-        {/* Acciones */}
         <div className="mt-5 flex items-center gap-3">
           <button
             type="button"

@@ -6,6 +6,9 @@ interface TicketVentaProps {
   onClose: () => void;
   pedidoId: string | null;
   items: PosCartItem[];
+  subtotalInicial?: number;
+  descuentoMonto?: number;
+  recargoMonto?: number;
   total: number;
   metodoPago: string;
   pagoCon: number;
@@ -18,6 +21,9 @@ export default function TicketVenta({
   onClose,
   pedidoId,
   items,
+  subtotalInicial = 0,
+  descuentoMonto = 0,
+  recargoMonto = 0,
   total,
   metodoPago,
   pagoCon,
@@ -26,12 +32,17 @@ export default function TicketVenta({
 }: TicketVentaProps) {
   if (!isOpen) return null;
 
+  // Si no se envió subtotalInicial, calculamos la suma directa de los ítems
+  const baseSubtotal = subtotalInicial > 0 
+    ? subtotalInicial 
+    : items.reduce((acc, item) => acc + item.precio_unitario * item.cantidad, 0);
+
   const handleImprimir = () => {
     window.print();
   };
 
   const handleEnviarWhatsApp = () => {
-    let mensaje = `*COMPROBANTE DE COMPRA - Lluminares Estética*\n`;
+    let mensaje = `*COMPROBANTE DE COMPRA - Luminares Estética*\n`;
     mensaje += `--------------------------------------\n`;
     if (pedidoId) mensaje += `Ticket ID: #${pedidoId.slice(0, 8)}\n`;
     mensaje += `Cliente: ${nombreCliente}\n`;
@@ -40,9 +51,22 @@ export default function TicketVenta({
       mensaje += `${item.cantidad}x ${item.titulo} - $${(item.precio_unitario * item.cantidad).toLocaleString("es-AR")}\n`;
     });
     mensaje += `--------------------------------------\n`;
-    mensaje += `*TOTAL: $${total.toLocaleString("es-AR")}*\n`;
+    
+    if (descuentoMonto > 0 || recargoMonto > 0) {
+      mensaje += `Subtotal Productos: $${baseSubtotal.toLocaleString("es-AR")}\n`;
+      if (descuentoMonto > 0) {
+        mensaje += `Descuento Aplicado: -$${descuentoMonto.toLocaleString("es-AR")}\n`;
+      }
+      if (recargoMonto > 0) {
+        mensaje += `Recargo Medio Pago: +$${recargoMonto.toLocaleString("es-AR")}\n`;
+      }
+      mensaje += `--------------------------------------\n`;
+    }
+
+    mensaje += `*TOTAL FINAL: $${total.toLocaleString("es-AR")}*\n`;
     mensaje += `Medio de Pago: ${metodoPago.toUpperCase()}\n`;
-    if (metodoPago === "efectivo") {
+    
+    if (metodoPago.toLowerCase().includes("efectivo") && pagoCon > 0) {
       mensaje += `Abonó con: $${pagoCon.toLocaleString("es-AR")}\n`;
       mensaje += `Vuelto: $${vuelto.toLocaleString("es-AR")}\n`;
     }
@@ -79,17 +103,44 @@ export default function TicketVenta({
           ))}
         </div>
 
-        {/* Totales y Métodos de Pago */}
+        {/* Totales, Descuentos, Recargos y Métodos de Pago */}
         <div className="space-y-1.5 border-b border-dashed border-gray-300 pb-4 text-xs">
-          <div className="flex justify-between font-bold text-[#12151B]">
+          {(descuentoMonto > 0 || recargoMonto > 0) && (
+            <>
+              <div className="flex justify-between text-gray-600">
+                <span>Subtotal:</span>
+                <span>${baseSubtotal.toLocaleString("es-AR")}</span>
+              </div>
+
+              {descuentoMonto > 0 && (
+                <div className="flex justify-between font-medium text-emerald-600">
+                  <span>Descuento:</span>
+                  <span>-${descuentoMonto.toLocaleString("es-AR")}</span>
+                </div>
+              )}
+
+              {recargoMonto > 0 && (
+                <div className="flex justify-between font-medium text-amber-600">
+                  <span>Recargo (Tarjeta/Medio Pago):</span>
+                  <span>+${recargoMonto.toLocaleString("es-AR")}</span>
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="flex justify-between text-sm font-black text-[#12151B] pt-1 border-t border-gray-100">
             <span>TOTAL:</span>
             <span className="text-[#0E6E55]">${total.toLocaleString("es-AR")}</span>
           </div>
-          <div className="flex justify-between text-gray-500">
+
+          <div className="flex justify-between text-gray-500 pt-1">
             <span>Método de Pago:</span>
-            <span className="capitalize">{metodoPago}</span>
+            <span className="capitalize text-right max-w-[160px] truncate font-semibold text-gray-700">
+              {metodoPago}
+            </span>
           </div>
-          {metodoPago === "efectivo" && (
+
+          {metodoPago.toLowerCase().includes("efectivo") && pagoCon > 0 && (
             <>
               <div className="flex justify-between text-gray-500">
                 <span>Paga con:</span>
