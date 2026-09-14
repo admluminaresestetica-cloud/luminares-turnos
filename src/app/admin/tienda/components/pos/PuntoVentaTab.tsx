@@ -5,6 +5,7 @@ import PosGridProductos from "./PosGridProductos";
 import PosCarrito from "./PosCarrito";
 import ModalCobro from "./ModalCobro";
 import TicketVenta from "./TicketVenta";
+import ModalHistorialVentas from "./ModalHistorialVentas";
 import { ProductoPOS, PosCartItem } from "./types";
 import { Keyboard, X, Info } from "lucide-react";
 
@@ -40,6 +41,9 @@ export default function PuntoVentaTab({
     vuelto: number;
     nombreCliente: string;
   } | null>(null);
+
+  // Estado para Modal de Historial de Ventas del Día
+  const [isHistorialOpen, setIsHistorialOpen] = useState(false);
 
   // Estado para Pop-up / Modal de Atajos de Teclado
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -140,7 +144,13 @@ export default function PuntoVentaTab({
       }
 
       // 2. Tecla F2 o Enter (fuera del input) para abrir Modal de Cobro
-      if ((e.key === "F2" || (e.key === "Enter" && !isTypingInInput)) && carrito.length > 0 && !isModalCobroOpen && !isTicketOpen) {
+      if (
+        (e.key === "F2" || (e.key === "Enter" && !isTypingInInput)) &&
+        carrito.length > 0 &&
+        !isModalCobroOpen &&
+        !isTicketOpen &&
+        !isHistorialOpen
+      ) {
         e.preventDefault();
         const subtotalCalc = carrito.reduce((acc, i) => acc + i.precio_unitario * i.cantidad, 0);
         handleIniciarCobro(subtotalCalc, 0, subtotalCalc);
@@ -151,6 +161,8 @@ export default function PuntoVentaTab({
       if (e.key === "Escape") {
         if (isHelpOpen) {
           setIsHelpOpen(false);
+        } else if (isHistorialOpen) {
+          setIsHistorialOpen(false);
         } else if (isModalCobroOpen) {
           setIsModalCobroOpen(false);
         } else if (isTicketOpen) {
@@ -165,7 +177,7 @@ export default function PuntoVentaTab({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [carrito, isModalCobroOpen, isTicketOpen, isHelpOpen, productos]);
+  }, [carrito, isModalCobroOpen, isTicketOpen, isHelpOpen, isHistorialOpen, productos]);
 
   const handleModificarCantidad = (productoId: number, delta: number) => {
     setCarrito((prev) =>
@@ -216,6 +228,7 @@ export default function PuntoVentaTab({
         setBusqueda={setBusqueda}
         onBarcodeScanned={handleBarcodeScanned}
         totalItemsCarrito={carrito.reduce((acc, i) => acc + i.cantidad, 0)}
+        onAbrirHistorial={() => setIsHistorialOpen(true)}
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -309,6 +322,14 @@ export default function PuntoVentaTab({
           </div>
         </div>
       )}
+
+      {/* Modal de Historial y Anulación de Ventas */}
+      <ModalHistorialVentas
+        isOpen={isHistorialOpen}
+        onClose={() => setIsHistorialOpen(false)}
+        supabase={supabase}
+        onVentaAnulada={onActualizarProductos}
+      />
 
       {/* Modal de Cobro */}
       <ModalCobro
