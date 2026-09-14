@@ -25,7 +25,8 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
 
   const fetchCaja = async () => {
     setCargando(true);
-    // Buscar caja abierta
+
+    // 1. Obtener la caja abierta
     const { data: caja, error } = await supabase
       .from("cajas")
       .select("*")
@@ -39,7 +40,7 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
     setCajaActual(caja || null);
 
     if (caja) {
-      // Cargar movimientos de caja
+      // 2. Obtener movimientos manuales
       const { data: movs } = await supabase
         .from("movimientos_caja")
         .select("*")
@@ -48,7 +49,7 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
 
       setMovimientos(movs || []);
 
-      // Cargar ventas realizadas desde la apertura
+      // 3. Obtener ventas desde que se abrió la caja
       const { data: pedidos } = await supabase
         .from("pedidos")
         .select("total, metodo_pago, estado")
@@ -63,14 +64,22 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
           const total = Number(p.total) || 0;
           const metodo = (p.metodo_pago || "").toLowerCase();
 
-          if (metodo.startsWith("mixto")) {
-            // Extraer monto en efectivo del string tipo: mixto (Efectivo: $1000 + TRANSFERENCIA: $22980)
-            const matchEfectivo = metodo.match(/efectivo:\s*\$?(\d+(\.\d+)?)/i);
-            if (matchEfectivo) {
-              const efecMonto = parseFloat(matchEfectivo[1]);
-              efecSum += efecMonto;
-              digiSum += (total - efecMonto);
-            } else {
+          if (metodo.includes("mixto")) {
+            // Ejemplo: "mixto (efectivo: $1000 + transferencia: $22980)"
+            try {
+              // Cortamos el texto justo donde dice "efectivo: $"
+              const partes = metodo.split("efectivo: $");
+              if (partes.length > 1) {
+                // Tomamos la parte del monto y extraemos solo el número
+                const montoTexto = partes[1].split(" ")[0].replace("+", "").trim();
+                const efecMonto = parseFloat(montoTexto) || 0;
+                
+                efecSum += efecMonto;
+                digiSum += (total - efecMonto);
+              } else {
+                digiSum += total;
+              }
+            } catch (err) {
               digiSum += total;
             }
           } else if (metodo.includes("efectivo")) {
