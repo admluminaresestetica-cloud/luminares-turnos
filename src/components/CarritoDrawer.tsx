@@ -30,6 +30,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const envioDomicilioActivo = (config as any)?.envio_domicilio_activo ?? true;
   const envioGratisActivo = (config as any)?.envio_gratis_activo ?? true;
 
+  // Configuración global de cuotas
+  const cuotasHabilitadas = (config as any)?.cuotas_habilitadas ?? true;
+  const montoMinimoCuotas = Number((config as any)?.monto_minimo_cuotas ?? 0);
+
   const rawNumber = config?.whatsapp_numero || "5493413954355";
   const telefonoWhatsApp = rawNumber.replace(/[^0-9]/g, "");
 
@@ -61,9 +65,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   }, [envioDomicilioActivo, datosEnvio.metodoEnvio]);
 
   // Bloquea el scroll del body mientras el drawer/bottom sheet está abierto.
-  // Evita que el swipe hacia abajo, al llegar al tope del scroll interno,
-  // se propague al body y dispare el "pull to refresh" del navegador
-  // (Chrome/Android, Safari/iOS).
   useEffect(() => {
     if (!isOpen) return;
 
@@ -91,6 +92,18 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   if (!isOpen && !mostrarModalExito) return null;
 
   const subtotalProductos = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+
+  // Validación de cuotas según la lista de ítems y configuración global
+  const productoNoAptoCuotas = carrito.find((item: any) => item.permite_cuotas === false);
+  const alcanzaMontoMinimoCuotas = subtotalProductos >= montoMinimoCuotas;
+  const aptoParaCuotas = cuotasHabilitadas && alcanzaMontoMinimoCuotas && !productoNoAptoCuotas;
+
+  // Si no está apto para cuotas y el usuario tiene seleccionado Mercado Pago, podemos avisarle o volver a WhatsApp si es estricto
+  useEffect(() => {
+    if (!aptoParaCuotas && metodoPago === "mercadopago" && productoNoAptoCuotas) {
+      // Opcional: Notificar o ajustar si no se permite financiación
+    }
+  }, [aptoParaCuotas, metodoPago, productoNoAptoCuotas]);
 
   const tieneEnvioGratis = envioGratisActivo && subtotalProductos >= montoEnvioGratis;
   const faltaParaEnvioGratis = Math.max(0, montoEnvioGratis - subtotalProductos);
@@ -368,9 +381,30 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                       }`}
                     >
                       <span>💳 Mercado Pago</span>
-                      <span className="text-[10px] font-normal text-gray-500">Tarjetas / Cuotas (+10%)</span>
+                      <span className="text-[10px] font-normal text-gray-500">
+                        {aptoParaCuotas ? "Tarjetas / 3 Cuotas (+10%)" : "Tarjetas / Débito (+10%)"}
+                      </span>
                     </button>
                   </div>
+
+                  {/* Avisos de Cuotas */}
+                  {metodoPago === "mercadopago" && (
+                    <div className="mt-2 text-[11px] space-y-1">
+                      {productoNoAptoCuotas ? (
+                        <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
+                          ⚠️ El producto <strong>{productoNoAptoCuotas.nombre}</strong> solo se abona al contado/débito. No aplica financiación en cuotas.
+                        </div>
+                      ) : !alcanzaMontoMinimoCuotas && cuotasHabilitadas ? (
+                        <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-800">
+                          ℹ️ Sumá <strong>${(montoMinimoCuotas - subtotalProductos).toLocaleString("es-AR")}</strong> más para habilitar el pago en 3 cuotas.
+                        </div>
+                      ) : aptoParaCuotas ? (
+                        <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-medium">
+                          ✨ ¡Tu compra aplica para abonar en 3 cuotas sin interés!
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
 
                 <FormularioEnvio
