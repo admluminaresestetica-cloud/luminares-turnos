@@ -1,3 +1,4 @@
+// tienda/components/GridProductos.tsx
 'use client';
 
 import React from "react";
@@ -16,7 +17,6 @@ export default function GridProductos({
   onVerDetalle,
   cargando = false,
 }: GridProductosProps) {
-  // 1. Si está cargando, mostramos los skeletons modularizados
   if (cargando) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
@@ -27,7 +27,6 @@ export default function GridProductos({
     );
   }
 
-  // 2. Si ya cargó pero no hay productos
   if (productos.length === 0) {
     return (
       <div className="rounded-2xl border border-[#E7E5E0] bg-white py-16 text-center">
@@ -39,7 +38,6 @@ export default function GridProductos({
     );
   }
 
-  // 3. Render normal de productos
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
       {productos.map((producto) => (
