@@ -18,17 +18,21 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
 
   useEffect(() => {
     async function cargarConfig() {
-      const config = await obtenerConfiguracion();
-      if (config) {
-        setMontoEnvioGratis(config.monto_envio_gratis ?? 0);
-        setEnvioGratisActivo(config.envio_gratis_activo ?? false);
+      try {
+        const config = await obtenerConfiguracion();
+        if (config) {
+          setMontoEnvioGratis(Number(config.monto_envio_gratis) || 0);
+          setEnvioGratisActivo(Boolean(config.envio_gratis_activo));
+        }
+      } catch (e) {
+        console.error("Error cargando configuración:", e);
       }
     }
     cargarConfig();
   }, []);
 
   const totalItems = Array.isArray(items)
-    ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 1), 0)
+    ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 0), 0)
     : 0;
 
   const [animando, setAnimando] = useState(false);
@@ -88,7 +92,7 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
         </div>
 
         <div className="flex items-center gap-2 shrink-0 pl-2">
-          <span className="text-sm font-extrabold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <span className="text-sm font-extrabold text-white">
             ${totalPrecio.toLocaleString("es-AR")}
           </span>
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white">
