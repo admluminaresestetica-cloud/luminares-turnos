@@ -11,6 +11,7 @@ export interface Producto {
   categoria?: string;
   stock?: number;
   activo?: boolean;
+  permite_cuotas?: boolean; // Agregado
 }
 
 export interface CarritoItem extends Producto {
@@ -42,7 +43,7 @@ const CarritoContext = createContext<CarritoContextType | undefined>(undefined);
 
 export function CarritoProvider({ children }: { children: React.ReactNode }) {
   const [carrito, setCarrito] = useState<CarritoItem[]>([]);
-  const [cargado, setCargado] = useState(false); // Bandera para evitar sobrescribir al iniciar
+  const [cargado, setCargado] = useState(false);
   const [datosEnvio, setDatosEnvio] = useState<DatosEnvio>({
     nombreCliente: "",
     telefonoCliente: "",
@@ -51,7 +52,7 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
     notaAdicional: "",
   });
 
-  // 1. Cargar carrito desde localStorage en la primera carga
+  // Cargar carrito desde localStorage
   useEffect(() => {
     const guardado = localStorage.getItem("luminares_carrito");
     if (guardado) {
@@ -61,10 +62,10 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
         console.error("Error al cargar el carrito:", e);
       }
     }
-    setCargado(true); // Marcamos que la lectura inicial ya se realizó
+    setCargado(true);
   }, []);
 
-  // 2. Guardar en localStorage solo DESPUÉS de haber cargado el estado inicial
+  // Guardar en localStorage
   useEffect(() => {
     if (cargado) {
       localStorage.setItem("luminares_carrito", JSON.stringify(carrito));
@@ -90,12 +91,19 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
       if (existe) {
         return prev.map((item) =>
           item.id === producto.id
-            ? { ...item, cantidad: item.cantidad + 1 }
+            ? { ...item, cantidad: item.cantidad + 1, permite_cuotas: producto.permite_cuotas ?? item.permite_cuotas ?? true }
             : item
         );
       }
 
-      return [...prev, { ...producto, cantidad: 1 }];
+      return [
+        ...prev,
+        {
+          ...producto,
+          cantidad: 1,
+          permite_cuotas: producto.permite_cuotas ?? true, // Preserva la bandera de cuotas
+        },
+      ];
     });
   };
 
@@ -121,7 +129,7 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
   };
 
   const total = carrito.reduce(
-    (acc, item) => acc + item.precio * item.cantidad,
+    (acc, item) => acc + (Number(item.precio) || 0) * item.cantidad,
     0
   );
 
