@@ -29,6 +29,7 @@ export default function FormularioProducto({
   const [imagenUrl, setImagenUrl] = useState("");
   const [imagenFile, setImagenFile] = useState<File | null>(null);
   const [mostrarUltimasUnidades, setMostrarUltimasUnidades] = useState(false);
+  const [permiteCuotas, setPermiteCuotas] = useState(true); // <-- Nuevo estado (por defecto true)
   const [cargando, setCargando] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
@@ -44,6 +45,7 @@ export default function FormularioProducto({
       setCategoria(productoEditando.categoria || "");
       setImagenUrl(productoEditando.imagen_url || "");
       setMostrarUltimasUnidades(productoEditando.mostrar_ultimas_unidades || false);
+      setPermiteCuotas(productoEditando.permite_cuotas ?? true); // <-- Carga valor existente
       setImagenFile(null);
       setIsOpen(true); // Abre el acordeón automáticamente si se va a editar
     } else {
@@ -62,6 +64,7 @@ export default function FormularioProducto({
     setCategoria("");
     setImagenUrl("");
     setMostrarUltimasUnidades(false);
+    setPermiteCuotas(true);
     setImagenFile(null);
   };
 
@@ -114,6 +117,7 @@ export default function FormularioProducto({
       categoria: categoria || "General",
       imagen_url: finalImagenUrl || null,
       mostrar_ultimas_unidades: mostrarUltimasUnidades,
+      permite_cuotas: permiteCuotas, // <-- Propiedad agregada al payload
     };
 
     let error;
@@ -289,6 +293,20 @@ export default function FormularioProducto({
             />
             <label htmlFor="mostrarUltimasUnidades" className="cursor-pointer text-xs font-medium text-[#12151B]">
               🔥 Mostrar distintivo <span className="font-bold text-[#D97706]">"¡Últimas unidades!"</span> en la tarjeta del producto
+            </label>
+          </div>
+
+          {/* Opciones de Cuotas / Financiación */}
+          <div className="sm:col-span-2 flex items-center gap-3 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3">
+            <input
+              type="checkbox"
+              id="permiteCuotas"
+              checked={permiteCuotas}
+              onChange={(e) => setPermiteCuotas(e.target.checked)}
+              className="h-4 w-4 cursor-pointer rounded accent-[#0E6E55]"
+            />
+            <label htmlFor="permiteCuotas" className="cursor-pointer text-xs font-medium text-[#12151B]">
+              💳 Permitir financiación en <span className="font-bold text-[#0E6E55]">cuotas</span> para este producto
             </label>
           </div>
 
