@@ -128,8 +128,8 @@ export default function ListaProductos({
 
                       {/* Badge con las cuotas calculadas */}
                       <span className="w-fit rounded-md border border-purple-200 bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
-                        3 cuotas sin interés de ${calcularCuotas(p.precio).montoCuota.toLocaleString("es-AR")}
-                      </span>
+                      3 cuotas sin interés de ${calcularCuotas(p.precio).montoCuota.toLocaleString("es-AR")}
+                     </span>
                     </div>
 
                     {/* Stock + Botón Restock */}

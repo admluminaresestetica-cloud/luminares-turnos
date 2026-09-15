@@ -1,19 +1,10 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import { useCarrito } from "@/context/CarritoContext";
-import { useConfig } from "@/context/ConfigContext";
-import { createClient } from "@supabase/supabase-js";
-
-import CarritoItem from "./carrito/CarritoItem";
+import { supabase } from "@/lib/supabase";
+import { X, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import FormularioEnvio from "./carrito/FormularioEnvio";
-import ModalExito from "./carrito/ModalExito";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-);
 
 interface CarritoDrawerProps {
   isOpen: boolean;
@@ -21,118 +12,88 @@ interface CarritoDrawerProps {
 }
 
 export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
-  const { config } = useConfig();
-  const { carrito, agregarAlCarrito, restarUnidad, eliminarDelCarrito, vaciarCarrito } = useCarrito();
-  const searchParams = useSearchParams();
+  const {
+    carrito,
+    datosEnvio,
+    setDatosEnvio,
+    agregarAlCarrito,
+    restarDelCarrito,
+    eliminarDelCarrito,
+    vaciarCarrito,
+  } = useCarrito();
+
+  // Estados del formulario y flujo de compra
+  const [paso, setPaso] = useState<"carrito" | "checkout">("carrito");
+  const [cargandoMP, setCargandoMP] = useState(false);
+  const [metodoPago, setMetodoPago] = useState<
+    "whatsapp" | "mercadopago_debito" | "mercadopago_cuotas"
+  >("whatsapp");
+
+  // Configuración de cuotas desde DB / Configuración
+  const [cuotasHabilitadas, setCuotasHabilitadas] = useState(true);
+  const [montoMinimoCuotas, setMontoMinimoCuotas] = useState(0);
+  const [costoEnvioFijo, setCostoEnvioFijo] = useState(0);
+
+  useEffect(() => {
+    const obtenerConfiguracion = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("configuracion")
+          .select("clave, valor");
+
+        if (data && !error) {
+          data.forEach((item) => {
+            if (item.clave === "cuotas_habilitadas") {
+              setCuotasHabilitadas(item.valor === "true" || item.valor === true);
+            }
+            if (item.clave === "cuotas_monto_minimo") {
+              setMontoMinimoCuotas(Number(item.valor) || 0);
+            }
+            if (item.clave === "costo_envio") {
+              setCostoEnvioFijo(Number(item.valor) || 0);
+            }
+          });
+        }
+      } catch (err) {
+        console.error("Error al obtener configuración:", err);
+      }
+    };
+
+    obtenerConfiguracion();
+  }, []);
 
   const carritoSeguro = Array.isArray(carrito) ? carrito : [];
-
-  const montoEnvioGratis = Number((config as any)?.monto_envio_gratis) || 40000;
-  const costoEnvioBase = Number((config as any)?.costo_envio_base) || 0;
-  const envioDomicilioActivo = (config as any)?.envio_domicilio_activo ?? true;
-  const envioGratisActivo = (config as any)?.envio_gratis_activo ?? true;
-
-  const cuotasHabilitadas = (config as any)?.cuotas_habilitadas ?? true;
-  const montoMinimoCuotas = Number((config as any)?.monto_minimo_cuotas) || 0;
-
-  const rawNumber = config?.whatsapp_numero || "5493413954355";
-  const telefonoWhatsApp = rawNumber.replace(/[^0-9]/g, "");
-
-  const [guardandoPedido, setGuardandoPedido] = useState(false);
-  const [mostrarModalExito, setMostrarModalExito] = useState(false);
-
-  useEffect(() => {
-    if (!searchParams) return;
-    const status = searchParams.get("status");
-    if (status === "success") {
-      setMostrarModalExito(true);
-      if (typeof window !== "undefined") {
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-  }, [searchParams]);
-
-  const [metodoPago, setMetodoPago] = useState<"whatsapp" | "mercadopago">("whatsapp");
-
-  const [datosEnvio, setDatosEnvio] = useState({
-    nombreCliente: "",
-    telefonoCliente: "",
-    metodoEnvio: (envioDomicilioActivo ? "envio" : "retiro") as "retiro" | "envio",
-    direccion: "",
-    notaAdicional: "",
-  });
-
-  useEffect(() => {
-    if (!envioDomicilioActivo && datosEnvio.metodoEnvio === "envio") {
-      setDatosEnvio((prev) => ({ ...prev, metodoEnvio: "retiro", direccion: "" }));
-    }
-  }, [envioDomicilioActivo, datosEnvio.metodoEnvio]);
-
-  // Bloquea el scroll del body
-  useEffect(() => {
-    if (!isOpen || typeof window === "undefined") return;
-
-    const scrollYPrevio = window.scrollY;
-    const bodyStyle = document.body.style;
-
-    bodyStyle.position = "fixed";
-    bodyStyle.top = `-${scrollYPrevio}px`;
-    bodyStyle.left = "0";
-    bodyStyle.right = "0";
-    bodyStyle.width = "100%";
-    bodyStyle.overscrollBehaviorY = "contain";
-
-    return () => {
-      bodyStyle.position = "";
-      bodyStyle.top = "";
-      bodyStyle.left = "";
-      bodyStyle.right = "";
-      bodyStyle.width = "";
-      bodyStyle.overscrollBehaviorY = "";
-      window.scrollTo(0, scrollYPrevio);
-    };
-  }, [isOpen]);
-
-  if (!isOpen && !mostrarModalExito) return null;
-
   const subtotalProductos = carritoSeguro.reduce(
-    (acc, item) => acc + (Number(item?.precio) || 0) * (Number(item?.cantidad) || 1),
+    (acc, item) => acc + (Number(item.precio) || 0) * (item.cantidad || 1),
     0
   );
 
-  const productoNoAptoCuotas = carritoSeguro.find((item: any) => item?.permite_cuotas === false);
-  const alcanzaMontoMinimoCuotas = subtotalProductos >= montoMinimoCuotas;
-  const aptoParaCuotas = cuotasHabilitadas && alcanzaMontoMinimoCuotas && !productoNoAptoCuotas;
-
-  const tieneEnvioGratis = envioGratisActivo && subtotalProductos >= montoEnvioGratis;
-  const faltaParaEnvioGratis = Math.max(0, montoEnvioGratis - subtotalProductos);
-  const porcentajeProgreso = montoEnvioGratis > 0 
-    ? Math.min(100, (subtotalProductos / montoEnvioGratis) * 100) 
-    : 100;
-
   const costoEnvioAplicado =
-    datosEnvio.metodoEnvio === "envio" && !tieneEnvioGratis ? costoEnvioBase : 0;
+    datosEnvio.metodoEnvio === "envio" ? costoEnvioFijo : 0;
 
+  // Evaluación de cuotas sin interés
+  const productoNoAptoCuotas = carritoSeguro.find(
+    (item) => item.permite_cuotas === false
+  );
+  const alcanzaMontoMinimoCuotas = subtotalProductos >= montoMinimoCuotas;
+  const aptoParaCuotas =
+    cuotasHabilitadas && !productoNoAptoCuotas && alcanzaMontoMinimoCuotas;
+
+  // Cálculos de recargos y totales
   const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
+  const PORCENTAJE_RECARGO = 0.1;
+  const esMercadoPago = metodoPago !== "whatsapp";
+  const esCuotasElegido = metodoPago === "mercadopago_cuotas";
 
-  const PORCENTAJE_RECARGO = 0.10;
-  const totalConRecargo = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_RECARGO));
+  const recargoMonto = esMercadoPago
+    ? Math.round(totalBaseConEnvio * PORCENTAJE_RECARGO)
+    : 0;
+  const totalFinalAbonar = totalBaseConEnvio + recargoMonto;
 
-  const totalFinalAbonar = metodoPago === "mercadopago" ? totalConRecargo : totalBaseConEnvio;
-
-  const validarFormulario = () => {
-    if (!datosEnvio.nombreCliente.trim()) {
-      alert("Por favor, ingresá tu nombre para continuar.");
-      return false;
-    }
-    if (datosEnvio.metodoEnvio === "envio" && !datosEnvio.direccion.trim()) {
-      alert("Por favor, ingresá tu dirección de envío.");
-      return false;
-    }
-    return true;
-  };
-
-  const guardarPedidoEnDB = async (montoFinal: number, medioPagoStr: string) => {
+  const guardarPedidoEnDB = async (
+    montoFinal: number,
+    medioPagoStr: string
+  ) => {
     try {
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
@@ -141,10 +102,17 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             nombre_cliente: datosEnvio.nombreCliente.trim(),
             telefono_cliente: datosEnvio.telefonoCliente.trim() || null,
             metodo_envio: datosEnvio.metodoEnvio,
+            metodo_pago: medioPagoStr,
+            es_cuotas: esCuotasElegido,
+            recargo_monto: recargoMonto,
             total: montoFinal,
             estado: "pendiente",
-            direccion: datosEnvio.metodoEnvio === "envio" ? datosEnvio.direccion.trim() : null,
-            nota_adicional: `${datosEnvio.notaAdicional.trim()} [Pago: ${medioPagoStr}]`.trim(),
+            direccion:
+              datosEnvio.metodoEnvio === "envio"
+                ? datosEnvio.direccion.trim()
+                : null,
+            nota_adicional:
+              `${datosEnvio.notaAdicional.trim()} [Pago: ${medioPagoStr}]`.trim(),
           },
         ])
         .select();
@@ -169,97 +137,118 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   };
 
   const procesarWhatsApp = async () => {
-    if (!validarFormulario()) return;
+    await guardarPedidoEnDB(totalFinalAbonar, "Transferencia / Efectivo");
 
-    setGuardandoPedido(true);
-    await guardarPedidoEnDB(totalBaseConEnvio, "WhatsApp / Transferencia");
-
-    let mensaje = `*¡Hola! Quiero realizar el siguiente pedido:*\n\n`;
-    mensaje += `*Cliente:* ${datosEnvio.nombreCliente}\n`;
-    if (datosEnvio.telefonoCliente) mensaje += `*Teléfono:* ${datosEnvio.telefonoCliente}\n`;
-    mensaje += `*Método:* ${datosEnvio.metodoEnvio === "envio" ? "Envío a domicilio" : "Retiro en local"}\n`;
-
-    if (datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion) {
-      mensaje += `*Dirección:* ${datosEnvio.direccion}\n`;
+    let mensaje = `¡Hola! Quisiera realizar el siguiente pedido:\n\n`;
+    mensaje += `👤 *Cliente:* ${datosEnvio.nombreCliente.trim()}\n`;
+    if (datosEnvio.telefonoCliente) {
+      mensaje += `📞 *Teléfono:* ${datosEnvio.telefonoCliente.trim()}\n`;
     }
+    mensaje += `🚚 *Método de entrega:* ${
+      datosEnvio.metodoEnvio === "envio"
+        ? `Envío a domicilio (${datosEnvio.direccion.trim()})`
+        : "Retiro en local"
+    }\n`;
+    mensaje += `💳 *Método de Pago:* Transferencia / Efectivo\n\n`;
+    mensaje += `📋 *Detalle del pedido:*\n`;
 
-    if (datosEnvio.notaAdicional) mensaje += `*Nota:* ${datosEnvio.notaAdicional}\n`;
-
-    mensaje += `\n*Detalle del pedido:*\n`;
     carritoSeguro.forEach((item) => {
-      const precioUnitario = Number(item.precio) || 0;
-      mensaje += `- ${item.cantidad}x ${item.nombre} ($${precioUnitario * item.cantidad})\n`;
+      mensaje += `• ${item.nombre} x${item.cantidad} - $${(
+        (Number(item.precio) || 0) * item.cantidad
+      ).toLocaleString("es-AR")}\n`;
     });
 
     if (costoEnvioAplicado > 0) {
-      mensaje += `- Cadetería / Envío: $${costoEnvioAplicado}\n`;
+      mensaje += `• Costo de envío: $${costoEnvioAplicado.toLocaleString(
+        "es-AR"
+      )}\n`;
     }
 
-    mensaje += `\n*Total a pagar (Transferencia / Efectivo):* $${totalBaseConEnvio}\n\n`;
-    mensaje += `Quedo a la espera del alias para realizar la transferencia.`;
+    mensaje += `\n💰 *Total a abonar:* $${totalFinalAbonar.toLocaleString(
+      "es-AR"
+    )}\n`;
 
-    const url = `https://wa.me/${telefonoWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, "_blank");
+    if (datosEnvio.notaAdicional.trim()) {
+      mensaje += `\n📝 *Nota:* ${datosEnvio.notaAdicional.trim()}\n`;
+    }
 
+    const whatsappUrl = `https://wa.me/5493416410291?text=${encodeURIComponent(
+      mensaje
+    )}`;
     vaciarCarrito();
-    setGuardandoPedido(false);
     onClose();
-    setMostrarModalExito(true);
+    window.open(whatsappUrl, "_blank");
   };
 
   const procesarMercadoPago = async () => {
-    if (!validarFormulario()) return;
-
-    setGuardandoPedido(true);
-    await guardarPedidoEnDB(totalConRecargo, "Mercado Pago");
-
+    setCargandoMP(true);
     try {
-      const itemsEnvio = costoEnvioAplicado > 0 ? [{
-        id: "envio-cadeteria",
-        nombre: "Costo de Cadetería / Envío",
-        precio: costoEnvioAplicado,
-        cantidad: 1,
-      }] : [];
+      const medioPagoTexto = esCuotasElegido
+        ? "Mercado Pago (3 Cuotas)"
+        : "Mercado Pago (Débito/Contado)";
 
-      const response = await fetch("/api/checkout", {
+      await guardarPedidoEnDB(totalFinalAbonar, medioPagoTexto);
+
+      const itemsMP = carritoSeguro.map((item) => ({
+        title: item.nombre,
+        unit_price: Number(item.precio) || 0,
+        quantity: item.cantidad,
+        currency_id: "ARS",
+      }));
+
+      if (costoEnvioAplicado > 0) {
+        itemsMP.push({
+          title: "Costo de envío",
+          unit_price: costoEnvioAplicado,
+          quantity: 1,
+          currency_id: "ARS",
+        });
+      }
+
+      if (recargoMonto > 0) {
+        itemsMP.push({
+          title: "Recargo gestión Mercado Pago (+10%)",
+          unit_price: recargoMonto,
+          quantity: 1,
+          currency_id: "ARS",
+        });
+      }
+
+      const response = await fetch("/api/mercadopago/crear-preferencia", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          itemsCarrito: [
-            ...carritoSeguro.map((item) => ({
-              id: item.id,
-              nombre: item.nombre,
-              precio: Number(item.precio) || 0,
-              cantidad: item.cantidad,
-            })),
-            ...itemsEnvio,
-          ],
-          cliente: {
-            nombre: datosEnvio.nombreCliente.trim(),
-            telefono: datosEnvio.telefonoCliente.trim(),
-            direccion: datosEnvio.direccion.trim(),
-            metodoEnvio: datosEnvio.metodoEnvio,
-            nota: datosEnvio.notaAdicional.trim(),
+          items: itemsMP,
+          payer: {
+            name: datosEnvio.nombreCliente.trim(),
+            phone: datosEnvio.telefonoCliente.trim(),
+          },
+          metadata: {
+            metodo_envio: datosEnvio.metodoEnvio,
+            direccion: datosEnvio.direccion,
+            es_cuotas: esCuotasElegido,
           },
         }),
       });
 
       const data = await response.json();
-
       if (data.init_point) {
         vaciarCarrito();
-        window.location.href = data.mobile_search_url || data.init_point;
+        onClose();
+        window.location.href = data.init_point;
       } else {
-        alert("Error del servidor: " + (data.error || "Desconocido"));
+        alert("Ocurrió un error al generar el pago con Mercado Pago.");
       }
-    } catch (error: any) {
-      alert("Error en la solicitud: " + error.message);
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión al procesar el pago.");
     } finally {
-      setGuardandoPedido(false);
+      setCargandoMP(false);
     }
   };
 
-  const manejarSubmit = () => {
+  const manejarSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (metodoPago === "whatsapp") {
       procesarWhatsApp();
     } else {
@@ -267,178 +256,269 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <>
-      <ModalExito
-        mostrar={mostrarModalExito}
-        onAceptar={() => setMostrarModalExito(false)}
-      />
+    <div className="fixed inset-0 z-50 overflow-hidden bg-black/50 backdrop-blur-sm transition-opacity">
+      <div className="absolute inset-y-0 right-0 flex max-w-full pl-10">
+        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#E7E5E0]">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5 text-[#0E6E55]" />
+              {paso === "carrito" ? "Tu Carrito" : "Finalizar Compra"}
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-stretch justify-center sm:justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out] overscroll-none">
-          <div
-            className="flex w-full sm:max-w-[420px] flex-col justify-between overflow-y-auto overscroll-contain bg-white shadow-2xl rounded-t-3xl sm:rounded-none max-h-[92vh] sm:h-full sm:max-h-full animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)] sm:animate-[slideIn_0.28s_cubic-bezier(0.16,1,0.3,1)]"
-            style={{ overscrollBehaviorY: "contain" }}
-          >
-            {/* Handle del Bottom Sheet */}
-            <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0 sticky top-0 z-10 bg-white">
-              <span className="h-1.5 w-12 rounded-full bg-[#E7E5E0]" />
-            </div>
-
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E5E0] bg-white/95 px-5 py-4 shadow-sm backdrop-blur-sm">
-              <h2 className="text-lg font-bold tracking-tight text-[#12151B]">
-                Tu Carrito
-                {carritoSeguro.length > 0 && (
-                  <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#12151B] px-1.5 text-xs font-semibold text-white">
-                    {carritoSeguro.length}
-                  </span>
-                )}
-              </h2>
-              <button
-                onClick={onClose}
-                aria-label="Cerrar carrito"
-                className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-all hover:bg-[#F7F7F5] hover:text-[#12151B] active:scale-90"
-              >
-                <span className="text-lg leading-none">✕</span>
-              </button>
-            </div>
-
-            {/* Barra de Envío Gratis */}
-            {carritoSeguro.length > 0 && envioDomicilioActivo && envioGratisActivo && (
-              <div className="border-b border-[#E7E5E0] bg-[#0E6E55]/5 px-5 py-3">
-                <div className="flex items-center justify-between text-xs font-semibold text-[#12151B] mb-1.5">
-                  {tieneEnvioGratis ? (
-                    <span className="text-[#0E6E55] font-bold flex items-center gap-1">
-                      ¡Genial! Tenés ENVÍO GRATIS
-                    </span>
-                  ) : (
-                    <span>
-                      Te faltan <strong className="text-[#0E6E55]">${faltaParaEnvioGratis.toLocaleString("es-AR")}</strong> para <strong>ENVÍO GRATIS</strong>
-                    </span>
-                  )}
-                  <span className="text-[10px] text-gray-500 font-bold">{Math.round(porcentajeProgreso)}%</span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-[#E7E5E0]">
+          {/* Contenido principal */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {carritoSeguro.length === 0 ? (
+              <div className="text-center py-12 space-y-4">
+                <ShoppingBag className="w-16 h-16 mx-auto text-gray-300" />
+                <p className="text-gray-500 font-medium">El carrito está vacío</p>
+              </div>
+            ) : paso === "carrito" ? (
+              <div className="space-y-4">
+                {carritoSeguro.map((item) => (
                   <div
-                    className="h-full bg-[#0E6E55] transition-all duration-500 ease-out rounded-full"
-                    style={{ width: `${porcentajeProgreso}%` }}
-                  />
+                    key={item.id}
+                    className="flex items-center justify-between p-3 border border-[#E7E5E0] rounded-xl bg-gray-50/50"
+                  >
+                    <div className="flex-1 min-w-0 pr-3">
+                      <h3 className="text-sm font-semibold text-gray-900 truncate">
+                        {item.nombre}
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        ${(Number(item.precio) || 0).toLocaleString("es-AR")} c/u
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center border border-gray-300 rounded-lg bg-white">
+                        <button
+                          onClick={() => restarDelCarrito(item.id)}
+                          className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg text-xs"
+                        >
+                          -
+                        </button>
+                        <span className="px-2 text-xs font-bold text-gray-800">
+                          {item.cantidad}
+                        </span>
+                        <button
+                          onClick={() => agregarAlCarrito(item)}
+                          className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-r-lg text-xs"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => eliminarDelCarrito(item.id)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Paso Checkout */
+              <form id="checkout-form" onSubmit={manejarSubmit} className="space-y-5">
+                <FormularioEnvio
+                datosEnvio={datosEnvio}
+                setDatosEnvio={setDatosEnvio}
+                costoEnvio={costoEnvioFijo}
+                metodoPago={metodoPago === "whatsapp" ? "whatsapp" : "mercadopago"}
+                totalPrecio={subtotalProductos}
+                tieneEnvioGratis={false}
+                guardandoPedido={cargandoMP}
+                onConfirmar={() => {
+                if (metodoPago === "whatsapp") {
+                procesarWhatsApp();
+                } else {
+                procesarMercadoPago();
+                 }
+                }}
+                /> 
+
+                {/* Selección de Método de Pago */}
+                <div className="space-y-2 pt-2">
+                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                    Seleccionar Método de Pago:
+                  </label>
+
+                  {/* Opción 1: WhatsApp */}
+                  <button
+                    type="button"
+                    onClick={() => setMetodoPago("whatsapp")}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left text-xs font-semibold transition-all active:scale-[0.98] ${
+                      metodoPago === "whatsapp"
+                        ? "border-[#0E6E55] bg-[#0E6E55]/10 text-[#0E6E55] shadow-sm"
+                        : "border-[#E7E5E0] bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div>
+                      <div className="font-bold text-sm">💬 Transferencia / Efectivo</div>
+                      <div className="text-[11px] font-normal text-gray-500">
+                        Sin recargos adicionales
+                      </div>
+                    </div>
+                    <span className="font-bold text-[#0E6E55] text-sm">
+                      ${totalBaseConEnvio.toLocaleString("es-AR")}
+                    </span>
+                  </button>
+
+                  {/* Opción 2: Mercado Pago Débito */}
+                  <button
+                    type="button"
+                    onClick={() => setMetodoPago("mercadopago_debito")}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left text-xs font-semibold transition-all active:scale-[0.98] ${
+                      metodoPago === "mercadopago_debito"
+                        ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
+                        : "border-[#E7E5E0] bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div>
+                      <div className="font-bold text-sm">
+                        💳 Mercado Pago (Débito / 1 Pago)
+                      </div>
+                      <div className="text-[11px] font-normal text-gray-500">
+                        Tarjeta de débito o saldo MP (+10%)
+                      </div>
+                    </div>
+                    <span className="font-bold text-blue-700 text-sm">
+                      ${Math.round(totalBaseConEnvio * 1.1).toLocaleString("es-AR")}
+                    </span>
+                  </button>
+
+                  {/* Opción 3: 3 Cuotas sin interés */}
+                  <button
+                    type="button"
+                    disabled={!aptoParaCuotas}
+                    onClick={() => aptoParaCuotas && setMetodoPago("mercadopago_cuotas")}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left text-xs font-semibold transition-all ${
+                      !aptoParaCuotas
+                        ? "border-gray-200 bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed"
+                        : metodoPago === "mercadopago_cuotas"
+                        ? "border-purple-600 bg-purple-50 text-purple-700 shadow-sm active:scale-[0.98]"
+                        : "border-[#E7E5E0] bg-white text-gray-700 hover:bg-gray-50 active:scale-[0.98]"
+                    }`}
+                  >
+                    <div>
+                      <div className="font-bold text-sm flex items-center gap-1.5">
+                        ✨ 3 Cuotas Sin Interés
+                        {!aptoParaCuotas && (
+                          <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-normal">
+                            No disponible
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] font-normal text-gray-500">
+                        3 pagos de $
+                        {Math.round(
+                          (totalBaseConEnvio * 1.1) / 3
+                        ).toLocaleString("es-AR")}{" "}
+                        (+10%)
+                      </div>
+                    </div>
+                    <span className="font-bold text-purple-700 text-sm">
+                      ${Math.round(totalBaseConEnvio * 1.1).toLocaleString("es-AR")}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Avisos de cuotas */}
+                <div className="mt-2 text-[11px] space-y-1">
+                  {productoNoAptoCuotas ? (
+                    <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
+                      ⚠️ El producto <strong>{productoNoAptoCuotas.nombre}</strong> solo
+                      se abona al contado/débito. No aplica financiación en cuotas.
+                    </div>
+                  ) : !alcanzaMontoMinimoCuotas && cuotasHabilitadas ? (
+                    <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-800">
+                      ℹ️ Sumá{" "}
+                      <strong>
+                        $
+                        {(
+                          montoMinimoCuotas - subtotalProductos
+                        ).toLocaleString("es-AR")}
+                      </strong>{" "}
+                      más para habilitar el pago en 3 cuotas.
+                    </div>
+                  ) : null}
+                </div>
+              </form>
+            )}
+          </div>
+
+          {/* Footer */}
+          {carritoSeguro.length > 0 && (
+            <div className="p-6 border-t border-[#E7E5E0] bg-gray-50 space-y-4">
+              <div className="space-y-1.5 text-xs text-gray-600">
+                <div className="flex justify-between">
+                  <span>Subtotal productos:</span>
+                  <span>${subtotalProductos.toLocaleString("es-AR")}</span>
+                </div>
+                {datosEnvio.metodoEnvio === "envio" && (
+                  <div className="flex justify-between">
+                    <span>Costo de envío:</span>
+                    <span>${costoEnvioAplicado.toLocaleString("es-AR")}</span>
+                  </div>
+                )}
+                {esMercadoPago && (
+                  <div className="flex justify-between text-blue-600 font-medium">
+                    <span>Recargo Mercado Pago (+10%):</span>
+                    <span>${recargoMonto.toLocaleString("es-AR")}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
+                  <span>Total final:</span>
+                  <span>${totalFinalAbonar.toLocaleString("es-AR")}</span>
                 </div>
               </div>
-            )}
 
-            {/* Lista de Productos */}
-            <div className="flex-1 px-5 py-4">
-              {carritoSeguro.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#F7F7F5] text-4xl">
-                    🛒
-                  </div>
-                  <p className="text-sm font-medium text-gray-500">Tu carrito está vacío</p>
-                </div>
+              {paso === "carrito" ? (
+                <button
+                  onClick={() => setPaso("checkout")}
+                  className="w-full bg-[#0E6E55] hover:bg-[#0b5643] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                >
+                  Continuar compra
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               ) : (
-                <div className="flex flex-col gap-3">
-                  {carritoSeguro.map((item) => (
-                    <CarritoItem
-                      key={item.id}
-                      item={item}
-                      onRestar={restarUnidad}
-                      onAgregar={agregarAlCarrito}
-                      onEliminar={eliminarDelCarrito}
-                    />
-                  ))}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaso("carrito")}
+                    className="w-1/3 border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold text-xs transition-colors"
+                  >
+                    Volver
+                  </button>
+                  <button
+                    form="checkout-form"
+                    type="submit"
+                    disabled={cargandoMP}
+                    className="w-2/3 bg-[#0E6E55] hover:bg-[#0b5643] text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-50"
+                  >
+                    {cargandoMP
+                      ? "Procesando..."
+                      : metodoPago === "whatsapp"
+                      ? "Pedir por WhatsApp"
+                      : "Pagar con Mercado Pago"}
+                  </button>
                 </div>
               )}
             </div>
-
-            {carritoSeguro.length > 0 && (
-              <div className="px-5 pb-5 space-y-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-                <div className="rounded-2xl border border-[#E7E5E0] p-3 bg-slate-50/60 space-y-2">
-                  <label className="text-xs font-bold text-[#12151B] uppercase tracking-wider block">
-                    Método de Pago
-                  </label>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setMetodoPago("whatsapp")}
-                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 ${
-                        metodoPago === "whatsapp"
-                          ? "border-[#0E6E55] bg-[#0E6E55]/10 text-[#0E6E55] shadow-sm"
-                          : "border-[#E7E5E0] bg-white text-gray-600 hover:bg-gray-100"
-                      }`}
-                    >
-                      <span>💬 WhatsApp</span>
-                      <span className="text-[10px] font-normal text-gray-500">Transferencia / Alias</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setMetodoPago("mercadopago")}
-                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 ${
-                        metodoPago === "mercadopago"
-                          ? "border-blue-600 bg-blue-50 text-blue-600 shadow-sm"
-                          : "border-[#E7E5E0] bg-white text-gray-600 hover:bg-gray-100"
-                      }`}
-                    >
-                      <span>💳 Mercado Pago</span>
-                      <span className="text-[10px] font-normal text-gray-500">
-                        {aptoParaCuotas ? "Tarjetas / 3 Cuotas (+10%)" : "Tarjetas / Débito (+10%)"}
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* Avisos de Cuotas */}
-                  {metodoPago === "mercadopago" && (
-                    <div className="mt-2 text-[11px] space-y-1">
-                      {productoNoAptoCuotas ? (
-                        <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
-                          ⚠️ El producto <strong>{productoNoAptoCuotas.nombre}</strong> solo se abona al contado/débito. No aplica financiación en cuotas.
-                        </div>
-                      ) : !alcanzaMontoMinimoCuotas && cuotasHabilitadas ? (
-                        <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-800">
-                          ℹ️ Sumá <strong>${(montoMinimoCuotas - subtotalProductos).toLocaleString("es-AR")}</strong> más para habilitar el pago en 3 cuotas.
-                        </div>
-                      ) : aptoParaCuotas ? (
-                        <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-medium">
-                          ✨ ¡Tu compra aplica para abonar en 3 cuotas sin interés!
-                        </div>
-                      ) : null}
-                    </div>
-                  )}
-                </div>
-
-                <FormularioEnvio
-                  totalPrecio={totalFinalAbonar}
-                  costoEnvio={costoEnvioBase}
-                  tieneEnvioGratis={tieneEnvioGratis}
-                  datosEnvio={datosEnvio}
-                  setDatosEnvio={setDatosEnvio}
-                  guardandoPedido={guardandoPedido}
-                  metodoPago={metodoPago}
-                  onConfirmar={manejarSubmit}
-                  envioDomicilioActivo={envioDomicilioActivo}
-                />
-              </div>
-            )}
-          </div>
+          )}
         </div>
-      )}
-
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideIn {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-        @keyframes slideUp {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
-        }
-      `}</style>
-    </>
+      </div>
+    </div>
   );
 }
