@@ -60,6 +60,34 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     }
   }, [envioDomicilioActivo, datosEnvio.metodoEnvio]);
 
+  // Bloquea el scroll del body mientras el drawer/bottom sheet está abierto.
+  // Evita que el swipe hacia abajo, al llegar al tope del scroll interno,
+  // se propague al body y dispare el "pull to refresh" del navegador
+  // (Chrome/Android, Safari/iOS).
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const scrollYPrevio = window.scrollY;
+    const bodyStyle = document.body.style;
+
+    bodyStyle.position = "fixed";
+    bodyStyle.top = `-${scrollYPrevio}px`;
+    bodyStyle.left = "0";
+    bodyStyle.right = "0";
+    bodyStyle.width = "100%";
+    bodyStyle.overscrollBehaviorY = "contain";
+
+    return () => {
+      bodyStyle.position = "";
+      bodyStyle.top = "";
+      bodyStyle.left = "";
+      bodyStyle.right = "";
+      bodyStyle.width = "";
+      bodyStyle.overscrollBehaviorY = "";
+      window.scrollTo(0, scrollYPrevio);
+    };
+  }, [isOpen]);
+
   if (!isOpen && !mostrarModalExito) return null;
 
   const subtotalProductos = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
@@ -232,8 +260,11 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       />
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-stretch justify-center sm:justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out]">
-          <div className="flex w-full sm:max-w-[420px] flex-col justify-between overflow-y-auto bg-white shadow-2xl rounded-t-3xl sm:rounded-none max-h-[92vh] sm:h-full sm:max-h-full animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)] sm:animate-[slideIn_0.28s_cubic-bezier(0.16,1,0.3,1)]">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-stretch justify-center sm:justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out] overscroll-none">
+          <div
+            className="flex w-full sm:max-w-[420px] flex-col justify-between overflow-y-auto overscroll-contain bg-white shadow-2xl rounded-t-3xl sm:rounded-none max-h-[92vh] sm:h-full sm:max-h-full animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)] sm:animate-[slideIn_0.28s_cubic-bezier(0.16,1,0.3,1)]"
+            style={{ overscrollBehaviorY: "contain" }}
+          >
 
             {/* Handle del Bottom Sheet (solo mobile) */}
             <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0 sticky top-0 z-10 bg-white">
