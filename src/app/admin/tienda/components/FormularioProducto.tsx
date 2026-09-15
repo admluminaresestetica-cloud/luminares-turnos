@@ -45,7 +45,7 @@ export default function FormularioProducto({
       setCategoria(productoEditando.categoria || "");
       setImagenUrl(productoEditando.imagen_url || "");
       setMostrarUltimasUnidades(productoEditando.mostrar_ultimas_unidades || false);
-      setPermiteCuotas(productoEditando.permite_cuotas ?? true); // <-- Carga valor existente
+      setPermiteCuotas(productoEditando.permite_cuotas !== false); // <-- Carga valor existente
       setImagenFile(null);
       setIsOpen(true); // Abre el acordeón automáticamente si se va a editar
     } else {
