@@ -4,6 +4,7 @@
 import React from "react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
+import { calcularCuotas } from "@/lib/precios";
 import { Plus, Minus, Flame, ShoppingCart, Truck } from "lucide-react";
 
 interface TarjetaProductoProps {
@@ -57,6 +58,10 @@ export default function TarjetaProducto({
   const precioOriginalFormateado = tieneOferta
     ? new Intl.NumberFormat("es-AR").format(precioBaseNum)
     : null;
+
+  // Cálculo de cuotas sin interés
+  const { montoCuota } = calcularCuotas(producto.precio || 0);
+  const cuotaFormateada = new Intl.NumberFormat("es-AR").format(montoCuota);
 
   const handleRestar = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -137,7 +142,7 @@ export default function TarjetaProducto({
           </h3>
         </div>
 
-        {/* Precios y Stock */}
+        {/* Precios, Cuotas y Stock */}
         <div className="mt-2 mb-2">
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-base sm:text-lg font-extrabold text-[#12151B] tracking-tight">
@@ -149,7 +154,17 @@ export default function TarjetaProducto({
               </span>
             )}
           </div>
-          <p className="text-[10px] text-[#A6A29B] mt-0.5">
+
+          {/* Badge de 3 cuotas sin interés */}
+          {!sinStock && (
+            <div className="mt-1">
+              <span className="inline-block rounded-md border border-purple-200 bg-purple-50 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700">
+                💳 3 cuotas sin interés de ${cuotaFormateada}
+              </span>
+            </div>
+          )}
+
+          <p className="text-[10px] text-[#A6A29B] mt-1">
             Stock: {producto.stock}
           </p>
         </div>
