@@ -65,6 +65,34 @@ export default function ModalDetalleProducto({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [producto, onClose]);
 
+  // Bloquea el scroll del body mientras el modal está abierto.
+  // Esto evita que, al llegar al tope del scroll interno del bottom sheet,
+  // el swipe hacia abajo se propague al body y dispare el "pull to refresh"
+  // del navegador (Chrome/Android, Safari/iOS).
+  useEffect(() => {
+    if (!producto) return;
+
+    const scrollYPrevio = window.scrollY;
+    const bodyStyle = document.body.style;
+
+    bodyStyle.position = "fixed";
+    bodyStyle.top = `-${scrollYPrevio}px`;
+    bodyStyle.left = "0";
+    bodyStyle.right = "0";
+    bodyStyle.width = "100%";
+    bodyStyle.overscrollBehaviorY = "contain";
+
+    return () => {
+      bodyStyle.position = "";
+      bodyStyle.top = "";
+      bodyStyle.left = "";
+      bodyStyle.right = "";
+      bodyStyle.width = "";
+      bodyStyle.overscrollBehaviorY = "";
+      window.scrollTo(0, scrollYPrevio);
+    };
+  }, [producto]);
+
   if (!producto) return null;
 
   const precioOriginal = Number(producto.precio_original ?? producto.precio_anterior) || 0;
@@ -158,12 +186,13 @@ export default function ModalDetalleProducto({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 overscroll-none"
     >
       <div
         ref={modalContainerRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-2xl animate-[slideUp_0.3s_ease-out] sm:animate-in sm:zoom-in-95 sm:duration-200"
+        className="relative w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-2xl animate-[slideUp_0.3s_ease-out] sm:animate-in sm:zoom-in-95 sm:duration-200"
+        style={{ overscrollBehaviorY: "contain" }}
       >
         <style>{`
           @keyframes slideUp {
@@ -441,7 +470,7 @@ export default function ModalDetalleProducto({
                             title={relLimiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
                           >
                             <Plus className="h-3 w-3" />
-                          </button>
+                        </button>
                         </div>
                       )}
                     </div>
@@ -455,3 +484,4 @@ export default function ModalDetalleProducto({
     </div>
   );
 }
+                 
