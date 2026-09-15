@@ -31,12 +31,25 @@
  ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂tienda
  ┃ ┃ ┃ ┣ 📂components
+ ┃ ┃ ┃ ┃ ┣ 📂pos
+ ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalCaja.tsx
+ ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalCobro.tsx
+ ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalHistorialVentas.tsx
+ ┃ ┃ ┃ ┃ ┃ ┣ 📜PosCarrito.tsx
+ ┃ ┃ ┃ ┃ ┃ ┣ 📜PosGridProductos.tsx
+ ┃ ┃ ┃ ┃ ┃ ┣ 📜PosHeader.tsx
+ ┃ ┃ ┃ ┃ ┃ ┣ 📜PuntoVentaTab.tsx
+ ┃ ┃ ┃ ┃ ┃ ┣ 📜TicketVenta.tsx
+ ┃ ┃ ┃ ┃ ┃ ┗ 📜types.ts
  ┃ ┃ ┃ ┃ ┣ 📜BannersTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜CategoriasTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜ControlCajaTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜FormularioProducto.tsx
  ┃ ┃ ┃ ┃ ┣ 📜ListaProductos.tsx
  ┃ ┃ ┃ ┃ ┣ 📜MetricasHeader.tsx
  ┃ ┃ ┃ ┃ ┣ 📜PedidosTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜PuntoVentaTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜ScannerModal.tsx
  ┃ ┃ ┃ ┃ ┗ 📜TagsTab.tsx
  ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂turnos
