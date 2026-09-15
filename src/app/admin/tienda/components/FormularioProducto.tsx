@@ -107,18 +107,18 @@ export default function FormularioProducto({
     }
 
     const productoData = {
-      nombre,
-      descripcion,
-      precio: Number(precio),
-      precio_original: precioOriginal ? Number(precioOriginal) : null,
-      stock: stock ? Number(stock) : 0,
-      stock_minimo: stockMinimo ? Number(stockMinimo) : 5,
-      codigo_barras: codigoBarras ? codigoBarras.trim() : null,
-      categoria: categoria || "General",
-      imagen_url: finalImagenUrl || null,
-      mostrar_ultimas_unidades: mostrarUltimasUnidades,
-      permite_cuotas: permiteCuotas, // <-- Propiedad agregada al payload
-    };
+  nombre,
+  descripcion,
+  precio: Number(precio),
+  precio_original: precioOriginal ? Number(precioOriginal) : null,
+  stock: stock ? Number(stock) : 0,
+  stock_minimo: stockMinimo ? Number(stockMinimo) : 5,
+  codigo_barras: codigoBarras ? codigoBarras.trim() : null,
+  categoria: categoria || "General",
+  imagen_url: finalImagenUrl || null,
+  mostrar_ultimas_unidades: Boolean(mostrarUltimasUnidades),
+  permite_cuotas: Boolean(permiteCuotas), // <-- Aseguramos booleano estricto (true/false)
+  };
 
     let error;
 
