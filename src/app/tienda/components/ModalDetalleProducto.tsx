@@ -216,12 +216,20 @@ export default function ModalDetalleProducto({
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 overscroll-none"
     >
-      <div
+            <div
         ref={modalContainerRef}
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         className="relative w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-2xl animate-[slideUp_0.3s_ease-out] sm:animate-in sm:zoom-in-95 sm:duration-200"
-        style={{ overscrollBehaviorY: "contain" }}
+        style={{
+          overscrollBehaviorY: "contain",
+          transform: `translateY(${currentOffsetY}px)`,
+          transition: startY === null ? "transform 0.2s ease-out" : "none",
+        }}
       >
+
         <style>{`
           @keyframes slideUp {
             from { transform: translateY(100%); }
