@@ -15,25 +15,29 @@ export default function ModalHistorialVentas({
   supabase,
   onVentaAnulada,
 }: ModalHistorialVentasProps) {
+  // Función auxiliar para obtener hoy en formato YYYY-MM-DD
+  const obtenerFechaHoyLocal = () => {
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+    const dia = String(hoy.getDate()).padStart(2, "0");
+    return `${año}-${mes}-${dia}`;
+  };
+
   const [ventas, setVentas] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [busqueda, setBusqueda] = useState("");
+  const [fechaFiltro, setFechaFiltro] = useState<string>(obtenerFechaHoyLocal());
   const [ventaAAnular, setVentaAAnular] = useState<any | null>(null);
   const [motivoAnulacion, setMotivoAnulacion] = useState<"error" | "dano">("error");
   const [procesandoAnulacion, setProcesandoAnulacion] = useState(false);
 
-  // Cargar ventas del día de hoy en el POS usando la estructura JSONB
-  const cargarVentasDelDia = async () => {
+  // Cargar ventas filtradas dinámicamente por la fecha elegida
+  const cargarVentasPorFecha = async (fechaElegida: string) => {
     setLoading(true);
     try {
-      const hoy = new Date();
-      const año = hoy.getFullYear();
-      const mes = String(hoy.getMonth() + 1).padStart(2, "0");
-      const dia = String(hoy.getDate()).padStart(2, "0");
-      const fechaHoyStr = `${año}-${mes}-${dia}`;
-
-      const inicioDiaUTC = new Date(`${fechaHoyStr}T00:00:00-03:00`).toISOString();
-      const finDiaUTC = new Date(`${fechaHoyStr}T23:59:59-03:00`).toISOString();
+      const inicioDiaUTC = new Date(`${fechaElegida}T00:00:00-03:00`).toISOString();
+      const finDiaUTC = new Date(`${fechaElegida}T23:59:59-03:00`).toISOString();
 
       const { data, error } = await supabase
         .from("pedidos")
@@ -55,17 +59,18 @@ export default function ModalHistorialVentas({
       if (error) throw error;
       setVentas(data || []);
     } catch (err) {
-      console.error("Error al cargar ventas del día:", err);
+      console.error("Error al cargar ventas por fecha:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Escucha cambios en la apertura del modal o cambio de fecha
   useEffect(() => {
-    if (isOpen) {
-      cargarVentasDelDia();
+    if (isOpen && fechaFiltro) {
+      cargarVentasPorFecha(fechaFiltro);
     }
-  }, [isOpen]);
+  }, [isOpen, fechaFiltro]);
 
   if (!isOpen) return null;
 
@@ -115,7 +120,7 @@ export default function ModalHistorialVentas({
 
       alert("Venta anulada correctamente.");
       setVentaAAnular(null);
-      cargarVentasDelDia();
+      cargarVentasPorFecha(fechaFiltro);
       onVentaAnulada();
     } catch (err: any) {
       console.error("Error anulando venta:", err);
@@ -125,7 +130,7 @@ export default function ModalHistorialVentas({
     }
   };
 
-  // Filtrado por cliente o ID de pedido
+  // Filtrado adicional por texto (cliente o ID de pedido)
   const ventasFiltradas = ventas.filter((v) => {
     const term = busqueda.toLowerCase();
     const cliente = (v.cliente_nombre || v.nombre_cliente || "").toLowerCase();
@@ -144,10 +149,10 @@ export default function ModalHistorialVentas({
               <FileText className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-[#12151B]">Historial de Ventas del Día</h3>
+              <h3 className="text-base font-bold text-[#12151B]">Historial de Ventas</h3>
               <p className="text-xs font-medium text-gray-500 flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
-                {new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })}
+                Ventas del día: <span className="font-bold text-gray-700">{fechaFiltro}</span>
               </p>
             </div>
           </div>
@@ -159,9 +164,9 @@ export default function ModalHistorialVentas({
           </button>
         </div>
 
-        {/* Buscador */}
-        <div className="p-4 border-b border-gray-100 bg-white">
-          <div className="relative">
+        {/* Controles de Búsqueda y Fecha */}
+        <div className="p-4 border-b border-gray-100 bg-white flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
@@ -171,6 +176,23 @@ export default function ModalHistorialVentas({
               className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] py-2 pl-10 pr-4 text-xs font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
             />
           </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={fechaFiltro}
+              onChange={(e) => setFechaFiltro(e.target.value)}
+              className="rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] py-2 px-3 text-xs font-bold text-[#12151B] outline-none focus:border-[#0E6E55]"
+            />
+            {fechaFiltro !== obtenerFechaHoyLocal() && (
+              <button
+                onClick={() => setFechaFiltro(obtenerFechaHoyLocal())}
+                className="rounded-xl bg-gray-100 px-3 py-2 text-[11px] font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+              >
+                Hoy
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Lista de Ventas */}
@@ -179,7 +201,7 @@ export default function ModalHistorialVentas({
             <div className="py-12 text-center text-xs text-gray-400">Cargando ventas...</div>
           ) : ventasFiltradas.length === 0 ? (
             <div className="py-12 text-center text-xs text-gray-400">
-              No se registraron ventas en el turno de hoy.
+              No se registraron ventas en la fecha seleccionada ({fechaFiltro}).
             </div>
           ) : (
             ventasFiltradas.map((v) => {

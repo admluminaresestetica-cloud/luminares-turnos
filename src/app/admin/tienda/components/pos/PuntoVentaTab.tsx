@@ -318,12 +318,12 @@ export default function PuntoVentaTab({
       )}
 
       {/* Modal de Historial y Anulación de Ventas */}
-      <ModalHistorialVentas
-        isOpen={isHistorialOpen}
-        onClose={() => setIsHistorialOpen(false)}
-        supabase={supabase}
-        onVentaAnulada={onActualizarProductos}
-      />
+<ModalHistorialVentas
+  isOpen={isHistorialOpen}
+  onClose={() => setIsHistorialOpen(false)}
+  supabase={supabase}
+  onVentaAnulada={onActualizarProductos}
+/>
 
       {/* Modal de Cobro */}
       <ModalCobro
