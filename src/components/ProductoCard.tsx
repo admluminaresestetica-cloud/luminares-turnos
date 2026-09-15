@@ -13,18 +13,11 @@ interface Producto {
   categoria?: string;
   stock?: number;
   disponible?: boolean;
-  activo?: boolean; // Campo para pausar / activar
+  activo?: boolean;
+  permite_cuotas?: boolean; // Se agrega la propiedad
 }
 
 export default function ProductoCard({ producto }: { producto: Producto }) {
-  // 🔍 AGREGAR ESTA LÍNEA DE DIAGNÓSTICO:
-  console.log("Datos del producto:", producto.nombre, {
-    precio: producto.precio,
-    precio_original: producto.precio_original,
-    tipo_precio_original: typeof producto.precio_original
-  });
-
-
   const { carrito, agregarAlCarrito, restarUnidad } = useCarrito();
 
   const itemEnCarrito = carrito.find((item) => item.id === producto.id);
@@ -35,6 +28,7 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
   const estaPausado = producto.activo === false || producto.disponible === false;
   const sinStock = stockDisponible <= 0;
   const estaAgotado = sinStock || estaPausado;
+  const permiteCuotas = producto.permite_cuotas ?? true;
 
   // Límite alcanzado en el contador
   const alcanzoLimiteStock = cantidad >= stockDisponible;
@@ -52,6 +46,13 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
       )
     : 0;
 
+  const handleAgregar = () => {
+    agregarAlCarrito({
+      ...producto,
+      permite_cuotas: permiteCuotas, // Nos aseguramos de enviar permite_cuotas
+    } as any);
+  };
+
   return (
     <div
       style={{
@@ -63,50 +64,60 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
         flexDirection: "column",
         justifyContent: "space-between",
         boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-        opacity: estaAgotado ? 0.75 : 1, // Opacidad sutil si está agotado/pausado
+        opacity: estaAgotado ? 0.75 : 1,
         position: "relative",
       }}
     >
       <div>
-        {/* Badges superiores (Sin Stock / Pausado / Oferta %) */}
-        {estaAgotado ? (
-          <span
-            style={{
-              position: "absolute",
-              top: "12px",
-              right: "12px",
-              backgroundColor: "#ef4444",
-              color: "#ffffff",
-              fontSize: "11px",
-              fontWeight: "700",
-              padding: "4px 8px",
-              borderRadius: "6px",
-              zIndex: 1,
-              textTransform: "uppercase",
-            }}
-          >
-            {estaPausado ? "Pausado" : "Sin Stock"}
-          </span>
-        ) : (
-          tieneOferta && (
+        {/* Badges superiores */}
+        <div style={{ position: "absolute", top: "12px", right: "12px", display: "flex", gap: "4px", zIndex: 1 }}>
+          {!permiteCuotas && !estaAgotado && (
             <span
               style={{
-                position: "absolute",
-                top: "12px",
-                right: "12px",
-                backgroundColor: "#10b981", // Verde oferta
+                backgroundColor: "#f59e0b",
+                color: "#ffffff",
+                fontSize: "10px",
+                fontWeight: "700",
+                padding: "3px 6px",
+                borderRadius: "6px",
+                textTransform: "uppercase",
+              }}
+            >
+              Sin cuotas
+            </span>
+          )}
+
+          {estaAgotado ? (
+            <span
+              style={{
+                backgroundColor: "#ef4444",
                 color: "#ffffff",
                 fontSize: "11px",
                 fontWeight: "700",
                 padding: "4px 8px",
                 borderRadius: "6px",
-                zIndex: 1,
+                textTransform: "uppercase",
               }}
             >
-              {porcentajeDescuento}% OFF
+              {estaPausado ? "Pausado" : "Sin Stock"}
             </span>
-          )
-        )}
+          ) : (
+            tieneOferta && (
+              <span
+                style={{
+                  backgroundColor: "#10b981",
+                  color: "#ffffff",
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  padding: "4px 8px",
+                  borderRadius: "6px",
+                }}
+              >
+                {porcentajeDescuento}% OFF
+              </span>
+            )
+          )}
+        </div>
 
         {producto.imagen_url && (
           <img
@@ -161,7 +172,7 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
             <span
               style={{ fontSize: "18px", fontWeight: "700", color: "#111827" }}
             >
-              ${producto.precio}
+              ${(Number(producto.precio) || 0).toLocaleString("es-AR")}
             </span>
             {tieneOferta && (
               <span
@@ -171,7 +182,7 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
                   textDecoration: "line-through",
                 }}
               >
-                ${producto.precio_original}
+                ${(Number(producto.precio_original) || 0).toLocaleString("es-AR")}
               </span>
             )}
           </div>
@@ -202,7 +213,7 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
           </button>
         ) : cantidad === 0 ? (
           <button
-            onClick={() => agregarAlCarrito(producto as any)}
+            onClick={handleAgregar}
             style={{
               width: "100%",
               backgroundColor: "#111827",
@@ -247,7 +258,7 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
               {cantidad}
             </span>
             <button
-              onClick={() => agregarAlCarrito(producto as any)}
+              onClick={handleAgregar}
               disabled={alcanzoLimiteStock}
               style={{
                 width: "32px",
