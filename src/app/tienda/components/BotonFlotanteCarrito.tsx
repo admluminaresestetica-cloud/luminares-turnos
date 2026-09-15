@@ -13,11 +13,9 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
   const context = useCarrito();
   const items = context?.items || context?.carrito || [];
 
-  // Estado para guardar el monto de envío gratis dinámico cargado en Ajustes
   const [montoEnvioGratis, setMontoEnvioGratis] = useState<number>(0);
   const [envioGratisActivo, setEnvioGratisActivo] = useState<boolean>(false);
 
-  // Cargar configuración de la empresa desde Supabase
   useEffect(() => {
     async function cargarConfig() {
       const config = await obtenerConfiguracion();
@@ -33,7 +31,6 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
     ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 1), 0)
     : 0;
 
-  // Estado para controlar la animación de latido cuando cambian los ítems
   const [animando, setAnimando] = useState(false);
 
   useEffect(() => {
@@ -63,10 +60,12 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
           animando ? "scale-105 ring-2 ring-[#0E6E55]" : "scale-100"
         }`}
       >
-        {/* Lado izquierdo: Ícono con contador y texto explicativo */}
         <div className="flex items-center gap-3 min-w-0">
           <div className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0E6E55] transition-transform duration-300 ${animando ? "rotate-12 scale-110" : ""}`}>
-            <ShoppingBag className="h-5 w-5 text-white" />
+            {animando && (
+              <span className="absolute inset-0 rounded-xl bg-[#0E6E55] animate-ping opacity-60" />
+            )}
+            <ShoppingBag className="relative h-5 w-5 text-white" />
             <span className="absolute -top-1.5 -right-1.5 flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-extrabold text-[#12151B] shadow-sm">
               {totalItems}
             </span>
@@ -88,7 +87,6 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
           </div>
         </div>
 
-        {/* Lado derecho: Precio total y flecha */}
         <div className="flex items-center gap-2 shrink-0 pl-2">
           <span className="text-sm font-extrabold text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             ${totalPrecio.toLocaleString("es-AR")}
