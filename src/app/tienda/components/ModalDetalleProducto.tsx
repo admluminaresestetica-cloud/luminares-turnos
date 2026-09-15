@@ -23,6 +23,8 @@ export default function ModalDetalleProducto({
   onAbrirCarrito,
 }: ModalDetalleProductoProps) {
   const [cantidad, setCantidad] = useState(1);
+  const [startY, setStartY] = useState<number | null>(null);
+  const [currentOffsetY, setCurrentOffsetY] = useState<number>(0);
 
   const context = useCarrito();
   const agregarAlCarrito = context?.agregarAlCarrito;
@@ -31,34 +33,6 @@ export default function ModalDetalleProducto({
   const items = context?.items || context?.carrito || [];
 
   const modalContainerRef = useRef<HTMLDivElement>(null);
-
-    // --- INICIO: Lógica para deslizar y cerrar (Drag to Dismiss) ---
-  const [startY, setStartY] = useState<number | null>(null);
-  const [currentOffsetY, setCurrentOffsetY] = useState<number>(0);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    // Solo permite arrastrar si el scroll interno del modal está en el tope
-    if (modalContainerRef.current && modalContainerRef.current.scrollTop === 0) {
-      setStartY(e.touches[0].clientY);
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (startY === null) return;
-    const deltaY = e.touches[0].clientY - startY;
-    if (deltaY > 0) {
-      setCurrentOffsetY(deltaY); // Desplaza visualmente el modal hacia abajo
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (currentOffsetY > 120) {
-      onClose(); // Si se arrastró más de 120px, se cierra
-    } else {
-      setCurrentOffsetY(0); // Vuelve a su lugar
-    }
-    setStartY(null);
-  };
 
   const stockDisponible = producto?.stock ?? 0;
   const sinStock = stockDisponible <= 0;
@@ -71,6 +45,7 @@ export default function ModalDetalleProducto({
   const maximoPermitidoParaAgregar = Math.max(0, stockDisponible - cantidadEnCarrito);
 
   useEffect(() => {
+    setCurrentOffsetY(0);
     if (maximoPermitidoParaAgregar > 0) {
       setCantidad(1);
     } else {
@@ -93,10 +68,6 @@ export default function ModalDetalleProducto({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [producto, onClose]);
 
-  // Bloquea el scroll del body mientras el modal está abierto.
-  // Esto evita que, al llegar al tope del scroll interno del bottom sheet,
-  // el swipe hacia abajo se propague al body y dispare el "pull to refresh"
-  // del navegador (Chrome/Android, Safari/iOS).
   useEffect(() => {
     if (!producto) return;
 
@@ -120,6 +91,30 @@ export default function ModalDetalleProducto({
       window.scrollTo(0, scrollYPrevio);
     };
   }, [producto]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (modalContainerRef.current && modalContainerRef.current.scrollTop === 0) {
+      setStartY(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (startY === null) return;
+    const deltaY = e.touches[0].clientY - startY;
+    if (deltaY > 0) {
+      setCurrentOffsetY(deltaY);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (currentOffsetY > 100) {
+      setCurrentOffsetY(0);
+      onClose();
+    } else {
+      setCurrentOffsetY(0);
+    }
+    setStartY(null);
+  };
 
   if (!producto) return null;
 
@@ -216,33 +211,23 @@ export default function ModalDetalleProducto({
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 overscroll-none"
     >
-            <div
+      <div
         ref={modalContainerRef}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-2xl animate-[slideUp_0.3s_ease-out] sm:animate-in sm:zoom-in-95 sm:duration-200"
+        className="relative w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-2xl"
         style={{
           overscrollBehaviorY: "contain",
           transform: `translateY(${currentOffsetY}px)`,
           transition: startY === null ? "transform 0.2s ease-out" : "none",
         }}
       >
-
-        <style>{`
-          @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-          }
-        `}</style>
-
-        {/* Handle del Bottom Sheet (solo mobile) */}
-        <div className="flex justify-center -mt-2 mb-2 sm:hidden">
-          <span className="h-1.5 w-12 rounded-full bg-slate-200" />
+        <div className="flex justify-center -mt-2 mb-2 py-2 sm:hidden cursor-grab active:cursor-grabbing">
+          <span className="h-1.5 w-12 rounded-full bg-slate-300" />
         </div>
 
-        {/* Botones Superiores (Compartir y Cerrar) */}
         <div className="sticky top-0 float-right z-20 -mr-2 -mt-2 sm:-mr-4 sm:-mt-4 flex items-center gap-2">
           <button
             onClick={handleCompartir}
@@ -262,7 +247,6 @@ export default function ModalDetalleProducto({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start clear-both">
-          {/* Imagen Principal */}
           <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
             {producto.imagen_url ? (
               <Image
@@ -293,7 +277,6 @@ export default function ModalDetalleProducto({
             )}
           </div>
 
-          {/* Información del Producto */}
           <div className="flex flex-col justify-between space-y-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#0E6E55]">
@@ -330,7 +313,6 @@ export default function ModalDetalleProducto({
               )}
             </div>
 
-            {/* Selector de Cantidad y Botón Principal */}
             <div className="space-y-4 pt-2">
               <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-2">
                 <span className="text-xs font-semibold text-slate-600 pl-2">Cantidad a agregar:</span>
@@ -506,7 +488,7 @@ export default function ModalDetalleProducto({
                             title={relLimiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
                           >
                             <Plus className="h-3 w-3" />
-                        </button>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -519,5 +501,4 @@ export default function ModalDetalleProducto({
       </div>
     </div>
   );
-}
-                 
+}               
