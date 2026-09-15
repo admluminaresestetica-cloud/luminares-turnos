@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { X, Plus, Minus, ShoppingBag, Sparkles, Share2 } from "lucide-react";
+import { X, Plus, Minus, ShoppingBag, Sparkles, Share2, CreditCard } from "lucide-react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 import AcordeonFAQ from "./AcordeonFAQ";
@@ -125,7 +125,10 @@ export default function ModalDetalleProducto({
   const porcentajeDescuento = tieneDescuento
     ? Math.round(((precioOriginal - producto.precio) / precioOriginal) * 100)
     : 0;
-const { montoCuota } = calcularCuotas(producto.precio || 0);
+
+  // Evaluar cuotas según la propiedad individual del producto
+  const permiteCuotas = producto.permite_cuotas !== false;
+  const { montoCuota } = calcularCuotas(producto.precio || 0);
 
   const handleCompartir = async () => {
     const urlProducto = `${window.location.origin}/tienda/producto/${producto.id}`;
@@ -299,15 +302,23 @@ const { montoCuota } = calcularCuotas(producto.precio || 0);
                   </span>
                 )}
               </div>
-         {!sinStock && (
+
+              {!sinStock && (
                 <div className="mt-2">
-                  <span className="inline-block rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700">
-                    💳 3 cuotas sin interés de ${montoCuota.toLocaleString("es-AR")}
-                  </span>
+                  {permiteCuotas ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700">
+                      <CreditCard className="h-3.5 w-3.5" />
+                      3 cuotas de ${montoCuota.toLocaleString("es-AR")} con MP
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                      Solo Contado / Débito
+                    </span>
+                  )}
                 </div>
               )}
 
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 mt-2">
                 Stock disponible: <strong className="text-slate-800">{stockDisponible}</strong>
                 {cantidadEnCarrito > 0 && (
                   <span className="ml-1 text-emerald-700 font-medium">
@@ -490,12 +501,8 @@ const { montoCuota } = calcularCuotas(producto.precio || 0);
                           <button
                             onClick={(e) => handleSumarRecomendado(e, rel, relCantidadEnCarrito, relStock)}
                             disabled={relLimiteAlcanzado}
-                            className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold transition-all active:scale-90 ${
-                              relLimiteAlcanzado
-                                ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                                : "bg-[#0E6E55] text-white hover:bg-[#0b5944]"
-                            }`}
-                            title={relLimiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
+                            className="flex h-6 w-6 items-center justify-center rounded-lg bg-white text-emerald-800 hover:bg-emerald-100 transition-all active:scale-90 font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                            title="Sumar una unidad"
                           >
                             <Plus className="h-3 w-3" />
                           </button>
@@ -511,4 +518,4 @@ const { montoCuota } = calcularCuotas(producto.precio || 0);
       </div>
     </div>
   );
-}               
+}
