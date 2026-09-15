@@ -32,6 +32,34 @@ export default function ModalDetalleProducto({
 
   const modalContainerRef = useRef<HTMLDivElement>(null);
 
+    // --- INICIO: Lógica para deslizar y cerrar (Drag to Dismiss) ---
+  const [startY, setStartY] = useState<number | null>(null);
+  const [currentOffsetY, setCurrentOffsetY] = useState<number>(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Solo permite arrastrar si el scroll interno del modal está en el tope
+    if (modalContainerRef.current && modalContainerRef.current.scrollTop === 0) {
+      setStartY(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (startY === null) return;
+    const deltaY = e.touches[0].clientY - startY;
+    if (deltaY > 0) {
+      setCurrentOffsetY(deltaY); // Desplaza visualmente el modal hacia abajo
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (currentOffsetY > 120) {
+      onClose(); // Si se arrastró más de 120px, se cierra
+    } else {
+      setCurrentOffsetY(0); // Vuelve a su lugar
+    }
+    setStartY(null);
+  };
+
   const stockDisponible = producto?.stock ?? 0;
   const sinStock = stockDisponible <= 0;
 
