@@ -125,6 +125,7 @@ export default function ModalDetalleProducto({
   const porcentajeDescuento = tieneDescuento
     ? Math.round(((precioOriginal - producto.precio) / precioOriginal) * 100)
     : 0;
+const { montoCuota } = calcularCuotas(producto.precio || 0);
 
   const handleCompartir = async () => {
     const urlProducto = `${window.location.origin}/tienda/producto/${producto.id}`;
