@@ -116,12 +116,11 @@
  ┃ ┃ ┃ ┣ 📜AcordeonFAQ.tsx
  ┃ ┃ ┃ ┣ 📜BannerCarousel.tsx
  ┃ ┃ ┃ ┣ 📜BannerTienda.tsx
+ ┃ ┃ ┃ ┣ 📜BeneficiosTienda.tsx
  ┃ ┃ ┃ ┣ 📜BotonFlotanteCarrito.tsx
  ┃ ┃ ┃ ┣ 📜BuscadorYCategorias.tsx
- ┃ ┃ ┃ ┣ 📜CarritoModal.tsx
  ┃ ┃ ┃ ┣ 📜GridProductos.tsx
  ┃ ┃ ┃ ┣ 📜ModalDetalleProducto.tsx
- ┃ ┃ ┃ ┣ 📜ProductoCard.tsx
  ┃ ┃ ┃ ┣ 📜ProductoSkeleton.tsx
  ┃ ┃ ┃ ┣ 📜TagsFiltros.tsx
  ┃ ┃ ┃ ┗ 📜TarjetaProducto.tsx
@@ -205,6 +204,7 @@
  ┃ ┃ ┣ 📜laser.ts
  ┃ ┃ ┣ 📜reservas.ts
  ┃ ┃ ┗ 📜servicios-generales.ts
+ ┃ ┣ 📜precios.ts
  ┃ ┣ 📜supabase.ts
  ┃ ┣ 📜types.ts
  ┃ ┗ 📜whatsapp.ts

@@ -8,6 +8,8 @@ export interface Producto {
   stock_minimo?: number;
   codigo_barras?: string | null;
   imagen_url?: string;
+  imagenes_urls?: string[]; // <-- Nueva propiedad para múltiples imágenes
+  permite_cuotas?: boolean; // <-- Para controlar las 3 cuotas sin interés
   categoria?: string;
   activo?: boolean;
   mostrar_ultimas_unidades?: boolean;

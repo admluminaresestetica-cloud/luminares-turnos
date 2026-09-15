@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useState } from "react";
 import { calcularCuotas } from "@/lib/precios";
@@ -50,7 +50,7 @@ export default function ListaProductos({
           📦 Listado de Productos
         </h2>
 
-        {/* Buscador Global (ahora soporta código de barras) */}
+        {/* Buscador Global */}
         <input
           type="text"
           placeholder="Buscar por nombre, categoría, precio o código..."
@@ -69,6 +69,16 @@ export default function ListaProductos({
           {productosFiltrados.map((p) => {
             const estaPausado = p.activo === false;
 
+            // Obtención de la lista de fotos y la portada
+            const fotosArray: string[] = p.imagenes_urls && p.imagenes_urls.length > 0 
+              ? p.imagenes_urls 
+              : p.imagen_url 
+              ? [p.imagen_url] 
+              : [];
+            
+            const imagenPortada = fotosArray[0] || null;
+            const totalFotos = fotosArray.length;
+
             return (
               <div
                 key={p.id}
@@ -77,6 +87,22 @@ export default function ListaProductos({
                 }`}
               >
                 <div>
+                  {/* Imagen de Portada con Badge de cantidad de fotos */}
+                  {imagenPortada && (
+                    <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg bg-gray-100">
+                      <img
+                        src={imagenPortada}
+                        alt={p.nombre}
+                        className="h-full w-full object-cover"
+                      />
+                      {totalFotos > 1 && (
+                        <span className="absolute bottom-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs">
+                          📷 {totalFotos} fotos
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between gap-2">
                     <span className="rounded-md bg-white px-2 py-1 text-[11px] font-semibold text-[#6B675F]">
                       {p.categoria || "General"}
@@ -99,7 +125,7 @@ export default function ListaProductos({
                     {p.nombre}
                   </h3>
 
-                  {/* Badge de Código de Barras en la tarjeta del Admin */}
+                  {/* Badge de Código de Barras */}
                   {p.codigo_barras && (
                     <div className="mt-1.5 flex items-center gap-1 text-[11px] font-mono font-medium text-gray-500">
                       <span>🏷️ EAN:</span>
@@ -126,12 +152,12 @@ export default function ListaProductos({
                         )}
                       </div>
 
-                      {/* Solo muestra si p.permite_cuotas no es false */}
-{p.permite_cuotas !== false && (
-  <span className="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
-    💳 3 cuotas sin interés de ${calcularCuotas(p.precio).montoCuota.toLocaleString("es-AR")}
-  </span>
-)}
+                      {/* Cuotas */}
+                      {p.permite_cuotas !== false && (
+                        <span className="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
+                          💳 3 cuotas sin interés de ${calcularCuotas(p.precio).montoCuota.toLocaleString("es-AR")}
+                        </span>
+                      )}
                     </div>
 
                     {/* Stock + Botón Restock */}
@@ -171,7 +197,7 @@ export default function ListaProductos({
         </div>
       )}
 
-      {/* Modal de Re-stock / Ajuste de Stock */}
+      {/* Modal de Re-stock */}
       {modalRestockId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-xs rounded-2xl border border-[#E7E5E0] bg-white p-5 shadow-lg">

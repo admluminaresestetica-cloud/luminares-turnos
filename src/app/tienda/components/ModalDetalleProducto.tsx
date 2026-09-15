@@ -8,7 +8,6 @@ import { useCarrito } from "@/context/CarritoContext";
 import AcordeonFAQ from "./AcordeonFAQ";
 import { calcularCuotas } from "@/lib/precios";
 
-
 interface ModalDetalleProductoProps {
   producto: Producto | null;
   todosProductos: Producto[];
@@ -120,13 +119,12 @@ export default function ModalDetalleProducto({
 
   if (!producto) return null;
 
-  const precioOriginal = Number(producto.precio_original ?? producto.precio_anterior) || 0;
+  const precioOriginal = Number(producto.precio_original ?? (producto as any).precio_anterior) || 0;
   const tieneDescuento = precioOriginal > producto.precio;
   const porcentajeDescuento = tieneDescuento
     ? Math.round(((precioOriginal - producto.precio) / precioOriginal) * 100)
     : 0;
 
-  // Evaluar cuotas según la propiedad individual del producto
   const permiteCuotas = producto.permite_cuotas !== false;
   const { montoCuota } = calcularCuotas(producto.precio || 0);
 
@@ -406,21 +404,17 @@ export default function ModalDetalleProducto({
 
         <AcordeonFAQ />
 
+        {/* Sección de productos recomendados */}
         {productosRelacionados.length > 0 && (
-          <div className="mt-8 border-t border-slate-100 pt-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-[#0E6E55]" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Completa tu rutina / Recomendados
-                </h3>
-              </div>
-              <span className="text-[11px] text-slate-400 font-medium">Suma en 1-clic</span>
-            </div>
+          <div className="mt-8 pt-6 border-t border-slate-100">
+            <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4 text-[#0E6E55]" />
+              También te puede interesar
+            </h3>
 
             <div className="grid grid-cols-3 gap-3">
               {productosRelacionados.map((rel) => {
-                const relPrecioOriginal = Number(rel.precio_original ?? rel.precio_anterior) || 0;
+                const relPrecioOriginal = Number(rel.precio_original ?? (rel as any).precio_anterior) || 0;
                 const relTieneDesc = relPrecioOriginal > rel.precio;
                 const relStock = rel.stock ?? 0;
 
