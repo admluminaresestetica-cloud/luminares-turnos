@@ -40,7 +40,6 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
       const data = await obtenerConfiguracion();
       if (data) {
         setConfig(data);
-        // Si no están habilitados los envíos, forzar "retiro"
         if (!data.envio_domicilio_activo) {
           setMetodoEntrega("retiro");
         }
@@ -49,11 +48,10 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
     cargarConfig();
   }, []);
 
-  // Lógica de envíos
   const envioGratisActivo = Boolean(config?.envio_gratis_activo && config?.monto_envio_gratis);
   const montoMinimoEnvioGratis = config?.monto_envio_gratis || 0;
   const calificaEnvioGratis = envioGratisActivo && subtotalProductos >= montoMinimoEnvioGratis;
-  
+
   const costoEnvioBase = config?.costo_envio_base || 0;
   const costoEnvioAplicado =
     metodoEntrega === "envio"
@@ -64,7 +62,6 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
 
   const totalFinal = subtotalProductos + costoEnvioAplicado;
 
-  // Porcentaje de la barra de envío gratis
   const porcentajeEnvioGratis = envioGratisActivo
     ? Math.min(100, Math.round((subtotalProductos / montoMinimoEnvioGratis) * 100))
     : 0;
@@ -117,22 +114,31 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
 
   return (
     <div
-      className="fixed inset-0 z-[1000] flex justify-end bg-[#0B0F14]/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[1000] flex items-end sm:items-stretch justify-center sm:justify-end bg-[#0B0F14]/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex h-full w-full max-w-[420px] flex-col bg-white shadow-[-20px_0_50px_rgba(11,15,20,0.15)] animate-[slideIn_0.3s_ease-out]"
+        className="flex w-full sm:max-w-[420px] flex-col bg-white shadow-[0_-10px_40px_rgba(11,15,20,0.15)] sm:shadow-[-20px_0_50px_rgba(11,15,20,0.15)] rounded-t-3xl sm:rounded-none max-h-[92vh] sm:h-full sm:max-h-full animate-[slideUp_0.3s_ease-out] sm:animate-[slideIn_0.3s_ease-out]"
       >
         <style>{`
           @keyframes slideIn {
             from { transform: translateX(100%); }
             to { transform: translateX(0); }
           }
+          @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+          }
         `}</style>
 
+        {/* Handle del Bottom Sheet (solo mobile) */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
+          <span className="h-1.5 w-12 rounded-full bg-[#E7E5E0]" />
+        </div>
+
         {/* Cabecera */}
-        <div className="flex items-center justify-between border-b border-[#E7E5E0] px-6 py-5">
+        <div className="flex items-center justify-between border-b border-[#E7E5E0] px-6 py-4 sm:py-5 shrink-0">
           <h2
             className="m-0 text-lg font-bold text-[#12151B]"
             style={{ fontFamily: "'Space Grotesk', ui-sans-serif, sans-serif" }}
@@ -141,7 +147,7 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
           </h2>
           <button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F1F0EC] text-[#6B675F] transition-colors duration-200 hover:bg-[#E7E5E0]"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F1F0EC] text-[#6B675F] transition-all duration-200 hover:bg-[#E7E5E0] active:scale-90"
             aria-label="Cerrar carrito"
           >
             <X className="h-4 w-4" strokeWidth={2.3} />
@@ -160,7 +166,6 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
           ) : (
             <div className="flex flex-col gap-7">
 
-              {/* Barra de Progreso Envío Gratis */}
               {envioGratisActivo && (
                 <div className="rounded-2xl border border-[#E7E5E0] bg-[#FAF9F7] p-4 shadow-xs">
                   <div className="flex items-center gap-2 mb-2">
@@ -184,7 +189,6 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
                 </div>
               )}
 
-              {/* Método de Entrega */}
               <section>
                 <h3 className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-[#9E9A92]">
                   Método de entrega
@@ -193,7 +197,7 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
                   <button
                     type="button"
                     onClick={() => setMetodoEntrega("retiro")}
-                    className={`flex flex-col items-center gap-1.5 rounded-2xl border px-3 py-3.5 text-center transition-all duration-200 ${
+                    className={`flex flex-col items-center gap-1.5 rounded-2xl border px-3 py-3.5 text-center transition-all duration-200 active:scale-95 ${
                       metodoEntrega === "retiro"
                         ? "border-[#12151B] bg-[#12151B] text-white shadow-md shadow-[#12151B]/15"
                         : "border-[#E7E5E0] bg-white text-[#524F4A] hover:border-[#12151B]/25 hover:bg-[#FAF9F7]"
@@ -207,7 +211,7 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
                     <button
                       type="button"
                       onClick={() => setMetodoEntrega("envio")}
-                      className={`flex flex-col items-center gap-1.5 rounded-2xl border px-3 py-3.5 text-center transition-all duration-200 ${
+                      className={`flex flex-col items-center gap-1.5 rounded-2xl border px-3 py-3.5 text-center transition-all duration-200 active:scale-95 ${
                         metodoEntrega === "envio"
                           ? "border-[#12151B] bg-[#12151B] text-white shadow-md shadow-[#12151B]/15"
                           : "border-[#E7E5E0] bg-white text-[#524F4A] hover:border-[#12151B]/25 hover:bg-[#FAF9F7]"
@@ -220,7 +224,6 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
                 </div>
               </section>
 
-              {/* Datos del Cliente */}
               <section>
                 <h3 className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-[#9E9A92]">
                   Tus datos
@@ -267,7 +270,6 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
                 </div>
               </section>
 
-              {/* Método de Pago */}
               <section>
                 <h3 className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-[#9E9A92]">
                   Método de pago
@@ -284,7 +286,7 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
                         key={id}
                         type="button"
                         onClick={() => setMetodoPago(id as typeof metodoPago)}
-                        className={`flex items-center justify-between rounded-xl border px-3.5 py-3 transition-all duration-200 ${
+                        className={`flex items-center justify-between rounded-xl border px-3.5 py-3 transition-all duration-200 active:scale-[0.98] ${
                           activo
                             ? "border-[#12151B] bg-[#FAF9F7] shadow-xs"
                             : "border-[#E7E5E0] bg-white hover:bg-[#FAF9F7]"
@@ -320,7 +322,6 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
                 </div>
               </section>
 
-              {/* Lista de productos */}
               <section>
                 <h3 className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-[#9E9A92]">
                   Productos ({carrito.length})
@@ -349,7 +350,7 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
                       <button
                         onClick={() => onEliminar(index)}
                         aria-label="Quitar producto"
-                        className="flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#FBE7E7] px-3 py-2 text-[#D14343] transition-all duration-200 hover:bg-[#F5D0D0] active:scale-95"
+                        className="flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#FBE7E7] px-3 py-2 text-[#D14343] transition-all duration-200 hover:bg-[#F5D0D0] active:scale-90"
                       >
                         <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
                       </button>
@@ -363,7 +364,7 @@ export default function CarritoModal({ carrito, onClose, onEliminar }: any) {
 
         {/* Total y checkout */}
         {carrito.length > 0 && (
-          <div className="border-t border-[#E7E5E0] px-6 py-5 space-y-3">
+          <div className="border-t border-[#E7E5E0] px-6 py-5 space-y-3 shrink-0 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
             <div className="space-y-1.5 text-xs text-[#6B675F]">
               <div className="flex justify-between">
                 <span>Subtotal productos</span>
