@@ -299,6 +299,13 @@ const { montoCuota } = calcularCuotas(producto.precio || 0);
                   </span>
                 )}
               </div>
+         {!sinStock && (
+                <div className="mt-2">
+                  <span className="inline-block rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700">
+                    💳 3 cuotas sin interés de ${montoCuota.toLocaleString("es-AR")}
+                  </span>
+                </div>
+              )}
 
               <p className="text-xs text-slate-500 mt-1">
                 Stock disponible: <strong className="text-slate-800">{stockDisponible}</strong>
