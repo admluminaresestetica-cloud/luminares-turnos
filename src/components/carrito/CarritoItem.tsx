@@ -11,6 +11,7 @@ interface CarritoItemProps {
     cantidad: number;
     stock?: number;
     imagen_url?: string;
+    permite_cuotas?: boolean;
   };
   onRestar: (id: string | number) => void;
   onAgregar: (item: any) => void;
@@ -23,8 +24,9 @@ export default function CarritoItem({
   onAgregar,
   onEliminar,
 }: CarritoItemProps) {
-  const stockDisponible = item.stock ?? 0;
+  const stockDisponible = item.stock ?? 99;
   const alcanzoLimite = item.cantidad >= stockDisponible;
+  const precioSeguro = Number(item.precio) || 0;
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl border border-[#E7E5E0] bg-white p-3 shadow-xs transition-all duration-200 hover:border-[#D8D5CE] hover:shadow-md">
@@ -33,7 +35,7 @@ export default function CarritoItem({
           {item.imagen_url ? (
             <img
               src={item.imagen_url}
-              alt={item.nombre}
+              alt={item.nombre || "Producto"}
               className="h-full w-full object-cover"
             />
           ) : (
@@ -43,12 +45,20 @@ export default function CarritoItem({
 
         <div className="min-w-0">
           <strong className="block truncate text-sm font-semibold text-[#12151B]">
-            {item.nombre}
+            {item.nombre || "Producto"}
           </strong>
-          <span className="text-xs font-bold text-[#0E6E55]">
-            ${new Intl.NumberFormat("es-AR").format(item.precio)}
-          </span>
-          <span className="ml-1 text-xs text-gray-400">c/u</span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs font-bold text-[#0E6E55]">
+              ${precioSeguro.toLocaleString("es-AR")}
+            </span>
+            <span className="text-xs text-gray-400">c/u</span>
+
+            {item.permite_cuotas === false && (
+              <span className="text-[9px] bg-amber-100 text-amber-800 font-semibold px-1.5 py-0.2 rounded">
+                Sin cuotas
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
