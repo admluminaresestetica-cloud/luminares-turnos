@@ -26,6 +26,7 @@ export default function ModalDetalleProducto({
   const [cantidad, setCantidad] = useState(1);
   const [startY, setStartY] = useState<number | null>(null);
   const [currentOffsetY, setCurrentOffsetY] = useState<number>(0);
+  const [imagenSeleccionada, setImagenSeleccionada] = useState<string>("");
 
   const context = useCarrito();
   const agregarAlCarrito = context?.agregarAlCarrito;
@@ -45,6 +46,15 @@ export default function ModalDetalleProducto({
 
   const maximoPermitidoParaAgregar = Math.max(0, stockDisponible - cantidadEnCarrito);
 
+  // Obtener todas las imágenes disponibles (compatibilidad con arrays o url única)
+  const imagenesTotales: string[] = (producto as any)?.imagenes_urls?.length
+    ? (producto as any).imagenes_urls
+    : (producto as any)?.imagenes?.length
+    ? (producto as any).imagenes
+    : producto?.imagen_url
+    ? [producto.imagen_url]
+    : [];
+
   useEffect(() => {
     setCurrentOffsetY(0);
     if (maximoPermitidoParaAgregar > 0) {
@@ -52,6 +62,14 @@ export default function ModalDetalleProducto({
     } else {
       setCantidad(0);
     }
+    
+    // Setear la primera imagen como portada al abrir/cambiar producto
+    if (imagenesTotales.length > 0) {
+      setImagenSeleccionada(imagenesTotales[0]);
+    } else {
+      setImagenSeleccionada("");
+    }
+
     if (modalContainerRef.current) {
       modalContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -251,36 +269,64 @@ export default function ModalDetalleProducto({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start clear-both">
-          <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
-            {producto.imagen_url ? (
-              <Image
-                src={producto.imagen_url}
-                alt={producto.nombre}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-slate-300">
-                Sin Imagen
-              </div>
-            )}
+          {/* GALERÍA DE IMÁGENES */}
+          <div className="flex flex-col gap-3 w-full">
+            <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+              {imagenSeleccionada ? (
+                <Image
+                  src={imagenSeleccionada}
+                  alt={producto.nombre}
+                  fill
+                  className="object-cover transition-all duration-200"
+                  priority
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-slate-300">
+                  Sin Imagen
+                </div>
+              )}
 
-            {tieneDescuento && !sinStock && (
-              <span className="absolute top-3 left-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-sm">
-                -{porcentajeDescuento}% OFF
-              </span>
-            )}
-
-            {sinStock && (
-              <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
-                <span className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-bold text-[#12151B]">
-                  Sin Stock
+              {tieneDescuento && !sinStock && (
+                <span className="absolute top-3 left-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-sm z-10">
+                  -{porcentajeDescuento}% OFF
                 </span>
+              )}
+
+              {sinStock && (
+                <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+                  <span className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-bold text-[#12151B]">
+                    Sin Stock
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* MINIANURAS INTERACTIVAS */}
+            {imagenesTotales.length > 1 && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                {imagenesTotales.map((img: string, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => setImagenSeleccionada(img)}
+                    className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${
+                      imagenSeleccionada === img
+                        ? "border-[#0E6E55] scale-95 shadow-sm"
+                        : "border-transparent opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <Image
+                      src={img}
+                      alt={`${producto.nombre} - ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
+          {/* INFORMACIÓN Y ACCIONES DEL PRODUCTO */}
           <div className="flex flex-col justify-between space-y-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#0E6E55]">
@@ -404,7 +450,7 @@ export default function ModalDetalleProducto({
 
         <AcordeonFAQ />
 
-        {/* Sección de productos recomendados */}
+        {/* RECOMENDADOS */}
         {productosRelacionados.length > 0 && (
           <div className="mt-8 pt-6 border-t border-slate-100">
             <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
