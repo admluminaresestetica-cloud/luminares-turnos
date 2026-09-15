@@ -22,15 +22,19 @@ export default function ModalHistorialVentas({
   const [motivoAnulacion, setMotivoAnulacion] = useState<"error" | "dano">("error");
   const [procesandoAnulacion, setProcesandoAnulacion] = useState(false);
 
-  // Cargar ventas del día de hoy
+  // Cargar ventas del día de hoy en hora local (Argentina UTC-3) filtrando por POS
   const cargarVentasDelDia = async () => {
     setLoading(true);
     try {
-      const hoyInicio = new Date();
-      hoyInicio.setHours(0, 0, 0, 0);
+      const hoy = new Date();
+      const año = hoy.getFullYear();
+      const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+      const dia = String(hoy.getDate()).padStart(2, "0");
+      const fechaHoyStr = `${año}-${mes}-${dia}`;
 
-      const hoyFin = new Date();
-      hoyFin.setHours(23, 59, 59, 999);
+      // Inicio y fin del día local en Argentina (-03:00)
+      const inicioDiaUTC = new Date(`${fechaHoyStr}T00:00:00-03:00`).toISOString();
+      const finDiaUTC = new Date(`${fechaHoyStr}T23:59:59-03:00`).toISOString();
 
       const { data, error } = await supabase
         .from("pedidos")
@@ -41,6 +45,7 @@ export default function ModalHistorialVentas({
           metodo_pago,
           estado,
           nombre_cliente,
+          origen,
           pedidos_items (
             id,
             producto_id,
@@ -49,14 +54,15 @@ export default function ModalHistorialVentas({
             titulo
           )
         `)
-        .gte("created_at", hoyInicio.toISOString())
-        .lte("created_at", hoyFin.toISOString())
+        .eq("origen", "pos")
+        .gte("created_at", inicioDiaUTC)
+        .lte("created_at", finDiaUTC)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       setVentas(data || []);
     } catch (err) {
-      console.error("Error al cargar ventas del día:", err);
+      console.error("Error al cargar ventas del día en el POS:", err);
     } finally {
       setLoading(false);
     }
@@ -80,7 +86,6 @@ export default function ModalHistorialVentas({
       if (motivoAnulacion === "error" && ventaAAnular.pedidos_items?.length > 0) {
         for (const item of ventaAAnular.pedidos_items) {
           if (item.producto_id) {
-            // Traer stock actual
             const { data: prodData } = await supabase
               .from("productos")
               .select("stock")
@@ -98,16 +103,17 @@ export default function ModalHistorialVentas({
         }
       }
 
-      // 2. Cambiar estado del pedido a 'anulado'
+      // 2. Cambiar estado del pedido a 'anulado' y guardar el motivo en motivo_anulacion
+      const textoMotivo =
+        motivoAnulacion === "error"
+          ? "Error de carga / Devolución cliente (Stock reintegrado)"
+          : "Producto fallado / roto (Stock descartado)";
+
       const { error: updateError } = await supabase
         .from("pedidos")
         .update({
           estado: "anulado",
-          notas: `Anulado por motivo: ${
-            motivoAnulacion === "error"
-              ? "Error de carga / Devolución cliente (Stock reintegrado)"
-              : "Producto fallado / roto (Stock descartado)"
-          }`,
+          motivo_anulacion: textoMotivo,
         })
         .eq("id", ventaAAnular.id);
 
@@ -136,7 +142,7 @@ export default function ModalHistorialVentas({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fadeIn">
       <div className="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 bg-[#F7F7F5] px-6 py-4">
           <div className="flex items-center gap-3">
@@ -176,10 +182,10 @@ export default function ModalHistorialVentas({
         {/* Lista de Ventas */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {loading ? (
-            <div className="py-12 text-center text-xs text-gray-400">Cargando ventas...</div>
+            <div className="py-12 text-center text-xs text-gray-400">Cargando ventas del POS...</div>
           ) : ventasFiltradas.length === 0 ? (
             <div className="py-12 text-center text-xs text-gray-400">
-              No se registraron ventas en el turno de hoy.
+              No se registraron ventas en el POS en el turno de hoy.
             </div>
           ) : (
             ventasFiltradas.map((v) => {
@@ -201,7 +207,7 @@ export default function ModalHistorialVentas({
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs font-bold text-gray-900">
-                        Ticket #{v.id}
+                        Ticket #{String(v.id).substring(0, 8)}...
                       </span>
                       <span className="text-[11px] text-gray-400">({hora} hs)</span>
                       {esAnulada && (
@@ -248,7 +254,7 @@ export default function ModalHistorialVentas({
             <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100 space-y-4">
               <div className="flex items-center gap-2 text-red-600">
                 <AlertTriangle className="h-5 w-5" />
-                <h4 className="font-bold text-base text-gray-900">Anular Ticket #{ventaAAnular.id}</h4>
+                <h4 className="font-bold text-base text-gray-900">Anular Ticket #{String(ventaAAnular.id).substring(0, 8)}...</h4>
               </div>
 
               <p className="text-xs text-gray-600">
