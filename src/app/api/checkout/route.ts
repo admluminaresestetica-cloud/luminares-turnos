@@ -21,6 +21,10 @@ export async function POST(request: Request) {
       );
     }
 
+    // Configuración global de cuotas desde la base de datos
+    const cuotasHabilitadas = configEmpresa?.cuotas_habilitadas ?? true;
+    const montoMinimoCuotas = Number(configEmpresa?.monto_minimo_cuotas ?? 0);
+
     const client = new MercadoPagoConfig({ accessToken });
 
     const { itemsCarrito, cliente } = await request.json();
@@ -34,6 +38,9 @@ export async function POST(request: Request) {
 
     const PORCENTAJE_RECARGO = 0.10;
     let totalPedido = 0;
+    let subtotalSinRecargo = 0;
+    let algunProductoBloqueaCuotas = false;
+
     const itemsMP = [];
     const itemsValidados = [];
 
@@ -56,6 +63,7 @@ export async function POST(request: Request) {
         const precioUnitarioConRecargo = Math.round(precioOficial * (1 + PORCENTAJE_RECARGO));
 
         totalPedido += precioUnitarioConRecargo * cantidad;
+        subtotalSinRecargo += precioOficial * cantidad;
 
         itemsMP.push({
           id: "envio-cadeteria",
@@ -74,12 +82,12 @@ export async function POST(request: Request) {
         continue; // Pasa al siguiente ítem
       }
 
-      let productoDb = null;
+      let productoDb: any = null;
 
       for (const tabla of tablasASecundar) {
         const { data, error } = await supabase
           .from(tabla)
-          .select("id, nombre, precio")
+          .select("id, nombre, precio, permite_cuotas")
           .eq("id", productoId)
           .single();
 
@@ -96,9 +104,15 @@ export async function POST(request: Request) {
         );
       }
 
+      // Validar si el producto individual permite cuotas
+      if (productoDb.permite_cuotas === false) {
+        algunProductoBloqueaCuotas = true;
+      }
+
       const precioOficial = Number(productoDb.precio) || 0;
       const precioUnitarioConRecargo = Math.round(precioOficial * (1 + PORCENTAJE_RECARGO));
 
+      subtotalSinRecargo += precioOficial * cantidad;
       totalPedido += precioUnitarioConRecargo * cantidad;
 
       itemsMP.push({
@@ -116,7 +130,13 @@ export async function POST(request: Request) {
       });
     }
 
-    // Registramos el pedido
+    // Evaluación final para decidir si se permiten las cuotas en Mercado Pago
+    const permiteFinanciacion =
+      cuotasHabilitadas &&
+      subtotalSinRecargo >= montoMinimoCuotas &&
+      !algunProductoBloqueaCuotas;
+
+    // Registramos el pedido en Supabase
     const { data: pedido, error: errorPedido } = await supabase
       .from("pedidos")
       .insert({
@@ -167,6 +187,10 @@ export async function POST(request: Request) {
         },
         auto_return: "approved",
         notification_url: `${baseUrl}/api/webhooks/mercadopago`,
+        payment_methods: {
+          // Si cumple todas las condiciones se permiten hasta 3 cuotas; si no, se limita a 1 cuota (pago contado/débito)
+          installments: permiteFinanciacion ? 3 : 1,
+        },
       },
     });
 
