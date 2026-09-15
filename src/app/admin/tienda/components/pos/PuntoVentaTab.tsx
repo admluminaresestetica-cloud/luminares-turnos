@@ -5,6 +5,7 @@ import PosGridProductos from "./PosGridProductos";
 import PosCarrito from "./PosCarrito";
 import ModalCobro from "./ModalCobro";
 import TicketVenta from "./TicketVenta";
+import ModalHistorialVentas from "./ModalHistorialVentas";
 import { ProductoPOS, PosCartItem } from "./types";
 import { Keyboard, X, Info } from "lucide-react";
 
@@ -40,6 +41,9 @@ export default function PuntoVentaTab({
     vuelto: number;
     nombreCliente: string;
   } | null>(null);
+
+  // Estado para Modal de Historial de Ventas del Día
+  const [isHistorialOpen, setIsHistorialOpen] = useState(false);
 
   // Estado para Pop-up / Modal de Atajos de Teclado
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -87,14 +91,13 @@ export default function PuntoVentaTab({
     const q = code.trim().toLowerCase();
     if (!q) return;
 
-    // Busca coincidencia exacta por código de barras
     const encontrado = productos.find(
       (p) => p.codigo_barras && p.codigo_barras.trim().toLowerCase() === q
     );
 
     if (encontrado) {
       handleAgregarAlCarrito(encontrado);
-      setBusqueda(""); // Limpia la búsqueda para dejar listo el siguiente escaneo
+      setBusqueda("");
     } else {
       alert(`No se encontró ningún producto con el código: ${code}`);
     }
@@ -108,13 +111,11 @@ export default function PuntoVentaTab({
       const target = e.target as HTMLElement;
       const isTypingInInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA";
 
-      // Manejo de la tecla Enter dentro del buscador (Pistola de escaneo)
       if (e.key === "Enter" && isTypingInInput) {
         const inputElem = target as HTMLInputElement;
         const queryVal = inputElem.value.trim().toLowerCase();
 
         if (queryVal) {
-          // Busca coincidencia exacta por código de barras
           const prodExacto = productos.find(
             (p) => p.codigo_barras && p.codigo_barras.trim().toLowerCase() === queryVal
           );
@@ -128,7 +129,6 @@ export default function PuntoVentaTab({
         }
       }
 
-      // 1. Enfocar buscador con "/" o "F4"
       if (e.key === "F4" || (e.key === "/" && !isTypingInInput)) {
         e.preventDefault();
         const searchInput = document.querySelector<HTMLInputElement>("input[type='text']");
@@ -139,18 +139,24 @@ export default function PuntoVentaTab({
         return;
       }
 
-      // 2. Tecla F2 o Enter (fuera del input) para abrir Modal de Cobro
-      if ((e.key === "F2" || (e.key === "Enter" && !isTypingInInput)) && carrito.length > 0 && !isModalCobroOpen && !isTicketOpen) {
+      if (
+        (e.key === "F2" || (e.key === "Enter" && !isTypingInInput)) &&
+        carrito.length > 0 &&
+        !isModalCobroOpen &&
+        !isTicketOpen &&
+        !isHistorialOpen
+      ) {
         e.preventDefault();
         const subtotalCalc = carrito.reduce((acc, i) => acc + i.precio_unitario * i.cantidad, 0);
         handleIniciarCobro(subtotalCalc, 0, subtotalCalc);
         return;
       }
 
-      // 3. Tecla Escape para cerrar modales o vaciar carrito
       if (e.key === "Escape") {
         if (isHelpOpen) {
           setIsHelpOpen(false);
+        } else if (isHistorialOpen) {
+          setIsHistorialOpen(false);
         } else if (isModalCobroOpen) {
           setIsModalCobroOpen(false);
         } else if (isTicketOpen) {
@@ -165,7 +171,7 @@ export default function PuntoVentaTab({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [carrito, isModalCobroOpen, isTicketOpen, isHelpOpen, productos]);
+  }, [carrito, isModalCobroOpen, isTicketOpen, isHelpOpen, isHistorialOpen, productos]);
 
   const handleModificarCantidad = (productoId: number, delta: number) => {
     setCarrito((prev) =>
@@ -216,6 +222,7 @@ export default function PuntoVentaTab({
         setBusqueda={setBusqueda}
         onBarcodeScanned={handleBarcodeScanned}
         totalItemsCarrito={carrito.reduce((acc, i) => acc + i.cantidad, 0)}
+        onAbrirHistorial={() => setIsHistorialOpen(true)}
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -309,6 +316,14 @@ export default function PuntoVentaTab({
           </div>
         </div>
       )}
+
+      {/* Modal de Historial y Anulación de Ventas */}
+      <ModalHistorialVentas
+        isOpen={isHistorialOpen}
+        onClose={() => setIsHistorialOpen(false)}
+        supabase={supabase}
+        onVentaAnulada={onActualizarProductos}
+      />
 
       {/* Modal de Cobro */}
       <ModalCobro
