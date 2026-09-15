@@ -25,9 +25,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const { carrito, agregarAlCarrito, restarUnidad, eliminarDelCarrito, vaciarCarrito } = useCarrito();
   const searchParams = useSearchParams();
 
-  // Mapeo exacto con la tabla configuracion_empresa
   const montoEnvioGratis = Number((config as any)?.monto_envio_gratis ?? 40000);
-  const costoEnvioBase = Number((config as any)?.costo_envio_base ?? 0); // 👈 Nombre exacto de la columna
+  const costoEnvioBase = Number((config as any)?.costo_envio_base ?? 0);
   const envioDomicilioActivo = (config as any)?.envio_domicilio_activo ?? true;
   const envioGratisActivo = (config as any)?.envio_gratis_activo ?? true;
 
@@ -63,22 +62,17 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   if (!isOpen && !mostrarModalExito) return null;
 
-  // Cálculo del Subtotal
   const subtotalProductos = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
 
-  // Verificación de Envío Gratis
   const tieneEnvioGratis = envioGratisActivo && subtotalProductos >= montoEnvioGratis;
   const faltaParaEnvioGratis = Math.max(0, montoEnvioGratis - subtotalProductos);
   const porcentajeProgreso = Math.min(100, (subtotalProductos / montoEnvioGratis) * 100);
 
-  // Costo de envío a aplicar
   const costoEnvioAplicado =
     datosEnvio.metodoEnvio === "envio" && !tieneEnvioGratis ? costoEnvioBase : 0;
 
-  // Total base
   const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
 
-  // Recargo MP (10%)
   const PORCENTAJE_RECARGO = 0.10;
   const totalConRecargo = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_RECARGO));
 
@@ -238,8 +232,13 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       />
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out]">
-          <div className="flex h-full w-full max-w-[420px] flex-col justify-between overflow-y-auto bg-white shadow-2xl animate-[slideIn_0.28s_cubic-bezier(0.16,1,0.3,1)]">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-stretch justify-center sm:justify-end bg-black/40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out]">
+          <div className="flex w-full sm:max-w-[420px] flex-col justify-between overflow-y-auto bg-white shadow-2xl rounded-t-3xl sm:rounded-none max-h-[92vh] sm:h-full sm:max-h-full animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)] sm:animate-[slideIn_0.28s_cubic-bezier(0.16,1,0.3,1)]">
+
+            {/* Handle del Bottom Sheet (solo mobile) */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0 sticky top-0 z-10 bg-white">
+              <span className="h-1.5 w-12 rounded-full bg-[#E7E5E0]" />
+            </div>
 
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E7E5E0] bg-white/95 px-5 py-4 shadow-sm backdrop-blur-sm">
               <h2 className="text-lg font-bold tracking-tight text-[#12151B]">
@@ -253,7 +252,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
               <button
                 onClick={onClose}
                 aria-label="Cerrar carrito"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-[#F7F7F5] hover:text-[#12151B] active:scale-90"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-all hover:bg-[#F7F7F5] hover:text-[#12151B] active:scale-90"
               >
                 <span className="text-lg leading-none">✕</span>
               </button>
@@ -308,7 +307,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             </div>
 
             {carrito.length > 0 && (
-              <div className="px-5 pb-5 space-y-4">
+              <div className="px-5 pb-5 space-y-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
                 <div className="rounded-2xl border border-[#E7E5E0] p-3 bg-slate-50/60 space-y-2">
                   <label className="text-xs font-bold text-[#12151B] uppercase tracking-wider block">
                     Método de Pago
@@ -318,7 +317,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     <button
                       type="button"
                       onClick={() => setMetodoPago("whatsapp")}
-                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 ${
                         metodoPago === "whatsapp"
                           ? "border-[#0E6E55] bg-[#0E6E55]/10 text-[#0E6E55] shadow-sm"
                           : "border-[#E7E5E0] bg-white text-gray-600 hover:bg-gray-100"
@@ -331,7 +330,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     <button
                       type="button"
                       onClick={() => setMetodoPago("mercadopago")}
-                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 ${
                         metodoPago === "mercadopago"
                           ? "border-blue-600 bg-blue-50 text-blue-600 shadow-sm"
                           : "border-[#E7E5E0] bg-white text-gray-600 hover:bg-gray-100"
@@ -368,6 +367,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         @keyframes slideIn {
           from { transform: translateX(100%); }
           to { transform: translateX(0); }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
         }
       `}</style>
     </>
