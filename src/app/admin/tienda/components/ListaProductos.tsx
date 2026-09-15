@@ -1,6 +1,7 @@
-"use client";
+ "use client";
 
 import { useState } from "react";
+import { calcularCuotas } from "@/lib/precios";
 
 interface ListaProductosProps {
   productos: any[];
@@ -113,15 +114,22 @@ export default function ListaProductos({
                   </p>
 
                   <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-extrabold text-[#12151B]">
-                        ${p.precio}
-                      </span>
-                      {p.precio_original && (
-                        <span className="text-xs text-[#A6A29B] line-through">
-                          ${p.precio_original}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-extrabold text-[#12151B]">
+                          ${p.precio}
                         </span>
-                      )}
+                        {p.precio_original && (
+                          <span className="text-xs text-[#A6A29B] line-through">
+                            ${p.precio_original}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Badge con las cuotas calculadas */}
+                      <span className="w-fit rounded-md border border-purple-200 bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
+                        3 cuotas sin interés de ${calcularCuotas(p.precio).montoCuota.toLocaleString("es-AR")}
+                      </span>
                     </div>
 
                     {/* Stock + Botón Restock */}
