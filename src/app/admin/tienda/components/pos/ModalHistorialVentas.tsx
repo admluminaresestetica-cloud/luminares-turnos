@@ -22,7 +22,7 @@ export default function ModalHistorialVentas({
   const [motivoAnulacion, setMotivoAnulacion] = useState<"error" | "dano">("error");
   const [procesandoAnulacion, setProcesandoAnulacion] = useState(false);
 
-  // Cargar ventas del día de hoy en hora local (Argentina UTC-3) filtrando por POS
+  // Cargar ventas del día de hoy en el POS usando la estructura JSONB
   const cargarVentasDelDia = async () => {
     setLoading(true);
     try {
@@ -32,7 +32,6 @@ export default function ModalHistorialVentas({
       const dia = String(hoy.getDate()).padStart(2, "0");
       const fechaHoyStr = `${año}-${mes}-${dia}`;
 
-      // Inicio y fin del día local en Argentina (-03:00)
       const inicioDiaUTC = new Date(`${fechaHoyStr}T00:00:00-03:00`).toISOString();
       const finDiaUTC = new Date(`${fechaHoyStr}T23:59:59-03:00`).toISOString();
 
@@ -45,16 +44,10 @@ export default function ModalHistorialVentas({
           metodo_pago,
           estado,
           nombre_cliente,
+          cliente_nombre,
           origen,
-          pedidos_items (
-            id,
-            producto_id,
-            cantidad,
-            precio_unitario,
-            titulo
-          )
+          items
         `)
-        .eq("origen", "pos")
         .gte("created_at", inicioDiaUTC)
         .lte("created_at", finDiaUTC)
         .order("created_at", { ascending: false });
@@ -62,7 +55,7 @@ export default function ModalHistorialVentas({
       if (error) throw error;
       setVentas(data || []);
     } catch (err) {
-      console.error("Error al cargar ventas del día en el POS:", err);
+      console.error("Error al cargar ventas del día:", err);
     } finally {
       setLoading(false);
     }
@@ -76,34 +69,35 @@ export default function ModalHistorialVentas({
 
   if (!isOpen) return null;
 
-  // Lógica para procesar la anulación de una venta
+  // Lógica para procesar la anulación de una venta (Restablece stock desde JSONB)
   const handleConfirmarAnulacion = async () => {
     if (!ventaAAnular) return;
     setProcesandoAnulacion(true);
 
     try {
-      // 1. Si el motivo es "error / arrepentimiento", reintegramos el stock
-      if (motivoAnulacion === "error" && ventaAAnular.pedidos_items?.length > 0) {
-        for (const item of ventaAAnular.pedidos_items) {
-          if (item.producto_id) {
+      // 1. Reintegrar stock si es devolución / error de carga
+      if (motivoAnulacion === "error" && Array.isArray(ventaAAnular.items)) {
+        for (const item of ventaAAnular.items) {
+          const idProducto = item.producto_id || item.id;
+          if (idProducto) {
             const { data: prodData } = await supabase
               .from("productos")
               .select("stock")
-              .eq("id", item.producto_id)
+              .eq("id", idProducto)
               .single();
 
             if (prodData) {
-              const nuevoStock = (prodData.stock || 0) + item.cantidad;
+              const nuevoStock = (prodData.stock || 0) + (item.cantidad || 1);
               await supabase
                 .from("productos")
                 .update({ stock: nuevoStock })
-                .eq("id", item.producto_id);
+                .eq("id", idProducto);
             }
           }
         }
       }
 
-      // 2. Cambiar estado del pedido a 'anulado' y guardar el motivo en motivo_anulacion
+      // 2. Cambiar estado a 'anulado' y registrar el motivo
       const textoMotivo =
         motivoAnulacion === "error"
           ? "Error de carga / Devolución cliente (Stock reintegrado)"
@@ -122,7 +116,7 @@ export default function ModalHistorialVentas({
       alert("Venta anulada correctamente.");
       setVentaAAnular(null);
       cargarVentasDelDia();
-      onVentaAnulada(); // Actualiza el grid de productos en el POS
+      onVentaAnulada();
     } catch (err: any) {
       console.error("Error anulando venta:", err);
       alert("Ocurrió un error al intentar anular la venta.");
@@ -134,7 +128,7 @@ export default function ModalHistorialVentas({
   // Filtrado por cliente o ID de pedido
   const ventasFiltradas = ventas.filter((v) => {
     const term = busqueda.toLowerCase();
-    const cliente = (v.nombre_cliente || "").toLowerCase();
+    const cliente = (v.cliente_nombre || v.nombre_cliente || "").toLowerCase();
     const id = String(v.id).toLowerCase();
     return cliente.includes(term) || id.includes(term);
   });
@@ -182,10 +176,10 @@ export default function ModalHistorialVentas({
         {/* Lista de Ventas */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {loading ? (
-            <div className="py-12 text-center text-xs text-gray-400">Cargando ventas del POS...</div>
+            <div className="py-12 text-center text-xs text-gray-400">Cargando ventas...</div>
           ) : ventasFiltradas.length === 0 ? (
             <div className="py-12 text-center text-xs text-gray-400">
-              No se registraron ventas en el POS en el turno de hoy.
+              No se registraron ventas en el turno de hoy.
             </div>
           ) : (
             ventasFiltradas.map((v) => {
@@ -194,6 +188,7 @@ export default function ModalHistorialVentas({
                 hour: "2-digit",
                 minute: "2-digit",
               });
+              const nombreClienteDisplay = v.cliente_nombre || v.nombre_cliente || "Cliente Ocasional";
 
               return (
                 <div
@@ -218,12 +213,14 @@ export default function ModalHistorialVentas({
                     </div>
 
                     <div className="text-xs text-gray-600">
-                      Cliente: <span className="font-semibold">{v.nombre_cliente || "Consumidor Final"}</span> | Método:{" "}
+                      Cliente: <span className="font-semibold">{nombreClienteDisplay}</span> | Método:{" "}
                       <span className="capitalize font-medium">{v.metodo_pago || "Efectivo"}</span>
                     </div>
 
                     <div className="text-[11px] text-gray-500">
-                      {v.pedidos_items?.map((i: any) => `${i.cantidad}x ${i.titulo}`).join(", ")}
+                      {Array.isArray(v.items)
+                        ? v.items.map((i: any) => `${i.cantidad || 1}x ${i.titulo || i.nombre || "Producto"}`).join(", ")
+                        : "Sin detalle de productos"}
                     </div>
                   </div>
 
