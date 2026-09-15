@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { ShoppingBag, ChevronRight } from "lucide-react";
 import { useCarrito } from "@/context/CarritoContext";
-
-const MONTO_ENVIO_GRATIS = 35000;
+import { obtenerConfiguracion } from "@/lib/supabase/configuracion-empresa";
 
 interface BotonFlotanteCarritoProps {
   onOpenCarrito: () => void;
@@ -13,6 +12,22 @@ interface BotonFlotanteCarritoProps {
 export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCarritoProps) {
   const context = useCarrito();
   const items = context?.items || context?.carrito || [];
+
+  // Estado para guardar el monto de envío gratis dinámico cargado en Ajustes
+  const [montoEnvioGratis, setMontoEnvioGratis] = useState<number>(0);
+  const [envioGratisActivo, setEnvioGratisActivo] = useState<boolean>(false);
+
+  // Cargar configuración de la empresa desde Supabase
+  useEffect(() => {
+    async function cargarConfig() {
+      const config = await obtenerConfiguracion();
+      if (config) {
+        setMontoEnvioGratis(config.monto_envio_gratis ?? 0);
+        setEnvioGratisActivo(config.envio_gratis_activo ?? false);
+      }
+    }
+    cargarConfig();
+  }, []);
 
   const totalItems = Array.isArray(items)
     ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 1), 0)
@@ -26,7 +41,7 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
       setAnimando(true);
       const timer = setTimeout(() => {
         setAnimando(false);
-      }, 600); // Dura 600ms la animación de rebote
+      }, 600);
       return () => clearTimeout(timer);
     }
   }, [totalItems]);
@@ -37,8 +52,8 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
     ? items.reduce((acc: number, item: any) => acc + (Number(item?.precio) || 0) * (Number(item?.cantidad) || 1), 0)
     : 0;
 
-  const faltaParaEnvioGratis = Math.max(0, MONTO_ENVIO_GRATIS - totalPrecio);
-  const tieneEnvioGratis = totalPrecio >= MONTO_ENVIO_GRATIS;
+  const faltaParaEnvioGratis = Math.max(0, montoEnvioGratis - totalPrecio);
+  const tieneEnvioGratis = totalPrecio >= montoEnvioGratis;
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-40 sm:hidden animate-in slide-in-from-bottom-4 duration-300">
@@ -61,13 +76,15 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
             <span className="text-xs font-bold text-white tracking-wide">
               Ver Mi Carrito ({totalItems} {totalItems === 1 ? 'prod.' : 'prods.'})
             </span>
-            <span className="text-[10px] font-medium text-slate-300 truncate">
-              {tieneEnvioGratis ? (
-                <span className="text-emerald-400 font-bold">✨ ¡Envío gratis conseguido!</span>
-              ) : (
-                <span>Faltan <strong className="text-white">${faltaParaEnvioGratis.toLocaleString("es-AR")}</strong> para envío gratis</span>
-              )}
-            </span>
+            {envioGratisActivo && montoEnvioGratis > 0 && (
+              <span className="text-[10px] font-medium text-slate-300 truncate">
+                {tieneEnvioGratis ? (
+                  <span className="text-emerald-400 font-bold">✨ ¡Envío gratis conseguido!</span>
+                ) : (
+                  <span>Faltan <strong className="text-white">${faltaParaEnvioGratis.toLocaleString("es-AR")}</strong> para envío gratis</span>
+                )}
+              </span>
+            )}
           </div>
         </div>
 
