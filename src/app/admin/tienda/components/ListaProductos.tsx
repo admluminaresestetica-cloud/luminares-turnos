@@ -126,10 +126,12 @@ export default function ListaProductos({
                         )}
                       </div>
 
-                      {/* Badge con las cuotas calculadas */}
-                      <span className="w-fit rounded-md border border-purple-200 bg-purple-50 px-2 py-0.5 text-[10px] font-semibold text-purple-700">
-                      3 cuotas sin interés de ${calcularCuotas(p.precio).montoCuota.toLocaleString("es-AR")}
-                     </span>
+                      {/* Solo muestra si p.permite_cuotas no es false */}
+{p.permite_cuotas !== false && (
+  <span className="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
+    💳 3 cuotas sin interés de ${calcularCuotas(p.precio).montoCuota.toLocaleString("es-AR")}
+  </span>
+)}
                     </div>
 
                     {/* Stock + Botón Restock */}

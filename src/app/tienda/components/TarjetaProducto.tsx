@@ -1,4 +1,3 @@
-// tienda/components/TarjetaProducto.tsx
 'use client';
 
 import React from "react";
@@ -9,6 +8,7 @@ import { Plus, Minus, Flame, ShoppingCart, Truck } from "lucide-react";
 
 interface TarjetaProductoProps {
   producto: Producto & {
+    permite_cuotas?: boolean;
     mostrar_ultimas_unidades?: boolean;
     ultimas_unidades?: boolean;
     envio_gratis?: boolean;
@@ -156,7 +156,7 @@ export default function TarjetaProducto({
           </div>
 
           {/* Badge de 3 cuotas sin interés */}
-          {!sinStock && (
+          {!sinStock && producto.permite_cuotas !== false && (
             <div className="mt-1">
               <span className="inline-block rounded-md border border-purple-200 bg-purple-50 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700">
                 💳 3 cuotas sin interés de ${cuotaFormateada}
