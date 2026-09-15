@@ -6,6 +6,8 @@ import { X, Plus, Minus, ShoppingBag, Sparkles, Share2 } from "lucide-react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 import AcordeonFAQ from "./AcordeonFAQ";
+import { calcularCuotas } from "@/lib/precios";
+
 
 interface ModalDetalleProductoProps {
   producto: Producto | null;
