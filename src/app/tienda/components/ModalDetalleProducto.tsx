@@ -32,20 +32,16 @@ export default function ModalDetalleProducto({
 
   const modalContainerRef = useRef<HTMLDivElement>(null);
 
-  // Stock real del producto principal
   const stockDisponible = producto?.stock ?? 0;
   const sinStock = stockDisponible <= 0;
 
-  // Buscar cuántos hay actualmente en el carrito del producto principal
   const itemEnCarrito = Array.isArray(items) && producto
     ? items.find((item: any) => item.id === producto.id)
     : null;
   const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
 
-  // Cuántas unidades más se pueden agregar como máximo
   const maximoPermitidoParaAgregar = Math.max(0, stockDisponible - cantidadEnCarrito);
 
-  // Reseteamos la cantidad según lo disponible al cambiar de producto
   useEffect(() => {
     if (maximoPermitidoParaAgregar > 0) {
       setCantidad(1);
@@ -57,7 +53,6 @@ export default function ModalDetalleProducto({
     }
   }, [producto, maximoPermitidoParaAgregar]);
 
-  // Soporte para cerrar con tecla ESC
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -78,15 +73,14 @@ export default function ModalDetalleProducto({
     ? Math.round(((precioOriginal - producto.precio) / precioOriginal) * 100)
     : 0;
 
-  // Función para Compartir Enlace Inteligente
   const handleCompartir = async () => {
     const urlProducto = `${window.location.origin}/tienda/producto/${producto.id}`;
 
-  const shareData = {
-    title: producto.nombre,
-    text: `¡Mirá este producto en Luminares! ${producto.nombre} a $${producto.precio.toLocaleString("es-AR")}`,
-    url: urlProducto,
-  };
+    const shareData = {
+      title: producto.nombre,
+      text: `¡Mirá este producto en Luminares! ${producto.nombre} a $${producto.precio.toLocaleString("es-AR")}`,
+      url: urlProducto,
+    };
     if (navigator.share) {
       try {
         await navigator.share(shareData);
@@ -126,7 +120,6 @@ export default function ModalDetalleProducto({
     }
   };
 
-  // Handlers para la sección de Cross-Selling (Productos Recomendados)
   const handleRestarRecomendado = (e: React.MouseEvent, relProd: Producto, cantActual: number) => {
     e.stopPropagation();
     if (cantActual > 1 && actualizarCantidad) {
@@ -149,7 +142,6 @@ export default function ModalDetalleProducto({
     }
   };
 
-  // Lógica de Cross-Selling
   const complementosOtrasCategorias = todosProductos.filter(
     (p) => p.id !== producto.id && p.categoria !== producto.categoria
   );
@@ -160,35 +152,44 @@ export default function ModalDetalleProducto({
 
   const productosRelacionados = [...complementosOtrasCategorias, ...deLaMismaCategoria].slice(0, 3);
 
-  // Controles de incremento y decremento modal principal
   const puedeSumar = cantidad < maximoPermitidoParaAgregar;
   const puedeRestar = cantidad > 1;
 
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
     >
       <div
         ref={modalContainerRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+        className="relative w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-2xl animate-[slideUp_0.3s_ease-out] sm:animate-in sm:zoom-in-95 sm:duration-200"
       >
-        {/* Contenedor de Botones Superiores (Compartir y Cerrar) */}
+        <style>{`
+          @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+          }
+        `}</style>
+
+        {/* Handle del Bottom Sheet (solo mobile) */}
+        <div className="flex justify-center -mt-2 mb-2 sm:hidden">
+          <span className="h-1.5 w-12 rounded-full bg-slate-200" />
+        </div>
+
+        {/* Botones Superiores (Compartir y Cerrar) */}
         <div className="sticky top-0 float-right z-20 -mr-2 -mt-2 sm:-mr-4 sm:-mt-4 flex items-center gap-2">
-          {/* Botón Compartir */}
           <button
             onClick={handleCompartir}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-600 backdrop-blur-md transition-colors hover:bg-slate-200 hover:text-slate-900 cursor-pointer shadow-sm"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-600 backdrop-blur-md transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-90 cursor-pointer shadow-sm"
             title="Compartir producto"
           >
             <Share2 className="h-4 w-4" />
           </button>
 
-          {/* Botón Cerrar */}
           <button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-500 backdrop-blur-md transition-colors hover:bg-slate-200 hover:text-slate-800 cursor-pointer shadow-sm"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-500 backdrop-blur-md transition-all hover:bg-slate-200 hover:text-slate-800 active:scale-90 cursor-pointer shadow-sm"
             title="Cerrar (Esc)"
           >
             <X className="h-5 w-5" />
@@ -272,7 +273,7 @@ export default function ModalDetalleProducto({
                   <button
                     onClick={() => puedeRestar && setCantidad(cantidad - 1)}
                     disabled={!puedeRestar}
-                    className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
                       puedeRestar
                         ? "text-slate-700 hover:bg-slate-100 cursor-pointer"
                         : "text-slate-300 cursor-not-allowed"
@@ -289,7 +290,7 @@ export default function ModalDetalleProducto({
                   <button
                     onClick={() => puedeSumar && setCantidad(cantidad + 1)}
                     disabled={!puedeSumar}
-                    className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
                       puedeSumar
                         ? "text-slate-700 hover:bg-slate-100 cursor-pointer"
                         : "text-slate-300 cursor-not-allowed"
@@ -301,7 +302,6 @@ export default function ModalDetalleProducto({
                 </div>
               </div>
 
-              {/* Botón de Agregar al Carrito */}
               <button
                 onClick={handleAgregarPrincipal}
                 disabled={sinStock || maximoPermitidoParaAgregar <= 0}
@@ -321,14 +321,13 @@ export default function ModalDetalleProducto({
                 </span>
               </button>
 
-              {/* Botón de Comprar Ahora */}
               <button
                 onClick={handleComprarAhora}
                 disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all mt-2.5 ${
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all mt-2.5 active:scale-[0.98] ${
                   sinStock || maximoPermitidoParaAgregar <= 0
                     ? "bg-slate-200 text-slate-400 cursor-not-allowed border-transparent"
-                    : "border-2 border-[#0E6E55] bg-transparent text-[#0E6E55] hover:bg-[#0E6E55]/10 active:scale-[0.98] cursor-pointer"
+                    : "border-2 border-[#0E6E55] bg-transparent text-[#0E6E55] hover:bg-[#0E6E55]/10 cursor-pointer"
                 }`}
               >
                 <span>Comprar ahora</span>
@@ -337,10 +336,8 @@ export default function ModalDetalleProducto({
           </div>
         </div>
 
-        {/* Componente Modular de FAQ */}
         <AcordeonFAQ />
 
-        {/* Sección Cross-Selling con Controles Inteligentes */}
         {productosRelacionados.length > 0 && (
           <div className="mt-8 border-t border-slate-100 pt-6">
             <div className="flex items-center justify-between mb-3">
@@ -369,7 +366,7 @@ export default function ModalDetalleProducto({
                   <div
                     key={rel.id}
                     onClick={() => onSeleccionarProducto && onSeleccionarProducto(rel)}
-                    className="group relative flex flex-col justify-between text-left rounded-2xl border border-slate-100 p-2.5 hover:border-[#0E6E55]/40 hover:bg-slate-50/80 transition-all cursor-pointer shadow-sm hover:shadow-md"
+                    className="group relative flex flex-col justify-between text-left rounded-2xl border border-slate-100 p-2.5 hover:border-[#0E6E55]/40 hover:bg-slate-50/80 transition-all cursor-pointer shadow-sm hover:shadow-md active:scale-[0.97]"
                   >
                     <div>
                       <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-slate-100 mb-2">
@@ -415,7 +412,7 @@ export default function ModalDetalleProducto({
                           onClick={(e) => handleSumarRecomendado(e, rel, relCantidadEnCarrito, relStock)}
                           disabled={relStock <= 0}
                           title="Agregar al carrito"
-                          className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] hover:bg-[#0E6E55] hover:text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] hover:bg-[#0E6E55] hover:text-white transition-all active:scale-90 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
                         </button>
@@ -423,7 +420,7 @@ export default function ModalDetalleProducto({
                         <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-200/80 rounded-xl p-0.5 shadow-sm">
                           <button
                             onClick={(e) => handleRestarRecomendado(e, rel, relCantidadEnCarrito)}
-                            className="flex h-6 w-6 items-center justify-center rounded-lg bg-white text-emerald-800 hover:bg-emerald-100 transition-all font-bold text-xs"
+                            className="flex h-6 w-6 items-center justify-center rounded-lg bg-white text-emerald-800 hover:bg-emerald-100 transition-all active:scale-90 font-bold text-xs"
                             title="Restar una unidad"
                           >
                             <Minus className="h-3 w-3" />
@@ -436,7 +433,7 @@ export default function ModalDetalleProducto({
                           <button
                             onClick={(e) => handleSumarRecomendado(e, rel, relCantidadEnCarrito, relStock)}
                             disabled={relLimiteAlcanzado}
-                            className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold transition-all ${
+                            className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold transition-all active:scale-90 ${
                               relLimiteAlcanzado
                                 ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                                 : "bg-[#0E6E55] text-white hover:bg-[#0b5944]"
