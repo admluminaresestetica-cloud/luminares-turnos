@@ -135,13 +135,22 @@ export default function TiendaPage() {
         const nombre = p.nombre?.toLowerCase() || "";
         const desc = p.descripcion?.toLowerCase() || "";
         const cat = p.categoria?.toLowerCase() || "";
-        return nombre.includes(criterio) || desc.includes(criterio) || cat.includes(criterio);
+        const tagsProd = Array.isArray(p.etiquetas)
+          ? p.etiquetas.map((t) => String(t).toLowerCase())
+          : [];
+
+        return (
+          nombre.includes(criterio) ||
+          desc.includes(criterio) ||
+          cat.includes(criterio) ||
+          tagsProd.some((t) => t.includes(criterio))
+        );
       });
     }
 
     if (busqueda.trim() !== "") {
       const fuseOptions = {
-        keys: ["nombre", "categoria"],
+        keys: ["nombre", "categoria", "etiquetas"],
         threshold: 0.4,
         ignoreLocation: true,
       };
