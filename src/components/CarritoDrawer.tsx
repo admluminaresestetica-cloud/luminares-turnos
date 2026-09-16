@@ -34,32 +34,36 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const [montoMinimoCuotas, setMontoMinimoCuotas] = useState(0);
   const [costoEnvioFijo, setCostoEnvioFijo] = useState(0);
 
+  // Estados para reglas de envío desde configuracion_empresa
+  const [envioDomicilioActivo, setEnvioDomicilioActivo] = useState(true);
+  const [envioGratisActivo, setEnvioGratisActivo] = useState(false);
+  const [montoEnvioGratis, setMontoEnvioGratis] = useState(0);
+
   useEffect(() => {
-    const obtenerConfiguracion = async () => {
+    async function cargarConfiguracion() {
       try {
         const { data, error } = await supabase
-          .from("configuracion")
-          .select("clave, valor");
+          .from("configuracion_empresa")
+          .select("costo_envio_base, envio_domicilio_activo, envio_gratis_activo, monto_envio_gratis")
+          .maybeSingle();
 
-        if (data && !error) {
-          data.forEach((item) => {
-            if (item.clave === "cuotas_habilitadas") {
-              setCuotasHabilitadas(item.valor === "true" || item.valor === true);
-            }
-            if (item.clave === "cuotas_monto_minimo") {
-              setMontoMinimoCuotas(Number(item.valor) || 0);
-            }
-            if (item.clave === "costo_envio") {
-              setCostoEnvioFijo(Number(item.valor) || 0);
-            }
-          });
+        if (error) {
+          console.error("Error al obtener la configuración de la empresa:", error);
+          return;
+        }
+
+        if (data) {
+          setCostoEnvioFijo(Number(data.costo_envio_base) || 0);
+          setEnvioDomicilioActivo(data.envio_domicilio_activo ?? true);
+          setEnvioGratisActivo(data.envio_gratis_activo ?? false);
+          setMontoEnvioGratis(Number(data.monto_envio_gratis) || 0);
         }
       } catch (err) {
-        console.error("Error al obtener configuración:", err);
+        console.error("Error inesperado al cargar la configuración:", err);
       }
-    };
+    }
 
-    obtenerConfiguracion();
+    cargarConfiguracion();
   }, []);
 
   const carritoSeguro = Array.isArray(carrito) ? carrito : [];
@@ -68,8 +72,14 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     0
   );
 
+  // Evaluación de Envío Gratis según la DB
+  const tieneEnvioGratis =
+    envioGratisActivo &&
+    montoEnvioGratis > 0 &&
+    subtotalProductos >= montoEnvioGratis;
+
   const costoEnvioAplicado =
-    datosEnvio.metodoEnvio === "retiro" ? 0 : costoEnvioFijo;
+    datosEnvio.metodoEnvio === "retiro" || tieneEnvioGratis ? 0 : costoEnvioFijo;
 
   const productoNoAptoCuotas = carritoSeguro.find(
     (item) => item.permite_cuotas === false
@@ -359,7 +369,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   costoEnvio={costoEnvioFijo}
                   metodoPago={metodoPago === "whatsapp" ? "whatsapp" : "mercadopago"}
                   totalPrecio={subtotalProductos}
-                  tieneEnvioGratis={false}
+                  tieneEnvioGratis={tieneEnvioGratis}
                   guardandoPedido={cargandoMP}
                   onConfirmar={() => {
                     if (metodoPago === "whatsapp") {
@@ -376,7 +386,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     Seleccionar Método de Pago:
                   </label>
 
-                  {/* Opción 1: WhatsApp (Precio Base) */}
+                  {/* Opción 1: WhatsApp */}
                   <button
                     type="button"
                     onClick={() => setMetodoPago("whatsapp")}
@@ -488,7 +498,11 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   <span>Costo de envío:</span>
                   <span>
                     {costoEnvioAplicado === 0 ? (
-                      <span className="font-bold text-[#0E6E55]">Gratis (Retiro en local)</span>
+                      <span className="font-bold text-[#0E6E55]">
+                        {datosEnvio.metodoEnvio === "retiro"
+                          ? "Gratis (Retiro en local)"
+                          : "Gratis (Envío promocional)"}
+                      </span>
                     ) : (
                       `$${costoEnvioAplicado.toLocaleString("es-AR")}`
                     )}
