@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Plus, Minus, ShoppingBag, Share2, CreditCard } from "lucide-react";
+import { X, Plus, Minus, ShoppingBag, Share2, CreditCard, Tag } from "lucide-react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 import AcordeonFAQ from "./AcordeonFAQ";
@@ -249,18 +249,16 @@ export default function ModalDetalleProducto({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start clear-both">
-          {/* GALERÍA DE IMÁGENES & ETIQUETAS */}
+          {/* GALERÍA DE IMÁGENES */}
           <GaleriaProducto
-          producto={producto}
-          imagenSeleccionada={imagenSeleccionada}
-          setImagenSeleccionada={setImagenSeleccionada}
-          imagenesTotales={imagenesTotales}
-          tieneDescuento={tieneDescuento}
-          porcentajeDescuento={porcentajeDescuento}
-          sinStock={sinStock}
-          onFiltrarPorTag={onFiltrarPorTag} 
-          onClose={onClose}     
-/>
+            producto={producto}
+            imagenSeleccionada={imagenSeleccionada}
+            setImagenSeleccionada={setImagenSeleccionada}
+            imagenesTotales={imagenesTotales}
+            tieneDescuento={tieneDescuento}
+            porcentajeDescuento={porcentajeDescuento}
+            sinStock={sinStock}
+          />
 
           {/* INFORMACIÓN Y ACCIONES DEL PRODUCTO */}
           <div className="flex flex-col justify-between space-y-4">
@@ -272,6 +270,27 @@ export default function ModalDetalleProducto({
               <h2 className="text-xl font-bold text-slate-900 sm:text-2xl mt-1">
                 {producto.nombre}
               </h2>
+
+              {/* ETIQUETAS / TAGS DEBAJO DEL NOMBRE */}
+              {producto.etiquetas && producto.etiquetas.length > 0 && (
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {producto.etiquetas.map((tag, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        if (onFiltrarPorTag) onFiltrarPorTag(tag);
+                        onClose();
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md bg-slate-100 hover:bg-[#0E6E55]/10 px-2 py-0.5 text-xs font-medium text-slate-600 hover:text-[#0E6E55] transition-colors cursor-pointer"
+                      title={`Filtrar productos por #${tag}`}
+                    >
+                      <Tag className="h-3 w-3 text-slate-400" />
+                      #{tag}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               <div className="mt-3 flex items-baseline gap-2">
                 <span className="text-2xl font-extrabold text-slate-900">

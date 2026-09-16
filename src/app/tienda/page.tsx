@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { ShoppingBag, ArrowLeft } from "lucide-react";
+import { ShoppingBag, ArrowLeft, Tag as TagIcon, X } from "lucide-react";
 import CarritoDrawer from "@/components/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
 import BeneficiosTienda from "./components/BeneficiosTienda";
@@ -203,8 +203,14 @@ export default function TiendaPage() {
     setTagSeleccionado(null);
   };
 
+  const hayTagActivo = Boolean(tagSeleccionado);
+
   return (
-    <div className="min-h-screen bg-[#F7F7F5] text-[#12151B] flex flex-col justify-between">
+    <div
+      className={`min-h-screen text-[#12151B] flex flex-col justify-between transition-colors duration-500 ease-in-out ${
+        hayTagActivo ? "bg-[#EEF5F2]" : "bg-[#F7F7F5]"
+      }`}
+    >
       <div>
         <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0] bg-white/90 px-4 py-3 backdrop-blur-md sm:px-10 sm:py-4">
           <div className="flex items-center gap-3">
@@ -270,6 +276,26 @@ export default function TiendaPage() {
             onSelectTag={(slug) => setTagSeleccionado(slug)}
           />
 
+          {/* Indicador visual de la etiqueta filtrada */}
+          {hayTagActivo && (
+            <div className="mb-4 flex items-center justify-between bg-white border border-[#0E6E55]/30 rounded-2xl px-4 py-3 shadow-sm animate-in fade-in duration-300">
+              <div className="flex items-center gap-2 text-sm font-semibold text-[#0E6E55]">
+                <TagIcon className="w-4 h-4" />
+                <span>
+                  Viendo productos etiquetados con:{" "}
+                  <strong className="underline decoration-2">#{tagSeleccionado}</strong>
+                </span>
+              </div>
+              <button
+                onClick={() => setTagSeleccionado(null)}
+                className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+              >
+                <span>Limpiar filtro</span>
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           <BuscadorYCategorias
             busqueda={busqueda}
             onBusquedaChange={setBusqueda}
@@ -293,6 +319,7 @@ export default function TiendaPage() {
           onClose={() => setProductoSeleccionado(null)}
           onSeleccionarProducto={(prod) => setProductoSeleccionado(prod)}
           onAbrirCarrito={() => setModalAbierto(true)}
+          onFiltrarPorTag={(tag) => setTagSeleccionado(tag)}
         />
 
         <CarritoDrawer
