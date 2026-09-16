@@ -29,8 +29,6 @@ export default function AjustesAdminPage() {
     costo_envio_base: 0,
     envio_gratis_activo: false,
     monto_envio_gratis: 0,
-    cuotas_habilitadas: true,
-    monto_minimo_cuotas: 20000,
   });
 
   useEffect(() => {
@@ -39,13 +37,17 @@ export default function AjustesAdminPage() {
       const data = await obtenerConfiguracion();
       if (data) {
         setForm({
-          ...data,
+          nombre_empresa: data.nombre_empresa ?? '',
+          subtitulo_tienda: data.subtitulo_tienda ?? '',
+          logo_url: data.logo_url ?? '',
+          whatsapp_numero: data.whatsapp_numero ?? '',
+          google_maps_url: data.google_maps_url ?? '',
+          mp_access_token: data.mp_access_token ?? '',
+          mp_alias: data.mp_alias ?? '',
           envio_domicilio_activo: data.envio_domicilio_activo ?? false,
           costo_envio_base: data.costo_envio_base ?? 0,
           envio_gratis_activo: data.envio_gratis_activo ?? false,
           monto_envio_gratis: data.monto_envio_gratis ?? 0,
-          cuotas_habilitadas: data.cuotas_habilitadas ?? true,
-          monto_minimo_cuotas: data.monto_minimo_cuotas ?? 20000,
         });
       }
       setLoading(false);
@@ -126,7 +128,7 @@ export default function AjustesAdminPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100">Ajustes del Negocio</h1>
         <p className="text-sm text-slate-500 dark:text-zinc-400">
-          Administrá la información dinámica de tu marca, datos de contacto, cobros, financiación y envíos.
+          Administrá la información dinámica de tu marca, datos de contacto, cobros y envíos.
         </p>
       </div>
 
@@ -238,51 +240,6 @@ export default function AjustesAdminPage() {
                 className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
               />
             </div>
-          </div>
-        </div>
-
-        {/* Financiación y Cuotas */}
-        <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm space-y-4 transition-colors">
-          <h2 className="text-lg font-semibold text-slate-800 dark:text-zinc-100 border-b border-slate-100 dark:border-zinc-800 pb-3">
-            Financiación en 3 Cuotas
-          </h2>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3.5 border border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50 dark:bg-zinc-950">
-              <div>
-                <p className="text-sm font-medium text-slate-800 dark:text-zinc-200">Habilitar 3 Cuotas en la Tienda</p>
-                <p className="text-xs text-slate-500 dark:text-zinc-400">
-                  Permite ofrecer la opción de 3 cuotas con recargo del 25% en las compras.
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                name="cuotas_habilitadas"
-                checked={form.cuotas_habilitadas ?? true}
-                onChange={handleChange}
-                className="w-5 h-5 accent-indigo-600 dark:accent-indigo-500 cursor-pointer rounded"
-              />
-            </div>
-
-            {form.cuotas_habilitadas && (
-              <div className="pl-4 border-l-2 border-slate-200 dark:border-zinc-800 space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400">
-                  Monto Mínimo de Compra para Habilitar Cuotas ($)
-                </label>
-                <input
-                  type="number"
-                  name="monto_minimo_cuotas"
-                  value={form.monto_minimo_cuotas ?? 0}
-                  onChange={handleChange}
-                  placeholder="20000"
-                  min="0"
-                  className="w-full md:w-1/2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
-                />
-                <p className="text-xs text-slate-400 dark:text-zinc-500">
-                  Las cuotas se ofrecerán únicamente cuando el total alcance o supere este monto.
-                </p>
-              </div>
-            )}
           </div>
         </div>
 
