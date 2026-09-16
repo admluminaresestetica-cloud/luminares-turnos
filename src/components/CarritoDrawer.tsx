@@ -363,22 +363,16 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             ) : (
               /* Paso Checkout */
               <form id="checkout-form" onSubmit={manejarSubmit} className="space-y-5">
-                <FormularioEnvio
-                  datosEnvio={datosEnvio}
-                  setDatosEnvio={setDatosEnvio}
-                  costoEnvio={costoEnvioFijo}
-                  metodoPago={metodoPago === "whatsapp" ? "whatsapp" : "mercadopago"}
-                  totalPrecio={subtotalProductos}
-                  tieneEnvioGratis={tieneEnvioGratis}
-                  guardandoPedido={cargandoMP}
-                  onConfirmar={() => {
-                    if (metodoPago === "whatsapp") {
-                      procesarWhatsApp();
-                    } else {
-                      procesarMercadoPago();
-                    }
-                  }}
-                />
+  <FormularioEnvio
+    datosEnvio={datosEnvio}
+    setDatosEnvio={setDatosEnvio}
+    costoEnvio={costoEnvioFijo}
+    metodoPago={metodoPago === "whatsapp" ? "whatsapp" : "mercadopago"}
+    totalPrecio={subtotalProductos}
+    tieneEnvioGratis={tieneEnvioGratis}
+    guardandoPedido={cargandoMP}
+    onConfirmar={() => {}}
+  />
 
                 {/* Selección de Método de Pago */}
                 <div className="space-y-2 pt-2">
