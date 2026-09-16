@@ -215,68 +215,47 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const procesarMercadoPago = async () => {
     setCargandoMP(true);
     try {
-      const medioPagoTexto =
-        metodoPago === "mercadopago_cuotas"
-          ? "Mercado Pago (3 Cuotas)"
-          : "Mercado Pago (Débito/Contado)";
-
-      await guardarPedidoEnDB(totalFinalAbonar, medioPagoTexto);
-
-      const itemsMP = carritoSeguro.map((item) => ({
-        title: item.nombre,
-        unit_price: Number(item.precio) || 0,
-        quantity: item.cantidad,
-        currency_id: "ARS",
+      const itemsParaApi = carritoSeguro.map((item) => ({
+        id: item.id,
+        nombre: item.nombre,
+        precio: Number(item.precio) || 0,
+        cantidad: item.cantidad,
       }));
 
       if (costoEnvioAplicado > 0) {
-        itemsMP.push({
-          title: "Costo de envío",
-          unit_price: costoEnvioAplicado,
-          quantity: 1,
-          currency_id: "ARS",
+        itemsParaApi.push({
+          id: "envio-cadeteria",
+          nombre: "Costo de Cadetería / Envío",
+          precio: costoEnvioAplicado,
+          cantidad: 1,
         });
       }
 
-      if (recargoMonto > 0) {
-        itemsMP.push({
-          title:
-            metodoPago === "mercadopago_cuotas"
-              ? "Gastos de gestión de pago en cuotas"
-              : "Gastos de gestión de pago",
-          unit_price: recargoMonto,
-          quantity: 1,
-          currency_id: "ARS",
-        });
-      }
-
-      const response = await fetch("/api/mercadopago/crear-preferencia", {
+      const response = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: itemsMP,
-          payer: {
-            name: datosEnvio.nombreCliente.trim(),
-            phone: datosEnvio.telefonoCliente.trim(),
-          },
-          metadata: {
-            metodo_envio: datosEnvio.metodoEnvio,
+          itemsCarrito: itemsParaApi,
+          cliente: {
+            nombre: datosEnvio.nombreCliente.trim(),
+            telefono: datosEnvio.telefonoCliente.trim(),
+            metodoEnvio: datosEnvio.metodoEnvio,
             direccion: datosEnvio.direccion,
-            es_cuotas: metodoPago === "mercadopago_cuotas",
           },
         }),
       });
 
       const data = await response.json();
-      if (data.init_point) {
+
+      if (response.ok && data.init_point) {
         vaciarCarrito();
         onClose();
         window.location.href = data.init_point;
       } else {
-        alert("Ocurrió un error al generar el pago con Mercado Pago.");
+        alert(data.error || "Ocurrió un error al generar la preferencia de Mercado Pago.");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error al procesar Mercado Pago:", err);
       alert("Error de conexión al procesar el pago.");
     } finally {
       setCargandoMP(false);
@@ -496,7 +475,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             )}
           </div>
 
-    {/* Footer */}
+                {/* Footer */}
           {carritoSeguro.length > 0 && (
             <div className="p-4 sm:p-6 border-t border-[#E7E5E0] bg-gray-50 space-y-4">
               <div className="space-y-1.5 text-xs text-gray-600">
