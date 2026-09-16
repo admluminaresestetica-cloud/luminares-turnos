@@ -119,6 +119,27 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     recargoMonto = totalCuotasOp - totalBaseConEnvio;
   }
 
+  // Validación previa de campos obligatorios
+  const validarCamposFormulario = (): boolean => {
+    const nombre = datosEnvio.nombreCliente?.trim() || "";
+    const telefono = datosEnvio.telefonoCliente?.trim() || "";
+    const direccion = datosEnvio.direccion?.trim() || "";
+
+    if (!nombre) {
+      alert("Por favor, ingresá tu nombre y apellido.");
+      return false;
+    }
+    if (!telefono) {
+      alert("Por favor, ingresá tu número de teléfono / celular.");
+      return false;
+    }
+    if (datosEnvio.metodoEnvio === "envio" && !direccion) {
+      alert("Por favor, ingresá la dirección de envío.");
+      return false;
+    }
+    return true;
+  };
+
   const guardarPedidoEnDB = async (
     montoFinal: number,
     medioPagoStr: string
@@ -166,6 +187,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   };
 
   const procesarWhatsApp = async () => {
+    if (!validarCamposFormulario()) return;
+
     await guardarPedidoEnDB(totalFinalAbonar, "Transferencia / Efectivo");
 
     let mensaje = `¡Hola! Quisiera realizar el siguiente pedido:\n\n`;
@@ -213,6 +236,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   };
 
   const procesarMercadoPago = async () => {
+    if (!validarCamposFormulario()) return;
+
     setCargandoMP(true);
     try {
       const itemsParaApi = carritoSeguro.map((item) => ({
@@ -248,7 +273,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       const data = await response.json();
 
       if (response.ok && data.init_point) {
-        vaciarCarrito();
+        // NOTA: Se removió vaciarCarrito() de aquí para evitar que se borre 
+        // el carrito si el usuario vuelve atrás desde la pasarela de pago.
+        // Ahora se vaciará mediante un listener al retornar con ?status=success en la página principal.
         onClose();
         window.location.href = data.init_point;
       } else {
@@ -473,8 +500,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                 </div>
               </form>
             )}
-          </div>
-
+          </div> 
                 {/* Footer */}
           {carritoSeguro.length > 0 && (
             <div className="p-4 sm:p-6 border-t border-[#E7E5E0] bg-gray-50 space-y-4">

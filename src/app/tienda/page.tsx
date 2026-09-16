@@ -43,9 +43,23 @@ export default function TiendaPage() {
 
   const context = useCarrito();
   const items = context?.items || context?.carrito || [];
+  const vaciarCarrito = context?.vaciarCarrito;
+
   const totalItems = Array.isArray(items)
     ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 1), 0)
     : 0;
+
+  // Listener para detectar cuando Mercado Pago retorna con éxito (?status=success)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get("status");
+
+    if (status === "success" && typeof vaciarCarrito === "function") {
+      vaciarCarrito();
+      // Limpiamos los parámetros de la URL para que no quede el status colgado
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [vaciarCarrito]);
 
   useEffect(() => {
     setMounted(true);
