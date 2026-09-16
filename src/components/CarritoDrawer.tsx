@@ -68,11 +68,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     0
   );
 
-  // Toma el costo de envío salvo que el usuario haya seleccionado explícitamente "retiro"
   const costoEnvioAplicado =
     datosEnvio.metodoEnvio === "retiro" ? 0 : costoEnvioFijo;
 
-  // Evaluación de aptitud para cuotas
   const productoNoAptoCuotas = carritoSeguro.find(
     (item) => item.permite_cuotas === false
   );
@@ -80,13 +78,11 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const aptoParaCuotas =
     cuotasHabilitadas && !productoNoAptoCuotas && alcanzaMontoMinimoCuotas;
 
-  // PORCENTAJES DE RECARGO SEGÚN OPCIÓN
-  const PORCENTAJE_DEBITO = 0.10; // +10%
-  const PORCENTAJE_CUOTAS = 0.25; // +25%
+  const PORCENTAJE_DEBITO = 0.10;
+  const PORCENTAJE_CUOTAS = 0.25;
 
   const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
 
-  // Cálculo del recargo exacto según la opción seleccionada
   let recargoMonto = 0;
   if (metodoPago === "mercadopago_debito") {
     recargoMonto = Math.round(totalBaseConEnvio * PORCENTAJE_DEBITO);
@@ -96,7 +92,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   const totalFinalAbonar = totalBaseConEnvio + recargoMonto;
 
-  // Valores prefijados para los botones
   const totalDebitoOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_DEBITO));
   const totalCuotasOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_CUOTAS));
   const valorCuotaOp = Math.round(totalCuotasOp / 3);
