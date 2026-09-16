@@ -188,7 +188,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       mensaje += `\n📝 *Nota:* ${datosEnvio.notaAdicional.trim()}\n`;
     }
 
-    const whatsappUrl = `https://wa.me/5493416410291?text=${encodeURIComponent(
+    const whatsappUrl = `https://wa.me/5493413954355?text=${encodeURIComponent(
       mensaje
     )}`;
     vaciarCarrito();
