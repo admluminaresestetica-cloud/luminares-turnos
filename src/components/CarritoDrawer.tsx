@@ -527,8 +527,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   <div className="flex justify-between text-gray-500">
                     <span>
                       {metodoPago === "mercadopago_cuotas"
-                        ? "Recargo cuotas (25%):"
-                        : "Recargo débito (10%):"}
+                        ? "Recargo cuotas"
+                        : "Recargo débitoRecargo cuotas (25%)"}
                     </span>
                     <span>+${recargoMonto.toLocaleString("es-AR")}</span>
                   </div>
