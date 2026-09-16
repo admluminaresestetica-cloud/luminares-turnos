@@ -68,8 +68,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     0
   );
 
+  // Toma el costo de envío salvo que el usuario haya seleccionado explícitamente "retiro"
   const costoEnvioAplicado =
-    datosEnvio.metodoEnvio === "envio" ? costoEnvioFijo : 0;
+    datosEnvio.metodoEnvio === "retiro" ? 0 : costoEnvioFijo;
 
   // Evaluación de aptitud para cuotas
   const productoNoAptoCuotas = carritoSeguro.find(
@@ -488,12 +489,16 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   <span>Subtotal productos:</span>
                   <span>${subtotalProductos.toLocaleString("es-AR")}</span>
                 </div>
-                {datosEnvio.metodoEnvio === "envio" && (
-                  <div className="flex justify-between">
-                    <span>Costo de envío:</span>
-                    <span>${costoEnvioAplicado.toLocaleString("es-AR")}</span>
-                  </div>
-                )}
+                <div className="flex justify-between">
+                  <span>Costo de envío:</span>
+                  <span>
+                    {costoEnvioAplicado === 0 ? (
+                      <span className="font-bold text-[#0E6E55]">Gratis (Retiro en local)</span>
+                    ) : (
+                      `$${costoEnvioAplicado.toLocaleString("es-AR")}`
+                    )}
+                  </span>
+                </div>
                 <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
                   <span>Total final:</span>
                   <span>${totalFinalAbonar.toLocaleString("es-AR")}</span>
