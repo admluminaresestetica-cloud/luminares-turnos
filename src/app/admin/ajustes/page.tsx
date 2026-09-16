@@ -37,7 +37,13 @@ export default function AjustesAdminPage() {
       const data = await obtenerConfiguracion();
       if (data) {
         setForm({
-          ...data,
+          nombre_empresa: data.nombre_empresa ?? '',
+          subtitulo_tienda: data.subtitulo_tienda ?? '',
+          logo_url: data.logo_url ?? '',
+          whatsapp_numero: data.whatsapp_numero ?? '',
+          google_maps_url: data.google_maps_url ?? '',
+          mp_access_token: data.mp_access_token ?? '',
+          mp_alias: data.mp_alias ?? '',
           envio_domicilio_activo: data.envio_domicilio_activo ?? false,
           costo_envio_base: data.costo_envio_base ?? 0,
           envio_gratis_activo: data.envio_gratis_activo ?? false,
@@ -51,7 +57,7 @@ export default function AjustesAdminPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    
+
     setForm((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : type === 'number' ? (value === '' ? 0 : Number(value)) : value,
@@ -242,7 +248,7 @@ export default function AjustesAdminPage() {
           <h2 className="text-lg font-semibold text-slate-800 dark:text-zinc-100 border-b border-slate-100 dark:border-zinc-800 pb-3">
             Configuración de Envíos
           </h2>
-          
+
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3.5 border border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50 dark:bg-zinc-950">
               <div>
@@ -356,13 +362,18 @@ export default function AjustesAdminPage() {
         </div>
       </form>
 
-      {/* Sección Independiente de Preguntas Frecuentes */}
-      <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm space-y-4 transition-colors">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-zinc-100 border-b border-slate-100 dark:border-zinc-800 pb-3">
-          Preguntas Frecuentes (FAQ)
-        </h2>
-        <FaqTab />
-      </div>
+      {/* Sección Independiente de Preguntas Frecuentes (Desplegable) */}
+      <details className="group bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm transition-colors">
+        <summary className="flex items-center justify-between cursor-pointer list-none text-lg font-semibold text-slate-800 dark:text-zinc-100 select-none">
+          <span>Preguntas Frecuentes (FAQ)</span>
+          <span className="text-xs text-slate-400 font-normal transition-transform group-open:rotate-180">
+            ▼
+          </span>
+        </summary>
+        <div className="pt-4 mt-4 border-t border-slate-100 dark:border-zinc-800">
+          <FaqTab />
+        </div>
+      </details>
     </div>
   );
 }

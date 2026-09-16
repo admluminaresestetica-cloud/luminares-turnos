@@ -16,7 +16,7 @@ export default function AcordeonFAQ() {
       <div className="rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden">
         <button
           onClick={() => toggleFaq("envios")}
-          className="flex w-full items-center justify-between p-3.5 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/60 transition-colors"
+          className="flex w-full items-center justify-between p-3.5 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/60 active:scale-[0.99] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-2.5">
             <Truck className="h-4 w-4 text-[#0E6E55]" />
@@ -39,7 +39,7 @@ export default function AcordeonFAQ() {
       <div className="rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden">
         <button
           onClick={() => toggleFaq("pagos")}
-          className="flex w-full items-center justify-between p-3.5 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/60 transition-colors"
+          className="flex w-full items-center justify-between p-3.5 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/60 active:scale-[0.99] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-2.5">
             <CreditCard className="h-4 w-4 text-[#0E6E55]" />
@@ -62,7 +62,7 @@ export default function AcordeonFAQ() {
       <div className="rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden">
         <button
           onClick={() => toggleFaq("cambios")}
-          className="flex w-full items-center justify-between p-3.5 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/60 transition-colors"
+          className="flex w-full items-center justify-between p-3.5 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/60 active:scale-[0.99] transition-all cursor-pointer"
         >
           <div className="flex items-center gap-2.5">
             <RefreshCw className="h-4 w-4 text-[#0E6E55]" />

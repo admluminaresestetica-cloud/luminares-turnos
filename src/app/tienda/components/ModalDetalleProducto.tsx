@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { X, Plus, Minus, ShoppingBag, Sparkles, Share2 } from "lucide-react";
+import { X, Plus, Minus, ShoppingBag, Share2, CreditCard, Tag } from "lucide-react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 import AcordeonFAQ from "./AcordeonFAQ";
+import GaleriaProducto from "./GaleriaProducto";
+import ProductosRelacionados from "./ProductosRelacionados";
+import { calcularCuotas } from "@/lib/precios";
 
 interface ModalDetalleProductoProps {
   producto: Producto | null;
@@ -13,16 +15,21 @@ interface ModalDetalleProductoProps {
   onClose: () => void;
   onSeleccionarProducto: (prod: Producto) => void;
   onAbrirCarrito?: () => void;
+  onFiltrarPorTag?: (tag: string) => void;
 }
 
 export default function ModalDetalleProducto({
   producto,
   todosProductos,
   onClose,
+  onFiltrarPorTag,
   onSeleccionarProducto,
   onAbrirCarrito,
 }: ModalDetalleProductoProps) {
   const [cantidad, setCantidad] = useState(1);
+  const [startY, setStartY] = useState<number | null>(null);
+  const [currentOffsetY, setCurrentOffsetY] = useState<number>(0);
+  const [imagenSeleccionada, setImagenSeleccionada] = useState<string>("");
 
   const context = useCarrito();
   const agregarAlCarrito = context?.agregarAlCarrito;
@@ -32,61 +39,109 @@ export default function ModalDetalleProducto({
 
   const modalContainerRef = useRef<HTMLDivElement>(null);
 
-  // Stock real del producto principal
   const stockDisponible = producto?.stock ?? 0;
   const sinStock = stockDisponible <= 0;
 
-  // Buscar cuántos hay actualmente en el carrito del producto principal
   const itemEnCarrito = Array.isArray(items) && producto
     ? items.find((item: any) => item.id === producto.id)
     : null;
   const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
-
-  // Cuántas unidades más se pueden agregar como máximo
   const maximoPermitidoParaAgregar = Math.max(0, stockDisponible - cantidadEnCarrito);
 
-  // Reseteamos la cantidad según lo disponible al cambiar de producto
+  const imagenesTotales: string[] = (producto as any)?.imagenes_urls?.length
+    ? (producto as any).imagenes_urls
+    : (producto as any)?.imagenes?.length
+    ? (producto as any).imagenes
+    : producto?.imagen_url
+    ? [producto.imagen_url]
+    : [];
+
   useEffect(() => {
-    if (maximoPermitidoParaAgregar > 0) {
-      setCantidad(1);
+    setCurrentOffsetY(0);
+    setCantidad(maximoPermitidoParaAgregar > 0 ? 1 : 0);
+
+    if (imagenesTotales.length > 0) {
+      setImagenSeleccionada(imagenesTotales[0]);
     } else {
-      setCantidad(0);
+      setImagenSeleccionada("");
     }
+
     if (modalContainerRef.current) {
       modalContainerRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [producto, maximoPermitidoParaAgregar]);
 
-  // Soporte para cerrar con tecla ESC
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+      if (e.key === "Escape") onClose();
     };
-    if (producto) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
+    if (producto) window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [producto, onClose]);
 
+  useEffect(() => {
+    if (!producto) return;
+    const scrollYPrevio = window.scrollY;
+    const bodyStyle = document.body.style;
+
+    bodyStyle.position = "fixed";
+    bodyStyle.top = `-${scrollYPrevio}px`;
+    bodyStyle.left = "0";
+    bodyStyle.right = "0";
+    bodyStyle.width = "100%";
+    bodyStyle.overscrollBehaviorY = "contain";
+
+    return () => {
+      bodyStyle.position = "";
+      bodyStyle.top = "";
+      bodyStyle.left = "";
+      bodyStyle.right = "";
+      bodyStyle.width = "";
+      bodyStyle.overscrollBehaviorY = "";
+      window.scrollTo(0, scrollYPrevio);
+    };
+  }, [producto]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (modalContainerRef.current && modalContainerRef.current.scrollTop === 0) {
+      setStartY(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (startY === null) return;
+    const deltaY = e.touches[0].clientY - startY;
+    if (deltaY > 0) setCurrentOffsetY(deltaY);
+  };
+
+  const handleTouchEnd = () => {
+    if (currentOffsetY > 100) {
+      setCurrentOffsetY(0);
+      onClose();
+    } else {
+      setCurrentOffsetY(0);
+    }
+    setStartY(null);
+  };
+
   if (!producto) return null;
 
-  const precioOriginal = Number(producto.precio_original ?? producto.precio_anterior) || 0;
+  const precioOriginal = Number(producto.precio_original ?? (producto as any).precio_anterior) || 0;
   const tieneDescuento = precioOriginal > producto.precio;
   const porcentajeDescuento = tieneDescuento
     ? Math.round(((precioOriginal - producto.precio) / precioOriginal) * 100)
     : 0;
 
-  // Función para Compartir Enlace Inteligente
+  const permiteCuotas = producto.permite_cuotas !== false;
+  const { montoCuota } = calcularCuotas(producto.precio || 0);
+
   const handleCompartir = async () => {
     const urlProducto = `${window.location.origin}/tienda/producto/${producto.id}`;
-
-  const shareData = {
-    title: producto.nombre,
-    text: `¡Mirá este producto en Luminares! ${producto.nombre} a $${producto.precio.toLocaleString("es-AR")}`,
-    url: urlProducto,
-  };
+    const shareData = {
+      title: producto.nombre,
+      text: `¡Mirá este producto en Luminares! ${producto.nombre} a $${producto.precio.toLocaleString("es-AR")}`,
+      url: urlProducto,
+    };
     if (navigator.share) {
       try {
         await navigator.share(shareData);
@@ -105,7 +160,6 @@ export default function ModalDetalleProducto({
 
   const handleAgregarPrincipal = () => {
     if (cantidad <= 0 || maximoPermitidoParaAgregar <= 0 || !agregarAlCarrito) return;
-
     for (let i = 0; i < cantidad; i++) {
       agregarAlCarrito(producto);
     }
@@ -114,19 +168,13 @@ export default function ModalDetalleProducto({
 
   const handleComprarAhora = () => {
     if (cantidad <= 0 || maximoPermitidoParaAgregar <= 0 || !agregarAlCarrito) return;
-
     for (let i = 0; i < cantidad; i++) {
       agregarAlCarrito(producto);
     }
-
     onClose();
-
-    if (onAbrirCarrito) {
-      onAbrirCarrito();
-    }
+    if (onAbrirCarrito) onAbrirCarrito();
   };
 
-  // Handlers para la sección de Cross-Selling (Productos Recomendados)
   const handleRestarRecomendado = (e: React.MouseEvent, relProd: Producto, cantActual: number) => {
     e.stopPropagation();
     if (cantActual > 1 && actualizarCantidad) {
@@ -149,46 +197,51 @@ export default function ModalDetalleProducto({
     }
   };
 
-  // Lógica de Cross-Selling
   const complementosOtrasCategorias = todosProductos.filter(
     (p) => p.id !== producto.id && p.categoria !== producto.categoria
   );
-
   const deLaMismaCategoria = todosProductos.filter(
     (p) => p.id !== producto.id && p.categoria === producto.categoria
   );
-
   const productosRelacionados = [...complementosOtrasCategorias, ...deLaMismaCategoria].slice(0, 3);
 
-  // Controles de incremento y decremento modal principal
   const puedeSumar = cantidad < maximoPermitidoParaAgregar;
   const puedeRestar = cantidad > 1;
 
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 overscroll-none"
     >
       <div
         ref={modalContainerRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-200"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="relative w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-2xl"
+        style={{
+          overscrollBehaviorY: "contain",
+          transform: `translateY(${currentOffsetY}px)`,
+          transition: startY === null ? "transform 0.2s ease-out" : "none",
+        }}
       >
-        {/* Contenedor de Botones Superiores (Compartir y Cerrar) */}
+        <div className="flex justify-center -mt-2 mb-2 py-2 sm:hidden cursor-grab active:cursor-grabbing">
+          <span className="h-1.5 w-12 rounded-full bg-slate-300" />
+        </div>
+
         <div className="sticky top-0 float-right z-20 -mr-2 -mt-2 sm:-mr-4 sm:-mt-4 flex items-center gap-2">
-          {/* Botón Compartir */}
           <button
             onClick={handleCompartir}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-600 backdrop-blur-md transition-colors hover:bg-slate-200 hover:text-slate-900 cursor-pointer shadow-sm"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-600 backdrop-blur-md transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-90 cursor-pointer shadow-sm"
             title="Compartir producto"
           >
             <Share2 className="h-4 w-4" />
           </button>
 
-          {/* Botón Cerrar */}
           <button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-500 backdrop-blur-md transition-colors hover:bg-slate-200 hover:text-slate-800 cursor-pointer shadow-sm"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-500 backdrop-blur-md transition-all hover:bg-slate-200 hover:text-slate-800 active:scale-90 cursor-pointer shadow-sm"
             title="Cerrar (Esc)"
           >
             <X className="h-5 w-5" />
@@ -196,46 +249,48 @@ export default function ModalDetalleProducto({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start clear-both">
-          {/* Imagen Principal */}
-          <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
-            {producto.imagen_url ? (
-              <Image
-                src={producto.imagen_url}
-                alt={producto.nombre}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-slate-300">
-                Sin Imagen
-              </div>
-            )}
+          {/* GALERÍA DE IMÁGENES */}
+          <GaleriaProducto
+            producto={producto}
+            imagenSeleccionada={imagenSeleccionada}
+            setImagenSeleccionada={setImagenSeleccionada}
+            imagenesTotales={imagenesTotales}
+            tieneDescuento={tieneDescuento}
+            porcentajeDescuento={porcentajeDescuento}
+            sinStock={sinStock}
+          />
 
-            {tieneDescuento && !sinStock && (
-              <span className="absolute top-3 left-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-sm">
-                -{porcentajeDescuento}% OFF
-              </span>
-            )}
-
-            {sinStock && (
-              <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
-                <span className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-bold text-[#12151B]">
-                  Sin Stock
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Información del Producto */}
+          {/* INFORMACIÓN Y ACCIONES DEL PRODUCTO */}
           <div className="flex flex-col justify-between space-y-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#0E6E55]">
                 {producto.categoria}
               </span>
+
               <h2 className="text-xl font-bold text-slate-900 sm:text-2xl mt-1">
                 {producto.nombre}
               </h2>
+
+              {/* ETIQUETAS / TAGS DEBAJO DEL NOMBRE */}
+              {producto.etiquetas && producto.etiquetas.length > 0 && (
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {producto.etiquetas.map((tag, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        if (onFiltrarPorTag) onFiltrarPorTag(tag);
+                        onClose();
+                      }}
+                      className="inline-flex items-center gap-1 rounded-md bg-slate-100 hover:bg-[#0E6E55]/10 px-2 py-0.5 text-xs font-medium text-slate-600 hover:text-[#0E6E55] transition-colors cursor-pointer"
+                      title={`Filtrar productos por #${tag}`}
+                    >
+                      <Tag className="h-3 w-3 text-slate-400" />
+                      #{tag}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               <div className="mt-3 flex items-baseline gap-2">
                 <span className="text-2xl font-extrabold text-slate-900">
@@ -248,7 +303,22 @@ export default function ModalDetalleProducto({
                 )}
               </div>
 
-              <p className="text-xs text-slate-500 mt-1">
+              {!sinStock && (
+                <div className="mt-2">
+                  {permiteCuotas ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700">
+                      <CreditCard className="h-3.5 w-3.5" />
+                      3 cuotas fijas de ${montoCuota.toLocaleString("es-AR")}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                      Solo Contado / Débito
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <p className="text-xs text-slate-500 mt-2">
                 Stock disponible: <strong className="text-slate-800">{stockDisponible}</strong>
                 {cantidadEnCarrito > 0 && (
                   <span className="ml-1 text-emerald-700 font-medium">
@@ -264,7 +334,6 @@ export default function ModalDetalleProducto({
               )}
             </div>
 
-            {/* Selector de Cantidad y Botón Principal */}
             <div className="space-y-4 pt-2">
               <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-2">
                 <span className="text-xs font-semibold text-slate-600 pl-2">Cantidad a agregar:</span>
@@ -272,7 +341,7 @@ export default function ModalDetalleProducto({
                   <button
                     onClick={() => puedeRestar && setCantidad(cantidad - 1)}
                     disabled={!puedeRestar}
-                    className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
                       puedeRestar
                         ? "text-slate-700 hover:bg-slate-100 cursor-pointer"
                         : "text-slate-300 cursor-not-allowed"
@@ -289,7 +358,7 @@ export default function ModalDetalleProducto({
                   <button
                     onClick={() => puedeSumar && setCantidad(cantidad + 1)}
                     disabled={!puedeSumar}
-                    className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors ${
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
                       puedeSumar
                         ? "text-slate-700 hover:bg-slate-100 cursor-pointer"
                         : "text-slate-300 cursor-not-allowed"
@@ -301,7 +370,6 @@ export default function ModalDetalleProducto({
                 </div>
               </div>
 
-              {/* Botón de Agregar al Carrito */}
               <button
                 onClick={handleAgregarPrincipal}
                 disabled={sinStock || maximoPermitidoParaAgregar <= 0}
@@ -321,14 +389,13 @@ export default function ModalDetalleProducto({
                 </span>
               </button>
 
-              {/* Botón de Comprar Ahora */}
               <button
                 onClick={handleComprarAhora}
                 disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all mt-2.5 ${
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all mt-2.5 active:scale-[0.98] ${
                   sinStock || maximoPermitidoParaAgregar <= 0
                     ? "bg-slate-200 text-slate-400 cursor-not-allowed border-transparent"
-                    : "border-2 border-[#0E6E55] bg-transparent text-[#0E6E55] hover:bg-[#0E6E55]/10 active:scale-[0.98] cursor-pointer"
+                    : "border-2 border-[#0E6E55] bg-transparent text-[#0E6E55] hover:bg-[#0E6E55]/10 cursor-pointer"
                 }`}
               >
                 <span>Comprar ahora</span>
@@ -337,123 +404,16 @@ export default function ModalDetalleProducto({
           </div>
         </div>
 
-        {/* Componente Modular de FAQ */}
         <AcordeonFAQ />
 
-        {/* Sección Cross-Selling con Controles Inteligentes */}
-        {productosRelacionados.length > 0 && (
-          <div className="mt-8 border-t border-slate-100 pt-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-[#0E6E55]" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Completa tu rutina / Recomendados
-                </h3>
-              </div>
-              <span className="text-[11px] text-slate-400 font-medium">Suma en 1-clic</span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              {productosRelacionados.map((rel) => {
-                const relPrecioOriginal = Number(rel.precio_original ?? rel.precio_anterior) || 0;
-                const relTieneDesc = relPrecioOriginal > rel.precio;
-                const relStock = rel.stock ?? 0;
-
-                const itemRelEnCarrito = Array.isArray(items)
-                  ? items.find((item: any) => item.id === rel.id)
-                  : null;
-                const relCantidadEnCarrito = itemRelEnCarrito ? itemRelEnCarrito.cantidad : 0;
-                const relLimiteAlcanzado = relCantidadEnCarrito >= relStock;
-
-                return (
-                  <div
-                    key={rel.id}
-                    onClick={() => onSeleccionarProducto && onSeleccionarProducto(rel)}
-                    className="group relative flex flex-col justify-between text-left rounded-2xl border border-slate-100 p-2.5 hover:border-[#0E6E55]/40 hover:bg-slate-50/80 transition-all cursor-pointer shadow-sm hover:shadow-md"
-                  >
-                    <div>
-                      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-slate-100 mb-2">
-                        {rel.imagen_url ? (
-                          <Image
-                            src={rel.imagen_url}
-                            alt={rel.nombre}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-300">
-                            Sin Foto
-                          </div>
-                        )}
-
-                        {relTieneDesc && (
-                          <span className="absolute top-1 left-1 rounded-md bg-emerald-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                            OFF
-                          </span>
-                        )}
-                      </div>
-
-                      <span className="text-xs font-semibold text-slate-800 truncate block w-full group-hover:text-[#0E6E55] transition-colors">
-                        {rel.nombre}
-                      </span>
-                    </div>
-
-                    <div className="mt-2 flex items-center justify-between gap-1 pt-1 border-t border-slate-100/60">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-[#0E6E55]">
-                          ${rel.precio.toLocaleString("es-AR")}
-                        </span>
-                        {relTieneDesc && (
-                          <span className="text-[9px] text-slate-400 line-through">
-                            ${relPrecioOriginal.toLocaleString("es-AR")}
-                          </span>
-                        )}
-                      </div>
-
-                      {relCantidadEnCarrito === 0 ? (
-                        <button
-                          onClick={(e) => handleSumarRecomendado(e, rel, relCantidadEnCarrito, relStock)}
-                          disabled={relStock <= 0}
-                          title="Agregar al carrito"
-                          className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] hover:bg-[#0E6E55] hover:text-white transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-200/80 rounded-xl p-0.5 shadow-sm">
-                          <button
-                            onClick={(e) => handleRestarRecomendado(e, rel, relCantidadEnCarrito)}
-                            className="flex h-6 w-6 items-center justify-center rounded-lg bg-white text-emerald-800 hover:bg-emerald-100 transition-all font-bold text-xs"
-                            title="Restar una unidad"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </button>
-
-                          <span className="text-[11px] font-extrabold text-emerald-900 px-1">
-                            {relCantidadEnCarrito}
-                          </span>
-
-                          <button
-                            onClick={(e) => handleSumarRecomendado(e, rel, relCantidadEnCarrito, relStock)}
-                            disabled={relLimiteAlcanzado}
-                            className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs font-bold transition-all ${
-                              relLimiteAlcanzado
-                                ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                                : "bg-[#0E6E55] text-white hover:bg-[#0b5944]"
-                            }`}
-                            title={relLimiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* SUBCOMPONENTE DE PRODUCTOS RECOMENDADOS */}
+        <ProductosRelacionados
+          productosRelacionados={productosRelacionados}
+          items={items}
+          onSeleccionarProducto={onSeleccionarProducto}
+          handleSumarRecomendado={handleSumarRecomendado}
+          handleRestarRecomendado={handleRestarRecomendado}
+        />
       </div>
     </div>
   );

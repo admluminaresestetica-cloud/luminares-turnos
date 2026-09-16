@@ -11,6 +11,7 @@ export interface Producto {
   categoria?: string;
   stock?: number;
   activo?: boolean;
+  permite_cuotas?: boolean;
 }
 
 export interface CarritoItem extends Producto {
@@ -42,7 +43,7 @@ const CarritoContext = createContext<CarritoContextType | undefined>(undefined);
 
 export function CarritoProvider({ children }: { children: React.ReactNode }) {
   const [carrito, setCarrito] = useState<CarritoItem[]>([]);
-  const [cargado, setCargado] = useState(false); // Bandera para evitar sobrescribir al iniciar
+  const [cargado, setCargado] = useState(false);
   const [datosEnvio, setDatosEnvio] = useState<DatosEnvio>({
     nombreCliente: "",
     telefonoCliente: "",
@@ -51,85 +52,114 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
     notaAdicional: "",
   });
 
-  // 1. Cargar carrito desde localStorage en la primera carga
+  // Cargar carrito desde localStorage sólo en el cliente
   useEffect(() => {
-    const guardado = localStorage.getItem("luminares_carrito");
-    if (guardado) {
-      try {
-        setCarrito(JSON.parse(guardado));
-      } catch (e) {
-        console.error("Error al cargar el carrito:", e);
+    try {
+      const guardado = localStorage.getItem("luminares_carrito");
+      if (guardado) {
+        const parseado = JSON.parse(guardado);
+        if (Array.isArray(parseado)) {
+          setCarrito(parseado);
+        }
       }
+    } catch (e) {
+      console.error("Error al cargar el carrito:", e);
+    } finally {
+      setCargado(true);
     }
-    setCargado(true); // Marcamos que la lectura inicial ya se realizó
   }, []);
 
-  // 2. Guardar en localStorage solo DESPUÉS de haber cargado el estado inicial
+  // Guardar en localStorage de forma segura
   useEffect(() => {
     if (cargado) {
-      localStorage.setItem("luminares_carrito", JSON.stringify(carrito));
+      try {
+        localStorage.setItem("luminares_carrito", JSON.stringify(carrito));
+      } catch (e) {
+        console.error("Error al guardar en localStorage:", e);
+      }
     }
   }, [carrito, cargado]);
 
   const agregarAlCarrito = (producto: Producto) => {
+    if (!producto) return;
+
     if (producto.activo === false) {
       alert("Este producto no está disponible en este momento.");
       return;
     }
 
     setCarrito((prev) => {
-      const existe = prev.find((item) => item.id === producto.id);
-      const stockDisponible = producto.stock ?? 0;
+      const listaSegura = Array.isArray(prev) ? prev : [];
+      const existe = listaSegura.find((item) => item.id === producto.id);
+      const stockDisponible = Number(producto.stock) || 0;
       const cantidadActual = existe ? existe.cantidad : 0;
 
-      if (cantidadActual + 1 > stockDisponible) {
+      if (stockDisponible > 0 && cantidadActual + 1 > stockDisponible) {
         alert(`Solo hay ${stockDisponible} unidad(es) disponible(s) de este producto.`);
-        return prev;
+        return listaSegura;
       }
 
       if (existe) {
-        return prev.map((item) =>
+        return listaSegura.map((item) =>
           item.id === producto.id
-            ? { ...item, cantidad: item.cantidad + 1 }
+            ? {
+                ...item,
+                cantidad: item.cantidad + 1,
+                precio: Number(producto.precio) || Number(item.precio) || 0,
+                permite_cuotas: producto.permite_cuotas ?? item.permite_cuotas ?? true,
+              }
             : item
         );
       }
 
-      return [...prev, { ...producto, cantidad: 1 }];
+      return [
+        ...listaSegura,
+        {
+          ...producto,
+          precio: Number(producto.precio) || 0,
+          cantidad: 1,
+          permite_cuotas: producto.permite_cuotas ?? true,
+        },
+      ];
     });
   };
 
   const restarDelCarrito = (id: number | string) => {
-    setCarrito((prev) =>
-      prev
+    setCarrito((prev) => {
+      const listaSegura = Array.isArray(prev) ? prev : [];
+      return listaSegura
         .map((item) => {
           if (item.id === id) {
             return { ...item, cantidad: item.cantidad - 1 };
           }
           return item;
         })
-        .filter((item) => item.cantidad > 0)
-    );
+        .filter((item) => item.cantidad > 0);
+    });
   };
 
   const eliminarDelCarrito = (id: number | string) => {
-    setCarrito((prev) => prev.filter((item) => item.id !== id));
+    setCarrito((prev) => {
+      const listaSegura = Array.isArray(prev) ? prev : [];
+      return listaSegura.filter((item) => item.id !== id);
+    });
   };
 
   const vaciarCarrito = () => {
     setCarrito([]);
   };
 
-  const total = carrito.reduce(
-    (acc, item) => acc + item.precio * item.cantidad,
+  const listaSegura = Array.isArray(carrito) ? carrito : [];
+  const total = listaSegura.reduce(
+    (acc, item) => acc + (Number(item?.precio) || 0) * (Number(item?.cantidad) || 1),
     0
   );
 
   return (
     <CarritoContext.Provider
       value={{
-        carrito,
-        items: carrito,
+        carrito: listaSegura,
+        items: listaSegura,
         datosEnvio,
         setDatosEnvio,
         agregarAlCarrito,

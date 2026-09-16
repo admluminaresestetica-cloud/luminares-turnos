@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { calcularCuotas } from "@/lib/precios";
 
 interface ListaProductosProps {
   productos: any[];
@@ -21,15 +22,24 @@ export default function ListaProductos({
   const [modalRestockId, setModalRestockId] = useState<number | string | null>(null);
   const [cantidadRestock, setCantidadRestock] = useState<string>("1");
 
-  // Buscador por nombre, categoría, precio o CÓDIGO DE BARRAS
+  // Buscador por nombre, categoría, precio, CÓDIGO DE BARRAS o ETIQUETAS
   const productosFiltrados = productos.filter((p) => {
     const termino = busqueda.toLowerCase().trim();
     const coincideNombre = p.nombre?.toLowerCase().includes(termino);
     const coincideCategoria = p.categoria?.toLowerCase().includes(termino);
     const coincidePrecio = p.precio?.toString().includes(termino);
     const coincideCodigoBarras = p.codigo_barras?.toLowerCase().includes(termino);
+    const coincideEtiqueta = p.etiquetas?.some((tag: string) =>
+      tag.toLowerCase().includes(termino)
+    );
 
-    return coincideNombre || coincideCategoria || coincidePrecio || coincideCodigoBarras;
+    return (
+      coincideNombre ||
+      coincideCategoria ||
+      coincidePrecio ||
+      coincideCodigoBarras ||
+      coincideEtiqueta
+    );
   });
 
   const handleConfirmarRestock = (id: number | string) => {
@@ -49,10 +59,10 @@ export default function ListaProductos({
           📦 Listado de Productos
         </h2>
 
-        {/* Buscador Global (ahora soporta código de barras) */}
+        {/* Buscador Global */}
         <input
           type="text"
-          placeholder="Buscar por nombre, categoría, precio o código..."
+          placeholder="Buscar por nombre, categoría, etiqueta, precio o código..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-3 py-2 text-xs text-[#12151B] outline-none transition-all focus:border-[#0E6E55] sm:w-72"
@@ -61,12 +71,25 @@ export default function ListaProductos({
 
       {productosFiltrados.length === 0 ? (
         <p className="mt-4 text-xs text-[#6B675F]">
-          {busqueda ? "No se encontraron productos que coincidan." : "No hay productos registrados aún."}
+          {busqueda
+            ? "No se encontraron productos que coincidan."
+            : "No hay productos registrados aún."}
         </p>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           {productosFiltrados.map((p) => {
             const estaPausado = p.activo === false;
+
+            // Obtención de la lista de fotos y la portada
+            const fotosArray: string[] =
+              p.imagenes_urls && p.imagenes_urls.length > 0
+                ? p.imagenes_urls
+                : p.imagen_url
+                ? [p.imagen_url]
+                : [];
+
+            const imagenPortada = fotosArray[0] || null;
+            const totalFotos = fotosArray.length;
 
             return (
               <div
@@ -76,6 +99,22 @@ export default function ListaProductos({
                 }`}
               >
                 <div>
+                  {/* Imagen de Portada con Badge de cantidad de fotos */}
+                  {imagenPortada && (
+                    <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg bg-gray-100">
+                      <img
+                        src={imagenPortada}
+                        alt={p.nombre}
+                        className="h-full w-full object-cover"
+                      />
+                      {totalFotos > 1 && (
+                        <span className="absolute bottom-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs">
+                          📷 {totalFotos} fotos
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between gap-2">
                     <span className="rounded-md bg-white px-2 py-1 text-[11px] font-semibold text-[#6B675F]">
                       {p.categoria || "General"}
@@ -83,7 +122,9 @@ export default function ListaProductos({
 
                     {/* Botón de Pausa / Activar */}
                     <button
-                      onClick={() => onToggleActivo && onToggleActivo(p.id, estaPausado)}
+                      onClick={() =>
+                        onToggleActivo && onToggleActivo(p.id, estaPausado)
+                      }
                       className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold transition-all ${
                         estaPausado
                           ? "bg-[#FEF2F2] text-[#C84343] hover:bg-[#FEE2E2]"
@@ -98,7 +139,21 @@ export default function ListaProductos({
                     {p.nombre}
                   </h3>
 
-                  {/* Badge de Código de Barras en la tarjeta del Admin */}
+                  {/* 🏷️ LISTADO DE ETIQUETAS/TAGS EN EL ADMIN */}
+                  {p.etiquetas && p.etiquetas.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {p.etiquetas.map((tag: string, i: number) => (
+                        <span
+                          key={i}
+                          className="rounded-full bg-emerald-100/70 border border-emerald-200/80 px-2 py-0.5 text-[10px] font-semibold text-[#0E6E55]"
+                        >
+                          🏷️ {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Badge de Código de Barras */}
                   {p.codigo_barras && (
                     <div className="mt-1.5 flex items-center gap-1 text-[11px] font-mono font-medium text-gray-500">
                       <span>🏷️ EAN:</span>
@@ -113,13 +168,22 @@ export default function ListaProductos({
                   </p>
 
                   <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-lg font-extrabold text-[#12151B]">
-                        ${p.precio}
-                      </span>
-                      {p.precio_original && (
-                        <span className="text-xs text-[#A6A29B] line-through">
-                          ${p.precio_original}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-extrabold text-[#12151B]">
+                          ${p.precio}
+                        </span>
+                        {p.precio_original && (
+                          <span className="text-xs text-[#A6A29B] line-through">
+                            ${p.precio_original}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Cuotas */}
+                      {p.permite_cuotas !== false && (
+                        <span className="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
+                          💳 3 cuotas sin interés de ${calcularCuotas(p.precio).montoCuota.toLocaleString("es-AR")}
                         </span>
                       )}
                     </div>
@@ -161,7 +225,7 @@ export default function ListaProductos({
         </div>
       )}
 
-      {/* Modal de Re-stock / Ajuste de Stock */}
+      {/* Modal de Re-stock */}
       {modalRestockId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-xs rounded-2xl border border-[#E7E5E0] bg-white p-5 shadow-lg">

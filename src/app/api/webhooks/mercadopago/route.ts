@@ -36,7 +36,7 @@ export async function POST(request: Request) {
               estado: "confirmado",
               estado_pago: "pagado",
               tipo_pago_elegido: "mercadopago",
-              medio_pago: "mercadopago", // <--- AGREGADO AQUÍ
+              medio_pago: "mercadopago",
               monto_abonado: montoAbonado,
               mp_payment_id: String(dataId),
               updated_at: new Date().toISOString(),
@@ -69,6 +69,27 @@ export async function POST(request: Request) {
 
           if (errorPedido) {
             console.error("Error intentando actualizar pedido en webhook:", errorPedido);
+          }
+
+          // -------------------------------------------------------------
+          // LIMPIEZA AUTOMÁTICA DE INTENTOS DUPLICADOS PENDIENTES
+          // -------------------------------------------------------------
+          if (pedido && pedido.telefono_cliente) {
+            const telefonoCliente = pedido.telefono_cliente.trim();
+            // Ventana de seguridad de las últimas 3 horas para evitar tocar pedidos viejos
+            const haceTresHoras = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+
+            const { error: errorLimpieza } = await supabase
+              .from("pedidos")
+              .update({ estado: "cancelado" })
+              .eq("telefono_cliente", telefonoCliente)
+              .eq("estado", "pendiente")
+              .neq("id", externalRef) // Excluimos estrictamente el pedido aprobado actual
+              .gte("created_at", haceTresHoras);
+
+            if (errorLimpieza) {
+              console.error("Error al limpiar pedidos pendientes duplicados:", errorLimpieza);
+            }
           }
 
           // Descontar stock de los productos comprados si aplica

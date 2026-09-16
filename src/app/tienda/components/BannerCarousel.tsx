@@ -63,7 +63,6 @@ export default function BannerCarousel() {
         ))}
       </div>
 
-      {/* Indicadores / Puntos */}
       {banners.length > 1 && (
         <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
           {banners.map((_, idx) => (
@@ -71,10 +70,14 @@ export default function BannerCarousel() {
               key={idx}
               onClick={() => setCurrentIndex(idx)}
               aria-label={`Ir al banner ${idx + 1}`}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                currentIndex === idx ? "w-6 bg-white shadow-md" : "w-2 bg-white/60"
-              }`}
-            />
+              className={`flex items-center justify-center h-4 -my-1 px-0.5 active:scale-90 transition-transform cursor-pointer`}
+            >
+              <span
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  currentIndex === idx ? "w-6 bg-white shadow-md" : "w-2 bg-white/60"
+                }`}
+              />
+            </button>
           ))}
         </div>
       )}

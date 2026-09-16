@@ -15,6 +15,8 @@ export interface ConfiguracionEmpresa {
   costo_envio_base?: number;
   envio_gratis_activo?: boolean;
   monto_envio_gratis?: number;
+  cuotas_habilitadas?: boolean;
+  monto_minimo_cuotas?: number;
 }
 
 // Obtener la configuración actual

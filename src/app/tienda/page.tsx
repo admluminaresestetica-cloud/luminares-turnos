@@ -4,17 +4,17 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { ShoppingBag, ArrowLeft } from "lucide-react";
+import { ShoppingBag, ArrowLeft, Tag as TagIcon, X } from "lucide-react";
 import CarritoDrawer from "@/components/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
+import BeneficiosTienda from "./components/BeneficiosTienda";
 import FooterTienda from "@/components/FooterTienda";
 import { useCarrito } from "@/context/CarritoContext";
-import { useConfig } from "@/context/ConfigContext"; // 👈 1. Importamos el hook de configuración
+import { useConfig } from "@/context/ConfigContext";
 import { Producto } from "@/types/tienda";
 import BotonFlotanteCarrito from "./components/BotonFlotanteCarrito";
 import Fuse from "fuse.js";
 
-// Componentes modularizados
 import BuscadorYCategorias from "./components/BuscadorYCategorias";
 import GridProductos from "./components/GridProductos";
 import ModalDetalleProducto from "./components/ModalDetalleProducto";
@@ -25,13 +25,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function TiendaPage() {
-  const { config } = useConfig(); // 👈 2. Obtenemos la configuración global
+  const { config } = useConfig();
   const [mounted, setMounted] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<string[]>(["Todos"]);
-  
-  // Estados para los Tags de Búsqueda Inteligente
+
   const [tags, setTags] = useState<any[]>([]);
   const [tagSeleccionado, setTagSeleccionado] = useState<string | null>(null);
 
@@ -40,15 +39,27 @@ export default function TiendaPage() {
   const [categoriaFiltro, setCategoriaFiltro] = useState("Todos");
   const [ordenarPor, setOrdenarPor] = useState("destacados");
 
-  // Estado para el modal de detalle
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
 
-  // Cálculo seguro del total de ítems desde el contexto
   const context = useCarrito();
   const items = context?.items || context?.carrito || [];
+  const vaciarCarrito = context?.vaciarCarrito;
+
   const totalItems = Array.isArray(items)
     ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 1), 0)
     : 0;
+
+  // Listener para detectar cuando Mercado Pago retorna con éxito (?status=success)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get("status");
+
+    if (status === "success" && typeof vaciarCarrito === "function") {
+      vaciarCarrito();
+      // Limpiamos los parámetros de la URL para que no quede el status colgado
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [vaciarCarrito]);
 
   useEffect(() => {
     setMounted(true);
@@ -112,7 +123,7 @@ export default function TiendaPage() {
     fetchCategorias();
     fetchTags();
   }, []);
-  
+
   useEffect(() => {
     if (productos.length > 0) {
       const params = new URLSearchParams(window.location.search);
@@ -132,19 +143,28 @@ export default function TiendaPage() {
   const productosFiltrados = useMemo(() => {
     let resultado = productos;
 
+    // 1. Filtro estricto por Tag (sin buscar en la descripción)
     if (tagSeleccionado) {
       const criterio = tagSeleccionado.toLowerCase();
       resultado = resultado.filter((p) => {
         const nombre = p.nombre?.toLowerCase() || "";
-        const desc = p.descripcion?.toLowerCase() || "";
         const cat = p.categoria?.toLowerCase() || "";
-        return nombre.includes(criterio) || desc.includes(criterio) || cat.includes(criterio);
+        const tagsProd = Array.isArray(p.etiquetas)
+          ? p.etiquetas.map((t) => String(t).toLowerCase())
+          : [];
+
+        return (
+          nombre.includes(criterio) ||
+          cat.includes(criterio) ||
+          tagsProd.some((t) => t.includes(criterio))
+        );
       });
     }
 
+    // 2. Buscador por texto libre (Amplio con Fuse.js, sí incluye descripción)
     if (busqueda.trim() !== "") {
       const fuseOptions = {
-        keys: ["nombre", "categoria"],
+        keys: ["nombre", "categoria", "descripcion", "etiquetas"],
         threshold: 0.4,
         ignoreLocation: true,
       };
@@ -153,6 +173,7 @@ export default function TiendaPage() {
       resultado = fuse.search(busqueda).map((res) => res.item);
     }
 
+    // 3. Filtro por Categoría
     if (categoriaFiltro === "Ofertas") {
       resultado = resultado.filter((p) => {
         const precioBase = Number(p.precio_original) || 0;
@@ -197,13 +218,17 @@ export default function TiendaPage() {
     setTagSeleccionado(null);
   };
 
+  const hayTagActivo = Boolean(tagSeleccionado);
+
   return (
-    <div className="min-h-screen bg-[#F7F7F5] text-[#12151B] flex flex-col justify-between">
+    <div
+      className={`min-h-screen text-[#12151B] flex flex-col justify-between transition-colors duration-500 ease-in-out ${
+        hayTagActivo ? "bg-[#EEF5F2]" : "bg-[#F7F7F5]"
+      }`}
+    >
       <div>
-        {/* Navbar con botón de retorno al inicio integrado */}
         <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0] bg-white/90 px-4 py-3 backdrop-blur-md sm:px-10 sm:py-4">
           <div className="flex items-center gap-3">
-            {/* Botón para volver al inicio general */}
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B675F] hover:text-[#12151B] bg-[#F7F7F5] hover:bg-[#E7E5E0]/60 px-2.5 py-2 rounded-xl transition-all border border-[#E7E5E0]"
@@ -240,7 +265,6 @@ export default function TiendaPage() {
             </Link>
           </div>
 
-          {/* Botón del Carrito en Navbar */}
           <button
             onClick={() => setModalAbierto(true)}
             className="relative flex shrink-0 items-center justify-center gap-2 rounded-full border border-[#E7E5E0] bg-white p-2.5 text-sm font-semibold text-[#12151B] transition-all duration-200 hover:border-[#12151B]/40 hover:shadow-sm active:scale-95 sm:px-4 sm:py-2.5 cursor-pointer"
@@ -256,15 +280,36 @@ export default function TiendaPage() {
           </button>
         </nav>
 
-        {/* Contenido Principal */}
         <div className="mx-auto max-w-[1150px] px-4 pb-28 pt-4 sm:px-10 sm:pb-16">
           <BannerCarousel />
+
+          <BeneficiosTienda />
 
           <TagsFiltros
             tags={tags}
             tagSeleccionado={tagSeleccionado}
             onSelectTag={(slug) => setTagSeleccionado(slug)}
           />
+
+          {/* Indicador visual de la etiqueta filtrada */}
+          {hayTagActivo && (
+            <div className="mb-4 flex items-center justify-between bg-white border border-[#0E6E55]/30 rounded-2xl px-4 py-3 shadow-sm animate-in fade-in duration-300">
+              <div className="flex items-center gap-2 text-sm font-semibold text-[#0E6E55]">
+                <TagIcon className="w-4 h-4" />
+                <span>
+                  Viendo productos etiquetados con:{" "}
+                  <strong className="underline decoration-2">#{tagSeleccionado}</strong>
+                </span>
+              </div>
+              <button
+                onClick={() => setTagSeleccionado(null)}
+                className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+              >
+                <span>Limpiar filtro</span>
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           <BuscadorYCategorias
             busqueda={busqueda}
@@ -283,22 +328,20 @@ export default function TiendaPage() {
           />
         </div>
 
-        {/* Modal de Detalle de Producto */}
         <ModalDetalleProducto
           producto={productoSeleccionado}
           todosProductos={productos}
           onClose={() => setProductoSeleccionado(null)}
           onSeleccionarProducto={(prod) => setProductoSeleccionado(prod)}
           onAbrirCarrito={() => setModalAbierto(true)}
+          onFiltrarPorTag={(tag) => setTagSeleccionado(tag)}
         />
 
-        {/* Drawer del Carrito */}
         <CarritoDrawer
           isOpen={modalAbierto}
           onClose={() => setModalAbierto(false)}
         />
 
-        {/* Botón Flotante para Celulares */}
         <BotonFlotanteCarrito onOpenCarrito={() => setModalAbierto(true)} />
       </div>
 
