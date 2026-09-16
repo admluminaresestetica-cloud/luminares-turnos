@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { X, Plus, Minus, ShoppingBag, Sparkles, Share2, CreditCard } from "lucide-react";
+import { X, Plus, Minus, ShoppingBag, Share2, CreditCard } from "lucide-react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 import AcordeonFAQ from "./AcordeonFAQ";
+import GaleriaProducto from "./GaleriaProducto";
+import ProductosRelacionados from "./ProductosRelacionados";
 import { calcularCuotas } from "@/lib/precios";
 
 interface ModalDetalleProductoProps {
@@ -43,10 +44,8 @@ export default function ModalDetalleProducto({
     ? items.find((item: any) => item.id === producto.id)
     : null;
   const cantidadEnCarrito = itemEnCarrito ? itemEnCarrito.cantidad : 0;
-
   const maximoPermitidoParaAgregar = Math.max(0, stockDisponible - cantidadEnCarrito);
 
-  // Obtener todas las imágenes disponibles (compatibilidad con arrays o url única)
   const imagenesTotales: string[] = (producto as any)?.imagenes_urls?.length
     ? (producto as any).imagenes_urls
     : (producto as any)?.imagenes?.length
@@ -57,13 +56,8 @@ export default function ModalDetalleProducto({
 
   useEffect(() => {
     setCurrentOffsetY(0);
-    if (maximoPermitidoParaAgregar > 0) {
-      setCantidad(1);
-    } else {
-      setCantidad(0);
-    }
-    
-    // Setear la primera imagen como portada al abrir/cambiar producto
+    setCantidad(maximoPermitidoParaAgregar > 0 ? 1 : 0);
+
     if (imagenesTotales.length > 0) {
       setImagenSeleccionada(imagenesTotales[0]);
     } else {
@@ -77,19 +71,14 @@ export default function ModalDetalleProducto({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+      if (e.key === "Escape") onClose();
     };
-    if (producto) {
-      window.addEventListener("keydown", handleKeyDown);
-    }
+    if (producto) window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [producto, onClose]);
 
   useEffect(() => {
     if (!producto) return;
-
     const scrollYPrevio = window.scrollY;
     const bodyStyle = document.body.style;
 
@@ -120,9 +109,7 @@ export default function ModalDetalleProducto({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (startY === null) return;
     const deltaY = e.touches[0].clientY - startY;
-    if (deltaY > 0) {
-      setCurrentOffsetY(deltaY);
-    }
+    if (deltaY > 0) setCurrentOffsetY(deltaY);
   };
 
   const handleTouchEnd = () => {
@@ -148,7 +135,6 @@ export default function ModalDetalleProducto({
 
   const handleCompartir = async () => {
     const urlProducto = `${window.location.origin}/tienda/producto/${producto.id}`;
-
     const shareData = {
       title: producto.nombre,
       text: `¡Mirá este producto en Luminares! ${producto.nombre} a $${producto.precio.toLocaleString("es-AR")}`,
@@ -172,7 +158,6 @@ export default function ModalDetalleProducto({
 
   const handleAgregarPrincipal = () => {
     if (cantidad <= 0 || maximoPermitidoParaAgregar <= 0 || !agregarAlCarrito) return;
-
     for (let i = 0; i < cantidad; i++) {
       agregarAlCarrito(producto);
     }
@@ -181,16 +166,11 @@ export default function ModalDetalleProducto({
 
   const handleComprarAhora = () => {
     if (cantidad <= 0 || maximoPermitidoParaAgregar <= 0 || !agregarAlCarrito) return;
-
     for (let i = 0; i < cantidad; i++) {
       agregarAlCarrito(producto);
     }
-
     onClose();
-
-    if (onAbrirCarrito) {
-      onAbrirCarrito();
-    }
+    if (onAbrirCarrito) onAbrirCarrito();
   };
 
   const handleRestarRecomendado = (e: React.MouseEvent, relProd: Producto, cantActual: number) => {
@@ -218,11 +198,9 @@ export default function ModalDetalleProducto({
   const complementosOtrasCategorias = todosProductos.filter(
     (p) => p.id !== producto.id && p.categoria !== producto.categoria
   );
-
   const deLaMismaCategoria = todosProductos.filter(
     (p) => p.id !== producto.id && p.categoria === producto.categoria
   );
-
   const productosRelacionados = [...complementosOtrasCategorias, ...deLaMismaCategoria].slice(0, 3);
 
   const puedeSumar = cantidad < maximoPermitidoParaAgregar;
@@ -269,62 +247,16 @@ export default function ModalDetalleProducto({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start clear-both">
-          {/* GALERÍA DE IMÁGENES */}
-          <div className="flex flex-col gap-3 w-full">
-            <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
-              {imagenSeleccionada ? (
-                <Image
-                  src={imagenSeleccionada}
-                  alt={producto.nombre}
-                  fill
-                  className="object-cover transition-all duration-200"
-                  priority
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-slate-300">
-                  Sin Imagen
-                </div>
-              )}
-
-              {tieneDescuento && !sinStock && (
-                <span className="absolute top-3 left-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-sm z-10">
-                  -{porcentajeDescuento}% OFF
-                </span>
-              )}
-
-              {sinStock && (
-                <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
-                  <span className="rounded-md bg-white/90 px-3 py-1.5 text-xs font-bold text-[#12151B]">
-                    Sin Stock
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* MINIANURAS INTERACTIVAS */}
-            {imagenesTotales.length > 1 && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                {imagenesTotales.map((img: string, index: number) => (
-                  <button
-                    key={index}
-                    onClick={() => setImagenSeleccionada(img)}
-                    className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${
-                      imagenSeleccionada === img
-                        ? "border-[#0E6E55] scale-95 shadow-sm"
-                        : "border-transparent opacity-70 hover:opacity-100"
-                    }`}
-                  >
-                    <Image
-                      src={img}
-                      alt={`${producto.nombre} - ${index + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* GALERÍA DE IMÁGENES & ETIQUETAS */}
+          <GaleriaProducto
+            producto={producto}
+            imagenSeleccionada={imagenSeleccionada}
+            setImagenSeleccionada={setImagenSeleccionada}
+            imagenesTotales={imagenesTotales}
+            tieneDescuento={tieneDescuento}
+            porcentajeDescuento={porcentajeDescuento}
+            sinStock={sinStock}
+          />
 
           {/* INFORMACIÓN Y ACCIONES DEL PRODUCTO */}
           <div className="flex flex-col justify-between space-y-4">
@@ -332,6 +264,7 @@ export default function ModalDetalleProducto({
               <span className="text-xs font-bold uppercase tracking-wider text-[#0E6E55]">
                 {producto.categoria}
               </span>
+
               <h2 className="text-xl font-bold text-slate-900 sm:text-2xl mt-1">
                 {producto.nombre}
               </h2>
@@ -450,111 +383,14 @@ export default function ModalDetalleProducto({
 
         <AcordeonFAQ />
 
-        {/* RECOMENDADOS */}
-        {productosRelacionados.length > 0 && (
-          <div className="mt-8 pt-6 border-t border-slate-100">
-            <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-[#0E6E55]" />
-              También te puede interesar
-            </h3>
-
-            <div className="grid grid-cols-3 gap-3">
-              {productosRelacionados.map((rel) => {
-                const relPrecioOriginal = Number(rel.precio_original ?? (rel as any).precio_anterior) || 0;
-                const relTieneDesc = relPrecioOriginal > rel.precio;
-                const relStock = rel.stock ?? 0;
-
-                const itemRelEnCarrito = Array.isArray(items)
-                  ? items.find((item: any) => item.id === rel.id)
-                  : null;
-                const relCantidadEnCarrito = itemRelEnCarrito ? itemRelEnCarrito.cantidad : 0;
-                const relLimiteAlcanzado = relCantidadEnCarrito >= relStock;
-
-                return (
-                  <div
-                    key={rel.id}
-                    onClick={() => onSeleccionarProducto && onSeleccionarProducto(rel)}
-                    className="group relative flex flex-col justify-between text-left rounded-2xl border border-slate-100 p-2.5 hover:border-[#0E6E55]/40 hover:bg-slate-50/80 transition-all cursor-pointer shadow-sm hover:shadow-md active:scale-[0.97]"
-                  >
-                    <div>
-                      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-slate-100 mb-2">
-                        {rel.imagen_url ? (
-                          <Image
-                            src={rel.imagen_url}
-                            alt={rel.nombre}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-300">
-                            Sin Foto
-                          </div>
-                        )}
-
-                        {relTieneDesc && (
-                          <span className="absolute top-1 left-1 rounded-md bg-emerald-600 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                            OFF
-                          </span>
-                        )}
-                      </div>
-
-                      <span className="text-xs font-semibold text-slate-800 truncate block w-full group-hover:text-[#0E6E55] transition-colors">
-                        {rel.nombre}
-                      </span>
-                    </div>
-
-                    <div className="mt-2 flex items-center justify-between gap-1 pt-1 border-t border-slate-100/60">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-[#0E6E55]">
-                          ${rel.precio.toLocaleString("es-AR")}
-                        </span>
-                        {relTieneDesc && (
-                          <span className="text-[9px] text-slate-400 line-through">
-                            ${relPrecioOriginal.toLocaleString("es-AR")}
-                          </span>
-                        )}
-                      </div>
-
-                      {relCantidadEnCarrito === 0 ? (
-                        <button
-                          onClick={(e) => handleSumarRecomendado(e, rel, relCantidadEnCarrito, relStock)}
-                          disabled={relStock <= 0}
-                          title="Agregar al carrito"
-                          className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] hover:bg-[#0E6E55] hover:text-white transition-all active:scale-90 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-200/80 rounded-xl p-0.5 shadow-sm">
-                          <button
-                            onClick={(e) => handleRestarRecomendado(e, rel, relCantidadEnCarrito)}
-                            className="flex h-6 w-6 items-center justify-center rounded-lg bg-white text-emerald-800 hover:bg-emerald-100 transition-all active:scale-90 font-bold text-xs"
-                            title="Restar una unidad"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </button>
-
-                          <span className="text-[11px] font-extrabold text-emerald-900 px-1">
-                            {relCantidadEnCarrito}
-                          </span>
-
-                          <button
-                            onClick={(e) => handleSumarRecomendado(e, rel, relCantidadEnCarrito, relStock)}
-                            disabled={relLimiteAlcanzado}
-                            className="flex h-6 w-6 items-center justify-center rounded-lg bg-white text-emerald-800 hover:bg-emerald-100 transition-all active:scale-90 font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed"
-                            title="Sumar una unidad"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* SUBCOMPONENTE DE PRODUCTOS RECOMENDADOS */}
+        <ProductosRelacionados
+          productosRelacionados={productosRelacionados}
+          items={items}
+          onSeleccionarProducto={onSeleccionarProducto}
+          handleSumarRecomendado={handleSumarRecomendado}
+          handleRestarRecomendado={handleRestarRecomendado}
+        />
       </div>
     </div>
   );
