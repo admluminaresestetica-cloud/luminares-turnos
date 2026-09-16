@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useCarrito } from "@/context/CarritoContext";
+import { useConfig } from "@/context/ConfigContext";
 import { supabase } from "@/lib/supabase";
 import { X, Trash2, ShoppingBag, ArrowRight, Package } from "lucide-react";
 import FormularioEnvio from "./carrito/FormularioEnvio";
@@ -12,6 +13,7 @@ interface CarritoDrawerProps {
 }
 
 export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
+  const { config } = useConfig();
   const {
     carrito,
     datosEnvio,
@@ -33,6 +35,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const [cuotasHabilitadas, setCuotasHabilitadas] = useState(true);
   const [montoMinimoCuotas, setMontoMinimoCuotas] = useState(0);
   const [costoEnvioFijo, setCostoEnvioFijo] = useState(0);
+  const [whatsappNumeroDB, setWhatsappNumeroDB] = useState<string>("");
 
   // Estados para reglas de envío desde configuracion_empresa
   const [envioDomicilioActivo, setEnvioDomicilioActivo] = useState(true);
@@ -44,7 +47,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       try {
         const { data, error } = await supabase
           .from("configuracion_empresa")
-          .select("costo_envio_base, envio_domicilio_activo, envio_gratis_activo, monto_envio_gratis")
+          .select("costo_envio_base, envio_domicilio_activo, envio_gratis_activo, monto_envio_gratis, whatsapp_numero")
           .maybeSingle();
 
         if (error) {
@@ -57,6 +60,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           setEnvioDomicilioActivo(data.envio_domicilio_activo ?? true);
           setEnvioGratisActivo(data.envio_gratis_activo ?? false);
           setMontoEnvioGratis(Number(data.monto_envio_gratis) || 0);
+          if (data.whatsapp_numero) {
+            setWhatsappNumeroDB(data.whatsapp_numero);
+          }
         }
       } catch (err) {
         console.error("Error inesperado al cargar la configuración:", err);
@@ -188,7 +194,11 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       mensaje += `\n📝 *Nota:* ${datosEnvio.notaAdicional.trim()}\n`;
     }
 
-    const whatsappUrl = `https://wa.me/5493413954355?text=${encodeURIComponent(
+    // Obtener número dinámico (Contexto o DB)
+    const rawNumber = config?.whatsapp_numero || whatsappNumeroDB || "";
+    const numeroTelefono = rawNumber.replace(/[^0-9]/g, "");
+
+    const whatsappUrl = `https://wa.me/${numeroTelefono}?text=${encodeURIComponent(
       mensaje
     )}`;
     vaciarCarrito();
@@ -363,16 +373,16 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             ) : (
               /* Paso Checkout */
               <form id="checkout-form" onSubmit={manejarSubmit} className="space-y-5">
-  <FormularioEnvio
-    datosEnvio={datosEnvio}
-    setDatosEnvio={setDatosEnvio}
-    costoEnvio={costoEnvioFijo}
-    metodoPago={metodoPago === "whatsapp" ? "whatsapp" : "mercadopago"}
-    totalPrecio={subtotalProductos}
-    tieneEnvioGratis={tieneEnvioGratis}
-    guardandoPedido={cargandoMP}
-    onConfirmar={() => {}}
-  />
+                <FormularioEnvio
+                  datosEnvio={datosEnvio}
+                  setDatosEnvio={setDatosEnvio}
+                  costoEnvio={costoEnvioFijo}
+                  metodoPago={metodoPago === "whatsapp" ? "whatsapp" : "mercadopago"}
+                  totalPrecio={subtotalProductos}
+                  tieneEnvioGratis={tieneEnvioGratis}
+                  guardandoPedido={cargandoMP}
+                  onConfirmar={() => {}}
+                />
 
                 {/* Selección de Método de Pago */}
                 <div className="space-y-2 pt-2">
@@ -423,8 +433,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                       ${totalDebitoOp.toLocaleString("es-AR")}
                     </span>
                   </button>
-
-                  {/* Opción 3: 3 Cuotas Fijas (+25%) */}
+{/* Opción 3: 3 Cuotas Fijas (+25%) */}
                   <button
                     type="button"
                     disabled={!aptoParaCuotas}
