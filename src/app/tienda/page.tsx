@@ -129,11 +129,11 @@ export default function TiendaPage() {
   const productosFiltrados = useMemo(() => {
     let resultado = productos;
 
+    // 1. Filtro estricto por Tag (sin buscar en la descripción)
     if (tagSeleccionado) {
       const criterio = tagSeleccionado.toLowerCase();
       resultado = resultado.filter((p) => {
         const nombre = p.nombre?.toLowerCase() || "";
-        const desc = p.descripcion?.toLowerCase() || "";
         const cat = p.categoria?.toLowerCase() || "";
         const tagsProd = Array.isArray(p.etiquetas)
           ? p.etiquetas.map((t) => String(t).toLowerCase())
@@ -141,16 +141,16 @@ export default function TiendaPage() {
 
         return (
           nombre.includes(criterio) ||
-          desc.includes(criterio) ||
           cat.includes(criterio) ||
           tagsProd.some((t) => t.includes(criterio))
         );
       });
     }
 
+    // 2. Buscador por texto libre (Amplio con Fuse.js, sí incluye descripción)
     if (busqueda.trim() !== "") {
       const fuseOptions = {
-        keys: ["nombre", "categoria", "etiquetas"],
+        keys: ["nombre", "categoria", "descripcion", "etiquetas"],
         threshold: 0.4,
         ignoreLocation: true,
       };
@@ -159,6 +159,7 @@ export default function TiendaPage() {
       resultado = fuse.search(busqueda).map((res) => res.item);
     }
 
+    // 3. Filtro por Categoría
     if (categoriaFiltro === "Ofertas") {
       resultado = resultado.filter((p) => {
         const precioBase = Number(p.precio_original) || 0;
