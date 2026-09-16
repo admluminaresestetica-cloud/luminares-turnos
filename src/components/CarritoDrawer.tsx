@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useCarrito } from "@/context/CarritoContext";
 import { supabase } from "@/lib/supabase";
-import { X, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
+import { X, Trash2, ShoppingBag, ArrowRight, Package } from "lucide-react";
 import FormularioEnvio from "./carrito/FormularioEnvio";
 
 interface CarritoDrawerProps {
@@ -29,7 +29,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     "whatsapp" | "mercadopago_debito" | "mercadopago_cuotas"
   >("whatsapp");
 
-  // Configuración de cuotas desde DB / Configuración
+  // Configuración desde DB
   const [cuotasHabilitadas, setCuotasHabilitadas] = useState(true);
   const [montoMinimoCuotas, setMontoMinimoCuotas] = useState(0);
   const [costoEnvioFijo, setCostoEnvioFijo] = useState(0);
@@ -71,7 +71,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const costoEnvioAplicado =
     datosEnvio.metodoEnvio === "envio" ? costoEnvioFijo : 0;
 
-  // Evaluación de cuotas sin interés
+  // Evaluación de aptitud para cuotas
   const productoNoAptoCuotas = carritoSeguro.find(
     (item) => item.permite_cuotas === false
   );
@@ -79,16 +79,26 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const aptoParaCuotas =
     cuotasHabilitadas && !productoNoAptoCuotas && alcanzaMontoMinimoCuotas;
 
-  // Cálculos de recargos y totales
-  const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
-  const PORCENTAJE_RECARGO = 0.1;
-  const esMercadoPago = metodoPago !== "whatsapp";
-  const esCuotasElegido = metodoPago === "mercadopago_cuotas";
+  // PORCENTAJES DE RECARGO SEGÚN OPCIÓN
+  const PORCENTAJE_DEBITO = 0.10; // +10%
+  const PORCENTAJE_CUOTAS = 0.25; // +25%
 
-  const recargoMonto = esMercadoPago
-    ? Math.round(totalBaseConEnvio * PORCENTAJE_RECARGO)
-    : 0;
+  const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
+
+  // Cálculo del recargo exacto según la opción seleccionada
+  let recargoMonto = 0;
+  if (metodoPago === "mercadopago_debito") {
+    recargoMonto = Math.round(totalBaseConEnvio * PORCENTAJE_DEBITO);
+  } else if (metodoPago === "mercadopago_cuotas") {
+    recargoMonto = Math.round(totalBaseConEnvio * PORCENTAJE_CUOTAS);
+  }
+
   const totalFinalAbonar = totalBaseConEnvio + recargoMonto;
+
+  // Valores prefijados para los botones
+  const totalDebitoOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_DEBITO));
+  const totalCuotasOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_CUOTAS));
+  const valorCuotaOp = Math.round(totalCuotasOp / 3);
 
   const guardarPedidoEnDB = async (
     montoFinal: number,
@@ -103,7 +113,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             telefono_cliente: datosEnvio.telefonoCliente.trim() || null,
             metodo_envio: datosEnvio.metodoEnvio,
             metodo_pago: medioPagoStr,
-            es_cuotas: esCuotasElegido,
+            es_cuotas: metodoPago === "mercadopago_cuotas",
             recargo_monto: recargoMonto,
             total: montoFinal,
             estado: "pendiente",
@@ -183,9 +193,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const procesarMercadoPago = async () => {
     setCargandoMP(true);
     try {
-      const medioPagoTexto = esCuotasElegido
-        ? "Mercado Pago (3 Cuotas)"
-        : "Mercado Pago (Débito/Contado)";
+      const medioPagoTexto =
+        metodoPago === "mercadopago_cuotas"
+          ? "Mercado Pago (3 Cuotas)"
+          : "Mercado Pago (Débito/Contado)";
 
       await guardarPedidoEnDB(totalFinalAbonar, medioPagoTexto);
 
@@ -207,7 +218,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
       if (recargoMonto > 0) {
         itemsMP.push({
-          title: "Recargo gestión Mercado Pago (+10%)",
+          title:
+            metodoPago === "mercadopago_cuotas"
+              ? "Gastos de gestión de pago en cuotas"
+              : "Gastos de gestión de pago",
           unit_price: recargoMonto,
           quantity: 1,
           currency_id: "ARS",
@@ -226,7 +240,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           metadata: {
             metodo_envio: datosEnvio.metodoEnvio,
             direccion: datosEnvio.direccion,
-            es_cuotas: esCuotasElegido,
+            es_cuotas: metodoPago === "mercadopago_cuotas",
           },
         }),
       });
@@ -260,10 +274,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-black/50 backdrop-blur-sm transition-opacity">
-      <div className="absolute inset-y-0 right-0 flex max-w-full pl-10">
+      <div className="absolute inset-y-0 right-0 flex max-w-full pl-4 sm:pl-10">
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#E7E5E0]">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#E7E5E0]">
             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-[#0E6E55]" />
               {paso === "carrito" ? "Tu Carrito" : "Finalizar Compra"}
@@ -276,34 +290,46 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             </button>
           </div>
 
-          {/* Contenido principal */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Contenido */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
             {carritoSeguro.length === 0 ? (
               <div className="text-center py-12 space-y-4">
                 <ShoppingBag className="w-16 h-16 mx-auto text-gray-300" />
                 <p className="text-gray-500 font-medium">El carrito está vacío</p>
               </div>
             ) : paso === "carrito" ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {carritoSeguro.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-3 border border-[#E7E5E0] rounded-xl bg-gray-50/50"
+                    className="flex items-center justify-between p-3 border border-[#E7E5E0] rounded-xl bg-gray-50/50 gap-3"
                   >
-                    <div className="flex-1 min-w-0 pr-3">
-                      <h3 className="text-sm font-semibold text-gray-900 truncate">
+                    <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 flex items-center justify-center">
+                      {item.imagen_url ? (
+                        <img
+                          src={item.imagen_url}
+                          alt={item.nombre}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Package className="w-6 h-6 text-gray-400" />
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xs font-semibold text-gray-900 truncate">
                         {item.nombre}
                       </h3>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 font-medium mt-0.5">
                         ${(Number(item.precio) || 0).toLocaleString("es-AR")} c/u
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center border border-gray-300 rounded-lg bg-white">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center border border-gray-300 rounded-lg bg-white shadow-sm">
                         <button
                           onClick={() => restarDelCarrito(item.id)}
-                          className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg text-xs"
+                          className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg text-xs font-bold"
                         >
                           -
                         </button>
@@ -312,7 +338,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                         </span>
                         <button
                           onClick={() => agregarAlCarrito(item)}
-                          className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-r-lg text-xs"
+                          className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-r-lg text-xs font-bold"
                         >
                           +
                         </button>
@@ -320,7 +346,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
                       <button
                         onClick={() => eliminarDelCarrito(item.id)}
-                        className="text-red-500 hover:text-red-700 p-1"
+                        className="text-gray-400 hover:text-red-500 p-1 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -332,21 +358,21 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
               /* Paso Checkout */
               <form id="checkout-form" onSubmit={manejarSubmit} className="space-y-5">
                 <FormularioEnvio
-                datosEnvio={datosEnvio}
-                setDatosEnvio={setDatosEnvio}
-                costoEnvio={costoEnvioFijo}
-                metodoPago={metodoPago === "whatsapp" ? "whatsapp" : "mercadopago"}
-                totalPrecio={subtotalProductos}
-                tieneEnvioGratis={false}
-                guardandoPedido={cargandoMP}
-                onConfirmar={() => {
-                if (metodoPago === "whatsapp") {
-                procesarWhatsApp();
-                } else {
-                procesarMercadoPago();
-                 }
-                }}
-                /> 
+                  datosEnvio={datosEnvio}
+                  setDatosEnvio={setDatosEnvio}
+                  costoEnvio={costoEnvioFijo}
+                  metodoPago={metodoPago === "whatsapp" ? "whatsapp" : "mercadopago"}
+                  totalPrecio={subtotalProductos}
+                  tieneEnvioGratis={false}
+                  guardandoPedido={cargandoMP}
+                  onConfirmar={() => {
+                    if (metodoPago === "whatsapp") {
+                      procesarWhatsApp();
+                    } else {
+                      procesarMercadoPago();
+                    }
+                  }}
+                />
 
                 {/* Selección de Método de Pago */}
                 <div className="space-y-2 pt-2">
@@ -354,7 +380,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     Seleccionar Método de Pago:
                   </label>
 
-                  {/* Opción 1: WhatsApp */}
+                  {/* Opción 1: WhatsApp (Precio Base) */}
                   <button
                     type="button"
                     onClick={() => setMetodoPago("whatsapp")}
@@ -367,7 +393,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     <div>
                       <div className="font-bold text-sm">💬 Transferencia / Efectivo</div>
                       <div className="text-[11px] font-normal text-gray-500">
-                        Sin recargos adicionales
+                        Pago directo de contado
                       </div>
                     </div>
                     <span className="font-bold text-[#0E6E55] text-sm">
@@ -375,7 +401,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     </span>
                   </button>
 
-                  {/* Opción 2: Mercado Pago Débito */}
+                  {/* Opción 2: Débito / 1 Pago (+10%) */}
                   <button
                     type="button"
                     onClick={() => setMetodoPago("mercadopago_debito")}
@@ -390,15 +416,15 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                         💳 Mercado Pago (Débito / 1 Pago)
                       </div>
                       <div className="text-[11px] font-normal text-gray-500">
-                        Tarjeta de débito o saldo MP (+10%)
+                        Tarjeta de débito o saldo en cuenta
                       </div>
                     </div>
                     <span className="font-bold text-blue-700 text-sm">
-                      ${Math.round(totalBaseConEnvio * 1.1).toLocaleString("es-AR")}
+                      ${totalDebitoOp.toLocaleString("es-AR")}
                     </span>
                   </button>
 
-                  {/* Opción 3: 3 Cuotas sin interés */}
+                  {/* Opción 3: 3 Cuotas Fijas (+25%) */}
                   <button
                     type="button"
                     disabled={!aptoParaCuotas}
@@ -413,7 +439,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   >
                     <div>
                       <div className="font-bold text-sm flex items-center gap-1.5">
-                        ✨ 3 Cuotas Sin Interés
+                        💳 3 Cuotas Fijas
                         {!aptoParaCuotas && (
                           <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-normal">
                             No disponible
@@ -421,25 +447,21 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                         )}
                       </div>
                       <div className="text-[11px] font-normal text-gray-500">
-                        3 pagos de $
-                        {Math.round(
-                          (totalBaseConEnvio * 1.1) / 3
-                        ).toLocaleString("es-AR")}{" "}
-                        (+10%)
+                        3 pagos de ${valorCuotaOp.toLocaleString("es-AR")}
                       </div>
                     </div>
                     <span className="font-bold text-purple-700 text-sm">
-                      ${Math.round(totalBaseConEnvio * 1.1).toLocaleString("es-AR")}
+                      ${totalCuotasOp.toLocaleString("es-AR")}
                     </span>
                   </button>
                 </div>
 
-                {/* Avisos de cuotas */}
+                {/* Avisos */}
                 <div className="mt-2 text-[11px] space-y-1">
                   {productoNoAptoCuotas ? (
                     <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
                       ⚠️ El producto <strong>{productoNoAptoCuotas.nombre}</strong> solo
-                      se abona al contado/débito. No aplica financiación en cuotas.
+                      se abona al contado/débito.
                     </div>
                   ) : !alcanzaMontoMinimoCuotas && cuotasHabilitadas ? (
                     <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-800">
@@ -450,7 +472,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                           montoMinimoCuotas - subtotalProductos
                         ).toLocaleString("es-AR")}
                       </strong>{" "}
-                      más para habilitar el pago en 3 cuotas.
+                      más para habilitar las 3 cuotas.
                     </div>
                   ) : null}
                 </div>
@@ -460,7 +482,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
           {/* Footer */}
           {carritoSeguro.length > 0 && (
-            <div className="p-6 border-t border-[#E7E5E0] bg-gray-50 space-y-4">
+            <div className="p-4 sm:p-6 border-t border-[#E7E5E0] bg-gray-50 space-y-4">
               <div className="space-y-1.5 text-xs text-gray-600">
                 <div className="flex justify-between">
                   <span>Subtotal productos:</span>
@@ -470,12 +492,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   <div className="flex justify-between">
                     <span>Costo de envío:</span>
                     <span>${costoEnvioAplicado.toLocaleString("es-AR")}</span>
-                  </div>
-                )}
-                {esMercadoPago && (
-                  <div className="flex justify-between text-blue-600 font-medium">
-                    <span>Recargo Mercado Pago (+10%):</span>
-                    <span>${recargoMonto.toLocaleString("es-AR")}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">

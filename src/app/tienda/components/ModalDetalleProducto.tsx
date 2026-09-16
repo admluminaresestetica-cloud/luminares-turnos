@@ -308,7 +308,7 @@ export default function ModalDetalleProducto({
                   {permiteCuotas ? (
                     <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700">
                       <CreditCard className="h-3.5 w-3.5" />
-                      3 cuotas de ${montoCuota.toLocaleString("es-AR")} con MP
+                      3 cuotas fijas de ${montoCuota.toLocaleString("es-AR")}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
