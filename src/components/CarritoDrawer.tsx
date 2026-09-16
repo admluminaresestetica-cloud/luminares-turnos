@@ -78,14 +78,15 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     0
   );
 
-  // Evaluación de Envío Gratis según la DB
+  // Evaluación de Envío Gratis según la DB y si eligió Envío a Domicilio
   const tieneEnvioGratis =
     envioGratisActivo &&
     montoEnvioGratis > 0 &&
     subtotalProductos >= montoEnvioGratis;
 
+  const esEnvioADomicilio = datosEnvio.metodoEnvio === "envio";
   const costoEnvioAplicado =
-    datosEnvio.metodoEnvio === "retiro" || tieneEnvioGratis ? 0 : costoEnvioFijo;
+    esEnvioADomicilio && !tieneEnvioGratis ? costoEnvioFijo : 0;
 
   const productoNoAptoCuotas = carritoSeguro.find(
     (item) => item.permite_cuotas === false
@@ -97,20 +98,26 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const PORCENTAJE_DEBITO = 0.10;
   const PORCENTAJE_CUOTAS = 0.25;
 
+  // Base real para calcular recargos (Productos + Envío)
   const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
 
-  let recargoMonto = 0;
-  if (metodoPago === "mercadopago_debito") {
-    recargoMonto = Math.round(totalBaseConEnvio * PORCENTAJE_DEBITO);
-  } else if (metodoPago === "mercadopago_cuotas") {
-    recargoMonto = Math.round(totalBaseConEnvio * PORCENTAJE_CUOTAS);
-  }
-
-  const totalFinalAbonar = totalBaseConEnvio + recargoMonto;
-
+  // Opciones de Pago Calculadas
+  const totalTransferencia = totalBaseConEnvio;
   const totalDebitoOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_DEBITO));
   const totalCuotasOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_CUOTAS));
   const valorCuotaOp = Math.round(totalCuotasOp / 3);
+
+  // Determinación del Total Final según la opción seleccionada
+  let totalFinalAbonar = totalTransferencia;
+  let recargoMonto = 0;
+
+  if (metodoPago === "mercadopago_debito") {
+    totalFinalAbonar = totalDebitoOp;
+    recargoMonto = totalDebitoOp - totalBaseConEnvio;
+  } else if (metodoPago === "mercadopago_cuotas") {
+    totalFinalAbonar = totalCuotasOp;
+    recargoMonto = totalCuotasOp - totalBaseConEnvio;
+  }
 
   const guardarPedidoEnDB = async (
     montoFinal: number,
@@ -194,7 +201,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       mensaje += `\n📝 *Nota:* ${datosEnvio.notaAdicional.trim()}\n`;
     }
 
-    // Obtener número dinámico (Contexto o DB)
     const rawNumber = config?.whatsapp_numero || whatsappNumeroDB || "";
     const numeroTelefono = rawNumber.replace(/[^0-9]/g, "");
 
@@ -407,7 +413,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                       </div>
                     </div>
                     <span className="font-bold text-[#0E6E55] text-sm">
-                      ${totalBaseConEnvio.toLocaleString("es-AR")}
+                      ${totalTransferencia.toLocaleString("es-AR")}
                     </span>
                   </button>
 
@@ -433,7 +439,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                       ${totalDebitoOp.toLocaleString("es-AR")}
                     </span>
                   </button>
-{/* Opción 3: 3 Cuotas Fijas (+25%) */}
+
+                  {/* Opción 3: 3 Cuotas Fijas (+25%) */}
                   <button
                     type="button"
                     disabled={!aptoParaCuotas}
@@ -489,7 +496,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             )}
           </div>
 
-          {/* Footer */}
+    {/* Footer */}
           {carritoSeguro.length > 0 && (
             <div className="p-4 sm:p-6 border-t border-[#E7E5E0] bg-gray-50 space-y-4">
               <div className="space-y-1.5 text-xs text-gray-600">
@@ -511,6 +518,16 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     )}
                   </span>
                 </div>
+                {recargoMonto > 0 && (
+                  <div className="flex justify-between text-gray-500">
+                    <span>
+                      {metodoPago === "mercadopago_cuotas"
+                        ? "Recargo cuotas (25%):"
+                        : "Recargo débito (10%):"}
+                    </span>
+                    <span>+${recargoMonto.toLocaleString("es-AR")}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
                   <span>Total final:</span>
                   <span>${totalFinalAbonar.toLocaleString("es-AR")}</span>
