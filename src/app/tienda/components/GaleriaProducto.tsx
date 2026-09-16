@@ -11,6 +11,8 @@ interface GaleriaProductoProps {
   tieneDescuento: boolean;
   porcentajeDescuento: number;
   sinStock: boolean;
+  onFiltrarPorTag?: (tag: string) => void;
+  onClose?: () => void;
 }
 
 export default function GaleriaProducto({
@@ -21,25 +23,13 @@ export default function GaleriaProducto({
   tieneDescuento,
   porcentajeDescuento,
   sinStock,
+  onFiltrarPorTag,
+  onClose,
 }: GaleriaProductoProps) {
   return (
     <div className="flex flex-col gap-3 w-full">
-      {/* BADGES / ETIQUETAS VISUALES SOBRE LA FOTO */}
-      {producto.etiquetas && producto.etiquetas.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-1">
-          {producto.etiquetas.map((tag, idx) => (
-            <span
-              key={idx}
-              className="inline-flex items-center gap-1 rounded-full bg-[#0E6E55]/10 border border-[#0E6E55]/20 px-2.5 py-0.5 text-[11px] font-bold text-[#0E6E55]"
-            >
-              🏷️ {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
       {/* VISTA PREVIA PRINCIPAL */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group">
         {imagenSeleccionada ? (
           <Image
             src={imagenSeleccionada}
@@ -54,8 +44,29 @@ export default function GaleriaProducto({
           </div>
         )}
 
+        {/* ETIQUETAS/TAGS SUPERPUESTAS ARRIBA A LA IZQUIERDA */}
+        {producto.etiquetas && producto.etiquetas.length > 0 && (
+          <div className="absolute top-3 left-3 z-20 flex flex-wrap gap-1.5 max-w-[80%]">
+            {producto.etiquetas.map((tag, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  if (onFiltrarPorTag) onFiltrarPorTag(tag);
+                  if (onClose) onClose();
+                }}
+                className="inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-md border border-emerald-200/60 px-2.5 py-1 text-[11px] font-bold text-[#0E6E55] shadow-sm hover:bg-[#0E6E55] hover:text-white transition-all cursor-pointer"
+                title={`Filtrar por #${tag}`}
+              >
+                🏷️ {tag}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* BADGE DESCUENTO ARRIBA A LA DERECHA */}
         {tieneDescuento && !sinStock && (
-          <span className="absolute top-3 left-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-sm z-10">
+          <span className="absolute top-3 right-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-sm z-10">
             -{porcentajeDescuento}% OFF
           </span>
         )}
