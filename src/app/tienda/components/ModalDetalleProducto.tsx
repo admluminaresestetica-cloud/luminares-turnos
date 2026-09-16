@@ -15,12 +15,14 @@ interface ModalDetalleProductoProps {
   onClose: () => void;
   onSeleccionarProducto: (prod: Producto) => void;
   onAbrirCarrito?: () => void;
+  onFiltrarPorTag?: (tag: string) => void;
 }
 
 export default function ModalDetalleProducto({
   producto,
   todosProductos,
   onClose,
+  onFiltrarPorTag,
   onSeleccionarProducto,
   onAbrirCarrito,
 }: ModalDetalleProductoProps) {
@@ -249,14 +251,16 @@ export default function ModalDetalleProducto({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start clear-both">
           {/* GALERÍA DE IMÁGENES & ETIQUETAS */}
           <GaleriaProducto
-            producto={producto}
-            imagenSeleccionada={imagenSeleccionada}
-            setImagenSeleccionada={setImagenSeleccionada}
-            imagenesTotales={imagenesTotales}
-            tieneDescuento={tieneDescuento}
-            porcentajeDescuento={porcentajeDescuento}
-            sinStock={sinStock}
-          />
+          producto={producto}
+          imagenSeleccionada={imagenSeleccionada}
+          setImagenSeleccionada={setImagenSeleccionada}
+          imagenesTotales={imagenesTotales}
+          tieneDescuento={tieneDescuento}
+          porcentajeDescuento={porcentajeDescuento}
+          sinStock={sinStock}
+          onFiltrarPorTag={onFiltrarPorTag} 
+          onClose={onClose}     
+/>
 
           {/* INFORMACIÓN Y ACCIONES DEL PRODUCTO */}
           <div className="flex flex-col justify-between space-y-4">
