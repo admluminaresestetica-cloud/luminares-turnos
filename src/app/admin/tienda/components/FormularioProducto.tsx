@@ -1,6 +1,9 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import ScannerModal from "./ScannerModal";
+import SeccionEtiquetas from "./SeccionEtiquetas";
+import CargadorImagenes from "./CargadorImagenes";
 
 interface FormularioProductoProps {
   onProductoAgregado: () => void;
@@ -26,12 +29,13 @@ export default function FormularioProducto({
   const [stockMinimo, setStockMinimo] = useState("5");
   const [codigoBarras, setCodigoBarras] = useState("");
   const [categoria, setCategoria] = useState("");
+  const [etiquetas, setEtiquetas] = useState<string[]>([]);
   const [mostrarUltimasUnidades, setMostrarUltimasUnidades] = useState(false);
   const [permiteCuotas, setPermiteCuotas] = useState(true);
   const [cargando, setCargando] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
-  // Estados para múltiples imágenes
+  // Estados para imágenes
   const [imagenesExistentes, setImagenesExistentes] = useState<string[]>([]);
   const [imagenesNuevasFiles, setImagenesNuevasFiles] = useState<File[]>([]);
   const [previewsNuevas, setPreviewsNuevas] = useState<string[]>([]);
@@ -46,10 +50,10 @@ export default function FormularioProducto({
       setStockMinimo(productoEditando.stock_minimo ?? "5");
       setCodigoBarras(productoEditando.codigo_barras || "");
       setCategoria(productoEditando.categoria || "");
+      setEtiquetas(Array.isArray(productoEditando.etiquetas) ? productoEditando.etiquetas : []);
       setMostrarUltimasUnidades(productoEditando.mostrar_ultimas_unidades || false);
       setPermiteCuotas(productoEditando.permite_cuotas !== false);
 
-      // Cargar lista de imágenes si existen, o la imagen principal previa
       const fotosExistentes: string[] = productoEditando.imagenes_urls && productoEditando.imagenes_urls.length > 0
         ? productoEditando.imagenes_urls
         : productoEditando.imagen_url
@@ -74,6 +78,7 @@ export default function FormularioProducto({
     setStockMinimo("5");
     setCodigoBarras("");
     setCategoria("");
+    setEtiquetas([]);
     setMostrarUltimasUnidades(false);
     setPermiteCuotas(true);
     setImagenesExistentes([]);
@@ -86,12 +91,9 @@ export default function FormularioProducto({
     setCodigoBarras(randomCode);
   };
 
-  // Manejo de la selección de archivos múltiples
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const filesArray = Array.from(e.target.files);
-    
-    // Generar previews locales sin ocupar espacio
     const newPreviews = filesArray.map((file) => URL.createObjectURL(file));
 
     setImagenesNuevasFiles((prev) => [...prev, ...filesArray]);
@@ -103,7 +105,7 @@ export default function FormularioProducto({
   };
 
   const eliminarNueva = (index: number) => {
-    URL.revokeObjectURL(previewsNuevas[index]); // Limpiar memoria de la vista previa
+    URL.revokeObjectURL(previewsNuevas[index]);
     setImagenesNuevasFiles((prev) => prev.filter((_, i) => i !== index));
     setPreviewsNuevas((prev) => prev.filter((_, i) => i !== index));
   };
@@ -118,7 +120,6 @@ export default function FormularioProducto({
     setCargando(true);
     const urlsSubidas: string[] = [];
 
-    // Subida paralela de archivos nuevos a Supabase Storage
     for (const file of imagenesNuevasFiles) {
       const fileExt = file.name.split(".").pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
@@ -141,7 +142,6 @@ export default function FormularioProducto({
       urlsSubidas.push(publicUrlData.publicUrl);
     }
 
-    // Combinación final de URLs manteniendo el orden
     const imagenesFinales = [...imagenesExistentes, ...urlsSubidas];
     const portadaPrincipal = imagenesFinales.length > 0 ? imagenesFinales[0] : null;
 
@@ -154,6 +154,7 @@ export default function FormularioProducto({
       stock_minimo: stockMinimo ? Number(stockMinimo) : 5,
       codigo_barras: codigoBarras ? codigoBarras.trim() : null,
       categoria: categoria || "General",
+      etiquetas, // <-- Guardamos la lista de etiquetas
       imagen_url: portadaPrincipal,
       imagenes_urls: imagenesFinales,
       mostrar_ultimas_unidades: Boolean(mostrarUltimasUnidades),
@@ -189,7 +190,7 @@ export default function FormularioProducto({
 
   return (
     <div className="mb-8 rounded-2xl border border-[#E7E5E0] bg-white shadow-sm transition-all overflow-hidden">
-      {/* Cabecera Desplegable */}
+      {/* Cabecera */}
       <div
         onClick={() => setIsOpen(!isOpen)}
         className="flex cursor-pointer items-center justify-between p-5 hover:bg-[#F7F7F5] transition-colors"
@@ -222,7 +223,7 @@ export default function FormularioProducto({
         </div>
       </div>
 
-      {/* Cuerpo del Formulario */}
+      {/* Cuerpo */}
       {isOpen && (
         <form onSubmit={handleSubmit} className="border-t border-[#E7E5E0] p-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
@@ -236,7 +237,6 @@ export default function FormularioProducto({
             />
           </div>
 
-          {/* Código de Barras, Escáner y Generador */}
           <div>
             <label className="block text-xs font-medium text-[#6B675F]">Código de Barras</label>
             <div className="mt-1 flex gap-2">
@@ -251,7 +251,6 @@ export default function FormularioProducto({
                 type="button"
                 onClick={generarCodigoBarras}
                 className="rounded-xl bg-gray-100 px-3 text-xs font-bold text-[#12151B] hover:bg-gray-200 transition-colors whitespace-nowrap"
-                title="Generar código automático"
               >
                 🎲 Generar
               </button>
@@ -259,7 +258,6 @@ export default function FormularioProducto({
                 type="button"
                 onClick={() => setIsScannerOpen(true)}
                 className="flex items-center justify-center rounded-xl bg-[#12151B] px-3.5 text-base text-white hover:bg-[#2C323E]"
-                title="Escanear con cámara o lector USB"
               >
                 📷
               </button>
@@ -267,7 +265,7 @@ export default function FormularioProducto({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#6B675F]">Categoría</label>
+            <label className="block text-xs font-medium text-[#6B675F]">Categoría Principal</label>
             <select
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
@@ -282,6 +280,9 @@ export default function FormularioProducto({
             </select>
           </div>
 
+          {/* Subcomponente de Etiquetas */}
+          <SeccionEtiquetas etiquetas={etiquetas} setEtiquetas={setEtiquetas} />
+
           <div>
             <label className="block text-xs font-medium text-[#6B675F]">Precio ($)</label>
             <input
@@ -294,9 +295,7 @@ export default function FormularioProducto({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#6B675F]">
-              Precio Anterior / Oferta ($) (Opcional)
-            </label>
+            <label className="block text-xs font-medium text-[#6B675F]">Precio Anterior / Oferta ($) (Opcional)</label>
             <input
               type="number"
               value={precioOriginal}
@@ -351,64 +350,15 @@ export default function FormularioProducto({
             </label>
           </div>
 
-          {/* Subida Múltiple de Imágenes y Gestión con Numeración */}
-          <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-[#6B675F] mb-1">
-              Imágenes del Producto ({totalImagenes} cargadas)
-            </label>
-            
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleFileChange}
-              className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-2.5 text-sm text-[#12151B] outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-[#12151B] file:px-4 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-[#2C323E]"
-            />
-
-            {/* Tira de Vistas Previas Numeradas */}
-            {totalImagenes > 0 && (
-              <div className="mt-3 grid grid-cols-3 sm:grid-cols-6 gap-2">
-                {/* Imágenes ya guardadas en Supabase */}
-                {imagenesExistentes.map((url, idx) => (
-                  <div key={`exist-${idx}`} className="relative group aspect-square rounded-xl border border-gray-200 overflow-hidden bg-[#F7F7F5]">
-                    <img src={url} alt={`Imagen ${idx + 1}`} className="w-full h-full object-cover" />
-                    <span className="absolute top-1 left-1 bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
-                      #{idx + 1} {idx === 0 && "(Portada)"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => eliminarExistente(idx)}
-                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs opacity-80 hover:opacity-100"
-                      title="Eliminar imagen"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-
-                {/* Imágenes nuevas seleccionadas localmente */}
-                {previewsNuevas.map((previewUrl, idx) => {
-                  const numeroImg = imagenesExistentes.length + idx + 1;
-                  return (
-                    <div key={`new-${idx}`} className="relative group aspect-square rounded-xl border border-[#0E6E55]/40 overflow-hidden bg-[#F7F7F5]">
-                      <img src={previewUrl} alt={`Nueva ${numeroImg}`} className="w-full h-full object-cover" />
-                      <span className="absolute top-1 left-1 bg-[#0E6E55] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
-                        #{numeroImg} {numeroImg === 1 && "(Portada)"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => eliminarNueva(idx)}
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs opacity-80 hover:opacity-100"
-                        title="Eliminar imagen"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          {/* Subcomponente de Galería de Imágenes */}
+          <CargadorImagenes
+            totalImagenes={totalImagenes}
+            imagenesExistentes={imagenesExistentes}
+            previewsNuevas={previewsNuevas}
+            handleFileChange={handleFileChange}
+            eliminarExistente={eliminarExistente}
+            eliminarNueva={eliminarNueva}
+          />
 
           <div className="sm:col-span-2">
             <label className="block text-xs font-medium text-[#6B675F]">Descripción</label>
@@ -424,13 +374,9 @@ export default function FormularioProducto({
             <button
               type="submit"
               disabled={cargando}
-              className="w-full rounded-xl bg-[#0E6E55] py-3 text-sm font-semibold text-white transition-all hover:bg-[#0A5340] disabled:opacity-50"
+              className="w-full rounded-xl bg-[#0E6E55] py-3 text-sm font-semibold text-white transition-all hover:bg-[#0A5340] disabled:opacity-50 cursor-pointer"
             >
-              {cargando
-                ? "Guardando..."
-                : productoEditando
-                ? "Actualizar Producto"
-                : "Guardar Producto"}
+              {cargando ? "Guardando..." : productoEditando ? "Actualizar Producto" : "Guardar Producto"}
             </button>
           </div>
         </form>
