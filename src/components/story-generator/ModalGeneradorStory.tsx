@@ -23,18 +23,23 @@ export function ModalGeneradorStory({
 }: ModalGeneradorStoryProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [descargando, setDescargando] = useState(false);
+
+  // Estado inicial con todas las opciones de personalización (Etapa 1 a 4)
   const [opciones, setOpciones] = useState<OpcionesStory>({
-  estiloPlantilla: "minimal",
-  colorFondo: "#ffffff",
-  usarColorPersonalizado: false,
-  badge: "ninguno",
-  mostrarCuotas: true,
-  mostrarDireccion: true,
-  mostrarCategoria: true,
-});
+    estiloPlantilla: "minimal",
+    formato: "story", // "story" (9:16) | "feed" (1:1)
+    fitImagen: "contain", // "contain" | "cover"
+    colorFondo: "#ffffff",
+    usarColorPersonalizado: false,
+    badge: "ninguno",
+    mostrarCuotas: true,
+    mostrarDireccion: true,
+    mostrarCategoria: true,
+  });
 
   if (!isOpen || !producto) return null;
 
+  // Función para capturar el nodo DOM y exportar la imagen a PNG
   const descargarStory = async () => {
     if (!cardRef.current) return;
     try {
@@ -45,7 +50,12 @@ export function ModalGeneradorStory({
       });
 
       const link = document.createElement("a");
-      link.download = `story-${producto.nombre.toLowerCase().replace(/\s+/g, "-")}.png`;
+      const sufijoFormato = opciones.formato === "feed" ? "feed" : "story";
+      const nombreLimpio = (producto.nombre || "producto")
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+
+      link.download = `${sufijoFormato}-${nombreLimpio}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -58,11 +68,13 @@ export function ModalGeneradorStory({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="relative flex max-h-[95vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl overflow-hidden">
-        {/* Cabecera */}
+        {/* Cabecera del Modal */}
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-emerald-600" />
-            <h3 className="text-base font-bold text-gray-800">Generador de Story</h3>
+            <h3 className="text-base font-bold text-gray-800">
+              Generador de Imagen Promocional
+            </h3>
           </div>
           <button
             onClick={onClose}
@@ -72,7 +84,7 @@ export function ModalGeneradorStory({
           </button>
         </div>
 
-        {/* Cuerpo */}
+        {/* Cuerpo: Panel Lateral de Controles + Vista Previa en Vivo */}
         <div className="flex flex-1 flex-col sm:flex-row p-6 gap-6 items-center justify-center bg-gray-100 overflow-y-auto">
           <ControlesEditor
             opciones={opciones}

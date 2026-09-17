@@ -75,14 +75,20 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
 
     const esTextoOscuro = colorTextoHex === "#111827";
 
+    // Dimensiones según formato
+    const esFeed = opciones.formato === "feed";
+    const dimensionesClase = esFeed
+      ? "w-[380px] h-[380px]"
+      : "w-[281px] h-[500px]";
+
     return (
       <div
         ref={ref}
         style={{ ...bgStyle, color: colorTextoHex }}
-        className={`relative flex h-[500px] w-[281px] shrink-0 flex-col justify-between p-5 shadow-xl transition-colors ${bgClass}`}
+        className={`relative flex shrink-0 flex-col justify-between p-5 shadow-xl transition-all ${dimensionesClase} ${bgClass}`}
       >
         {/* Encabezado Marca */}
-        <div className="flex items-center justify-between z-10 border-b border-black/10 pb-3">
+        <div className="flex items-center justify-between z-10 border-b border-black/10 pb-2">
           <span
             className="text-xs font-black tracking-widest uppercase"
             style={{ color: esTextoOscuro ? "#047857" : "#34d399" }}
@@ -103,19 +109,25 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
           </div>
         </div>
 
-        {/* Imagen central con Badge Flotante */}
-        <div className="relative my-auto flex h-48 w-full items-center justify-center overflow-hidden rounded-xl bg-gray-50/80 shadow-inner my-2 border border-black/5">
+        {/* Contenedor e Imagen Central */}
+        <div
+          className={`relative my-auto flex w-full items-center justify-center overflow-hidden rounded-xl bg-gray-50/80 shadow-inner border border-black/5 ${
+            esFeed ? "h-40 my-1" : "h-48 my-2"
+          }`}
+        >
           {imagenPortada ? (
             <img
               src={imagenPortada}
               alt={producto.nombre}
-              className="h-full w-full object-cover"
+              className={`h-full w-full ${
+                opciones.fitImagen === "cover" ? "object-cover" : "object-contain p-2"
+              }`}
             />
           ) : (
             <Camera className="h-10 w-10 text-gray-300" />
           )}
 
-          {/* Render del Badge si está seleccionado */}
+          {/* Badge Flotante */}
           {opciones.badge !== "ninguno" && BADGE_MAP[opciones.badge] && (
             <span
               className={`absolute top-2 left-2 px-2 py-0.5 text-[9px] font-black rounded-md shadow-md uppercase tracking-wider ${
@@ -127,8 +139,8 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
           )}
         </div>
 
-        {/* Contenido inferior */}
-        <div className="space-y-2 z-10">
+        {/* Contenido Inferior */}
+        <div className="space-y-1.5 z-10">
           {opciones.mostrarCategoria && (
             <span className="inline-block rounded-md bg-emerald-100/90 px-2 py-0.5 text-[10px] font-bold text-emerald-900 shadow-sm">
               {producto.categoria || "Producto"}
@@ -153,13 +165,13 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
 
           {/* Info Cuotas */}
           {opciones.mostrarCuotas && producto.permite_cuotas !== false && (
-            <p className="text-[10px] font-semibold text-purple-700 bg-purple-50/90 px-2 py-1 rounded-md inline-block shadow-sm">
+            <p className="text-[10px] font-semibold text-purple-700 bg-purple-50/90 px-2 py-0.5 rounded-md inline-block shadow-sm">
               💳 3 cuotas sin interés de ${cuotaInfo.montoCuota.toLocaleString("es-AR")}
             </p>
           )}
 
           {/* Footer Call To Action + Dirección */}
-          <div className="pt-2 border-t border-black/10 text-center flex flex-col items-center gap-0.5">
+          <div className="pt-1.5 border-t border-black/10 text-center flex flex-col items-center gap-0.5">
             <span
               className="text-[10px] font-bold uppercase tracking-wide"
               style={{ color: esTextoOscuro ? "#047857" : "#34d399" }}
@@ -169,11 +181,11 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
 
             {opciones.mostrarDireccion && config?.direccion_texto && (
               <span
-                className="text-[9px] font-medium flex items-center gap-1"
+                className="text-[9px] font-medium flex items-center gap-1 truncate max-w-full"
                 style={{ color: esTextoOscuro ? "#6b7280" : "#d4d4d8" }}
               >
-                <MapPin className="w-2.5 h-2.5" />
-                {config.direccion_texto}
+                <MapPin className="w-2.5 h-2.5 shrink-0" />
+                <span className="truncate">{config.direccion_texto}</span>
               </span>
             )}
           </div>

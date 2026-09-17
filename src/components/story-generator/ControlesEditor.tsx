@@ -1,6 +1,6 @@
 "use client";
 
-import { OpcionesStory, EstiloPlantilla, BadgeTipo } from "@/types/story";
+import { OpcionesStory, EstiloPlantilla, BadgeTipo, FormatoStory, FitImagen } from "@/types/story";
 import { ColorPicker } from "./ColorPicker";
 import { BadgesSelector } from "./BadgesSelector";
 
@@ -39,7 +39,40 @@ export function ControlesEditor({
   };
 
   return (
-    <div className="flex flex-col gap-4 w-full sm:w-60 shrink-0 bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm max-h-[460px] overflow-y-auto">
+    <div className="flex flex-col gap-4 w-full sm:w-60 shrink-0 bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm max-h-[480px] overflow-y-auto">
+      {/* Formato de Lienzo (Story vs Feed) */}
+      <div className="flex flex-col gap-2">
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          Formato
+        </span>
+        <div className="grid grid-cols-2 gap-1.5">
+          <button
+            type="button"
+            onClick={() => onChangeOpciones({ ...opciones, formato: "story" })}
+            className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-all ${
+              opciones.formato === "story"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200/80"
+            }`}
+          >
+            📱 Story (9:16)
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeOpciones({ ...opciones, formato: "feed" })}
+            className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-all ${
+              opciones.formato === "feed"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200/80"
+            }`}
+          >
+            🖼️ Feed (1:1)
+          </button>
+        </div>
+      </div>
+
+      <hr className="border-gray-100" />
+
       {/* Plantillas Preset */}
       <div className="flex flex-col gap-2">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -67,6 +100,39 @@ export function ControlesEditor({
             }`}
           >
             Oferta / Destacado
+          </button>
+        </div>
+      </div>
+
+      <hr className="border-gray-100" />
+
+      {/* Ajuste de Imagen */}
+      <div className="flex flex-col gap-2">
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          Ajuste de Imagen
+        </span>
+        <div className="grid grid-cols-2 gap-1.5">
+          <button
+            type="button"
+            onClick={() => onChangeOpciones({ ...opciones, fitImagen: "contain" })}
+            className={`rounded-lg px-2 py-1.5 text-xs font-medium transition-all ${
+              opciones.fitImagen === "contain"
+                ? "bg-emerald-600 text-white font-semibold shadow-sm"
+                : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200/80"
+            }`}
+          >
+            Completa
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeOpciones({ ...opciones, fitImagen: "cover" })}
+            className={`rounded-lg px-2 py-1.5 text-xs font-medium transition-all ${
+              opciones.fitImagen === "cover"
+                ? "bg-emerald-600 text-white font-semibold shadow-sm"
+                : "bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200/80"
+            }`}
+          >
+            Rellenar
           </button>
         </div>
       </div>

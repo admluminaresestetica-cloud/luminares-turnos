@@ -1,13 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Sparkles } from "lucide-react";
+import { useState } from "react";
 import { calcularCuotas } from "@/lib/precios";
-import { ModalGeneradorStory } from "./ModalGeneradorStory";
-import {
-  obtenerConfiguracion,
-  ConfiguracionEmpresa,
-} from "@/lib/supabase/configuracion-empresa";
 
 interface ListaProductosProps {
   productos: any[];
@@ -27,19 +21,6 @@ export default function ListaProductos({
   const [busqueda, setBusqueda] = useState("");
   const [modalRestockId, setModalRestockId] = useState<number | string | null>(null);
   const [cantidadRestock, setCantidadRestock] = useState<string>("1");
-
-  // Estados para el Generador de Stories
-  const [productoStory, setProductoStory] = useState<any | null>(null);
-  const [configEmpresa, setConfigEmpresa] = useState<ConfiguracionEmpresa | null>(null);
-
-  // Cargar configuración de la empresa al montar el componente
-  useEffect(() => {
-    const cargarConfig = async () => {
-      const config = await obtenerConfiguracion();
-      setConfigEmpresa(config);
-    };
-    cargarConfig();
-  }, []);
 
   // Buscador por nombre, categoría, precio, CÓDIGO DE BARRAS o ETIQUETAS
   const productosFiltrados = productos.filter((p) => {
@@ -225,17 +206,6 @@ export default function ListaProductos({
 
                 {/* Botones de Acción */}
                 <div className="mt-4 flex gap-2 border-t border-[#E7E5E0] pt-3">
-                  {/* Botón para abrir la creación de Story */}
-                  <button
-                    type="button"
-                    onClick={() => setProductoStory(p)}
-                    title="Generar Story para Instagram/WhatsApp"
-                    className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Story</span>
-                  </button>
-
                   <button
                     onClick={() => onEditar(p)}
                     className="flex-1 rounded-lg border border-[#E7E5E0] bg-white py-2 text-xs font-semibold text-[#12151B] transition-colors hover:bg-[#E7E5E0]"
@@ -290,14 +260,6 @@ export default function ListaProductos({
           </div>
         </div>
       )}
-
-      {/* Modal Generador de Stories */}
-      <ModalGeneradorStory
-        isOpen={Boolean(productoStory)}
-        onClose={() => setProductoStory(null)}
-        producto={productoStory}
-        config={configEmpresa}
-      />
     </div>
   );
 }
