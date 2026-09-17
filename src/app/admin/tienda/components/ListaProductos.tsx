@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { calcularCuotas } from "@/lib/precios";
+import { ModalGeneradorStory } from "@/components/story-generator/ModalGeneradorStory";
 
 export interface Producto {
   id: number | string;
@@ -21,6 +23,7 @@ export interface Producto {
 
 interface ListaProductosProps {
   productos: Producto[];
+  config?: any; // Configuración de la empresa (logo, datos) para el lienzo
   onEliminar: (id: number | string) => void;
   onEditar: (producto: Producto) => void;
   onToggleActivo?: (id: number | string, nuevoEstado: boolean) => void;
@@ -29,6 +32,7 @@ interface ListaProductosProps {
 
 export default function ListaProductos({
   productos,
+  config,
   onEliminar,
   onEditar,
   onToggleActivo,
@@ -38,34 +42,26 @@ export default function ListaProductos({
   const [modalRestockId, setModalRestockId] = useState<number | string | null>(null);
   const [cantidadRestock, setCantidadRestock] = useState<string>("1");
 
-  // Buscador global optimizado
+  // ESTADO PARA EL GENERADOR DE STORY/IMAGEN REDES
+  const [productoStory, setProductoStory] = useState<Producto | null>(null);
+
   const productosFiltrados = productos.filter((p) => {
     const termino = busqueda.toLowerCase().trim();
     if (!termino) return true;
 
-    const coincideNombre = p.nombre?.toLowerCase().includes(termino);
-    const coincideCategoria = p.categoria?.toLowerCase().includes(termino);
-    const coincidePrecio = p.precio?.toString().includes(termino);
-    const coincideCodigoBarras = p.codigo_barras?.toLowerCase().includes(termino);
-    const coincideEtiqueta = p.etiquetas?.some((tag) =>
-      tag.toLowerCase().includes(termino)
-    );
-
     return (
-      coincideNombre ||
-      coincideCategoria ||
-      coincidePrecio ||
-      coincideCodigoBarras ||
-      coincideEtiqueta
+      p.nombre?.toLowerCase().includes(termino) ||
+      p.categoria?.toLowerCase().includes(termino) ||
+      p.precio?.toString().includes(termino) ||
+      p.codigo_barras?.toLowerCase().includes(termino) ||
+      p.etiquetas?.some((tag) => tag.toLowerCase().includes(termino))
     );
   });
 
   const handleConfirmarRestock = (id: number | string) => {
     const num = Number(cantidadRestock);
     if (isNaN(num) || num === 0) return;
-    if (onRestock) {
-      onRestock(id, num);
-    }
+    if (onRestock) onRestock(id, num);
     setModalRestockId(null);
     setCantidadRestock("1");
   };
@@ -77,7 +73,6 @@ export default function ListaProductos({
           📦 Listado de Productos
         </h2>
 
-        {/* Buscador Global */}
         <input
           type="text"
           placeholder="Buscar por nombre, categoría, etiqueta, precio o código..."
@@ -98,7 +93,6 @@ export default function ListaProductos({
           {productosFiltrados.map((p) => {
             const estaPausado = p.activo === false;
 
-            // Obtención limpia de imágenes
             const fotosArray: string[] =
               p.imagenes_urls && p.imagenes_urls.length > 0
                 ? p.imagenes_urls
@@ -117,7 +111,6 @@ export default function ListaProductos({
                 }`}
               >
                 <div>
-                  {/* Portada */}
                   {imagenPortada && (
                     <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg bg-gray-100">
                       <img
@@ -138,7 +131,6 @@ export default function ListaProductos({
                       {p.categoria || "General"}
                     </span>
 
-                    {/* Switch / Botón Pausa */}
                     <button
                       onClick={() =>
                         onToggleActivo && onToggleActivo(p.id, estaPausado)
@@ -157,7 +149,6 @@ export default function ListaProductos({
                     {p.nombre}
                   </h3>
 
-                  {/* Tags */}
                   {p.etiquetas && p.etiquetas.length > 0 && (
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {p.etiquetas.map((tag, i) => (
@@ -171,7 +162,6 @@ export default function ListaProductos({
                     </div>
                   )}
 
-                  {/* EAN / Código de Barras */}
                   {p.codigo_barras && (
                     <div className="mt-1.5 flex items-center gap-1 text-[11px] font-mono font-medium text-gray-500">
                       <span>🏷️ EAN:</span>
@@ -198,7 +188,6 @@ export default function ListaProductos({
                         )}
                       </div>
 
-                      {/* Cuotas */}
                       {p.permite_cuotas !== false && (
                         <span className="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
                           💳 3 cuotas sin interés de ${calcularCuotas(p.precio).montoCuota.toLocaleString("es-AR")}
@@ -206,7 +195,6 @@ export default function ListaProductos({
                       )}
                     </div>
 
-                    {/* Stock + Re-stock */}
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-bold text-[#0E6E55]">
                         Stock: {p.stock ?? 0}
@@ -222,14 +210,24 @@ export default function ListaProductos({
                   </div>
                 </div>
 
-                {/* Acciones */}
+                {/* BOTONES DE ACCIÓN: ¡AQUÍ ESTÁ EL BOTÓN DE STORY! */}
                 <div className="mt-4 flex gap-2 border-t border-[#E7E5E0] pt-3">
+                  <button
+                    onClick={() => setProductoStory(p)}
+                    title="Generar imagen para Redes / Story"
+                    className="flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-[#0E6E55] transition-colors hover:bg-emerald-100"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    <span>Story</span>
+                  </button>
+
                   <button
                     onClick={() => onEditar(p)}
                     className="flex-1 rounded-lg border border-[#E7E5E0] bg-white py-2 text-xs font-semibold text-[#12151B] transition-colors hover:bg-[#E7E5E0]"
                   >
                     ✏️ Editar
                   </button>
+
                   <button
                     onClick={() => onEliminar(p.id)}
                     className="rounded-lg border border-[#F87171]/20 bg-[#FEF2F2] px-3 py-2 text-xs font-semibold text-[#C84343] transition-colors hover:bg-[#FEE2E2]"
@@ -243,7 +241,7 @@ export default function ListaProductos({
         </div>
       )}
 
-      {/* Modal de Re-stock */}
+      {/* Modal Ajuste Stock */}
       {modalRestockId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-xs rounded-2xl border border-[#E7E5E0] bg-white p-5 shadow-lg">
@@ -277,6 +275,14 @@ export default function ListaProductos({
           </div>
         </div>
       )}
+
+      {/* MODAL GENERADOR DE STORY */}
+      <ModalGeneradorStory
+        isOpen={!!productoStory}
+        onClose={() => setProductoStory(null)}
+        producto={productoStory}
+        config={config || null}
+      />
     </div>
   );
 }
