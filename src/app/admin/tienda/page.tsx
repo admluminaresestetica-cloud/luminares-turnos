@@ -38,7 +38,7 @@ export default function AdminTiendaPage() {
     const { data, error } = await supabase
       .from("configuracion_empresa")
       .select("*")
-      .maybeSingle(); // Trae el registro único de la empresa
+      .maybeSingle();
 
     if (error) console.error("Error al cargar configuración empresa:", error);
     else if (data) setConfigEmpresa(data);
@@ -76,7 +76,7 @@ export default function AdminTiendaPage() {
 
   useEffect(() => {
     setMounted(true);
-    fetchConfigEmpresa(); // 👈 Carga dirección e Instagram al iniciar
+    fetchConfigEmpresa();
     fetchProductos();
     fetchCategorias();
     fetchPedidos();
@@ -221,10 +221,9 @@ export default function AdminTiendaPage() {
               onCancelarEdicion={() => setProductoEditando(null)}
             />
 
-            {/* SE PASA LA CONFIGURACIÓN REAL AL LISTADO */}
             <ListaProductos
               productos={productos}
-              config={configEmpresa} // 👈 ¡LISTO! Ahora envía direccion_texto e instagram_usuario reales
+              config={configEmpresa} 
               onEliminar={async (id) => {
                 if (confirm("¿Eliminar producto?")) {
                   await supabase.from("productos").delete().eq("id", id);
@@ -234,6 +233,21 @@ export default function AdminTiendaPage() {
               onEditar={(prod) => {
                 setProductoEditando(prod);
                 window.scrollTo({ top: 300, behavior: "smooth" });
+              }}
+              onRestock={async (id, cantidadASumar) => {
+                const prod = productos.find((p) => p.id === id);
+                if (!prod) return;
+
+                const nuevoStock = (Number(prod.stock) || 0) + cantidadASumar;
+
+                const { error } = await supabase
+                  .from("productos")
+                  .update({ stock: nuevoStock })
+                  .eq("id", id);
+
+                if (!error) {
+                  fetchProductos();
+                }
               }}
             />
           </>
