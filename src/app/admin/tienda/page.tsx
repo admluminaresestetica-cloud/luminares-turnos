@@ -10,7 +10,7 @@ import CategoriasTab from "./components/CategoriasTab";
 import BannersTab from "./components/BannersTab";
 import TagsTab from "./components/TagsTab";
 import PuntoVentaTab from "./components/pos/PuntoVentaTab";
-import ControlCajaTab from "./components/ControlCajaTab"; // 1. IMPORTANTE: Importar el componente de Caja
+import ControlCajaTab from "./components/ControlCajaTab";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,18 +18,31 @@ const supabase = createClient(
 );
 
 export default function AdminTiendaPage() {
-  // 2. IMPORTANTE: Agregamos "caja" al tipo de activeTab
   const [activeTab, setActiveTab] = useState<"catalogo" | "pos" | "caja" | "pedidos" | "banners" | "tags">("catalogo");
   const [mounted, setMounted] = useState(false);
 
   const [productos, setProductos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  
+  // ESTADO PARA GUARDAR LA CONFIGURACIÓN DE LA EMPRESA DESDE SUPABASE
+  const [configEmpresa, setConfigEmpresa] = useState<any | null>(null);
 
   const [cargandoCat, setCargandoCat] = useState(false);
   const [productoEditando, setProductoEditando] = useState<any | null>(null);
   const [cargandoPedidos, setCargandoPedidos] = useState(false);
   const [procesandoPedidoId, setProcesandoPedidoId] = useState<string | null>(null);
+
+  // FETCH DE CONFIGURACIÓN DE LA EMPRESA
+  const fetchConfigEmpresa = async () => {
+    const { data, error } = await supabase
+      .from("configuracion_empresa")
+      .select("*")
+      .maybeSingle(); // Trae el registro único de la empresa
+
+    if (error) console.error("Error al cargar configuración empresa:", error);
+    else if (data) setConfigEmpresa(data);
+  };
 
   const fetchProductos = async () => {
     const { data, error } = await supabase
@@ -63,6 +76,7 @@ export default function AdminTiendaPage() {
 
   useEffect(() => {
     setMounted(true);
+    fetchConfigEmpresa(); // 👈 Carga dirección e Instagram al iniciar
     fetchProductos();
     fetchCategorias();
     fetchPedidos();
@@ -108,7 +122,7 @@ export default function AdminTiendaPage() {
           totalCategorias={categorias.length}
         />
 
-        {/* Pestañas con Scroll Horizontal para Mobile */}
+        {/* Pestañas */}
         <div className="no-scrollbar -mx-6 mb-6 flex items-center gap-2 overflow-x-auto border-b border-[#E7E5E0] px-6 sm:mx-0 sm:px-0">
           <button
             onClick={() => setActiveTab("catalogo")}
@@ -132,7 +146,6 @@ export default function AdminTiendaPage() {
             📷 Escáner / POS
           </button>
 
-          {/* 3. NUEVA PESTAÑA DE CAJA Y ARQUEO */}
           <button
             onClick={() => setActiveTab("caja")}
             className={`flex whitespace-nowrap items-center gap-2 border-b-2 px-3.5 py-3 text-xs font-bold transition-all sm:text-sm ${
@@ -208,8 +221,10 @@ export default function AdminTiendaPage() {
               onCancelarEdicion={() => setProductoEditando(null)}
             />
 
+            {/* SE PASA LA CONFIGURACIÓN REAL AL LISTADO */}
             <ListaProductos
               productos={productos}
+              config={configEmpresa} // 👈 ¡LISTO! Ahora envía direccion_texto e instagram_usuario reales
               onEliminar={async (id) => {
                 if (confirm("¿Eliminar producto?")) {
                   await supabase.from("productos").delete().eq("id", id);
@@ -232,7 +247,6 @@ export default function AdminTiendaPage() {
           />
         )}
 
-        {/* 4. CONTENIDO DE LA PESTAÑA CAJA */}
         {activeTab === "caja" && <ControlCajaTab supabase={supabase} />}
 
         {activeTab === "pedidos" && (
