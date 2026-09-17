@@ -1,12 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { X, Download, Sparkles } from "lucide-react";
+import { X, Download, Sparkles, Share2 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { ConfiguracionEmpresa } from "@/lib/supabase/configuracion-empresa";
 import { OpcionesStory } from "@/types/story";
 import { LienzoStory } from "./LienzoStory";
 import { ControlesEditor } from "./ControlesEditor";
+import { compartirOGuardarImagen, descargarImagenDirecta } from "@/utils/shareImage";
 
 interface ModalGeneradorStoryProps {
   isOpen: boolean;
@@ -22,7 +23,7 @@ export function ModalGeneradorStory({
   config,
 }: ModalGeneradorStoryProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [descargando, setDescargando] = useState(false);
+  const [procesando, setProcesando] = useState(false);
 
   // Estado inicial con todas las opciones de personalización (Etapa 1 a 4)
   const [opciones, setOpciones] = useState<OpcionesStory>({
@@ -39,30 +40,50 @@ export function ModalGeneradorStory({
 
   if (!isOpen || !producto) return null;
 
-  // Función para capturar el nodo DOM y exportar la imagen a PNG
-  const descargarStory = async () => {
-    if (!cardRef.current) return;
+  // Genera el dataUrl en formato PNG a partir del lienzo
+  const generarDataUrl = async (): Promise<string | null> => {
+    if (!cardRef.current) return null;
     try {
-      setDescargando(true);
-      const dataUrl = await toPng(cardRef.current, {
+      return await toPng(cardRef.current, {
         pixelRatio: 3,
         cacheBust: true,
       });
-
-      const link = document.createElement("a");
-      const sufijoFormato = opciones.formato === "feed" ? "feed" : "story";
-      const nombreLimpio = (producto.nombre || "producto")
-        .toLowerCase()
-        .replace(/\s+/g, "-");
-
-      link.download = `${sufijoFormato}-${nombreLimpio}.png`;
-      link.href = dataUrl;
-      link.click();
     } catch (err) {
       console.error("Error al generar la imagen:", err);
-    } finally {
-      setDescargando(false);
+      return null;
     }
+  };
+
+  // Nombres de archivo formateados
+  const sufijoFormato = opciones.formato === "feed" ? "feed" : "story";
+  const nombreLimpio = (producto.nombre || "producto")
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+  const nombreArchivo = `${sufijoFormato}-${nombreLimpio}.png`;
+
+  // Acción 1: Compartir directamente en apps (WhatsApp, Instagram, etc.)
+  const compartirStory = async () => {
+    setProcesando(true);
+    const dataUrl = await generarDataUrl();
+    if (dataUrl) {
+      await compartirOGuardarImagen({
+        dataUrl,
+        nombreArchivo,
+        titulo: producto.nombre || "Promoción",
+        texto: `¡Mirá esta oferta de ${producto.nombre || "nuestra tienda"}!`,
+      });
+    }
+    setProcesando(false);
+  };
+
+  // Acción 2: Descargar directamente el archivo PNG
+  const descargarStory = async () => {
+    setProcesando(true);
+    const dataUrl = await generarDataUrl();
+    if (dataUrl) {
+      descargarImagenDirecta(dataUrl, nombreArchivo);
+    }
+    setProcesando(false);
   };
 
   return (
@@ -102,7 +123,7 @@ export function ModalGeneradorStory({
         </div>
 
         {/* Pie de acciones */}
-        <div className="flex justify-end border-t border-gray-100 px-6 py-4 gap-3 bg-white">
+        <div className="flex flex-wrap items-center justify-end border-t border-gray-100 px-6 py-4 gap-2.5 bg-white">
           <button
             type="button"
             onClick={onClose}
@@ -110,14 +131,27 @@ export function ModalGeneradorStory({
           >
             Cancelar
           </button>
+
+          {/* Botón Principal: Compartir */}
+          <button
+            type="button"
+            onClick={compartirStory}
+            disabled={procesando}
+            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-50"
+          >
+            <Share2 className="h-4 w-4" />
+            <span>{procesando ? "Generando..." : "Compartir en Redes"}</span>
+          </button>
+
+          {/* Botón Secundario: Descargar */}
           <button
             type="button"
             onClick={descargarStory}
-            disabled={descargando}
-            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors disabled:opacity-50"
+            disabled={procesando}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 active:scale-95 transition-all disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
-            <span>{descargando ? "Generando..." : "Descargar PNG"}</span>
+            <span>Descargar</span>
           </button>
         </div>
       </div>
