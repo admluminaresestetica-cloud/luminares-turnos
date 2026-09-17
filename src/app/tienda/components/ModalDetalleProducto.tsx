@@ -7,6 +7,7 @@ import { useCarrito } from "@/context/CarritoContext";
 import AcordeonFAQ from "./AcordeonFAQ";
 import GaleriaProducto from "./GaleriaProducto";
 import ProductosRelacionados from "./ProductosRelacionados";
+import CarruselEtiquetaModal from "./CarruselEtiquetaModal";
 import { calcularCuotas } from "@/lib/precios";
 
 interface ModalDetalleProductoProps {
@@ -30,6 +31,9 @@ export default function ModalDetalleProducto({
   const [startY, setStartY] = useState<number | null>(null);
   const [currentOffsetY, setCurrentOffsetY] = useState<number>(0);
   const [imagenSeleccionada, setImagenSeleccionada] = useState<string>("");
+  
+  // Estado para controlar el mini carrusel desplegable por etiqueta
+  const [tagSeleccionadoCarrusel, setTagSeleccionadoCarrusel] = useState<string | null>(null);
 
   const context = useCarrito();
   const agregarAlCarrito = context?.agregarAlCarrito;
@@ -59,6 +63,7 @@ export default function ModalDetalleProducto({
   useEffect(() => {
     setCurrentOffsetY(0);
     setCantidad(maximoPermitidoParaAgregar > 0 ? 1 : 0);
+    setTagSeleccionadoCarrusel(null);
 
     if (imagenesTotales.length > 0) {
       setImagenSeleccionada(imagenesTotales[0]);
@@ -219,7 +224,7 @@ export default function ModalDetalleProducto({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-2xl"
+        className="relative w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-2xl pb-24"
         style={{
           overscrollBehaviorY: "contain",
           transform: `translateY(${currentOffsetY}px)`,
@@ -278,12 +283,9 @@ export default function ModalDetalleProducto({
                     <button
                       key={idx}
                       type="button"
-                      onClick={() => {
-                        if (onFiltrarPorTag) onFiltrarPorTag(tag);
-                        onClose();
-                      }}
+                      onClick={() => setTagSeleccionadoCarrusel(tag)}
                       className="inline-flex items-center gap-1 rounded-md bg-slate-100 hover:bg-[#0E6E55]/10 px-2 py-0.5 text-xs font-medium text-slate-600 hover:text-[#0E6E55] transition-colors cursor-pointer"
-                      title={`Filtrar productos por #${tag}`}
+                      title={`Ver productos con #${tag}`}
                     >
                       <Tag className="h-3 w-3 text-slate-400" />
                       #{tag}
@@ -414,6 +416,27 @@ export default function ModalDetalleProducto({
           handleSumarRecomendado={handleSumarRecomendado}
           handleRestarRecomendado={handleRestarRecomendado}
         />
+
+        {/* CARRUSEL DESPLEGABLE DE PRODUCTOS POR ETIQUETA */}
+        {tagSeleccionadoCarrusel && (
+          <CarruselEtiquetaModal
+         isOpen={Boolean(tagSeleccionadoCarrusel)}
+         tag={tagSeleccionadoCarrusel}
+         productos={todosProductos}
+         items={items} // <-- Agregá esto
+         handleSumarRecomendado={handleSumarRecomendado} // <-- Agregá esto
+         handleRestarRecomendado={handleRestarRecomendado} // <-- Agregá esto
+         onClose={() => setTagSeleccionadoCarrusel(null)}
+         onSeleccionarProducto={(prod) => {
+         setTagSeleccionadoCarrusel(null);
+         onSeleccionarProducto(prod);
+  }}
+  onVerMasGlobal={(tag) => {
+    if (onFiltrarPorTag) onFiltrarPorTag(tag);
+    onClose();
+  }}
+/>
+        )}
       </div>
     </div>
   );
