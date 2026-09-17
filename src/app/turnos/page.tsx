@@ -19,7 +19,7 @@ const ACCESOS = [
   {
     href: '/servicios',
     titulo: 'Servicios Generales',
-    icon: Sparkles,
+    icon: UserStar,
     colorBg: 'bg-indigo-50 text-indigo-600',
     borderColor: 'hover:border-indigo-300',
     hoverShadow: 'hover:shadow-[0_15px_30px_-5px_rgba(99,102,241,0.15)]',
