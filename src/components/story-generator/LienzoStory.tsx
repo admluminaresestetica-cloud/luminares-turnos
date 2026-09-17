@@ -176,7 +176,7 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
               className="text-[10px] font-bold uppercase tracking-wide"
               style={{ color: esTextoOscuro ? "#047857" : "#34d399" }}
             >
-              📲 ¡Pedilo por Tienda Online!
+            
             </span>
 
             {opciones.mostrarDireccion && config?.direccion_texto && (
