@@ -3,12 +3,28 @@
 import { useState } from "react";
 import { calcularCuotas } from "@/lib/precios";
 
+export interface Producto {
+  id: number | string;
+  nombre: string;
+  descripcion?: string;
+  precio: number;
+  precio_original?: number;
+  categoria?: string;
+  stock?: number;
+  activo?: boolean;
+  permite_cuotas?: boolean;
+  codigo_barras?: string;
+  etiquetas?: string[];
+  imagen_url?: string;
+  imagenes_urls?: string[];
+}
+
 interface ListaProductosProps {
-  productos: any[];
-  onEliminar: (id: any) => void;
-  onEditar: (producto: any) => void;
-  onToggleActivo?: (id: any, nuevoEstado: boolean) => void;
-  onRestock?: (id: any, cantidadASumar: number) => void;
+  productos: Producto[];
+  onEliminar: (id: number | string) => void;
+  onEditar: (producto: Producto) => void;
+  onToggleActivo?: (id: number | string, nuevoEstado: boolean) => void;
+  onRestock?: (id: number | string, cantidadASumar: number) => void;
 }
 
 export default function ListaProductos({
@@ -22,14 +38,16 @@ export default function ListaProductos({
   const [modalRestockId, setModalRestockId] = useState<number | string | null>(null);
   const [cantidadRestock, setCantidadRestock] = useState<string>("1");
 
-  // Buscador por nombre, categoría, precio, CÓDIGO DE BARRAS o ETIQUETAS
+  // Buscador global optimizado
   const productosFiltrados = productos.filter((p) => {
     const termino = busqueda.toLowerCase().trim();
+    if (!termino) return true;
+
     const coincideNombre = p.nombre?.toLowerCase().includes(termino);
     const coincideCategoria = p.categoria?.toLowerCase().includes(termino);
     const coincidePrecio = p.precio?.toString().includes(termino);
     const coincideCodigoBarras = p.codigo_barras?.toLowerCase().includes(termino);
-    const coincideEtiqueta = p.etiquetas?.some((tag: string) =>
+    const coincideEtiqueta = p.etiquetas?.some((tag) =>
       tag.toLowerCase().includes(termino)
     );
 
@@ -44,7 +62,7 @@ export default function ListaProductos({
 
   const handleConfirmarRestock = (id: number | string) => {
     const num = Number(cantidadRestock);
-    if (num === 0 || isNaN(num)) return;
+    if (isNaN(num) || num === 0) return;
     if (onRestock) {
       onRestock(id, num);
     }
@@ -80,7 +98,7 @@ export default function ListaProductos({
           {productosFiltrados.map((p) => {
             const estaPausado = p.activo === false;
 
-            // Obtención de la lista de fotos y la portada
+            // Obtención limpia de imágenes
             const fotosArray: string[] =
               p.imagenes_urls && p.imagenes_urls.length > 0
                 ? p.imagenes_urls
@@ -99,7 +117,7 @@ export default function ListaProductos({
                 }`}
               >
                 <div>
-                  {/* Imagen de Portada con Badge de cantidad de fotos */}
+                  {/* Portada */}
                   {imagenPortada && (
                     <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg bg-gray-100">
                       <img
@@ -120,7 +138,7 @@ export default function ListaProductos({
                       {p.categoria || "General"}
                     </span>
 
-                    {/* Botón de Pausa / Activar */}
+                    {/* Switch / Botón Pausa */}
                     <button
                       onClick={() =>
                         onToggleActivo && onToggleActivo(p.id, estaPausado)
@@ -139,10 +157,10 @@ export default function ListaProductos({
                     {p.nombre}
                   </h3>
 
-                  {/* 🏷️ LISTADO DE ETIQUETAS/TAGS EN EL ADMIN */}
+                  {/* Tags */}
                   {p.etiquetas && p.etiquetas.length > 0 && (
                     <div className="mt-1.5 flex flex-wrap gap-1">
-                      {p.etiquetas.map((tag: string, i: number) => (
+                      {p.etiquetas.map((tag, i) => (
                         <span
                           key={i}
                           className="rounded-full bg-emerald-100/70 border border-emerald-200/80 px-2 py-0.5 text-[10px] font-semibold text-[#0E6E55]"
@@ -153,7 +171,7 @@ export default function ListaProductos({
                     </div>
                   )}
 
-                  {/* Badge de Código de Barras */}
+                  {/* EAN / Código de Barras */}
                   {p.codigo_barras && (
                     <div className="mt-1.5 flex items-center gap-1 text-[11px] font-mono font-medium text-gray-500">
                       <span>🏷️ EAN:</span>
@@ -188,10 +206,10 @@ export default function ListaProductos({
                       )}
                     </div>
 
-                    {/* Stock + Botón Restock */}
+                    {/* Stock + Re-stock */}
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-bold text-[#0E6E55]">
-                        Stock: {p.stock || 0}
+                        Stock: {p.stock ?? 0}
                       </span>
                       <button
                         onClick={() => setModalRestockId(p.id)}
@@ -204,7 +222,7 @@ export default function ListaProductos({
                   </div>
                 </div>
 
-                {/* Botones de Acción */}
+                {/* Acciones */}
                 <div className="mt-4 flex gap-2 border-t border-[#E7E5E0] pt-3">
                   <button
                     onClick={() => onEditar(p)}
@@ -237,7 +255,6 @@ export default function ListaProductos({
             </p>
             <input
               type="text"
-              inputMode="numeric"
               value={cantidadRestock}
               onChange={(e) => setCantidadRestock(e.target.value)}
               placeholder="Ej: 5 o -1"
