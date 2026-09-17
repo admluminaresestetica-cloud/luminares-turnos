@@ -3,7 +3,7 @@
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from 'next/link';
-import { Zap, Sparkles, Calendar, HelpCircle, MessageCircle, ArrowLeft } from 'lucide-react';
+import { Zap, Sparkles, Calendar, HelpCircle, MessageCircle, ArrowLeft, UserStar } from 'lucide-react';
 import BannerPrincipal from '@/components/BannerPrincipal';
 import { useConfig } from '@/context/ConfigContext';
 
