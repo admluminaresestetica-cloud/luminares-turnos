@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, Hand, Heart, Eye, ChevronRight } from 'lucide-react';
+import { Sparkles, Hand, Heart, Eye, ChevronRight, X, ZoomIn } from 'lucide-react';
 import FlujoAgendaConfirmacion from '@/components/booking/FlujoAgendaConfirmacion';
 import { SERVICIOS_STORAGE_KEY } from '@/lib/booking/session';
 import {
@@ -13,38 +13,48 @@ import type { CategoriaGeneral, DetalleReservaGeneral, ServicioGeneral } from '@
 
 type Paso = 'categoria' | 'servicios' | 'agenda';
 
-// Configuración visual por categoría (Ícono, Fondo y Colores de hover)
-const CATEGORIA_CONFIG: Record<string, { icon: any; colorBg: string; colorText: string; borderColor: string }> = {
+// Configuración visual por categoría (Ícono, degradado del badge y acentos)
+const CATEGORIA_CONFIG: Record<
+  string,
+  { icon: any; gradient: string; ringColor: string; softBg: string }
+> = {
   faciales: {
     icon: Sparkles,
-    colorBg: 'bg-rose-50 group-hover:bg-rose-500',
-    colorText: 'text-rose-600 group-hover:text-white',
-    borderColor: 'hover:border-rose-300',
+    gradient: 'from-rose-400 to-rose-600',
+    ringColor: 'group-hover:ring-rose-200',
+    softBg: 'bg-rose-50',
   },
   unas: {
     icon: Hand,
-    colorBg: 'bg-indigo-50 group-hover:bg-indigo-500',
-    colorText: 'text-indigo-600 group-hover:text-white',
-    borderColor: 'hover:border-indigo-300',
+    gradient: 'from-indigo-400 to-indigo-600',
+    ringColor: 'group-hover:ring-indigo-200',
+    softBg: 'bg-indigo-50',
   },
   uñas: {
     icon: Hand,
-    colorBg: 'bg-indigo-50 group-hover:bg-indigo-500',
-    colorText: 'text-indigo-600 group-hover:text-white',
-    borderColor: 'hover:border-indigo-300',
+    gradient: 'from-indigo-400 to-indigo-600',
+    ringColor: 'group-hover:ring-indigo-200',
+    softBg: 'bg-indigo-50',
   },
   masajes: {
     icon: Heart,
-    colorBg: 'bg-amber-50 group-hover:bg-amber-500',
-    colorText: 'text-amber-600 group-hover:text-white',
-    borderColor: 'hover:border-amber-300',
+    gradient: 'from-amber-400 to-amber-600',
+    ringColor: 'group-hover:ring-amber-200',
+    softBg: 'bg-amber-50',
   },
   ojos: {
     icon: Eye,
-    colorBg: 'bg-violet-50 group-hover:bg-violet-500',
-    colorText: 'text-violet-600 group-hover:text-white',
-    borderColor: 'hover:border-violet-300',
+    gradient: 'from-violet-400 to-violet-600',
+    ringColor: 'group-hover:ring-violet-200',
+    softBg: 'bg-violet-50',
   },
+};
+
+const CATEGORIA_CONFIG_DEFAULT = {
+  icon: Sparkles,
+  gradient: 'from-rose-400 to-rose-600',
+  ringColor: 'group-hover:ring-rose-200',
+  softBg: 'bg-rose-50',
 };
 
 export default function ServiciosPage() {
@@ -53,6 +63,8 @@ export default function ServiciosPage() {
   const [paso, setPaso] = useState<Paso>('categoria');
   const [categoria, setCategoria] = useState<CategoriaGeneral | null>(null);
   const [seleccionados, setSeleccionados] = useState<string[]>([]);
+  // Estado puramente visual: controla el lightbox de imagen (no afecta la lógica de reserva)
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
 
   useEffect(() => {
     async function cargar() {
@@ -129,7 +141,7 @@ export default function ServiciosPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 pb-32">
-      <div className="max-w-2xl mx-auto p-6 md:p-10">
+      <div className="max-w-3xl mx-auto p-6 md:p-10">
         <Link
           href="/"
           className="text-sm text-rose-600 font-semibold hover:underline inline-block mb-6"
@@ -153,16 +165,11 @@ export default function ServiciosPage() {
             No hay servicios disponibles en este momento.
           </div>
         ) : paso === 'categoria' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {categorias.map((cat) => {
               const count = servicios.filter((s) => s.categoria === cat).length;
               const key = cat.toLowerCase();
-              const config = CATEGORIA_CONFIG[key] || {
-                icon: Sparkles,
-                colorBg: 'bg-rose-50 group-hover:bg-rose-500',
-                colorText: 'text-rose-600 group-hover:text-white',
-                borderColor: 'hover:border-rose-300',
-              };
+              const config = CATEGORIA_CONFIG[key] || CATEGORIA_CONFIG_DEFAULT;
               const Icono = config.icon;
 
               return (
@@ -174,26 +181,34 @@ export default function ServiciosPage() {
                     setSeleccionados([]);
                     setPaso('servicios');
                   }}
-                  className={`group relative flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-all duration-200 text-left ${config.borderColor}`}
+                  className={`
+                    group relative flex items-center gap-4 p-4 sm:p-5
+                    bg-white rounded-[20px] border border-slate-100
+                    shadow-[0_2px_10px_rgba(15,23,42,0.06)]
+                    hover:shadow-[0_8px_24px_rgba(15,23,42,0.10)]
+                    active:scale-[0.98]
+                    transition-all duration-200 ease-out
+                    cursor-pointer text-left
+                  `}
                 >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors duration-200 shrink-0 ${config.colorBg}`}
-                    >
-                      <Icono className={`w-6 h-6 transition-colors duration-200 ${config.colorText}`} />
-                    </div>
-
-                    <div>
-                      <p className="font-bold text-slate-800 group-hover:text-slate-900 transition-colors capitalize text-base">
-                        {LABELS_CATEGORIA[cat] ?? cat}
-                      </p>
-                      <span className="inline-block text-xs font-medium text-slate-500 mt-0.5">
-                        {count} {count === 1 ? 'servicio disponible' : 'servicios disponibles'}
-                      </span>
-                    </div>
+                  <div
+                    className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${config.gradient} flex items-center justify-center shrink-0 shadow-inner ring-4 ring-transparent ${config.ringColor} transition-all duration-200`}
+                  >
+                    <Icono className="w-6 h-6 text-white" strokeWidth={2} />
                   </div>
 
-                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-1 transition-all duration-200 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-800 capitalize text-base leading-snug">
+                      {LABELS_CATEGORIA[cat] ?? cat}
+                    </p>
+                    <span className="inline-block text-xs font-medium text-slate-400 mt-0.5">
+                      {count} {count === 1 ? 'servicio disponible' : 'servicios disponibles'}
+                    </span>
+                  </div>
+
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-slate-900 flex items-center justify-center shrink-0 transition-colors duration-200">
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all duration-200" />
+                  </div>
                 </button>
               );
             })}
@@ -221,6 +236,12 @@ export default function ServiciosPage() {
                 const activo = seleccionados.includes(servicio.id);
                 // Permite verificar tanto imagen_url (Supabase) como el campo legacy imagen
                 const imagenParaMostrar = servicio.imagen_url || servicio.imagen;
+                const imagenSrc = imagenParaMostrar
+                  ? imagenParaMostrar.startsWith('http')
+                    ? imagenParaMostrar
+                    : `/images/${imagenParaMostrar}`
+                  : null;
+                const tieneDespliegue = Boolean(servicio.descripcion || imagenSrc);
 
                 return (
                   <button
@@ -228,14 +249,16 @@ export default function ServiciosPage() {
                     type="button"
                     onClick={() => toggleServicio(servicio.id)}
                     className={`
-                      w-full text-left border rounded-2xl p-4 transition-all
-                      ${activo
-                        ? 'border-rose-400 bg-rose-50 ring-2 ring-rose-200'
-                        : 'border-slate-200 bg-white hover:border-rose-200'
+                      w-full text-left rounded-2xl border overflow-hidden
+                      transition-all duration-200 ease-out
+                      ${
+                        activo
+                          ? 'border-rose-300 bg-rose-50/60 shadow-md ring-1 ring-rose-200'
+                          : 'border-slate-200 bg-white hover:border-rose-200 hover:shadow-sm'
                       }
                     `}
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center justify-between gap-3 p-4">
                       <div>
                         <p className="font-semibold text-slate-800">{servicio.subtipo}</p>
                         <p className="text-sm text-slate-500 mt-0.5">
@@ -247,32 +270,55 @@ export default function ServiciosPage() {
                       </p>
                     </div>
 
-                    {/* CONTENIDO DESPLEGABLE: Se muestra solo si está activo y tiene descripción o imagen */}
-                    {activo && (servicio.descripcion || imagenParaMostrar) && (
-                      <div className="mt-4 pt-4 border-t border-rose-200/60 animate-fadeIn space-y-3">
-                        {imagenParaMostrar && (
-                          <div className="relative w-full h-48 rounded-xl overflow-hidden shadow-sm bg-slate-100">
-                            <img
-                              src={
-                                imagenParaMostrar.startsWith('http')
-                                  ? imagenParaMostrar
-                                  : `/images/${imagenParaMostrar}`
-                              }
-                              alt={servicio.subtipo}
-                              className="w-full h-full object-cover"
-                              onError={(e: any) => {
-                                e.target.style.display = 'none';
+                    {/* CONTENIDO DESPLEGABLE: transición tipo acordeón, fluida en ambas direcciones */}
+                    <div
+                      className={`grid transition-all duration-300 ease-out ${
+                        activo && tieneDespliegue
+                          ? 'grid-rows-[1fr] opacity-100'
+                          : 'grid-rows-[0fr] opacity-0'
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="px-4 pb-4 pt-3 space-y-3 border-t border-rose-200/60 mx-4 -mt-px">
+                          {imagenSrc && (
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLightbox({ src: imagenSrc, alt: servicio.subtipo });
                               }}
-                            />
-                          </div>
-                        )}
-                        {servicio.descripcion && (
-                          <p className="text-sm text-slate-600 leading-relaxed">
-                            {servicio.descripcion}
-                          </p>
-                        )}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.stopPropagation();
+                                  setLightbox({ src: imagenSrc, alt: servicio.subtipo });
+                                }
+                              }}
+                              className="group/img relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-sm border border-rose-100 bg-slate-100 cursor-zoom-in"
+                            >
+                              <img
+                                src={imagenSrc}
+                                alt={servicio.subtipo}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
+                                onError={(e: any) => {
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors duration-200 flex items-center justify-center">
+                                <div className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 shadow-sm">
+                                  <ZoomIn className="w-4 h-4 text-slate-700" />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {servicio.descripcion && (
+                            <p className="text-sm text-slate-600 leading-relaxed">
+                              {servicio.descripcion}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </button>
                 );
               })}
@@ -281,13 +327,38 @@ export default function ServiciosPage() {
         )}
       </div>
 
+      {/* Lightbox: visor de imagen a pantalla completa (solo visual, no afecta la lógica de reserva) */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/60 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors duration-200"
+            aria-label="Cerrar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={lightbox.src}
+            alt={lightbox.alt}
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-full max-h-full rounded-2xl shadow-2xl object-contain"
+          />
+        </div>
+      )}
+
       {paso === 'servicios' && seleccionados.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pointer-events-none">
-          <div className="max-w-2xl mx-auto pointer-events-auto">
-            <div className="bg-slate-900 text-white rounded-2xl shadow-2xl px-5 py-4 flex items-center gap-4">
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 pointer-events-none">
+          <div className="max-w-3xl mx-auto pointer-events-auto">
+            <div className="bg-slate-900 text-white rounded-t-3xl sm:rounded-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.25)] px-5 py-4 flex items-center gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-3">
-                  <p className="text-2xl font-bold">${totales.precio.toLocaleString('es-AR')}</p>
+                  <p className="text-2xl font-bold tracking-tight">
+                    ${totales.precio.toLocaleString('es-AR')}
+                  </p>
                   <p className="text-slate-400 text-sm">{totales.duracion} min</p>
                 </div>
                 <p className="text-xs text-slate-400 mt-0.5 truncate">{totales.detalle}</p>
@@ -295,7 +366,7 @@ export default function ServiciosPage() {
               <button
                 type="button"
                 onClick={handleContinuarServicios}
-                className="shrink-0 bg-rose-500 hover:bg-rose-400 text-white font-semibold px-5 py-3 rounded-xl transition-colors text-sm"
+                className="shrink-0 bg-gradient-to-r from-rose-500 to-rose-400 hover:from-rose-400 hover:to-rose-300 active:scale-[0.98] text-white font-semibold px-5 py-3 rounded-xl shadow-lg shadow-rose-500/30 transition-all duration-200 text-sm"
               >
                 Continuar
               </button>
