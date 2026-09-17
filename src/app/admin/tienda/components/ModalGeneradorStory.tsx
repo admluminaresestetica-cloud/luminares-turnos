@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { X, Download, Sparkles, Camera } from "lucide-react";
+import { X, Download, Sparkles, Camera, MapPin } from "lucide-react";
 import { toPng } from "html-to-image";
 import { calcularCuotas } from "@/lib/precios";
 import { ConfiguracionEmpresa } from "@/lib/supabase/configuracion-empresa";
@@ -68,10 +68,9 @@ export function ModalGeneradorStory({
 
   const cuotaInfo = calcularCuotas(producto.precio);
 
-  // Intentar obtener la cuenta de Instagram de forma segura o usar el nombre por defecto
+  // 👈 FIX: Lee correctamente instagram_usuario de Supabase
   const usuarioInstagram =
-    (config as any)?.instagram ||
-    (config as any)?.instagram_handle ||
+    config?.instagram_usuario ||
     `@${(config?.nombre_empresa || "luminares").toLowerCase().replace(/\s+/g, "")}`;
 
   return (
@@ -194,13 +193,21 @@ export function ModalGeneradorStory({
                   </p>
                 )}
 
-                {/* Footer Call To Action */}
-                <div className="pt-2 border-t border-gray-100/20 text-center">
+                {/* Footer Call To Action + Dirección */}
+                <div className="pt-2 border-t border-gray-100/20 text-center flex flex-col items-center gap-0.5">
                   <span className={`text-[10px] font-bold uppercase tracking-wide ${
                     estiloPlantilla === "destacado" ? "text-emerald-400" : "text-emerald-700"
                   }`}>
                     📲 ¡Pedilo por Tienda Online!
                   </span>
+
+                  {/* 👈 FIX: Dirección dinámica en la imagen */}
+                  {config?.direccion_texto && (
+                    <span className="text-[9px] font-medium text-gray-400 flex items-center gap-1">
+                      <MapPin className="w-2.5 h-2.5" />
+                      {config.direccion_texto}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
