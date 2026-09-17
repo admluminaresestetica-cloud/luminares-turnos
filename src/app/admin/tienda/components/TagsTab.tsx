@@ -87,54 +87,52 @@ export default function TagsTab() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-[#12151B]">Tags de Búsqueda Inteligente</h2>
-          <p className="text-xs text-gray-500">
-            Administrá los accesos directos que aparecen arriba en la tienda para filtrar productos al instante.
-          </p>
-        </div>
+    <div className="space-y-5 sm:space-y-6">
+      <div>
+        <h2 className="text-base font-bold text-[#12151B] sm:text-lg">Tags de Búsqueda Inteligente</h2>
+        <p className="mt-0.5 text-xs text-gray-500">
+          Administrá los accesos directos que aparecen arriba en la tienda para filtrar productos al instante.
+        </p>
       </div>
 
       {/* Formulario para agregar nuevo Tag */}
-      <form onSubmit={handleCrearTag} className="rounded-2xl border border-[#E7E5E0] bg-white p-4 shadow-xs space-y-4">
-        <h3 className="text-sm font-bold text-[#12151B] flex items-center gap-2">
+      <form onSubmit={handleCrearTag} className="space-y-4 rounded-2xl border border-[#E7E5E0] bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
+        <h3 className="flex items-center gap-2 text-sm font-bold text-[#12151B]">
           <Tag className="h-4 w-4 text-[#0E6E55]" /> Agregar Nuevo Tag
         </h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Nombre visible (Ej: 🔥 Más Vendidos)</label>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-700">Nombre visible</label>
             <input
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Ej: ✨ Nuevos Ingresos"
-              className="w-full rounded-xl border border-[#E7E5E0] px-3 py-2 text-xs focus:outline-none focus:border-[#12151B]"
+              className="h-11 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-3.5 text-xs outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Slug / Palabra clave de filtro</label>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-700">Slug / Palabra clave</label>
             <input
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              placeholder="Ej: nuevo (o parte del nombre/descripción)"
-              className="w-full rounded-xl border border-[#E7E5E0] px-3 py-2 text-xs focus:outline-none focus:border-[#12151B]"
+              placeholder="Ej: nuevo"
+              className="h-11 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-3.5 text-xs outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1">Orden de aparición</label>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-700">Orden de aparición</label>
             <input
               type="number"
               value={orden}
               onChange={(e) => setOrden(e.target.value)}
-              className="w-full rounded-xl border border-[#E7E5E0] px-3 py-2 text-xs focus:outline-none focus:border-[#12151B]"
+              className="h-11 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-3.5 text-xs outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
             />
           </div>
         </div>
@@ -142,16 +140,16 @@ export default function TagsTab() {
         <button
           type="submit"
           disabled={guardando}
-          className="flex items-center justify-center gap-2 rounded-xl bg-[#12151B] px-4 py-2.5 text-xs font-bold text-white transition-all hover:bg-black cursor-pointer"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#12151B] text-xs font-bold text-white transition-all hover:bg-black active:scale-[0.98] disabled:opacity-50 sm:w-auto sm:px-5"
         >
           <Plus className="h-4 w-4" /> {guardando ? 'Guardando...' : 'Crear Tag de Búsqueda'}
         </button>
       </form>
 
       {/* Listado de Tags existentes */}
-      <div className="rounded-2xl border border-[#E7E5E0] bg-white overflow-hidden shadow-xs">
-        <div className="px-4 py-3 border-b border-[#E7E5E0] bg-gray-50">
-          <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Tags Activos en la Tienda</h3>
+      <div className="overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white shadow-sm sm:rounded-3xl">
+        <div className="border-b border-[#E7E5E0] bg-gray-50 px-4 py-3 sm:px-6">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">Tags Activos en la Tienda</h3>
         </div>
 
         {cargando ? (
@@ -161,21 +159,21 @@ export default function TagsTab() {
         ) : (
           <div className="divide-y divide-[#E7E5E0]">
             {tags.map((tag) => (
-              <div key={tag.id} className="flex items-center justify-between p-4 hover:bg-gray-50/50">
+              <div key={tag.id} className="flex flex-col gap-3 p-4 transition-colors hover:bg-gray-50/50 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F7F7F5] font-bold text-xs text-gray-600">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F7F7F5] text-xs font-bold text-gray-600">
                     {tag.orden}
                   </span>
-                  <div>
-                    <h4 className="text-xs font-bold text-[#12151B]">{tag.nombre}</h4>
-                    <span className="text-[11px] text-gray-400 font-mono">Filtro: {tag.slug}</span>
+                  <div className="min-w-0">
+                    <h4 className="truncate text-xs font-bold text-[#12151B] sm:text-sm">{tag.nombre}</h4>
+                    <span className="font-mono text-[11px] text-gray-400">Filtro: {tag.slug}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-auto">
                   <button
                     onClick={() => handleToggleActivo(tag.id, tag.activo)}
-                    className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold cursor-pointer transition-colors ${
+                    className={`flex h-9 items-center gap-1 rounded-full px-3 text-[11px] font-bold transition-colors active:scale-95 ${
                       tag.activo
                         ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                         : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
@@ -187,7 +185,7 @@ export default function TagsTab() {
 
                   <button
                     onClick={() => handleEliminar(tag.id)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 active:scale-95"
                     title="Eliminar tag"
                   >
                     <Trash2 className="h-4 w-4" />

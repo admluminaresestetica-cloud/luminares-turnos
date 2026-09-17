@@ -30,23 +30,23 @@ export default function CategoriasTab({
   };
 
   return (
-    <div className="mb-8 rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-sm">
-      <h2 className="m-0 text-lg font-bold text-[#12151B]">
+    <div className="mb-6 rounded-2xl border border-[#E7E5E0] bg-white p-4 shadow-sm sm:mb-8 sm:rounded-3xl sm:p-6">
+      <h2 className="m-0 text-base font-bold text-[#12151B] sm:text-lg">
         🏷️ Gestión de Categorías
       </h2>
 
-      <form onSubmit={handleSubmit} className="mt-4 flex gap-3">
+      <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:gap-3">
         <input
-  type="text"
-  placeholder="Nombre de la categoría..."
-  value={nuevaCategoria}
-  onChange={(e) => setNuevaCategoria(e.target.value)}
-  className="w-full rounded-xl border border-[#E7E5E0] bg-white p-3 text-sm font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
-/>
+          type="text"
+          placeholder="Nombre de la categoría..."
+          value={nuevaCategoria}
+          onChange={(e) => setNuevaCategoria(e.target.value)}
+          className="h-11 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-3.5 text-sm font-medium text-[#12151B] outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+        />
         <button
           type="submit"
           disabled={cargandoCat || !nuevaCategoria.trim()}
-          className="rounded-xl bg-[#0E6E55] px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[#0A5340] disabled:opacity-50"
+          className="h-11 shrink-0 rounded-xl bg-[#0E6E55] px-5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#0A5340] active:scale-[0.98] disabled:opacity-50 sm:w-auto"
         >
           {cargandoCat ? 'Guardando...' : 'Guardar Categoría'}
         </button>
@@ -59,12 +59,12 @@ export default function CategoriasTab({
           categorias.map((cat) => (
             <span
               key={cat.id}
-              className="inline-flex items-center gap-2 rounded-lg border border-[#E7E5E0] bg-[#F7F7F5] px-3 py-1.5 text-xs font-medium text-[#12151B]"
+              className="inline-flex h-9 items-center gap-2 rounded-full border border-[#E7E5E0] bg-[#F7F7F5] px-3.5 text-xs font-medium text-[#12151B] transition-colors hover:border-[#0E6E55]/30"
             >
               {cat.nombre}
               <button
                 onClick={() => onEliminarCategoria(cat)}
-                className="ml-1 font-bold text-[#C84343] hover:text-red-700"
+                className="flex h-4 w-4 items-center justify-center rounded-full font-bold text-[#C84343] transition-colors hover:bg-red-100 hover:text-red-700"
               >
                 ✕
               </button>
