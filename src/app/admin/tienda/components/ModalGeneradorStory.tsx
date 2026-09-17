@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { X, Download, Sparkles, Camera } from "lucide-react";
 import { toPng } from "html-to-image";
+import { calcularCuotas } from "@/lib/precios";
 import { ConfiguracionEmpresa } from "@/lib/supabase/configuracion-empresa";
 
 interface ModalGeneradorStoryProps {
@@ -12,7 +13,6 @@ interface ModalGeneradorStoryProps {
   config: ConfiguracionEmpresa | null;
 }
 
-// Componente SVG para el icono de Instagram
 const IconInstagram = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg
     className={className}
@@ -46,7 +46,7 @@ export function ModalGeneradorStory({
     try {
       setDescargando(true);
       const dataUrl = await toPng(cardRef.current, {
-        pixelRatio: 2,
+        pixelRatio: 3,
         cacheBust: true,
       });
 
@@ -66,9 +66,17 @@ export function ModalGeneradorStory({
       ? producto.imagenes_urls[0]
       : producto.imagen_url || null;
 
+  const cuotaInfo = calcularCuotas(producto.precio);
+
+  // Intentar obtener la cuenta de Instagram de forma segura o usar el nombre por defecto
+  const usuarioInstagram =
+    (config as any)?.instagram ||
+    (config as any)?.instagram_handle ||
+    `@${(config?.nombre_empresa || "luminares").toLowerCase().replace(/\s+/g, "")}`;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl overflow-hidden">
+      <div className="relative flex max-h-[95vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl overflow-hidden">
         {/* Cabecera */}
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <div className="flex items-center gap-2">
@@ -84,9 +92,9 @@ export function ModalGeneradorStory({
         </div>
 
         {/* Cuerpo */}
-        <div className="flex flex-1 flex-col sm:flex-row overflow-y-auto p-6 gap-6 items-center justify-center bg-gray-50">
-          {/* Controles laterales */}
-          <div className="flex flex-col gap-4 w-full sm:w-48">
+        <div className="flex flex-1 flex-col sm:flex-row p-6 gap-6 items-center justify-center bg-gray-100 overflow-y-auto">
+          {/* Controles de Estilo */}
+          <div className="flex flex-col gap-4 w-full sm:w-48 shrink-0">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
               Diseño
             </span>
@@ -97,7 +105,7 @@ export function ModalGeneradorStory({
                 className={`rounded-xl px-4 py-2.5 text-xs font-semibold text-left transition-all ${
                   estiloPlantilla === "minimal"
                     ? "bg-emerald-600 text-white shadow-sm"
-                    : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                    : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                 }`}
               >
                 Elegante / Minimal
@@ -108,7 +116,7 @@ export function ModalGeneradorStory({
                 className={`rounded-xl px-4 py-2.5 text-xs font-semibold text-left transition-all ${
                   estiloPlantilla === "destacado"
                     ? "bg-emerald-600 text-white shadow-sm"
-                    : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                    : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
                 }`}
               >
                 Oferta / Destacado
@@ -116,34 +124,39 @@ export function ModalGeneradorStory({
             </div>
           </div>
 
-          {/* Vista previa / Lienzo Story (Proporción 9:16) */}
-          <div className="flex-1 flex justify-center items-center">
+          {/* Lienzo Story (Proporción exacta 9:16) */}
+          <div className="flex-1 flex justify-center items-center py-2 w-full overflow-hidden">
             <div
               ref={cardRef}
-              className={`relative flex h-[480px] w-[270px] flex-col justify-between p-6 shadow-2xl transition-all ${
+              className={`relative flex h-[500px] w-[281px] shrink-0 flex-col justify-between p-5 shadow-xl transition-all ${
                 estiloPlantilla === "destacado"
                   ? "bg-gradient-to-br from-emerald-950 via-emerald-900 to-slate-900 text-white"
                   : "bg-white text-gray-900"
               }`}
             >
               {/* Encabezado Marca */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between z-10 border-b border-gray-100/20 pb-3">
                 <span
-                  className={`text-xs font-bold tracking-wider uppercase ${
+                  className={`text-xs font-black tracking-widest uppercase ${
                     estiloPlantilla === "destacado" ? "text-emerald-400" : "text-emerald-700"
                   }`}
                 >
                   {config?.nombre_empresa || "Luminares"}
                 </span>
-                <IconInstagram
-                  className={`h-4 w-4 ${
-                    estiloPlantilla === "destacado" ? "text-emerald-400" : "text-gray-400"
-                  }`}
-                />
+                <div className="flex items-center gap-1">
+                  <IconInstagram
+                    className={`h-3.5 w-3.5 ${
+                      estiloPlantilla === "destacado" ? "text-emerald-400" : "text-gray-400"
+                    }`}
+                  />
+                  <span className="text-[10px] font-semibold text-gray-400">
+                    {usuarioInstagram}
+                  </span>
+                </div>
               </div>
 
               {/* Imagen central */}
-              <div className="relative my-auto flex h-52 w-full items-center justify-center overflow-hidden rounded-2xl bg-gray-100 shadow-md">
+              <div className="relative my-auto flex h-48 w-full items-center justify-center overflow-hidden rounded-xl bg-gray-50 shadow-inner my-2">
                 {imagenPortada ? (
                   <img
                     src={imagenPortada}
@@ -156,20 +169,38 @@ export function ModalGeneradorStory({
               </div>
 
               {/* Contenido inferior */}
-              <div className="space-y-2">
-                <span className="inline-block rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+              <div className="space-y-2 z-10">
+                <span className="inline-block rounded-md bg-emerald-100/80 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
                   {producto.categoria || "Producto"}
                 </span>
+                
                 <h4 className="text-sm font-bold line-clamp-2 leading-tight">
                   {producto.nombre}
                 </h4>
-                <div className="flex items-baseline gap-2 pt-1">
-                  <span className="text-xl font-black">${producto.precio}</span>
+
+                <div className="flex items-baseline gap-2 pt-0.5">
+                  <span className="text-2xl font-black">${producto.precio}</span>
                   {producto.precio_original && (
                     <span className="text-xs text-gray-400 line-through">
                       ${producto.precio_original}
                     </span>
                   )}
+                </div>
+
+                {/* Info Cuotas */}
+                {producto.permite_cuotas !== false && (
+                  <p className="text-[10px] font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded-md inline-block">
+                    💳 3 cuotas sin interés de ${cuotaInfo.montoCuota.toLocaleString("es-AR")}
+                  </p>
+                )}
+
+                {/* Footer Call To Action */}
+                <div className="pt-2 border-t border-gray-100/20 text-center">
+                  <span className={`text-[10px] font-bold uppercase tracking-wide ${
+                    estiloPlantilla === "destacado" ? "text-emerald-400" : "text-emerald-700"
+                  }`}>
+                    📲 ¡Pedilo por Tienda Online!
+                  </span>
                 </div>
               </div>
             </div>

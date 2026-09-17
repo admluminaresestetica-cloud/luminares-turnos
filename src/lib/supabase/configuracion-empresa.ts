@@ -7,7 +7,8 @@ export interface ConfiguracionEmpresa {
   logo_url: string;
   whatsapp_numero: string;
   google_maps_url: string;
-  direccion?: string;          
+  direccion_texto?: string; 
+  instagram_usuario?: string;
   mp_access_token: string;
   mp_alias: string;
   // Campos de configuración de Envíos

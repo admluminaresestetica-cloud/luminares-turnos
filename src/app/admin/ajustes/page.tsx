@@ -23,6 +23,8 @@ export default function AjustesAdminPage() {
     logo_url: '',
     whatsapp_numero: '',
     google_maps_url: '',
+    direccion_texto: '',    // 👈 Agregado
+    instagram_usuario: '',  // 👈 Agregado
     mp_access_token: '',
     mp_alias: '',
     envio_domicilio_activo: false,
@@ -42,6 +44,8 @@ export default function AjustesAdminPage() {
           logo_url: data.logo_url ?? '',
           whatsapp_numero: data.whatsapp_numero ?? '',
           google_maps_url: data.google_maps_url ?? '',
+          direccion_texto: data.direccion_texto ?? '',    // 👈 Cargado desde DB
+          instagram_usuario: data.instagram_usuario ?? '',  // 👈 Cargado desde DB
           mp_access_token: data.mp_access_token ?? '',
           mp_alias: data.mp_alias ?? '',
           envio_domicilio_activo: data.envio_domicilio_activo ?? false,
@@ -225,6 +229,32 @@ export default function AjustesAdminPage() {
                 placeholder="Ej. 5493411234567"
                 className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
                 required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+                Usuario de Instagram
+              </label>
+              <input
+                type="text"
+                name="instagram_usuario"
+                value={form.instagram_usuario}
+                onChange={handleChange}
+                placeholder="Ej. @luminares.estetica"
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+                Dirección Física / Local
+              </label>
+              <input
+                type="text"
+                name="direccion_texto"
+                value={form.direccion_texto}
+                onChange={handleChange}
+                placeholder="Ej. Av. San Martín 1234, Rosario"
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
               />
             </div>
             <div>
