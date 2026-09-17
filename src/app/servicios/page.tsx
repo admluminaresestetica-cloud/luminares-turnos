@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, Hand, Heart, Eye, ChevronRight, X, ZoomIn } from 'lucide-react';
+import { Sparkles, Hand, Heart, Eye, ChevronRight, X, ZoomIn, LayoutList } from 'lucide-react';
 import FlujoAgendaConfirmacion from '@/components/booking/FlujoAgendaConfirmacion';
 import { SERVICIOS_STORAGE_KEY } from '@/lib/booking/session';
 import {
@@ -51,7 +51,7 @@ const CATEGORIA_CONFIG: Record<
 };
 
 const CATEGORIA_CONFIG_DEFAULT = {
-  icon: Sparkles,
+  icon: LayoutList,
   gradient: 'from-rose-400 to-rose-600',
   ringColor: 'group-hover:ring-rose-200',
   softBg: 'bg-rose-50',
