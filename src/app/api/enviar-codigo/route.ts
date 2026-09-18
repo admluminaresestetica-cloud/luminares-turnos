@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
 import { createClient } from '@supabase/supabase-js'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Cliente de Supabase para servidor (usando las variables públicas o de servicio)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -42,24 +40,6 @@ export async function POST(request: Request) {
 
     if (dbError) {
       return NextResponse.json({ error: 'Error al generar el código en la base de datos' }, { status: 500 })
-    }
-
-    // 5. Enviar el correo usando Resend
-    const { error: mailError } = await resend.emails.send({
-      from: 'Luminares Admin <onboarding@resend.dev>',
-      to: [email],
-      subject: '🔑 Tu código de acceso al Admin',
-      html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2>Código de verificación</h2>
-        <p>Has intentado iniciar sesión en el panel de administración.</p>
-        <p>Tu código de acceso es:</p>
-        <h1 style="background: #f4f4f4; padding: 10px; display: inline-block; letter-spacing: 5px;">${codigo}</h1>
-        <p>Este código expira en 10 minutos.</p>
-      </div>`,
-    })
-
-    if (mailError) {
-      return NextResponse.json({ error: 'Error al enviar el correo' }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
