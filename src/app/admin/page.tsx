@@ -149,3 +149,4 @@ export default function AdminHubPage() {
     </div>
   );
 }
+// Al cerrar sesión aquí, @supabase/ssr borra la cookie del navegador
