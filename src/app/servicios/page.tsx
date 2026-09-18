@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, Hand, Heart, Eye, ChevronRight, X, ZoomIn } from 'lucide-react';
+import { Sparkles, Hand, Heart, Eye, ChevronRight, X, ZoomIn, Check } from 'lucide-react';
 import FlujoAgendaConfirmacion from '@/components/booking/FlujoAgendaConfirmacion';
 import { SERVICIOS_STORAGE_KEY } from '@/lib/booking/session';
 import {
@@ -13,7 +13,6 @@ import type { CategoriaGeneral, DetalleReservaGeneral, ServicioGeneral } from '@
 
 type Paso = 'categoria' | 'servicios' | 'agenda';
 
-// Configuración visual por categoría (Ícono, degradado del badge y acentos)
 const CATEGORIA_CONFIG: Record<
   string,
   { icon: any; gradient: string; ringColor: string; softBg: string }
@@ -63,7 +62,6 @@ export default function ServiciosPage() {
   const [paso, setPaso] = useState<Paso>('categoria');
   const [categoria, setCategoria] = useState<CategoriaGeneral | null>(null);
   const [seleccionados, setSeleccionados] = useState<string[]>([]);
-  // Estado puramente visual: controla el lightbox de imagen (no afecta la lógica de reserva)
   const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
 
   useEffect(() => {
@@ -75,6 +73,15 @@ export default function ServiciosPage() {
     }
     cargar();
   }, []);
+
+  // Cierra el lightbox con la tecla Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(null);
+    };
+    if (lightbox) window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightbox]);
 
   const categorias = useMemo(() => {
     const cats = new Set(servicios.map((s) => s.categoria));
@@ -181,15 +188,7 @@ export default function ServiciosPage() {
                     setSeleccionados([]);
                     setPaso('servicios');
                   }}
-                  className={`
-                    group relative flex items-center gap-4 p-4 sm:p-5
-                    bg-white rounded-[20px] border border-slate-100
-                    shadow-[0_2px_10px_rgba(15,23,42,0.06)]
-                    hover:shadow-[0_8px_24px_rgba(15,23,42,0.10)]
-                    active:scale-[0.98]
-                    transition-all duration-200 ease-out
-                    cursor-pointer text-left
-                  `}
+                  className="group relative flex items-center gap-4 p-4 sm:p-5 bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_10px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_24px_rgba(15,23,42,0.10)] active:scale-[0.98] transition-all duration-200 ease-out cursor-pointer text-left"
                 >
                   <div
                     className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${config.gradient} flex items-center justify-center shrink-0 shadow-inner ring-4 ring-transparent ${config.ringColor} transition-all duration-200`}
@@ -234,7 +233,6 @@ export default function ServiciosPage() {
             <div className="space-y-3">
               {serviciosCategoria.map((servicio: any) => {
                 const activo = seleccionados.includes(servicio.id);
-                // Permite verificar tanto imagen_url (Supabase) como el campo legacy imagen
                 const imagenParaMostrar = servicio.imagen_url || servicio.imagen;
                 const imagenSrc = imagenParaMostrar
                   ? imagenParaMostrar.startsWith('http')
@@ -244,13 +242,10 @@ export default function ServiciosPage() {
                 const tieneDespliegue = Boolean(servicio.descripcion || imagenSrc);
 
                 return (
-                  <button
+                  <div
                     key={servicio.id}
-                    type="button"
-                    onClick={() => toggleServicio(servicio.id)}
                     className={`
-                      w-full text-left rounded-2xl border overflow-hidden
-                      transition-all duration-200 ease-out
+                      w-full rounded-2xl border overflow-hidden transition-all duration-200 ease-out
                       ${
                         activo
                           ? 'border-rose-300 bg-rose-50/60 shadow-md ring-1 ring-rose-200'
@@ -258,19 +253,35 @@ export default function ServiciosPage() {
                       }
                     `}
                   >
-                    <div className="flex items-center justify-between gap-3 p-4">
-                      <div>
-                        <p className="font-semibold text-slate-800">{servicio.subtipo}</p>
-                        <p className="text-sm text-slate-500 mt-0.5">
-                          {servicio.duracion_minutos} min
-                        </p>
+                    {/* Botón Principal: Modifica la selección */}
+                    <button
+                      type="button"
+                      onClick={() => toggleServicio(servicio.id)}
+                      className="w-full text-left p-4 flex items-center justify-between gap-3 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
+                            activo
+                              ? 'bg-rose-500 border-rose-500 text-white'
+                              : 'border-slate-300 bg-white'
+                          }`}
+                        >
+                          {activo && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-800">{servicio.subtipo}</p>
+                          <p className="text-sm text-slate-500 mt-0.5">
+                            {servicio.duracion_minutos} min
+                          </p>
+                        </div>
                       </div>
                       <p className="font-bold text-slate-800 shrink-0">
                         ${Number(servicio.precio).toLocaleString('es-AR')}
                       </p>
-                    </div>
+                    </button>
 
-                    {/* CONTENIDO DESPLEGABLE: transición tipo acordeón, fluida en ambas direcciones */}
+                    {/* Contenido Acordeón */}
                     <div
                       className={`grid transition-all duration-300 ease-out ${
                         activo && tieneDespliegue
@@ -279,26 +290,19 @@ export default function ServiciosPage() {
                       }`}
                     >
                       <div className="overflow-hidden">
-                        <div className="px-4 pb-4 pt-3 space-y-3 border-t border-rose-200/60 mx-4 -mt-px">
+                        <div className="px-4 pb-4 pt-2 space-y-3 border-t border-rose-200/60 mx-4 -mt-px">
                           {imagenSrc && (
-                            <div
-                              role="button"
-                              tabIndex={0}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setLightbox({ src: imagenSrc, alt: servicio.subtipo });
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.stopPropagation();
-                                  setLightbox({ src: imagenSrc, alt: servicio.subtipo });
-                                }
-                              }}
-                              className="group/img relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-sm border border-rose-100 bg-slate-100 cursor-zoom-in"
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setLightbox({ src: imagenSrc, alt: servicio.subtipo })
+                              }
+                              className="group/img relative w-full aspect-[16/9] rounded-xl overflow-hidden shadow-sm border border-rose-100 bg-slate-100 cursor-zoom-in block"
                             >
                               <img
                                 src={imagenSrc}
                                 alt={servicio.subtipo}
+                                loading="lazy"
                                 className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
                                 onError={(e: any) => {
                                   e.target.style.display = 'none';
@@ -309,7 +313,7 @@ export default function ServiciosPage() {
                                   <ZoomIn className="w-4 h-4 text-slate-700" />
                                 </div>
                               </div>
-                            </div>
+                            </button>
                           )}
                           {servicio.descripcion && (
                             <p className="text-sm text-slate-600 leading-relaxed">
@@ -319,7 +323,7 @@ export default function ServiciosPage() {
                         </div>
                       </div>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -327,17 +331,17 @@ export default function ServiciosPage() {
         )}
       </div>
 
-      {/* Lightbox: visor de imagen a pantalla completa (solo visual, no afecta la lógica de reserva) */}
+      {/* Lightbox */}
       {lightbox && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/60 backdrop-blur-sm animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/70 backdrop-blur-sm animate-fadeIn"
           onClick={() => setLightbox(null)}
         >
           <button
             type="button"
             onClick={() => setLightbox(null)}
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors duration-200"
-            aria-label="Cerrar"
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors duration-200 cursor-pointer"
+            aria-label="Cerrar modal"
           >
             <X className="w-5 h-5" />
           </button>
@@ -345,11 +349,12 @@ export default function ServiciosPage() {
             src={lightbox.src}
             alt={lightbox.alt}
             onClick={(e) => e.stopPropagation()}
-            className="max-w-full max-h-full rounded-2xl shadow-2xl object-contain"
+            className="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain"
           />
         </div>
       )}
 
+      {/* Barra Flotante Inferior */}
       {paso === 'servicios' && seleccionados.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 pointer-events-none">
           <div className="max-w-3xl mx-auto pointer-events-auto">
@@ -366,7 +371,7 @@ export default function ServiciosPage() {
               <button
                 type="button"
                 onClick={handleContinuarServicios}
-                className="shrink-0 bg-gradient-to-r from-rose-500 to-rose-400 hover:from-rose-400 hover:to-rose-300 active:scale-[0.98] text-white font-semibold px-5 py-3 rounded-xl shadow-lg shadow-rose-500/30 transition-all duration-200 text-sm"
+                className="shrink-0 bg-gradient-to-r from-rose-500 to-rose-400 hover:from-rose-400 hover:to-rose-300 active:scale-[0.98] text-white font-semibold px-5 py-3 rounded-xl shadow-lg shadow-rose-500/30 transition-all duration-200 text-sm cursor-pointer"
               >
                 Continuar
               </button>

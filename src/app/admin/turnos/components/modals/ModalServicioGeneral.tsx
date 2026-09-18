@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Folder, Layers, DollarSign, Clock, CheckCircle2, X, Scissors, FileText, Image as ImageIcon, Upload, Loader2 } from 'lucide-react'
+import { Folder, Layers, DollarSign, Clock, CheckCircle2, X, Scissors, FileText, Image as ImageIcon, Upload, Loader2, Smile, Sparkles, Heart, Eye, LayoutList, SmilePlus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export interface ServicioGeneral {
@@ -13,6 +13,7 @@ export interface ServicioGeneral {
   activo?: boolean
   descripcion?: string
   imagen_url?: string
+  icono?: string
 }
 
 interface ModalServicioGeneralProps {
@@ -21,6 +22,16 @@ interface ModalServicioGeneralProps {
   onSubmit: (e: React.FormEvent) => void
   onClose: () => void
 }
+
+const OPCIONES_ICONOS = [
+  { value: 'LayoutList', label: 'Lista General', icon: LayoutList },
+  { value: 'Sparkles', label: 'Chispas / Belleza', icon: Sparkles },
+  { value: 'Eye', label: 'Ojos / Pestañas', icon: Eye },
+  { value: 'Smile', label: 'Rostro / Faciales', icon: Smile },
+  { value: 'SmilePlus', label: 'Estética / Cuidado', icon: SmilePlus },
+  { value: 'Heart', label: 'Corazón / Bienestar', icon: Heart },
+  { value: 'Scissors', label: 'Tijeras / Corte', icon: Scissors },
+]
 
 export default function ModalServicioGeneral({
   servicioGeneralEdit,
@@ -104,6 +115,24 @@ export default function ModalServicioGeneral({
               className="w-full px-3.5 py-3 sm:py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
               placeholder="Ej: Masajes, Pestañas, Cosmiatría"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5 dark:text-zinc-400">
+              <Sparkles className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
+              Ícono del Servicio / Categoria
+            </label>
+            <select
+              value={servicioGeneralEdit.icono || 'LayoutList'}
+              onChange={(e) => setServicioGeneralEdit({ ...servicioGeneralEdit, icono: e.target.value })}
+              className="w-full px-3.5 py-3 sm:py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
+            >
+              {OPCIONES_ICONOS.map((op) => (
+                <option key={op.value} value={op.value}>
+                  {op.label} ({op.value})
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
