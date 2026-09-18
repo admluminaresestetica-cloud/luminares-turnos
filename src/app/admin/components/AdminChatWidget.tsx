@@ -8,7 +8,7 @@ export default function AdminChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [inputMessage, setInputMessage] = useState('')
   
-  // Llamamos a useChat sin argumentos para que use la ruta por defecto (/api/chat)
+  // Volvemos a usar sendMessage que es el método correcto en tu versión de @ai-sdk/react
   const { messages, sendMessage, status } = useChat()
 
   const isLoading = status === 'submitted' || status === 'streaming'
@@ -75,9 +75,10 @@ export default function AdminChatWidget() {
             )}
 
             {messages.map((m) => {
+              // Extraemos el texto correctamente de las partes (parts) que maneja esta versión
               const textContent = m.parts
-                ? m.parts.map((p) => (p.type === 'text' ? p.text : '')).join('')
-                : (m as any).content || ''
+                ? m.parts.map((p: any) => (p.type === 'text' ? p.text : '')).join('')
+                : ''
 
               return (
                 <div
