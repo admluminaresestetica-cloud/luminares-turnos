@@ -7,8 +7,6 @@ import { createBrowserClient } from '@supabase/ssr'
 export default function AdminLogin() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [codigo, setCodigo] = useState('')
-  const [step, setStep] = useState<'credentials' | 'otp'>('credentials')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -19,86 +17,29 @@ export default function AdminLogin() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // PASO 1: Enviar credenciales a la API para verificar y mandar el código por mail
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
-      const res = await fetch('/api/enviar-codigo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const dataRes = await res.json()
-
-      if (!res.ok) {
-        setError(dataRes.error || 'Credenciales incorrectas o error al enviar el código.')
-        setLoading(false)
-        return
-      }
-
-      setStep('otp')
-      setLoading(false)
-    } catch (err: any) {
-      setError(`Error inesperado: ${err.message || 'Desconocido'}`)
-      setLoading(false)
-    }
-  }
-
-  // PASO 2: Verificar el código de 6 dígitos e iniciar sesión definitivamente
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    try {
-      // 1. Validar el código en la tabla codigos_admin
-      const { data: registros, error: dbError } = await supabase
-        .from('codigos_admin')
-        .select('*')
-        .eq('email', email)
-        .eq('codigo', codigo)
-        .single()
-
-      if (dbError || !registros) {
-        setError('El código ingresado es incorrecto.')
-        setLoading(false)
-        return
-      }
-
-      // 2. Validar si el código expiró (usando expires_at o expira_at por compatibilidad)
-      const fechaExpiracion = registros.expires_at || registros.expira_at
-      if (fechaExpiracion && new Date() > new Date(fechaExpiracion)) {
-        setError('El código ha expirado. Volvé a iniciar sesión.')
-        setLoading(false)
-        setStep('credentials')
-        return
-      }
-
-      // 3. Iniciar sesión oficialmente con Supabase Auth (esto setea las cookies automáticamente)
+      // Autenticación directa con correo y contraseña en Supabase Auth
       const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (loginError || !data?.session) {
-        setError('Error al iniciar sesión final. Verificá tus datos.')
+        setError('Correo o contraseña incorrectos. Verificá tus datos.')
         setLoading(false)
-        setStep('credentials')
         return
       }
 
-      // 4. Limpiar el código usado de la base de datos
-      await supabase.from('codigos_admin').delete().eq('email', email)
-
-      // 5. Refrescar el estado del servidor para que el middleware lea la cookie nueva y redirigir
+      // Refrescar el estado del servidor y redirigir al panel de administración
       router.refresh()
       window.location.href = '/admin'
     } catch (err: any) {
-      setError(`Error al verificar: ${err.message || 'Desconocido'}`)
+      setError(`Error inesperado: ${err.message || 'Desconocido'}`)
       setLoading(false)
     }
   }
@@ -120,98 +61,55 @@ export default function AdminLogin() {
             Luminares Admin
           </h2>
           <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
-            {step === 'credentials' 
-              ? 'Ingresá tus datos para acceder al sistema' 
-              : `Hemos enviado un código de 6 dígitos a ${email}`}
+            Ingresá tus credenciales para acceder al sistema
           </p>
         </div>
 
-        {step === 'credentials' ? (
-          <form className="mt-8 space-y-5" onSubmit={handleLogin}>
-            {error && (
-              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm p-3 rounded-xl">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1.5">
-                  Correo Electrónico
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 text-sm focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-400 focus:outline-none transition"
-                  placeholder="admin@luminares.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1.5">
-                  Contraseña
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 text-sm focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-400 focus:outline-none transition"
-                  placeholder="••••••••"
-                />
-              </div>
+        <form className="mt-8 space-y-5" onSubmit={handleLogin}>
+          {error && (
+            <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm p-3 rounded-xl">
+              {error}
             </div>
+          )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-stone-200 text-white dark:text-stone-900 font-medium text-sm rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm"
-            >
-              {loading ? 'Verificando y enviando código...' : 'Continuar'}
-            </button>
-          </form>
-        ) : (
-          <form className="mt-8 space-y-5" onSubmit={handleVerifyCode}>
-            {error && (
-              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm p-3 rounded-xl">
-                {error}
-              </div>
-            )}
-
+          <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1.5">
-                Código de verificación (6 dígitos)
+                Correo Electrónico
               </label>
               <input
-                type="text"
-                maxLength={6}
+                type="email"
                 required
-                value={codigo}
-                onChange={(e) => setCodigo(e.target.value)}
-                className="w-full text-center tracking-widest text-lg px-4 py-2.5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-400 focus:outline-none transition"
-                placeholder="123456"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 text-sm focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-400 focus:outline-none transition"
+                placeholder="admin@luminares.com"
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-stone-200 text-white dark:text-stone-900 font-medium text-sm rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm"
-            >
-              {loading ? 'Validando código...' : 'Ingresar al Panel'}
-            </button>
+            <div>
+              <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1.5">
+                Contraseña
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 text-sm focus:ring-2 focus:ring-stone-900 dark:focus:ring-stone-400 focus:outline-none transition"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
 
-            <button
-              type="button"
-              onClick={() => setStep('credentials')}
-              className="w-full text-center text-xs text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200 mt-2 transition-colors"
-            >
-              Volver atrás
-            </button>
-          </form>
-        )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 dark:bg-stone-100 dark:hover:bg-stone-200 text-white dark:text-stone-900 font-medium text-sm rounded-xl transition-all duration-200 disabled:opacity-50 shadow-sm cursor-pointer"
+          >
+            {loading ? 'Iniciando sesión...' : 'Ingresar al Panel'}
+          </button>
+        </form>
       </div>
     </div>
   )
