@@ -79,6 +79,9 @@ export async function deleteServicioGeneral(id: string) {
 
 export const LABELS_CATEGORIA: Record<string, string> = {
   faciales: 'Faciales',
-  manicura: 'Uñas',
+  unas: 'Uñas',
+  uñas: 'Uñas',
   masajes: 'Masajes',
+  miradas: 'Miradas',
+  ojos: 'Miradas',
 };

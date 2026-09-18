@@ -39,6 +39,7 @@ export interface ServicioGeneral {
   activo: boolean;
   descripcion?: string;
   imagen_url?: string;
+  icono?: string;
 }
 
 export interface ConfiguracionCalendario {
