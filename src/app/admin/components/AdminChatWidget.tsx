@@ -7,6 +7,8 @@ import { X, Send, Bot } from 'lucide-react'
 export default function AdminChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [inputMessage, setInputMessage] = useState('')
+  
+  // Llamamos a useChat sin argumentos para que use la ruta por defecto (/api/chat)
   const { messages, sendMessage, status } = useChat()
 
   const isLoading = status === 'submitted' || status === 'streaming'
@@ -74,7 +76,7 @@ export default function AdminChatWidget() {
 
             {messages.map((m) => {
               const textContent = m.parts
-                ? m.parts.map((p, i) => (p.type === 'text' ? p.text : '')).join('')
+                ? m.parts.map((p) => (p.type === 'text' ? p.text : '')).join('')
                 : (m as any).content || ''
 
               return (
