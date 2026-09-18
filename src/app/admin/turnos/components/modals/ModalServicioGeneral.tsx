@@ -120,8 +120,16 @@ export default function ModalServicioGeneral({
               placeholder="Ej: Sparkles, Eye, Heart, Hand, Zap, UserStar"
             />
             <p className="text-[11px] text-gray-400 mt-1 leading-relaxed dark:text-zinc-500">
-              Podés poner el nombre exacto de cualquier ícono disponible en Lucide Icons.
-            </p>
+  Podés usar cualquier ícono de Lucide (ej: <span className="font-semibold text-gray-600 dark:text-zinc-300">Sparkles</span>, <span className="font-semibold text-gray-600 dark:text-zinc-300">Eye</span>, <span className="font-semibold text-gray-600 dark:text-zinc-300">Smile</span>, <span className="font-semibold text-gray-600 dark:text-zinc-300">Heart</span>, <span className="font-semibold text-gray-600 dark:text-zinc-300">Hand</span>, <span className="font-semibold text-gray-600 dark:text-zinc-300">Scissors</span>, <span className="font-semibold text-gray-600 dark:text-zinc-300">UserStar</span>). Buscá más en{' '}
+  <a 
+    href="https://lucide.dev/icons/" 
+    target="_blank" 
+    rel="noopener noreferrer" 
+    className="text-purple-600 dark:text-purple-400 font-semibold underline hover:text-purple-700"
+  >
+    lucide.dev
+  </a>.
+</p>
           </div>
 
           <div>
