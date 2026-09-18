@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, Hand, Heart, Eye, ChevronRight, X, ZoomIn, Check } from 'lucide-react';
+import * as Icons from 'lucide-react';
+import { ChevronRight, X, ZoomIn, Check, Sparkles } from 'lucide-react';
 import FlujoAgendaConfirmacion from '@/components/booking/FlujoAgendaConfirmacion';
 import { SERVICIOS_STORAGE_KEY } from '@/lib/booking/session';
 import {
@@ -13,48 +14,12 @@ import type { CategoriaGeneral, DetalleReservaGeneral, ServicioGeneral } from '@
 
 type Paso = 'categoria' | 'servicios' | 'agenda';
 
-const CATEGORIA_CONFIG: Record<
-  string,
-  { icon: any; gradient: string; ringColor: string; softBg: string }
-> = {
-  faciales: {
-    icon: Sparkles,
-    gradient: 'from-rose-400 to-rose-600',
-    ringColor: 'group-hover:ring-rose-200',
-    softBg: 'bg-rose-50',
-  },
-  unas: {
-    icon: Hand,
-    gradient: 'from-indigo-400 to-indigo-600',
-    ringColor: 'group-hover:ring-indigo-200',
-    softBg: 'bg-indigo-50',
-  },
-  uñas: {
-    icon: Hand,
-    gradient: 'from-indigo-400 to-indigo-600',
-    ringColor: 'group-hover:ring-indigo-200',
-    softBg: 'bg-indigo-50',
-  },
-  masajes: {
-    icon: Heart,
-    gradient: 'from-amber-400 to-amber-600',
-    ringColor: 'group-hover:ring-amber-200',
-    softBg: 'bg-amber-50',
-  },
-  ojos: {
-    icon: Eye,
-    gradient: 'from-violet-400 to-violet-600',
-    ringColor: 'group-hover:ring-violet-200',
-    softBg: 'bg-violet-50',
-  },
-};
-
-const CATEGORIA_CONFIG_DEFAULT = {
-  icon: Sparkles,
-  gradient: 'from-rose-400 to-rose-600',
-  ringColor: 'group-hover:ring-rose-200',
-  softBg: 'bg-rose-50',
-};
+// Función para resolver dinámicamente cualquier ícono guardado en Supabase
+function obtenerIconoDinamico(nombreIcono?: string) {
+  if (!nombreIcono) return Sparkles;
+  const IconoComponente = (Icons as Record<string, any>)[nombreIcono];
+  return IconoComponente || Sparkles;
+}
 
 export default function ServiciosPage() {
   const [servicios, setServicios] = useState<ServicioGeneral[]>([]);
@@ -174,10 +139,12 @@ export default function ServiciosPage() {
         ) : paso === 'categoria' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {categorias.map((cat) => {
-              const count = servicios.filter((s) => s.categoria === cat).length;
-              const key = cat.toLowerCase();
-              const config = CATEGORIA_CONFIG[key] || CATEGORIA_CONFIG_DEFAULT;
-              const Icono = config.icon;
+              const serviciosDeCategoria = servicios.filter((s) => s.categoria === cat);
+              const count = serviciosDeCategoria.length;
+              
+              // Toma el ícono configurado en el primer servicio disponible de la categoría
+              const iconoNombre = serviciosDeCategoria.find((s) => s.icono)?.icono;
+              const IconoDinamico = obtenerIconoDinamico(iconoNombre);
 
               return (
                 <button
@@ -190,10 +157,8 @@ export default function ServiciosPage() {
                   }}
                   className="group relative flex items-center gap-4 p-4 sm:p-5 bg-white rounded-[20px] border border-slate-100 shadow-[0_2px_10px_rgba(15,23,42,0.06)] hover:shadow-[0_8px_24px_rgba(15,23,42,0.10)] active:scale-[0.98] transition-all duration-200 ease-out cursor-pointer text-left"
                 >
-                  <div
-                    className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${config.gradient} flex items-center justify-center shrink-0 shadow-inner ring-4 ring-transparent ${config.ringColor} transition-all duration-200`}
-                  >
-                    <Icono className="w-6 h-6 text-white" strokeWidth={2} />
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center shrink-0 shadow-inner ring-4 ring-transparent group-hover:ring-rose-200 transition-all duration-200">
+                    <IconoDinamico className="w-6 h-6 text-white" strokeWidth={2} />
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -253,7 +218,6 @@ export default function ServiciosPage() {
                       }
                     `}
                   >
-                    {/* Botón Principal: Modifica la selección */}
                     <button
                       type="button"
                       onClick={() => toggleServicio(servicio.id)}
@@ -281,7 +245,6 @@ export default function ServiciosPage() {
                       </p>
                     </button>
 
-                    {/* Contenido Acordeón */}
                     <div
                       className={`grid transition-all duration-300 ease-out ${
                         activo && tieneDespliegue
@@ -331,7 +294,6 @@ export default function ServiciosPage() {
         )}
       </div>
 
-      {/* Lightbox */}
       {lightbox && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/70 backdrop-blur-sm animate-fadeIn"
@@ -354,7 +316,6 @@ export default function ServiciosPage() {
         </div>
       )}
 
-      {/* Barra Flotante Inferior */}
       {paso === 'servicios' && seleccionados.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 pointer-events-none">
           <div className="max-w-3xl mx-auto pointer-events-auto">
