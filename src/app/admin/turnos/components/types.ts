@@ -52,6 +52,7 @@ export interface ServicioGeneral {
   created_at?: string
   descripcion?: string
   imagen_url?: string
+  icono?: string
 }
 
 // --- TIPOS PARA CONFIGURACIÓN DE CALENDARIO / HORARIOS ---

@@ -46,7 +46,8 @@ export function useServiciosGenerales() {
         duracion_minutos: 30,
         activo: true,
         descripcion: '',
-        imagen_url: ''
+        imagen_url: '',
+        icono: '' // <-- Agregado para creación limpia
       })
     }
     setModalGeneral(true)
@@ -61,6 +62,7 @@ export function useServiciosGenerales() {
     e.preventDefault()
     if (!servicioGeneralEdit) return
 
+    // Incluimos icono en el payload
     const payload = {
       categoria: servicioGeneralEdit.categoria,
       subtipo: servicioGeneralEdit.subtipo,
@@ -68,7 +70,8 @@ export function useServiciosGenerales() {
       duracion_minutos: Number(servicioGeneralEdit.duracion_minutos),
       activo: servicioGeneralEdit.activo ?? true,
       descripcion: servicioGeneralEdit.descripcion || '',
-      imagen_url: servicioGeneralEdit.imagen_url || ''
+      imagen_url: servicioGeneralEdit.imagen_url || '',
+      icono: servicioGeneralEdit.icono || '' // <-- Agregado al payload enviado a Supabase
     }
 
     if (servicioGeneralEdit.id) {
