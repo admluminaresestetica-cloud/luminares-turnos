@@ -11,7 +11,7 @@ export const aiTools = {
   // 1. Herramienta para consultar turnos y reservas
   consultarReservas: tool({
     description: 'Consulta las reservas o turnos registrados en el centro de estética. Permite buscar por nombre de cliente o filtrar por estado.',
-    inputSchema: z.object({
+    parameters: z.object({
       filtroNombre: z.string().optional().describe('Nombre o parte del nombre del cliente para buscar sus turnos'),
       estado: z.string().optional().describe('Estado del turno (ej: pendiente, confirmado, cancelado)'),
     }),
@@ -42,7 +42,7 @@ export const aiTools = {
   // 2. Herramienta para consultar movimientos de caja
   consultarCaja: tool({
     description: 'Consulta los movimientos recientes de caja y registros financieros para ver ingresos, egresos y estado financiero.',
-    inputSchema: z.object({
+    parameters: z.object({
       limite: z.number().optional().describe('Cantidad máxima de movimientos a retornar (por defecto 10)'),
     }),
     execute: async ({ limite }) => {

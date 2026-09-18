@@ -8,10 +8,8 @@ export default function AdminChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [inputMessage, setInputMessage] = useState('')
   
-  // Volvemos a usar sendMessage que es el método correcto en tu versión de @ai-sdk/react
-  const { messages, sendMessage, status } = useChat()
+  const { messages, append, isLoading } = useChat()
 
-  const isLoading = status === 'submitted' || status === 'streaming'
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -31,7 +29,10 @@ export default function AdminChatWidget() {
     const textToSend = inputMessage
     setInputMessage('')
 
-    await sendMessage({ text: textToSend })
+    await append({
+      role: 'user',
+      content: textToSend,
+    })
   }
 
   return (
@@ -74,29 +75,22 @@ export default function AdminChatWidget() {
               </div>
             )}
 
-            {messages.map((m) => {
-              // Extraemos el texto correctamente de las partes (parts) que maneja esta versión
-              const textContent = m.parts
-                ? m.parts.map((p: any) => (p.type === 'text' ? p.text : '')).join('')
-                : ''
-
-              return (
+            {messages.map((m) => (
+              <div
+                key={m.id}
+                className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
                 <div
-                  key={m.id}
-                  className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed shadow-sm ${
+                    m.role === 'user'
+                      ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-medium'
+                      : 'bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200'
+                  }`}
                 >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed shadow-sm ${
-                      m.role === 'user'
-                        ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-medium'
-                        : 'bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200'
-                    }`}
-                  >
-                    <div className="whitespace-pre-wrap">{textContent}</div>
-                  </div>
+                  <div className="whitespace-pre-wrap">{m.content}</div>
                 </div>
-              )
-            })}
+              </div>
+            ))}
             <div ref={messagesEndRef} />
           </div>
 
