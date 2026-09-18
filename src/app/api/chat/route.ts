@@ -6,22 +6,27 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    console.log('1. Mensajes recibidos en /api/chat:', JSON.stringify(body.messages, null, 2));
+    const { messages } = await req.json();
+
+    if (!messages || messages.length === 0) {
+      return new Response('No se recibieron mensajes', { status: 400 });
+    }
+
+    // Verificamos que la API key esté presente
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      return new Response('Error: Falta la variable de entorno GOOGLE_GENERATIVE_AI_API_KEY en el servidor.', { status: 500 });
+    }
 
     const result = await streamText({
       model: google('gemini-2.5-flash'),
-      messages: body.messages,
+      messages,
       tools: aiTools,
     });
 
-    console.log('2. Stream generado exitosamente, enviando respuesta al cliente...');
     return result.toTextStreamResponse();
   } catch (error: any) {
-    console.error('❌ ERROR CRÍTICO EN /api/chat:', error);
-    return new Response(JSON.stringify({ error: error.message || 'Error desconocido' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    console.error('❌ ERROR DETALLADO EN /api/chat:', error);
+    // Devolvemos el error en texto plano para verlo directo en el navegador
+    return new Response(`Error en el servidor: ${error.message || error}`, { status: 500 });
   }
 }
