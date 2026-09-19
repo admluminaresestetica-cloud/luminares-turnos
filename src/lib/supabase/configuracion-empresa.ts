@@ -11,6 +11,10 @@ export interface ConfiguracionEmpresa {
   instagram_usuario?: string;
   mp_access_token: string;
   mp_alias: string;
+  // Campos de Datos Bancarios / Transferencia
+  cbu?: string;
+  banco?: string;
+  titular_cuenta?: string;
   // Campos de configuración de Envíos
   envio_domicilio_activo?: boolean;
   costo_envio_base?: number;

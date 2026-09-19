@@ -61,6 +61,11 @@ export interface ConfiguracionSistema {
   referidos_activo?: boolean;
   referidos_tipo_descuento?: 'porcentaje' | 'monto_fijo';
   referidos_valor_descuento?: number;
+  // Agregá estos:
+  banco?: string;
+  titular_cuenta?: string;
+  cbu?: string;
+  mp_alias?: string;
 }
 
 export interface DetalleReservaLaser {

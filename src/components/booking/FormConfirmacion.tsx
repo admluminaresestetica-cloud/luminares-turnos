@@ -12,6 +12,9 @@ import {
   CreditCard,
   CheckCircle2,
   Zap,
+  Copy,
+  Check,
+  Building2,
 } from 'lucide-react';
 
 interface Props {
@@ -38,6 +41,11 @@ interface Props {
   onPagarMercadoPago?: (montoAPagar: number) => void;
   cargandoMP?: boolean;
   onCancelarMP?: () => void;
+  // Nuevas props opcionales para los datos bancarios
+  banco?: string;
+  titularCuenta?: string;
+  cbu?: string;
+  alias?: string;
 }
 
 const ACCENT_STYLES = {
@@ -84,13 +92,31 @@ export default function FormConfirmacion({
   onPagarMercadoPago,
   cargandoMP = false,
   onCancelarMP,
+  banco,
+  titularCuenta,
+  cbu,
+  alias,
 }: Props) {
   const [opcionMP, setOpcionMP] = useState<'sena' | 'total'>('sena');
-
-  // Estado puramente visual: qué tarjeta de método de pago está seleccionada/expandida.
   const [metodoPago, setMetodoPago] = useState<'mercadopago' | 'whatsapp'>(
     onPagarMercadoPago ? 'mercadopago' : 'whatsapp'
   );
+
+  // Estado para la animación visual del botón copiar
+  const [copiadoCbu, setCopiadoCbu] = useState(false);
+  const [copiadoAlias, setCopiadoAlias] = useState(false);
+
+  const copiarAlPortapapeles = (texto: string, tipo: 'cbu' | 'alias') => {
+    if (!texto) return;
+    navigator.clipboard.writeText(texto);
+    if (tipo === 'cbu') {
+      setCopiadoCbu(true);
+      setTimeout(() => setCopiadoCbu(false), 2000);
+    } else {
+      setCopiadoAlias(true);
+      setTimeout(() => setCopiadoAlias(false), 2000);
+    }
+  };
 
   const styles = ACCENT_STYLES[colorAccent] || ACCENT_STYLES.violet;
 
@@ -205,7 +231,7 @@ export default function FormConfirmacion({
           </div>
         </div>
 
-        {/* CÓDIGO DE REFERIDO (Solo se muestra si la función está activa) */}
+        {/* CÓDIGO DE REFERIDO */}
         {referidosActivo && (
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
@@ -291,9 +317,9 @@ export default function FormConfirmacion({
             }`}>
               <MessageCircle className="w-4 h-4" />
             </div>
-            <p className="text-xs font-bold text-slate-900 leading-tight pr-5">WhatsApp</p>
+            <p className="text-xs font-bold text-slate-900 leading-tight pr-5">Transferencia / WhatsApp</p>
             <p className="mt-1.5 text-[10px] font-medium text-slate-500 leading-tight">
-              Coordinás el pago de la seña por chat
+              Abonás por transferencia y enviás comprobante
             </p>
           </button>
         </div>
@@ -301,7 +327,6 @@ export default function FormConfirmacion({
         {/* PANEL MERCADO PAGO */}
         {onPagarMercadoPago && metodoPago === 'mercadopago' && (
           <div className="bg-sky-50/60 border border-sky-100 rounded-2xl p-3.5 sm:p-4 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-            {/* Selector de Monto (Seña o Total) */}
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -327,7 +352,6 @@ export default function FormConfirmacion({
               </button>
             </div>
 
-            {/* Leyenda aclaratoria del recargo */}
             <p className="text-[11px] text-slate-500 font-medium leading-tight">
               * Los pagos con Mercado Pago incluyen un <strong>10% de recargo por servicio</strong> (${recargoCalculadoMP.toLocaleString('es-AR')}).
             </p>
@@ -348,7 +372,6 @@ export default function FormConfirmacion({
               )}
             </button>
 
-            {/* Opción de cancelar la carga manual */}
             {cargandoMP && onCancelarMP && (
               <button
                 type="button"
@@ -361,9 +384,60 @@ export default function FormConfirmacion({
           </div>
         )}
 
-        {/* PANEL WHATSAPP */}
+        {/* PANEL WHATSAPP / TRANSFERENCIA CON DATOS BANCARIOS */}
         {metodoPago === 'whatsapp' && (
-          <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+            
+            {/* Tarjeta Informativa de Datos Bancarios */}
+            <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 space-y-2.5 text-xs text-slate-700">
+              <div className="font-bold text-amber-900 flex items-center gap-1.5">
+                <Building2 className="w-4 h-4 text-amber-700" />
+                <span>Datos para la Transferencia Bancaria</span>
+              </div>
+
+              <div className="space-y-1.5 pt-1 border-t border-amber-200/60">
+                {banco && (
+                  <p><strong>Banco:</strong> {banco}</p>
+                )}
+                {titularCuenta && (
+                  <p><strong>Titular:</strong> {titularCuenta}</p>
+                )}
+                
+                {/* CBU con botón de copiar */}
+                {cbu && (
+                  <div className="flex items-center justify-between bg-white/80 p-2 rounded-xl border border-amber-200/50">
+                    <span className="truncate pr-2"><strong>CBU:</strong> <span className="font-mono">{cbu}</span></span>
+                    <button
+                      type="button"
+                      onClick={() => copiarAlPortapapeles(cbu, 'cbu')}
+                      className="shrink-0 px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg text-[10px] flex items-center gap-1 transition-colors"
+                    >
+                      {copiadoCbu ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      {copiadoCbu ? '¡Copiado!' : 'Copiar CBU'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Alias con botón de copiar */}
+                {alias && (
+                  <div className="flex items-center justify-between bg-white/80 p-2 rounded-xl border border-amber-200/50">
+                    <span className="truncate pr-2"><strong>Alias:</strong> <span className="font-mono text-emerald-800 font-bold">{alias}</span></span>
+                    <button
+                      type="button"
+                      onClick={() => copiarAlPortapapeles(alias, 'alias')}
+                      className="shrink-0 px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg text-[10px] flex items-center gap-1 transition-colors"
+                    >
+                      {copiadoAlias ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      {copiadoAlias ? '¡Copiado!' : 'Copiar Alias'}
+                    </button>
+                  </div>
+                )}
+              </div>
+              <p className="text-[10px] text-amber-800/80 italic pt-0.5">
+                * Recordá enviar el comprobante por WhatsApp una vez realizada la transferencia.
+              </p>
+            </div>
+
             <button
               type="button"
               disabled={!formValido || confirmando || cargandoMP}
@@ -378,14 +452,14 @@ export default function FormConfirmacion({
               ) : (
                 <span className="flex items-center gap-2">
                   <MessageCircle className="w-4 h-4 fill-white" />
-                  Confirmar reserva por WhatsApp
+                  Enviar comprobante y confirmar por WhatsApp
                 </span>
               )}
             </button>
           </div>
         )}
 
-        <p className="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1">
+        <p className="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1 pt-1">
           <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
           <span>Tus datos se encuentran protegidos</span>
         </p>

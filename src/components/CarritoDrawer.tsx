@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from "react";
 import { useCarrito } from "@/context/CarritoContext";
@@ -72,6 +72,14 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     cargarConfiguracion();
   }, []);
 
+  // ──> NUEVO: EFECTO DE SEGURIDAD PARA MÉTODO DE ENVÍO <──
+  // Si se desactiva el envío a domicilio y el usuario lo tenía seleccionado, lo forzamos a "retiro"
+  useEffect(() => {
+    if (!envioDomicilioActivo && datosEnvio?.metodoEnvio === "envio") {
+      setDatosEnvio((prev) => ({ ...prev, metodoEnvio: "retiro" }));
+    }
+  }, [envioDomicilioActivo, datosEnvio?.metodoEnvio, setDatosEnvio]);
+
   const carritoSeguro = Array.isArray(carrito) ? carrito : [];
   const subtotalProductos = carritoSeguro.reduce(
     (acc, item) => acc + (Number(item.precio) || 0) * (item.cantidad || 1),
@@ -84,7 +92,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     montoEnvioGratis > 0 &&
     subtotalProductos >= montoEnvioGratis;
 
-  const esEnvioADomicilio = datosEnvio.metodoEnvio === "envio";
+  const esEnvioADomicilio = envioDomicilioActivo && datosEnvio.metodoEnvio === "envio";
   const costoEnvioAplicado =
     esEnvioADomicilio && !tieneEnvioGratis ? costoEnvioFijo : 0;
 
@@ -133,7 +141,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       alert("Por favor, ingresá tu número de teléfono / celular.");
       return false;
     }
-    if (datosEnvio.metodoEnvio === "envio" && !direccion) {
+    if (envioDomicilioActivo && datosEnvio.metodoEnvio === "envio" && !direccion) {
       alert("Por favor, ingresá la dirección de envío.");
       return false;
     }
@@ -151,14 +159,14 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           {
             nombre_cliente: datosEnvio.nombreCliente.trim(),
             telefono_cliente: datosEnvio.telefonoCliente.trim() || null,
-            metodo_envio: datosEnvio.metodoEnvio,
+            metodo_envio: envioDomicilioActivo ? datosEnvio.metodoEnvio : "retiro",
             metodo_pago: medioPagoStr,
             es_cuotas: metodoPago === "mercadopago_cuotas",
             recargo_monto: recargoMonto,
             total: montoFinal,
             estado: "pendiente",
             direccion:
-              datosEnvio.metodoEnvio === "envio"
+              envioDomicilioActivo && datosEnvio.metodoEnvio === "envio"
                 ? datosEnvio.direccion.trim()
                 : null,
             nota_adicional:
@@ -197,7 +205,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       mensaje += `📞 *Teléfono:* ${datosEnvio.telefonoCliente.trim()}\n`;
     }
     mensaje += `🚚 *Método de entrega:* ${
-      datosEnvio.metodoEnvio === "envio"
+      envioDomicilioActivo && datosEnvio.metodoEnvio === "envio"
         ? `Envío a domicilio (${datosEnvio.direccion.trim()})`
         : "Retiro en local"
     }\n`;
@@ -240,7 +248,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
     setCargandoMP(true);
     try {
-      // Usamos metodoPago que es la variable real de tu estado
       const recargoPorcentaje = metodoPago === "mercadopago_cuotas" ? PORCENTAJE_CUOTAS : PORCENTAJE_DEBITO;
 
       const itemsParaApi = carritoSeguro.map((item) => ({
@@ -268,8 +275,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           cliente: {
             nombre: datosEnvio.nombreCliente.trim(),
             telefono: datosEnvio.telefonoCliente.trim(),
-            metodoEnvio: datosEnvio.metodoEnvio,
-            direccion: datosEnvio.direccion,
+            metodoEnvio: envioDomicilioActivo ? datosEnvio.metodoEnvio : "retiro",
+            direccion: envioDomicilioActivo ? datosEnvio.direccion : "",
           },
         }),
       });
@@ -374,7 +381,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     <div className="flex items-center gap-2">
                       <div className="flex items-center border border-gray-200 rounded-lg bg-white">
                         <button
-                          onClick={() => decrementarCantidad(item.id)}
+                          onClick={() => restarDelCarrito(item.id)}
                           className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg text-xs font-bold"
                         >
                           -
@@ -412,6 +419,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   tieneEnvioGratis={tieneEnvioGratis}
                   guardandoPedido={cargandoMP}
                   onConfirmar={() => {}}
+                  envioDomicilioActivo={envioDomicilioActivo}
                 />
 
                 {/* Selección de Método de Pago */}

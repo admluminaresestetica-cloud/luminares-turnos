@@ -24,6 +24,9 @@ export default function FormularioEmpresaTab() {
     instagram_usuario: '',
     mp_access_token: '',
     mp_alias: '',
+    cbu: '',
+    banco: '',
+    titular_cuenta: '',
     envio_domicilio_activo: false,
     costo_envio_base: 0,
     envio_gratis_activo: false,
@@ -45,6 +48,9 @@ export default function FormularioEmpresaTab() {
           instagram_usuario: data.instagram_usuario ?? '',
           mp_access_token: data.mp_access_token ?? '',
           mp_alias: data.mp_alias ?? '',
+          cbu: data.cbu ?? '',
+          banco: data.banco ?? '',
+          titular_cuenta: data.titular_cuenta ?? '',
           envio_domicilio_activo: data.envio_domicilio_activo ?? false,
           costo_envio_base: data.costo_envio_base ?? 0,
           envio_gratis_activo: data.envio_gratis_activo ?? false,
@@ -61,8 +67,12 @@ export default function FormularioEmpresaTab() {
 
     setForm((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? (value === '' ? 0 : Number(value)) : value,
-    }));
+      [name]: type === 'checkbox' 
+        ? checked 
+        : type === 'number' 
+          ? (value === '' ? 0 : Number(value)) 
+          : value,
+    } as ConfiguracionEmpresa));
   };
 
   const handleSubirLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -335,26 +345,65 @@ export default function FormularioEmpresaTab() {
           </div>
         </div>
 
-        {/* Pagos / Mercado Pago */}
+        {/* Pagos / Mercado Pago y Transferencia */}
         <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm space-y-4 transition-colors">
           <h2 className="text-lg font-semibold text-slate-800 dark:text-zinc-100 border-b border-slate-100 dark:border-zinc-800 pb-3">
-            Configuración de Pagos (Mercado Pago)
+            Configuración de Pagos (Mercado Pago & Transferencia)
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
-                Alias / CBU para Transferencias
+                Alias para Transferencias
               </label>
               <input
                 type="text"
                 name="mp_alias"
                 value={form.mp_alias}
                 onChange={handleChange}
-                placeholder="Ej. luminares.mp"
+                placeholder="Ej. luminares.estetica"
                 className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
               />
             </div>
             <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+                CBU / CVU (22 dígitos)
+              </label>
+              <input
+                type="text"
+                name="cbu"
+                value={form.cbu}
+                onChange={handleChange}
+                placeholder="Ej. 00000031000..."
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+                Banco o Billetera Virtual
+              </label>
+              <input
+                type="text"
+                name="banco"
+                value={form.banco}
+                onChange={handleChange}
+                placeholder="Ej. Mercado Pago / Banco Galicia"
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+                Titular de la Cuenta
+              </label>
+              <input
+                type="text"
+                name="titular_cuenta"
+                value={form.titular_cuenta}
+                onChange={handleChange}
+                placeholder="Ej. María Laura Pérez"
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
+              />
+            </div>
+            <div className="md:col-span-2">
               <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
                 Mercado Pago Access Token (API)
               </label>

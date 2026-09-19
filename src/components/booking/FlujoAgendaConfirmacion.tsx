@@ -146,7 +146,7 @@ export default function FlujoAgendaConfirmacion({
     const nombreLimpio = nombre.trim();
     let codigoReferidoPropio = '';
 
-    // 1. Manejo seguro de cliente (evita que rompa si el celular ya existe)
+    // 1. Manejo seguro de cliente
     const { data: clienteExistente } = await supabase
       .from('clientes')
       .select('codigo_referido')
@@ -187,7 +187,6 @@ export default function FlujoAgendaConfirmacion({
     const sistemaReferidosActivo = configSistema.referidos_activo ?? false;
     const codigoUsadoLimpio = codigoReferidoUsado.trim().toUpperCase();
 
-    // Solo procesamos el referido si el switch general está encendido (true)
     if (sistemaReferidosActivo && codigoUsadoLimpio && referidoValido) {
       const { data: duenoCodigo } = await supabase
         .from('clientes')
@@ -203,7 +202,6 @@ export default function FlujoAgendaConfirmacion({
       }
     }
 
-    // Si el sistema está pausado, ignoramos cualquier descuento
     const montoDescuentoAplicar = sistemaReferidosActivo ? descuentoMonto : 0;
     const precioFinal = Math.max(0, precioTotal - montoDescuentoAplicar);
     const fechaHoraInicio = new Date(`${fecha}T${hora}:00`).toISOString();
@@ -398,30 +396,35 @@ export default function FlujoAgendaConfirmacion({
               </button>
 
               <FormConfirmacion
-  servicioDetalle={detalleTexto}
-  precioTotal={precioTotal}
-  duracionTotal={duracionTotal}
-  fecha={fecha}
-  hora={hora}
-  porcentajeSena={configSistema.porcentaje_sena}
-  nombre={nombre}
-  celular={celular}
-  codigoReferidoUsado={codigoReferidoUsado}
-  descuentoMonto={descuentoMonto}
-  referidoValido={referidoValido}
-  mensajeReferido={mensajeReferido}
-  referidosActivo={configSistema?.referidos_activo}
-  onNombreChange={setNombre}
-  onCelularChange={setCelular}
-  onCodigoReferidoChange={setCodigoReferidoUsado}
-  onConfirmar={handleConfirmar}
-  confirmando={confirmando}
-  error={error}
-  colorAccent={colorAccent}
-  onPagarMercadoPago={handlePagarMercadoPago}
-  cargandoMP={cargandoMP}
-  onCancelarMP={() => setCargandoMP(false)}
-/>
+                servicioDetalle={detalleTexto}
+                precioTotal={precioTotal}
+                duracionTotal={duracionTotal}
+                fecha={fecha}
+                hora={hora}
+                porcentajeSena={configSistema.porcentaje_sena}
+                nombre={nombre}
+                celular={celular}
+                codigoReferidoUsado={codigoReferidoUsado}
+                descuentoMonto={descuentoMonto}
+                referidoValido={referidoValido}
+                mensajeReferido={mensajeReferido}
+                referidosActivo={configSistema?.referidos_activo}
+                onNombreChange={setNombre}
+                onCelularChange={setCelular}
+                onCodigoReferidoChange={setCodigoReferidoUsado}
+                onConfirmar={handleConfirmar}
+                confirmando={confirmando}
+                error={error}
+                colorAccent={colorAccent}
+                onPagarMercadoPago={handlePagarMercadoPago}
+                cargandoMP={cargandoMP}
+                onCancelarMP={() => setCargandoMP(false)}
+                // DATOS BANCARIOS DESDE useConfig()
+                banco={config?.banco}
+                titularCuenta={config?.titular_cuenta}
+                cbu={config?.cbu}
+                alias={config?.mp_alias}
+              />
             </div>
           )}
         </div>
