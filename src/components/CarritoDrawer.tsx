@@ -240,6 +240,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
     setCargandoMP(true);
     try {
+      // Usamos metodoPago que es la variable real de tu estado
+      const recargoPorcentaje = metodoPago === "mercadopago_cuotas" ? PORCENTAJE_CUOTAS : PORCENTAJE_DEBITO;
+
       const itemsParaApi = carritoSeguro.map((item) => ({
         id: item.id,
         nombre: item.nombre,
@@ -261,6 +264,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           itemsCarrito: itemsParaApi,
+          recargoPorcentaje: recargoPorcentaje,
           cliente: {
             nombre: datosEnvio.nombreCliente.trim(),
             telefono: datosEnvio.telefonoCliente.trim(),
@@ -273,9 +277,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       const data = await response.json();
 
       if (response.ok && data.init_point) {
-        // NOTA: Se removió vaciarCarrito() de aquí para evitar que se borre 
-        // el carrito si el usuario vuelve atrás desde la pasarela de pago.
-        // Ahora se vaciará mediante un listener al retornar con ?status=success en la página principal.
         onClose();
         window.location.href = data.init_point;
       } else {
@@ -327,36 +328,53 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
               </div>
             ) : paso === "carrito" ? (
               <div className="space-y-3">
+                {/* --- BARRITA / MENSAJE DE ENVÍO GRATIS --- */}
+                {envioGratisActivo && montoEnvioGratis > 0 && (
+                  <div className="bg-[#0E6E55]/10 border border-[#0E6E55]/20 rounded-xl p-3 mb-4 text-xs">
+                    {subtotalProductos >= montoEnvioGratis ? (
+                      <div className="flex items-center gap-2 text-[#0E6E55] font-bold">
+                        <span>🎉</span>
+                        <span>¡Felicitaciones! Tenés <strong>Envío Gratis</strong> alcanzado.</span>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex justify-between text-gray-800 font-semibold mb-1.5">
+                          <span>
+                            Agregá <strong>${(montoEnvioGratis - subtotalProductos).toLocaleString("es-AR")}</strong> más para envío gratis
+                          </span>
+                          <span className="text-[#0E6E55] font-bold">
+                            {Math.min(100, Math.round((subtotalProductos / montoEnvioGratis) * 100))}%
+                          </span>
+                        </div>
+                        {/* Barrita de Progreso */}
+                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="bg-[#0E6E55] h-2 rounded-full transition-all duration-300 ease-out"
+                            style={{
+                              width: `${Math.min(100, (subtotalProductos / montoEnvioGratis) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Listado de productos */}
                 {carritoSeguro.map((item) => (
                   <div
                     key={item.id}
                     className="flex items-center justify-between p-3 border border-[#E7E5E0] rounded-xl bg-gray-50/50 gap-3"
                   >
-                    <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 flex items-center justify-center">
-                      {item.imagen_url ? (
-                        <img
-                          src={item.imagen_url}
-                          alt={item.nombre}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Package className="w-6 h-6 text-gray-400" />
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xs font-semibold text-gray-900 truncate">
-                        {item.nombre}
-                      </h3>
-                      <p className="text-xs text-gray-500 font-medium mt-0.5">
-                        ${(Number(item.precio) || 0).toLocaleString("es-AR")} c/u
-                      </p>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-xs text-gray-800">{item.nombre}</h4>
+                      <p className="text-xs text-gray-500">${(Number(item.precio) || 0).toLocaleString("es-AR")}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center border border-gray-300 rounded-lg bg-white shadow-sm">
+                      <div className="flex items-center border border-gray-200 rounded-lg bg-white">
                         <button
-                          onClick={() => restarDelCarrito(item.id)}
+                          onClick={() => decrementarCantidad(item.id)}
                           className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg text-xs font-bold"
                         >
                           -
@@ -500,8 +518,9 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                 </div>
               </form>
             )}
-          </div> 
-                {/* Footer */}
+          </div>
+
+          {/* Footer */}
           {carritoSeguro.length > 0 && (
             <div className="p-4 sm:p-6 border-t border-[#E7E5E0] bg-gray-50 space-y-4">
               <div className="space-y-1.5 text-xs text-gray-600">
@@ -527,8 +546,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   <div className="flex justify-between text-gray-500">
                     <span>
                       {metodoPago === "mercadopago_cuotas"
-                        ? "Recargo cuotas"
-                        : "Recargo débitoRecargo cuotas (25%)"}
+                        ? `Recargo cuotas (${PORCENTAJE_CUOTAS}%)`
+                        : `Recargo débito (${PORCENTAJE_DEBITO}%)`}
                     </span>
                     <span>+${recargoMonto.toLocaleString("es-AR")}</span>
                   </div>

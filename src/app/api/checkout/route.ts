@@ -10,7 +10,6 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    // 1. Obtenemos credenciales dinámicas de la DB o .env como respaldo
     const configEmpresa = await obtenerConfiguracion();
     const accessToken = configEmpresa?.mp_access_token || process.env.MP_ACCESS_TOKEN || "";
 
@@ -21,13 +20,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Configuración global de cuotas desde la base de datos
     const cuotasHabilitadas = configEmpresa?.cuotas_habilitadas ?? true;
     const montoMinimoCuotas = Number(configEmpresa?.monto_minimo_cuotas ?? 0);
 
     const client = new MercadoPagoConfig({ accessToken });
 
-    const { itemsCarrito, cliente } = await request.json();
+    // Recibimos recargoAplicado desde el body enviado por CarritoDrawer
+    const { itemsCarrito, cliente, recargoPorcentaje = 0.10 } = await request.json();
 
     if (!itemsCarrito || !Array.isArray(itemsCarrito) || itemsCarrito.length === 0) {
       return NextResponse.json(
@@ -36,7 +35,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const PORCENTAJE_RECARGO = 0.10;
+    const PORCENTAJE_RECARGO = Number(recargoPorcentaje) || 0;
     let totalPedido = 0;
     let subtotalSinRecargo = 0;
     let algunProductoBloqueaCuotas = false;
@@ -57,18 +56,17 @@ export async function POST(request: Request) {
         );
       }
 
-      // Si es el ítem especial de Envío / Cadetería, lo procesamos directo sin consultar a la DB
+      // Manejo de Envío: No aplicamos recargo sobre la cadetería
       if (productoId === "envio-cadeteria") {
         const precioOficial = Number(item.precio) || 0;
-        const precioUnitarioConRecargo = Math.round(precioOficial * (1 + PORCENTAJE_RECARGO));
 
-        totalPedido += precioUnitarioConRecargo * cantidad;
+        totalPedido += precioOficial * cantidad;
         subtotalSinRecargo += precioOficial * cantidad;
 
         itemsMP.push({
           id: "envio-cadeteria",
           title: String(item.nombre || "Costo de Cadetería / Envío"),
-          unit_price: precioUnitarioConRecargo,
+          unit_price: precioOficial,
           quantity: cantidad,
           currency_id: "ARS",
         });
@@ -76,10 +74,10 @@ export async function POST(request: Request) {
         itemsValidados.push({
           nombre_producto: String(item.nombre || "Costo de Cadetería / Envío"),
           cantidad: cantidad,
-          precio_unitario: precioUnitarioConRecargo,
+          precio_unitario: precioOficial,
         });
 
-        continue; // Pasa al siguiente ítem
+        continue;
       }
 
       let productoDb: any = null;
@@ -104,7 +102,6 @@ export async function POST(request: Request) {
         );
       }
 
-      // Validar si el producto individual permite cuotas
       if (productoDb.permite_cuotas === false) {
         algunProductoBloqueaCuotas = true;
       }
@@ -130,13 +127,12 @@ export async function POST(request: Request) {
       });
     }
 
-    // Evaluación final para decidir si se permiten las cuotas en Mercado Pago
     const permiteFinanciacion =
       cuotasHabilitadas &&
       subtotalSinRecargo >= montoMinimoCuotas &&
       !algunProductoBloqueaCuotas;
 
-    // Registramos el pedido en Supabase
+    // Registro en Supabase
     const { data: pedido, error: errorPedido } = await supabase
       .from("pedidos")
       .insert({
@@ -164,15 +160,8 @@ export async function POST(request: Request) {
       pedido_id: pedido.id,
     }));
 
-    const { error: errorItems } = await supabase
-      .from("pedido_items")
-      .insert(itemsParaInsertarConId);
+    await supabase.from("pedido_items").insert(itemsParaInsertarConId);
 
-    if (errorItems) {
-      console.error("Error al registrar los ítems del pedido:", errorItems);
-    }
-
-    // Creamos la preferencia con la instancia dinámica de MP
     const preference = new Preference(client);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
 
@@ -188,7 +177,6 @@ export async function POST(request: Request) {
         auto_return: "approved",
         notification_url: `${baseUrl}/api/webhooks/mercadopago`,
         payment_methods: {
-          // Si cumple todas las condiciones se permiten hasta 3 cuotas; si no, se limita a 1 cuota (pago contado/débito)
           installments: permiteFinanciacion ? 3 : 1,
         },
       },
