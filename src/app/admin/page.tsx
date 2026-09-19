@@ -3,7 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
-import { UserCheck, Sparkles, CalendarDays, ShoppingBag, Settings, LogOut } from 'lucide-react';
+import { 
+  UserCheck, 
+  Sparkles, 
+  CalendarDays, 
+  ShoppingBag, 
+  BarChart3, // 👈 1. Importamos el ícono de Métricas
+  Settings, 
+  LogOut 
+} from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import AdminChatWidget from './components/AdminChatWidget';
 
@@ -21,7 +29,6 @@ export default function AdminHubPage() {
     setCerrandoSesion(true);
 
     try {
-      // Al cerrar sesión aquí, @supabase/ssr borra la cookie del navegador
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Error durante el cierre de sesión:', error);
@@ -29,7 +36,6 @@ export default function AdminHubPage() {
       if (typeof window !== 'undefined') {
         localStorage.clear();
         sessionStorage.clear();
-        // Redirigimos directamente al login
         window.location.href = '/admin/login';
       }
     }
@@ -68,6 +74,17 @@ export default function AdminHubPage() {
       iconBg: 'bg-teal-100/70 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-white dark:group-hover:bg-teal-500',
       textColor: 'group-hover:text-teal-700 dark:group-hover:text-teal-300',
     },
+    
+    // 🟢 2. NUEVO MÓDULO DE MÉTRICAS (Ubicado entre Tienda y Ajustes)
+    {
+      titulo: 'Métricas',
+      icono: BarChart3,
+      ruta: '/admin/metricas',
+      bgHover: 'hover:bg-violet-50/60 dark:hover:bg-violet-950/30 hover:border-violet-300 dark:hover:border-violet-800 hover:shadow-violet-500/10',
+      iconBg: 'bg-violet-100/70 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 group-hover:scale-110 group-hover:bg-violet-600 group-hover:text-white dark:group-hover:bg-violet-500',
+      textColor: 'group-hover:text-violet-700 dark:group-hover:text-violet-300',
+    },
+
     {
       titulo: 'Ajustes',
       icono: Settings,
