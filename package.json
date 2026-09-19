@@ -9,11 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.0.0",
+    "@ai-sdk/groq": "^4.0.46",
     "@capacitor/android": "^8.5.0",
     "@capacitor/core": "^8.5.0",
     "@supabase/ssr": "^0.12.5",
     "@supabase/supabase-js": "^2.112.3",
+    "ai": "^4.0.0",
     "fuse.js": "^7.5.0",
+    "groq-sdk": "^1.6.0",
     "html-to-image": "^1.11.13",
     "html5-qrcode": "^2.3.8",
     "lucide-react": "^1.32.0",
@@ -21,10 +25,13 @@
     "next": "14.2.35",
     "next-themes": "^0.4.6",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.0",
+    "@tailwindcss/typography": "^0.5.20",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

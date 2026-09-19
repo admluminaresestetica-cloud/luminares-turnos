@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { UserCheck, Sparkles, CalendarDays, ShoppingBag, Settings, LogOut } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
+import AdminChatWidget from './components/AdminChatWidget';
 
 // Cliente configurado para manejar cookies de sesión en el navegador
 const supabase = createBrowserClient(
@@ -78,7 +79,7 @@ export default function AdminHubPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col justify-between p-6 sm:p-10 select-none transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col justify-between p-6 sm:p-10 select-none transition-colors duration-200 relative">
 
       {/* ENCABEZADO SUPERIOR CON BOTÓN DE CERRAR SESIÓN Y THEME TOGGLE */}
       <header className="w-full max-w-xl mx-auto flex items-center justify-between">
@@ -110,7 +111,6 @@ export default function AdminHubPage() {
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
           {modulos.map((modulo, index) => {
             const IconoComponente = modulo.icono;
-            // Si es el último elemento en cantidad impar, centrarlo si se desea o dejar en su lugar natural
             const esUltimoImpar = index === modulos.length - 1 && modulos.length % 2 !== 0;
 
             return (
@@ -142,6 +142,9 @@ export default function AdminHubPage() {
           Seleccioná un módulo para operar
         </span>
       </footer>
+
+      {/* WIDGET FLOTANTE DE IA */}
+      <AdminChatWidget />
 
     </div>
   );
