@@ -27,6 +27,7 @@ interface Props {
   descuentoMonto: number;
   referidoValido: boolean | null;
   mensajeReferido: string | null;
+  referidosActivo?: boolean;
   onNombreChange: (val: string) => void;
   onCelularChange: (val: string) => void;
   onCodigoReferidoChange: (val: string) => void;
@@ -72,6 +73,7 @@ export default function FormConfirmacion({
   descuentoMonto,
   referidoValido,
   mensajeReferido,
+  referidosActivo = true,
   onNombreChange,
   onCelularChange,
   onCodigoReferidoChange,
@@ -86,7 +88,6 @@ export default function FormConfirmacion({
   const [opcionMP, setOpcionMP] = useState<'sena' | 'total'>('sena');
 
   // Estado puramente visual: qué tarjeta de método de pago está seleccionada/expandida.
-  // No reemplaza ni interfiere con opcionMP, onPagarMercadoPago, onConfirmar, etc.
   const [metodoPago, setMetodoPago] = useState<'mercadopago' | 'whatsapp'>(
     onPagarMercadoPago ? 'mercadopago' : 'whatsapp'
   );
@@ -177,12 +178,12 @@ export default function FormConfirmacion({
           <div className="relative">
             <User className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
-                type="text"
-                placeholder="Ej: María González"
-                value={nombre}
-                onChange={(e) => onNombreChange(e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''))}
-                className={`w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-[15px] sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all ${styles.focusRing}`}
-                 />
+              type="text"
+              placeholder="Ej: María González"
+              value={nombre}
+              onChange={(e) => onNombreChange(e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''))}
+              className={`w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-[15px] sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all ${styles.focusRing}`}
+            />
           </div>
         </div>
 
@@ -193,37 +194,40 @@ export default function FormConfirmacion({
           <div className="relative">
             <Phone className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
-                type="tel"
-                inputMode="numeric"
-                maxLength={10}
-                placeholder="Ej: 3411234567"
-                value={celular}
-                onChange={(e) => onCelularChange(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                className={`w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-[15px] sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all ${styles.focusRing}`}
-               />
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="Ej: 3411234567"
+              value={celular}
+              onChange={(e) => onCelularChange(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              className={`w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-[15px] sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all ${styles.focusRing}`}
+            />
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
-            ¿Tenés un código de recomendada? <span className="text-slate-400 font-normal lowercase">(opcional)</span>
-          </label>
-          <div className="relative">
-            <Gift className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Ej: MARIA-A8F2"
-              value={codigoReferidoUsado}
-              onChange={(e) => onCodigoReferidoChange(e.target.value.toUpperCase())}
-              className={`w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-[15px] sm:text-sm text-slate-900 uppercase tracking-wider placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all ${styles.focusRing}`}
-            />
+        {/* CÓDIGO DE REFERIDO (Solo se muestra si la función está activa) */}
+        {referidosActivo && (
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
+              ¿Tenés un código de recomendada? <span className="text-slate-400 font-normal lowercase">(opcional)</span>
+            </label>
+            <div className="relative">
+              <Gift className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Ej: MARIA-A8F2"
+                value={codigoReferidoUsado}
+                onChange={(e) => onCodigoReferidoChange(e.target.value.toUpperCase())}
+                className={`w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-[15px] sm:text-sm text-slate-900 uppercase tracking-wider placeholder:text-slate-400 focus:outline-none focus:ring-4 transition-all ${styles.focusRing}`}
+              />
+            </div>
+            {mensajeReferido && (
+              <p className={`text-xs mt-1.5 ml-1 font-semibold ${referidoValido ? 'text-emerald-600' : 'text-rose-500'}`}>
+                {mensajeReferido}
+              </p>
+            )}
           </div>
-          {mensajeReferido && (
-            <p className={`text-xs mt-1.5 ml-1 font-semibold ${referidoValido ? 'text-emerald-600' : 'text-rose-500'}`}>
-              {mensajeReferido}
-            </p>
-          )}
-        </div>
+        )}
       </div>
 
       {/* MENSAJE DE ERROR */}

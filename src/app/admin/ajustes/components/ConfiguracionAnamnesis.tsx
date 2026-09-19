@@ -1,19 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { Plus, Trash2, CheckCircle2, XCircle, Settings } from 'lucide-react';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-interface ConfiguracionAnamnesisProps {
+interface ConfiguracionAnamnesisTabProps {
   onClose?: () => void;
 }
 
-export default function ConfiguracionAnamnesis({ onClose }: ConfiguracionAnamnesisProps) {
+export default function ConfiguracionAnamnesisTab({ onClose }: ConfiguracionAnamnesisTabProps) {
   const [preguntas, setPreguntas] = useState<any[]>([]);
   const [nuevaPregunta, setNuevaPregunta] = useState('');
   const [categoria, setCategoria] = useState('Salud');
@@ -120,7 +115,6 @@ export default function ConfiguracionAnamnesis({ onClose }: ConfiguracionAnamnes
         )}
       </div>
 
-      {/* Formulario para agregar nueva pregunta */}
       <form onSubmit={agregarPregunta} className="mb-8 space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/60 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
         <h3 className="text-sm font-semibold text-slate-800 dark:text-white">Agregar Nueva Pregunta</h3>
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -151,7 +145,6 @@ export default function ConfiguracionAnamnesis({ onClose }: ConfiguracionAnamnes
         </div>
       </form>
 
-      {/* Listado de Preguntas */}
       <div className="space-y-3">
         <h3 className="mb-2 text-sm font-semibold text-slate-800 dark:text-white">Preguntas Registradas</h3>
         {loading ? (

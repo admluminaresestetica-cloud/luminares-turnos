@@ -146,6 +146,7 @@ export default function FlujoAgendaConfirmacion({
     const nombreLimpio = nombre.trim();
     let codigoReferidoPropio = '';
 
+    // 1. Manejo seguro de cliente (evita que rompa si el celular ya existe)
     const { data: clienteExistente } = await supabase
       .from('clientes')
       .select('codigo_referido')
@@ -156,16 +157,38 @@ export default function FlujoAgendaConfirmacion({
       codigoReferidoPropio = clienteExistente.codigo_referido;
     } else {
       codigoReferidoPropio = generarCodigoReferido(nombreLimpio);
-      await supabase.from('clientes').insert([{
-        celular: celularLimpio,
-        nombre: nombreLimpio,
-        codigo_referido: codigoReferidoPropio,
-        descuentos_disponibles: 0,
-      }]);
+      const { data: nuevoCliente, error: errorInsert } = await supabase
+        .from('clientes')
+        .insert([{
+          celular: celularLimpio,
+          nombre: nombreLimpio,
+          codigo_referido: codigoReferidoPropio,
+          descuentos_disponibles: 0,
+        }])
+        .select('codigo_referido')
+        .maybeSingle();
+
+      if (errorInsert) {
+        const { data: clienteReintento } = await supabase
+          .from('clientes')
+          .select('codigo_referido')
+          .eq('celular', celularLimpio)
+          .maybeSingle();
+
+        if (clienteReintento) {
+          codigoReferidoPropio = clienteReintento.codigo_referido;
+        }
+      } else if (nuevoCliente) {
+        codigoReferidoPropio = nuevoCliente.codigo_referido;
+      }
     }
 
+    // 2. Validación con la variable correcta de Supabase: referidos_activo
+    const sistemaReferidosActivo = configSistema.referidos_activo ?? false;
     const codigoUsadoLimpio = codigoReferidoUsado.trim().toUpperCase();
-    if (codigoUsadoLimpio && referidoValido) {
+
+    // Solo procesamos el referido si el switch general está encendido (true)
+    if (sistemaReferidosActivo && codigoUsadoLimpio && referidoValido) {
       const { data: duenoCodigo } = await supabase
         .from('clientes')
         .select('id, descuentos_disponibles')
@@ -180,13 +203,15 @@ export default function FlujoAgendaConfirmacion({
       }
     }
 
-    const precioFinal = Math.max(0, precioTotal - descuentoMonto);
+    // Si el sistema está pausado, ignoramos cualquier descuento
+    const montoDescuentoAplicar = sistemaReferidosActivo ? descuentoMonto : 0;
+    const precioFinal = Math.max(0, precioTotal - montoDescuentoAplicar);
     const fechaHoraInicio = new Date(`${fecha}T${hora}:00`).toISOString();
 
     const reserva = await crearReserva({
       cliente_nombre: nombreLimpio,
       cliente_celular: celularLimpio,
-      codigo_referido_usado: (referidoValido && codigoUsadoLimpio) ? codigoUsadoLimpio : null,
+      codigo_referido_usado: (sistemaReferidosActivo && referidoValido && codigoUsadoLimpio) ? codigoUsadoLimpio : null,
       servicio_tipo: tipo,
       detalle_reserva: { ...detalleReserva, detalle_texto: detalleTexto },
       precio_total: precioFinal,
@@ -373,29 +398,30 @@ export default function FlujoAgendaConfirmacion({
               </button>
 
               <FormConfirmacion
-                servicioDetalle={detalleTexto}
-                precioTotal={precioTotal}
-                duracionTotal={duracionTotal}
-                fecha={fecha}
-                hora={hora}
-                porcentajeSena={configSistema.porcentaje_sena}
-                nombre={nombre}
-                celular={celular}
-                codigoReferidoUsado={codigoReferidoUsado}
-                descuentoMonto={descuentoMonto}
-                referidoValido={referidoValido}
-                mensajeReferido={mensajeReferido}
-                onNombreChange={setNombre}
-                onCelularChange={setCelular}
-                onCodigoReferidoChange={setCodigoReferidoUsado}
-                onConfirmar={handleConfirmar}
-                confirmando={confirmando}
-                error={error}
-                colorAccent={colorAccent}
-                onPagarMercadoPago={handlePagarMercadoPago}
-                cargandoMP={cargandoMP}
-                onCancelarMP={() => setCargandoMP(false)}
-              />
+  servicioDetalle={detalleTexto}
+  precioTotal={precioTotal}
+  duracionTotal={duracionTotal}
+  fecha={fecha}
+  hora={hora}
+  porcentajeSena={configSistema.porcentaje_sena}
+  nombre={nombre}
+  celular={celular}
+  codigoReferidoUsado={codigoReferidoUsado}
+  descuentoMonto={descuentoMonto}
+  referidoValido={referidoValido}
+  mensajeReferido={mensajeReferido}
+  referidosActivo={configSistema?.referidos_activo}
+  onNombreChange={setNombre}
+  onCelularChange={setCelular}
+  onCodigoReferidoChange={setCodigoReferidoUsado}
+  onConfirmar={handleConfirmar}
+  confirmando={confirmando}
+  error={error}
+  colorAccent={colorAccent}
+  onPagarMercadoPago={handlePagarMercadoPago}
+  cargandoMP={cargandoMP}
+  onCancelarMP={() => setCargandoMP(false)}
+/>
             </div>
           )}
         </div>

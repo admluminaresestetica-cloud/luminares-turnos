@@ -4,7 +4,6 @@ import { ejecutarAccionAdmin } from '@/lib/admin/api';
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import {
-  Settings,
   UserRound,
   UserPlus,
   ClipboardList,
@@ -26,7 +25,6 @@ import { ArrowLeft } from 'lucide-react';
 import ResumenReservaCobro from './components/ResumenReservaCobro';
 import ChecklistAnamnesis from './components/ChecklistAnamnesis';
 import SelectorZonasBotones from './components/SelectorZonasBotones';
-import ConfiguracionAnamnesis from './components/ConfiguracionAnamnesis';
 
 import BannerAlertasClinicas from '../components/BannerAlertasClinicas';
 import ModalHistorialSesiones from '../components/ModalHistorialSesiones';
@@ -47,8 +45,6 @@ export default function RecepcionPage() {
   const [pacienteFicha, setPacienteFicha] = useState<any>(null);
   const [reservaHoy, setReservaHoy] = useState<any>(null);
   const [esNuevo, setEsNuevo] = useState(false);
-
-  const [mostrarConfigAnamnesis, setMostrarConfigAnamnesis] = useState(false);
 
   // Campos del Paciente
   const [nombre, setNombre] = useState('');
@@ -256,7 +252,7 @@ export default function RecepcionPage() {
     <div className="min-h-screen bg-slate-50 transition-colors dark:bg-zinc-950">
       <div
         className={`mx-auto max-w-7xl space-y-6 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 ${
-          hayPacienteActivo && !mostrarConfigAnamnesis ? 'pb-28 lg:pb-8' : 'pb-8'
+          hayPacienteActivo ? 'pb-28 lg:pb-8' : 'pb-8'
         }`}
       >
         {/* Encabezado */}
@@ -283,203 +279,189 @@ export default function RecepcionPage() {
               <ArrowLeft className="h-4 w-4 text-slate-500 dark:text-zinc-400" />
               <span>Menú Admin</span>
             </Link>
-
-            <button
-              onClick={() => setMostrarConfigAnamnesis(!mostrarConfigAnamnesis)}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-95 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-            >
-              <Settings className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-              <span>{mostrarConfigAnamnesis ? 'Volver a Recepción' : 'Configurar Anamnesis'}</span>
-            </button>
           </div>
         </header>
 
-        {mostrarConfigAnamnesis ? (
-          <ConfiguracionAnamnesis onClose={() => setMostrarConfigAnamnesis(false)} />
-        ) : (
-          <>
-            {/* Buscador */}
-            <BuscadorMulticoincidencia
-              onClienteSeleccionado={handleClienteSeleccionado}
-              onVerHistorialDirecto={(id) => setPacienteIdModal(id)}
-            />
+        {/* Buscador */}
+        <BuscadorMulticoincidencia
+          onClienteSeleccionado={handleClienteSeleccionado}
+          onVerHistorialDirecto={(id) => setPacienteIdModal(id)}
+        />
 
-            {mensaje && !hayPacienteActivo && (
-              <div className={`flex items-start gap-2 rounded-xl border p-3.5 text-sm font-semibold shadow-sm ${configMensaje.wrap}`}>
-                {configMensaje.icon}
-                <span>{mensaje}</span>
+        {mensaje && !hayPacienteActivo && (
+          <div className={`flex items-start gap-2 rounded-xl border p-3.5 text-sm font-semibold shadow-sm ${configMensaje.wrap}`}>
+            {configMensaje.icon}
+            <span>{mensaje}</span>
+          </div>
+        )}
+
+        {hayPacienteActivo && (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 xl:items-start">
+            {/* ───────────────────────── SECCIÓN 1 · PACIENTE ───────────────────────── */}
+            <section className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 hover:shadow-md sm:p-5 xl:col-span-1">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                  <IdCard className="h-3.5 w-3.5" />
+                  Datos del paciente
+                </span>
+                <button
+                  type="button"
+                  onClick={limpiar}
+                  title="Quitar paciente seleccionado"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-rose-200/70 bg-rose-50/70 px-2.5 text-[11px] font-semibold text-rose-600 transition-all hover:bg-rose-100 active:scale-95 dark:border-rose-900/50 dark:bg-rose-950/50 dark:text-rose-400 dark:hover:bg-rose-900/70"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Quitar
+                </button>
               </div>
-            )}
 
-            {hayPacienteActivo && (
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 xl:items-start">
-                {/* ───────────────────────── SECCIÓN 1 · PACIENTE ───────────────────────── */}
-                <section className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 hover:shadow-md sm:p-5 xl:col-span-1">
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                      <IdCard className="h-3.5 w-3.5" />
-                      Datos del paciente
-                    </span>
-                    <button
-                      type="button"
-                      onClick={limpiar}
-                      title="Quitar paciente seleccionado"
-                      className="inline-flex h-8 items-center gap-1 rounded-lg border border-rose-200/70 bg-rose-50/70 px-2.5 text-[11px] font-semibold text-rose-600 transition-all hover:bg-rose-100 active:scale-95 dark:border-rose-900/50 dark:bg-rose-950/50 dark:text-rose-400 dark:hover:bg-rose-900/70"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                      Quitar
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-zinc-800">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 ring-1 ring-teal-100 dark:bg-teal-950/60 dark:text-teal-400 dark:ring-teal-900">
-                      {esNuevo ? <UserPlus className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-base font-bold text-slate-900 dark:text-zinc-100">
-                        {esNuevo ? 'Nuevo paciente' : nombre || 'Paciente'}
-                      </p>
-                      {esNuevo ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-teal-700 dark:text-teal-400">
-                          <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                          Se creará una ficha nueva
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-zinc-400">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                          Ficha clínica registrada
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <dl className="space-y-2.5 text-sm">
-                    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50/70 px-3 py-2 dark:bg-zinc-800/60">
-                      <dt className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Celular</dt>
-                      <dd className="truncate font-medium text-slate-800 dark:text-zinc-200">{celular || '—'}</dd>
-                    </div>
-                    <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50/70 px-3 py-2 dark:bg-zinc-800/60">
-                      <dt className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Fototipo</dt>
-                      <dd className="truncate font-medium text-slate-800 dark:text-zinc-200">{fototipo}</dd>
-                    </div>
-                  </dl>
-
-                  {pacienteFicha && (
-                    <button
-                      type="button"
-                      onClick={() => setPacienteIdModal(pacienteFicha.id)}
-                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100 hover:text-slate-900 active:scale-[0.98] dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                    >
-                      <ClipboardList className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                      Ver historial completo
-                    </button>
-                  )}
-                </section>
-
-                {/* ─────────────────── SECCIÓN 2 · INFO MÉDICA / HISTORIAL ─────────────────── */}
-                <section className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 hover:shadow-md sm:p-5 xl:col-span-1">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                    <FileHeart className="h-3.5 w-3.5" />
-                    Historial e información médica
-                  </span>
-
-                  <div className="border-b border-slate-100 pb-4 dark:border-zinc-800">
-                    <BannerAlertasClinicas
-                      antecedentes={antecedentes}
-                      observacionesFijas={observacionesFijas}
-                    />
-                  </div>
-
-                  <ChecklistAnamnesis
-                    fototipo={fototipo}
-                    setFototipo={setFototipo}
-                    antecedentes={antecedentes}
-                    setAntecedentes={setAntecedentes}
-                    observacionesFijas={observacionesFijas}
-                    setObservacionesFijas={setObservacionesFijas}
-                  />
-                </section>
-
-                {/* ───────────────── SECCIÓN 3 · ESTADO DE ATENCIÓN / OPERACIÓN ───────────────── */}
-                <section className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 hover:shadow-md sm:p-5 xl:sticky xl:top-6 xl:col-span-1">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                    <ClipboardCheck className="h-3.5 w-3.5" />
-                    Estado de atención
-                  </span>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {ESTADOS_ATENCION.map(({ key, label, icon: Icon }) => {
-                      const activo = key === 'en_espera';
-                      return (
-                        <div
-                          key={key}
-                          className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all ${
-                            activo
-                              ? 'border-teal-300 bg-teal-50 text-teal-800 ring-1 ring-teal-200 dark:border-teal-800 dark:bg-teal-950/60 dark:text-teal-300 dark:ring-teal-900'
-                              : 'border-slate-200/70 bg-slate-50/60 text-slate-400 dark:border-zinc-800 dark:bg-zinc-800/40 dark:text-zinc-500'
-                          }`}
-                        >
-                          <Icon className={`h-4 w-4 shrink-0 ${activo ? 'text-teal-600 dark:text-teal-400' : 'text-slate-300 dark:text-zinc-600'}`} />
-                          {label}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <p className="-mt-2 flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-zinc-500">
-                    <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-zinc-600" />
-                    Al enviar, el paciente pasa a "En espera" en Gabinete.
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-zinc-800">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 ring-1 ring-teal-100 dark:bg-teal-950/60 dark:text-teal-400 dark:ring-teal-900">
+                  {esNuevo ? <UserPlus className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-base font-bold text-slate-900 dark:text-zinc-100">
+                    {esNuevo ? 'Nuevo paciente' : nombre || 'Paciente'}
                   </p>
-
-                  <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
-                    <ResumenReservaCobro
-                      reserva={reservaHoy}
-                      cobradoEnPuerta={cobradoEnPuerta}
-                      onToggleCobrado={setCobradoEnPuerta}
-                    />
-                  </div>
-
-                  <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
-                    <SelectorZonasBotones
-                      zonasSeleccionadas={zonasSeleccionadas}
-                      setZonasSeleccionadas={setZonasSeleccionadas}
-                    />
-                  </div>
-
-                  <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
-                    <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
-                      Notas para gabinete
-                    </label>
-                    <input
-                      type="text"
-                      value={observacionesHoy}
-                      onChange={(e) => setObservacionesHoy(e.target.value)}
-                      placeholder="Ej: Sensibilidad leve en axilas..."
-                      className="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                    />
-                  </div>
-
-                  {mensaje && (
-                    <div className={`flex items-start gap-2 rounded-xl border p-3 text-xs font-semibold ${configMensaje.wrap}`}>
-                      {configMensaje.icon}
-                      <span>{mensaje}</span>
-                    </div>
+                  {esNuevo ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-teal-700 dark:text-teal-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                      Se creará una ficha nueva
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-zinc-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Ficha clínica registrada
+                    </span>
                   )}
-
-                  <button
-                    onClick={handleEnviarAGabinete}
-                    disabled={guardando}
-                    className="hidden h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none lg:flex"
-                  >
-                    {textoBoton}
-                  </button>
-                </section>
+                </div>
               </div>
-            )}
-          </>
+
+              <dl className="space-y-2.5 text-sm">
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50/70 px-3 py-2 dark:bg-zinc-800/60">
+                  <dt className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Celular</dt>
+                  <dd className="truncate font-medium text-slate-800 dark:text-zinc-200">{celular || '—'}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50/70 px-3 py-2 dark:bg-zinc-800/60">
+                  <dt className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Fototipo</dt>
+                  <dd className="truncate font-medium text-slate-800 dark:text-zinc-200">{fototipo}</dd>
+                </div>
+              </dl>
+
+              {pacienteFicha && (
+                <button
+                  type="button"
+                  onClick={() => setPacienteIdModal(pacienteFicha.id)}
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100 hover:text-slate-900 active:scale-[0.98] dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                >
+                  <ClipboardList className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                  Ver historial completo
+                </button>
+              )}
+            </section>
+
+            {/* ─────────────────── SECCIÓN 2 · INFO MÉDICA / HISTORIAL ─────────────────── */}
+            <section className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 hover:shadow-md sm:p-5 xl:col-span-1">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                <FileHeart className="h-3.5 w-3.5" />
+                Historial e información médica
+              </span>
+
+              <div className="border-b border-slate-100 pb-4 dark:border-zinc-800">
+                <BannerAlertasClinicas
+                  antecedentes={antecedentes}
+                  observacionesFijas={observacionesFijas}
+                />
+              </div>
+
+              <ChecklistAnamnesis
+                fototipo={fototipo}
+                setFototipo={setFototipo}
+                antecedentes={antecedentes}
+                setAntecedentes={setAntecedentes}
+                observacionesFijas={observacionesFijas}
+                setObservacionesFijas={setObservacionesFijas}
+              />
+            </section>
+
+            {/* ───────────────── SECCIÓN 3 · ESTADO DE ATENCIÓN / OPERACIÓN ───────────────── */}
+            <section className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 hover:shadow-md sm:p-5 xl:sticky xl:top-6 xl:col-span-1">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                <ClipboardCheck className="h-3.5 w-3.5" />
+                Estado de atención
+              </span>
+
+              <div className="grid grid-cols-2 gap-2">
+                {ESTADOS_ATENCION.map(({ key, label, icon: Icon }) => {
+                  const activo = key === 'en_espera';
+                  return (
+                    <div
+                      key={key}
+                      className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all ${
+                        activo
+                          ? 'border-teal-300 bg-teal-50 text-teal-800 ring-1 ring-teal-200 dark:border-teal-800 dark:bg-teal-950/60 dark:text-teal-300 dark:ring-teal-900'
+                          : 'border-slate-200/70 bg-slate-50/60 text-slate-400 dark:border-zinc-800 dark:bg-zinc-800/40 dark:text-zinc-500'
+                      }`}
+                    >
+                      <Icon className={`h-4 w-4 shrink-0 ${activo ? 'text-teal-600 dark:text-teal-400' : 'text-slate-300 dark:text-zinc-600'}`} />
+                      {label}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="-mt-2 flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-zinc-500">
+                <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-zinc-600" />
+                Al enviar, el paciente pasa a "En espera" en Gabinete.
+              </p>
+
+              <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
+                <ResumenReservaCobro
+                  reserva={reservaHoy}
+                  cobradoEnPuerta={cobradoEnPuerta}
+                  onToggleCobrado={setCobradoEnPuerta}
+                />
+              </div>
+
+              <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
+                <SelectorZonasBotones
+                  zonasSeleccionadas={zonasSeleccionadas}
+                  setZonasSeleccionadas={setZonasSeleccionadas}
+                />
+              </div>
+
+              <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
+                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                  Notas para gabinete
+                </label>
+                <input
+                  type="text"
+                  value={observacionesHoy}
+                  onChange={(e) => setObservacionesHoy(e.target.value)}
+                  placeholder="Ej: Sensibilidad leve en axilas..."
+                  className="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                />
+              </div>
+
+              {mensaje && (
+                <div className={`flex items-start gap-2 rounded-xl border p-3 text-xs font-semibold ${configMensaje.wrap}`}>
+                  {configMensaje.icon}
+                  <span>{mensaje}</span>
+                </div>
+              )}
+
+              <button
+                onClick={handleEnviarAGabinete}
+                disabled={guardando}
+                className="hidden h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none lg:flex"
+              >
+                {textoBoton}
+              </button>
+            </section>
+          </div>
         )}
       </div>
 
-      {hayPacienteActivo && !mostrarConfigAnamnesis && (
+      {hayPacienteActivo && (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200/80 bg-white/95 p-3 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95 lg:hidden">
           <div className="mx-auto flex max-w-7xl items-center gap-2">
             <button

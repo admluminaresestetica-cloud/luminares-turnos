@@ -3,8 +3,11 @@
  ┃ ┣ 📂admin
  ┃ ┃ ┣ 📂ajustes
  ┃ ┃ ┃ ┣ 📂components
- ┃ ┃ ┃ ┃ ┗ 📜FaqTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜FaqTab.tsx
+ ┃ ┃ ┃ ┃ ┗ 📜FormularioEmpresaTab.tsx
  ┃ ┃ ┃ ┗ 📜page.tsx
+ ┃ ┃ ┣ 📂components
+ ┃ ┃ ┃ ┗ 📜AdminChatWidget.tsx
  ┃ ┃ ┣ 📂gestion
  ┃ ┃ ┃ ┣ 📂components
  ┃ ┃ ┃ ┃ ┣ 📜BannerAlertasClinicas.tsx
@@ -42,6 +45,7 @@
  ┃ ┃ ┃ ┃ ┃ ┣ 📜TicketVenta.tsx
  ┃ ┃ ┃ ┃ ┃ ┗ 📜types.ts
  ┃ ┃ ┃ ┃ ┣ 📜BannersTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜CargadorImagenes.tsx
  ┃ ┃ ┃ ┃ ┣ 📜CategoriasTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜ControlCajaTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜FormularioProducto.tsx
@@ -50,6 +54,7 @@
  ┃ ┃ ┃ ┃ ┣ 📜PedidosTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜PuntoVentaTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜ScannerModal.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜SeccionEtiquetas.tsx
  ┃ ┃ ┃ ┃ ┗ 📜TagsTab.tsx
  ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂turnos
@@ -77,6 +82,7 @@
  ┃ ┃ ┃ ┃ ┗ 📜types.ts
  ┃ ┃ ┃ ┣ 📜AdminHeader.tsx
  ┃ ┃ ┃ ┗ 📜page.tsx
+ ┃ ┃ ┣ 📜layout.tsx
  ┃ ┃ ┗ 📜page.tsx
  ┃ ┣ 📂api
  ┃ ┃ ┣ 📂admin
@@ -87,6 +93,8 @@
  ┃ ┃ ┃ ┃ ┗ 📜route.ts
  ┃ ┃ ┃ ┗ 📂logout
  ┃ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┃ ┣ 📂chat
+ ┃ ┃ ┃ ┗ 📜route.ts
  ┃ ┃ ┣ 📂checkout
  ┃ ┃ ┃ ┗ 📜route.ts
  ┃ ┃ ┣ 📂checkout-reserva
@@ -119,9 +127,12 @@
  ┃ ┃ ┃ ┣ 📜BeneficiosTienda.tsx
  ┃ ┃ ┃ ┣ 📜BotonFlotanteCarrito.tsx
  ┃ ┃ ┃ ┣ 📜BuscadorYCategorias.tsx
+ ┃ ┃ ┃ ┣ 📜CarruselEtiquetaModal.tsx
+ ┃ ┃ ┃ ┣ 📜GaleriaProducto.tsx
  ┃ ┃ ┃ ┣ 📜GridProductos.tsx
  ┃ ┃ ┃ ┣ 📜ModalDetalleProducto.tsx
  ┃ ┃ ┃ ┣ 📜ProductoSkeleton.tsx
+ ┃ ┃ ┃ ┣ 📜ProductosRelacionados.tsx
  ┃ ┃ ┃ ┣ 📜TagsFiltros.tsx
  ┃ ┃ ┃ ┗ 📜TarjetaProducto.tsx
  ┃ ┃ ┣ 📂producto
@@ -159,6 +170,12 @@
  ┃ ┃ ┣ 📜PanelZonasIndividuales.tsx
  ┃ ┃ ┣ 📜SelectorGenero.tsx
  ┃ ┃ ┗ 📜SelectorModoLaser.tsx
+ ┃ ┣ 📂story-generator
+ ┃ ┃ ┣ 📜BadgesSelector.tsx
+ ┃ ┃ ┣ 📜ColorPicker.tsx
+ ┃ ┃ ┣ 📜ControlesEditor.tsx
+ ┃ ┃ ┣ 📜LienzoStory.tsx
+ ┃ ┃ ┗ 📜ModalGeneradorStory.tsx
  ┃ ┣ 📜BannerPrincipal.tsx
  ┃ ┣ 📜CarritoDrawer.tsx
  ┃ ┣ 📜footer.tsx
@@ -204,10 +221,15 @@
  ┃ ┃ ┣ 📜laser.ts
  ┃ ┃ ┣ 📜reservas.ts
  ┃ ┃ ┗ 📜servicios-generales.ts
+ ┃ ┣ 📂utils
+ ┃ ┃ ┗ 📜color.ts
  ┃ ┣ 📜precios.ts
  ┃ ┣ 📜supabase.ts
  ┃ ┣ 📜types.ts
  ┃ ┗ 📜whatsapp.ts
  ┣ 📂types
+ ┃ ┣ 📜story.ts
  ┃ ┗ 📜tienda.ts
+ ┣ 📂utils
+ ┃ ┗ 📜shareImage.ts
  ┗ 📜middleware.ts

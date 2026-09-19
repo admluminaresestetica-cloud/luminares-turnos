@@ -2,7 +2,7 @@
 'use client'
 
 import { Plus, Clock, CheckCircle2, XCircle, Scissors, Image as ImageIcon } from 'lucide-react'
-import { ServicioGeneral } from '../types'
+import { ServicioGeneral } from '@/app/admin/turnos/components/types'
 
 interface GeneralesTabProps {
   loadingGenerales: boolean

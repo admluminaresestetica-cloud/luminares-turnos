@@ -2,7 +2,7 @@
 'use client'
 
 import { Plus, Calendar, Sparkles, CheckCircle2, XCircle, Trash2, CalendarX, Save } from 'lucide-react'
-import { ConfigCalendario, DIAS_SEMANA, HorarioDia, HorariosSemana, formatFecha, horarioDiaDefault } from '../types'
+import { ConfigCalendario, DIAS_SEMANA, HorarioDia, HorariosSemana, formatFecha, horarioDiaDefault } from '../../turnos/components/types'
 
 interface HorariosTabProps {
   loadingHorarios: boolean

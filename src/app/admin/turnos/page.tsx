@@ -1,4 +1,3 @@
-// src/app/admin/turnos/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -6,18 +5,10 @@ import Link from 'next/link'
 import { ArrowLeft, Store } from 'lucide-react'
 
 import AdminHeader from '@/app/admin/turnos/AdminHeader'
-import AdminTabs from './components/AdminTabs';
+import AdminTabs from './components/AdminTabs'
 import OverviewTab from './components/tabs/OverviewTab'
 import AgendaTab from './components/tabs/AgendaTab'
-import PreciosTab from './components/tabs/PreciosTab'
-import GeneralesTab from './components/tabs/GeneralesTab'
-import HorariosTab from './components/tabs/HorariosTab'
-import BannerTab from './components/tabs/BannerTab'
-import ReferidosTab from './components/tabs/ReferidosTab'
 
-import ModalServicioLaser from './components/modals/ModalServicioLaser'
-import ModalPromo from './components/modals/ModalPromo'
-import ModalServicioGeneral from './components/modals/ModalServicioGeneral'
 import ModalCobro from './components/modals/ModalCobro'
 import ModalNuevoTurno from './components/modals/ModalNuevoTurno'
 import ModalEditarTurno from './components/modals/ModalEditarTurno'
@@ -28,8 +19,6 @@ import { useAgenda } from '@/hooks/admin/useAgenda'
 import { useNuevoTurno } from '@/hooks/admin/useNuevoTurno'
 import { usePreciosLaser } from '@/hooks/admin/usePreciosLaser'
 import { useServiciosGenerales } from '@/hooks/admin/useServiciosGenerales'
-import { useConfigCalendario } from '@/hooks/admin/useConfigCalendario'
-import { useReferidosConfig } from '@/hooks/admin/useReferidosConfig'
 import { useAdminLogout } from '@/hooks/admin/useAdminLogout'
 
 export default function AdminDashboard() {
@@ -40,8 +29,6 @@ export default function AdminDashboard() {
   const agenda = useAgenda()
   const precios = usePreciosLaser()
   const generales = useServiciosGenerales()
-  const horarios = useConfigCalendario()
-  const referidos = useReferidosConfig()
 
   const nuevoTurno = useNuevoTurno({
     servicios: precios.servicios,
@@ -56,14 +43,13 @@ export default function AdminDashboard() {
       <AdminHeader onLogout={handleLogout} />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-10">
-        {/* Encabezado superior del Panel con acceso directo a Admin Tienda y Menú Admin */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm">
           <div className="min-w-0">
             <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-zinc-100 tracking-tight">
               Panel de Control
             </h1>
             <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-              Gestión integral de turnos, agenda y productos
+              Gestión integral de turnos y agenda
             </p>
           </div>
 
@@ -121,102 +107,9 @@ export default function AdminDashboard() {
             onEliminarTurno={(id) => agenda.eliminarTurno(id)}
           />
         )}
-
-        {activeTab === 'precios' && (
-          <PreciosTab
-            loadingPrecios={precios.loadingPrecios}
-            servicios={precios.servicios}
-            promos={precios.promos}
-            seccionPrecios={precios.seccionPrecios}
-            setSeccionPrecios={precios.setSeccionPrecios}
-            onNuevaZona={() => precios.abrirModalServicio()}
-            onEditarZona={(s) => precios.abrirModalServicio(s)}
-            onToggleActivoZona={precios.toggleActivoServicio}
-            onEliminarZona={precios.eliminarServicio}
-            onNuevaPromo={() => precios.abrirModalPromo()}
-            onEditarPromo={(p) => precios.abrirModalPromo(p)}
-            onToggleActivoPromo={precios.toggleActivoPromo}
-            onEliminarPromo={precios.eliminarPromo}
-          />
-        )}
-
-        {activeTab === 'generales' && (
-          <GeneralesTab
-            loadingGenerales={generales.loadingGenerales}
-            serviciosGenerales={generales.serviciosGenerales}
-            onNuevoServicio={() => generales.abrirModalGeneral()}
-            onEditarServicio={(s) => generales.abrirModalGeneral(s)}
-            onToggleActivo={generales.toggleActivoGeneral}
-            onEliminarServicio={generales.eliminarServicioGeneral}
-            referidosActivo={referidos.referidosActivo}
-            setReferidosActivo={referidos.setReferidosActivo}
-            referidosTipoDescuento={referidos.referidosTipoDescuento}
-            setReferidosTipoDescuento={referidos.setReferidosTipoDescuento}
-            referidosValorDescuento={referidos.referidosValorDescuento}
-            setReferidosValorDescuento={referidos.setReferidosValorDescuento}
-          />
-        )}
-
-        {activeTab === 'horarios' && (
-          <HorariosTab
-            loadingHorarios={horarios.loadingHorarios}
-            configLaser={horarios.configLaser}
-            guardandoLaser={horarios.guardandoLaser}
-            nuevaFechaLaser={horarios.nuevaFechaLaser}
-            setNuevaFechaLaser={horarios.setNuevaFechaLaser}
-            onActualizarRangoLaser={horarios.actualizarRangoLaser}
-            onAgregarFechaLaser={horarios.agregarFechaLaser}
-            onQuitarFechaLaser={horarios.quitarFechaLaser}
-            onGuardarConfigLaser={horarios.guardarConfigLaser}
-            configGeneral={horarios.configGeneral}
-            guardandoGeneral={horarios.guardandoGeneral}
-            nuevaExcepcionGeneral={horarios.nuevaExcepcionGeneral}
-            setNuevaExcepcionGeneral={horarios.setNuevaExcepcionGeneral}
-            onToggleDiaGeneral={(dia) => {
-              horarios.toggleDiaGeneral(dia as any);}}
-            onActualizarHorarioGeneral={(dia, campo, valor) => {
-              horarios.actualizarHorarioGeneral(dia as any, campo, valor);}}
-            onAgregarExcepcionGeneral={horarios.agregarExcepcionGeneral}
-            onQuitarExcepcionGeneral={horarios.quitarExcepcionGeneral}
-            onGuardarConfigGeneral={horarios.guardarConfigGeneral}
-          />
-        )}
-
-        {activeTab === 'banner' && <BannerTab />}
-        {activeTab === 'referidos' && <ReferidosTab />}
-
       </div>
 
-      {/* MODALES */}
-      {precios.modalServicio && precios.servicioEdit && (
-        <ModalServicioLaser
-          servicioEdit={precios.servicioEdit}
-          setServicioEdit={precios.setServicioEdit}
-          onSubmit={precios.guardarServicio}
-          onClose={precios.cerrarModalServicio}
-        />
-      )}
-
-      {precios.modalPromo && precios.promoEdit && (
-        <ModalPromo
-          promoEdit={precios.promoEdit}
-          setPromoEdit={precios.setPromoEdit}
-          servicios={precios.servicios}
-          onToggleZona={precios.toggleZonaEnPromo}
-          onSubmit={precios.guardarPromo}
-          onClose={precios.cerrarModalPromo}
-        />
-      )}
-
-      {generales.modalGeneral && generales.servicioGeneralEdit && (
-        <ModalServicioGeneral
-          servicioGeneralEdit={generales.servicioGeneralEdit}
-          setServicioGeneralEdit={generales.setServicioGeneralEdit}
-          onSubmit={generales.guardarServicioGeneral}
-          onClose={generales.cerrarModalGeneral}
-        />
-      )}
-
+      {/* MODALES OPERATIVOS DE AGENDA */}
       {agenda.turnoACobrar && (
         <ModalCobro
           turnoACobrar={agenda.turnoACobrar}

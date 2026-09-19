@@ -2,7 +2,7 @@
 'use client'
 
 import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Sparkles, Tag, Clock } from 'lucide-react'
-import { ServicioLaser, PromoLaser, getNombresZonas } from '../types'
+import { ServicioLaser, PromoLaser, getNombresZonas } from '@/app/admin/turnos/components/types'
 
 interface PreciosTabProps {
   loadingPrecios: boolean

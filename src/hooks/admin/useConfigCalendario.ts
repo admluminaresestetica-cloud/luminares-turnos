@@ -252,20 +252,22 @@ export function useConfigCalendario() {
   return {
     configLaser,
     guardandoLaser,
-    nuevaFechaLaser, setNuevaFechaLaser,
-    actualizarRangoLaser,
-    agregarFechaLaser,
-    quitarFechaLaser,
-    guardarConfigLaser,
+    nuevaFechaLaser,
+    setNuevaFechaLaser,
+    onActualizarRangoLaser: actualizarRangoLaser,
+    onAgregarFechaLaser: agregarFechaLaser,
+    onQuitarFechaLaser: quitarFechaLaser,
+    onGuardarConfigLaser: guardarConfigLaser,
 
     configGeneral,
     guardandoGeneral,
-    nuevaExcepcionGeneral, setNuevaExcepcionGeneral,
-    toggleDiaGeneral,
-    actualizarHorarioGeneral,
-    agregarExcepcionGeneral,
-    quitarExcepcionGeneral,
-    guardarConfigGeneral,
+    nuevaExcepcionGeneral,
+    setNuevaExcepcionGeneral,
+    onToggleDiaGeneral: toggleDiaGeneral,
+    onActualizarHorarioGeneral: actualizarHorarioGeneral,
+    onAgregarExcepcionGeneral: agregarExcepcionGeneral,
+    onQuitarExcepcionGeneral: quitarExcepcionGeneral,
+    onGuardarConfigGeneral: guardarConfigGeneral,
 
     loadingHorarios
   }

@@ -1,8 +1,7 @@
-// src/components/admin/AdminTabs.tsx
 'use client'
 
 import React from 'react'
-import { LayoutDashboard, Calendar, Sparkles, Scissors, Clock, Image, Gift } from 'lucide-react'
+import { LayoutDashboard, Calendar } from 'lucide-react'
 import { TabKey } from './types'
 
 interface AdminTabsProps {
@@ -12,15 +11,10 @@ interface AdminTabsProps {
   totalGenerales: number
 }
 
-export default function AdminTabs({ activeTab, onChange, totalTurnos, totalGenerales }: AdminTabsProps) {
+export default function AdminTabs({ activeTab, onChange, totalTurnos }: AdminTabsProps) {
   const tabs = [
     { key: 'overview' as TabKey, short: 'Resumen', label: 'Resumen General', icon: LayoutDashboard },
     { key: 'agenda' as TabKey, short: `Agenda (${totalTurnos})`, label: `Agenda de Turnos (${totalTurnos})`, icon: Calendar },
-    { key: 'precios' as TabKey, short: 'Láser', label: 'Editor Depilación (Láser)', icon: Sparkles },
-    { key: 'generales' as TabKey, short: `Generales (${totalGenerales})`, label: `Editor Servicios Generales (${totalGenerales})`, icon: Scissors },
-    { key: 'horarios' as TabKey, short: 'Horarios', label: 'Editar Horarios', icon: Clock },
-    { key: 'banner' as TabKey, short: 'Banner', label: 'Banner Inicio', icon: Image },
-    { key: 'referidos' as TabKey, short: 'Referidos', label: 'Programa Referidos', icon: Gift },
   ]
 
   return (
@@ -50,7 +44,6 @@ export default function AdminTabs({ activeTab, onChange, totalTurnos, totalGener
         </div>
       </div>
 
-      {/* Degradés laterales en mobile para indicar scroll */}
       <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-gray-100 dark:from-zinc-950 to-transparent sm:hidden rounded-r-2xl" />
       <div className="pointer-events-none absolute top-0 left-0 h-full w-6 bg-gradient-to-r from-gray-100 dark:from-zinc-950 to-transparent sm:hidden rounded-l-2xl" />
     </div>

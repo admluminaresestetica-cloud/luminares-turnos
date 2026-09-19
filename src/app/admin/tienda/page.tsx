@@ -7,7 +7,7 @@ import ListaProductos from "./components/ListaProductos";
 import PedidosTab, { Pedido } from "./components/PedidosTab";
 import MetricasHeader from "./components/MetricasHeader";
 import CategoriasTab from "./components/CategoriasTab";
-import BannersTab from "./components/BannersTab";
+import BannersTab from "../ajustes/components/BannersTab";
 import TagsTab from "./components/TagsTab";
 import PuntoVentaTab from "./components/pos/PuntoVentaTab";
 import ControlCajaTab from "./components/ControlCajaTab";
