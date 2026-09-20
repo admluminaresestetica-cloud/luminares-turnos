@@ -27,6 +27,8 @@ export default function FormularioEmpresaTab() {
     cbu: '',
     banco: '',
     titular_cuenta: '',
+    cuit: '',
+    mensaje_ticket: '',
     envio_domicilio_activo: false,
     costo_envio_base: 0,
     envio_gratis_activo: false,
@@ -51,6 +53,8 @@ export default function FormularioEmpresaTab() {
           cbu: data.cbu ?? '',
           banco: data.banco ?? '',
           titular_cuenta: data.titular_cuenta ?? '',
+          cuit: data.cuit ?? '',
+          mensaje_ticket: data.mensaje_ticket ?? '',
           envio_domicilio_activo: data.envio_domicilio_activo ?? false,
           costo_envio_base: data.costo_envio_base ?? 0,
           envio_gratis_activo: data.envio_gratis_activo ?? false,
@@ -62,15 +66,19 @@ export default function FormularioEmpresaTab() {
     cargarData();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
 
     setForm((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' 
-        ? checked 
-        : type === 'number' 
-          ? (value === '' ? 0 : Number(value)) 
+      [name]:
+        type === 'checkbox'
+          ? checked
+          : type === 'number'
+          ? value === '' ? 0 : Number(value)
           : value,
     } as ConfiguracionEmpresa));
   };
@@ -268,6 +276,48 @@ export default function FormularioEmpresaTab() {
                 placeholder="https://maps.google.com/..."
                 className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* PERSONALIZACIÓN DE TICKET DE VENTA */}
+        <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm space-y-4 transition-colors">
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-zinc-100 border-b border-slate-100 dark:border-zinc-800 pb-3">
+            🧾 Personalización de Ticket de Venta (POS)
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+                CUIT / Identificación Fiscal (Opcional)
+              </label>
+              <input
+                type="text"
+                name="cuit"
+                value={form.cuit}
+                onChange={handleChange}
+                placeholder="Ej. 20-12345678-9"
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
+              />
+              <p className="mt-1 text-[11px] text-slate-400">
+                Si lo completás, aparecerá impreso en la cabecera del ticket.
+              </p>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+                Mensaje de Agradecimiento / Pie de Página (Opcional)
+              </label>
+              <input
+                type="text"
+                name="mensaje_ticket"
+                value={form.mensaje_ticket}
+                onChange={handleChange}
+                placeholder="Ej. ¡Gracias por tu compra! ✨ (o legales como: Cambios hasta 15 días)"
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
+              />
+              <p className="mt-1 text-[11px] text-slate-400">
+                Aparece impreso al final del ticket y en los mensajes enviados por WhatsApp.
+              </p>
             </div>
           </div>
         </div>

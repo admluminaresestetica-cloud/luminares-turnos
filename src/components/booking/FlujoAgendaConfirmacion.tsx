@@ -330,7 +330,36 @@ export default function FlujoAgendaConfirmacion({
   }
 
   const fechasLaser = (configCalendario.fechas_habilitadas_laser ?? []).map((f) => String(f).slice(0, 10));
-  const diasSemana = configCalendario.horarios_atencion.dias_semana;
+
+const diasSemana = (() => {
+  const horarios = configCalendario.horarios_atencion || {};
+  
+  // Si en la base de datos se guardó el array explicito 'dias_semana', lo usa
+  if (Array.isArray(horarios.dias_semana)) {
+    return horarios.dias_semana;
+  }
+
+  // Mapa de nombres de días a sus identificadores numéricos (usamos 7 y 0 para asegurar compatibilidad ISO y JS)
+  const mapaDias: Record<string, number[]> = {
+    lunes: [1],
+    martes: [2],
+    miercoles: [3],
+    jueves: [4],
+    viernes: [5],
+    sabado: [6],
+    domingo: [7, 0], // El domingo se mapea tanto como 7 (ISO) y 0 (JS)
+  };
+
+  const activos: number[] = [];
+  Object.entries(horarios).forEach(([diaKey, conf]: [string, any]) => {
+    if (conf && typeof conf === 'object' && conf.abierto && mapaDias[diaKey]) {
+      activos.push(...mapaDias[diaKey]);
+    }
+  });
+
+  // Si por alguna razón no hay ninguno activo, devolvemos Lunes a Domingo por defecto
+  return activos.length > 0 ? activos : [1, 2, 3, 4, 5, 6, 7, 0];
+})();
 
   return (
     <main className="min-h-screen bg-slate-50 px-3 py-4 sm:p-6 md:p-12 pb-20 sm:pb-24 relative">

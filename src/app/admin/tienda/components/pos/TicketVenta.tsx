@@ -1,6 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PosCartItem } from "./types";
+import { createBrowserClient } from "@supabase/ssr";
+
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface TicketVentaProps {
   isOpen: boolean;
@@ -32,10 +38,47 @@ export default function TicketVenta({
   nombreCliente,
 }: TicketVentaProps) {
   const [formatoImpresion, setFormatoImpresion] = useState<"80mm" | "58mm" | "a4">("80mm");
+  
+  const [datosEmpresa, setDatosEmpresa] = useState<{
+    nombre: string;
+    direccion: string | null;
+    telefono: string | null;
+    cuit: string | null;
+    mensajeTicket: string | null;
+  }>({
+    nombre: "Mi Negocio",
+    direccion: null,
+    telefono: null,
+    cuit: null,
+    mensajeTicket: null,
+  });
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    async function cargarDatosEmpresa() {
+      const { data } = await supabase
+        .from("configuracion_empresa")
+        .select("nombre_empresa, direccion_texto, whatsapp_numero, cuit, mensaje_ticket")
+        .limit(1)
+        .maybeSingle();
+
+      if (data) {
+        setDatosEmpresa({
+          nombre: data.nombre_empresa || "Mi Negocio",
+          direccion: data.direccion_texto || null,
+          telefono: data.whatsapp_numero || null,
+          cuit: data.cuit || null,
+          mensajeTicket: data.mensaje_ticket || null,
+        });
+      }
+    }
+
+    cargarDatosEmpresa();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  // Si no se envió subtotalInicial, calculamos la suma directa de los ítems
   const baseSubtotal =
     subtotalInicial > 0
       ? subtotalInicial
@@ -46,7 +89,9 @@ export default function TicketVenta({
   };
 
   const handleEnviarWhatsApp = () => {
-    let mensaje = `*COMPROBANTE DE COMPRA - Luminares Estética*\n`;
+    let mensaje = `*COMPROBANTE DE COMPRA - ${datosEmpresa.nombre.toUpperCase()}*\n`;
+    if (datosEmpresa.cuit) mensaje += `CUIT: ${datosEmpresa.cuit}\n`;
+    if (datosEmpresa.direccion) mensaje += `Dirección: ${datosEmpresa.direccion}\n`;
     mensaje += `--------------------------------------\n`;
     if (pedidoId) mensaje += `Ticket ID: #${pedidoId.slice(0, 8)}\n`;
     if (nombreCliente) mensaje += `Cliente: ${nombreCliente}\n`;
@@ -76,7 +121,8 @@ export default function TicketVenta({
       mensaje += `Abonó con: $${pagoCon.toLocaleString("es-AR")}\n`;
       mensaje += `Vuelto: $${vuelto.toLocaleString("es-AR")}\n`;
     }
-    mensaje += `\n¡Gracias por tu compra! ✨`;
+    
+    mensaje += `\n${datosEmpresa.mensajeTicket || "¡Gracias por tu compra! ✨"}`;
 
     const encoded = encodeURIComponent(mensaje);
     window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_blank");
@@ -84,7 +130,6 @@ export default function TicketVenta({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm print:p-0 print:bg-transparent print:static">
-      {/* Estilos CSS específicos para mandar a la ticketera */}
       <style jsx global>{`
         @media print {
           body * {
@@ -110,7 +155,6 @@ export default function TicketVenta({
       `}</style>
 
       <div className="w-full max-w-sm rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-2xl">
-        {/* Selector de formato para impresión (No visible al imprimir) */}
         <div className="no-print mb-4 rounded-xl border border-gray-100 bg-gray-50 p-2 text-center">
           <p className="text-[11px] font-bold text-gray-500 mb-1">Formato de Ticketera:</p>
           <div className="flex justify-center gap-1.5">
@@ -153,9 +197,15 @@ export default function TicketVenta({
           <div className="border-b border-dashed border-gray-300 pb-4 text-center">
             <span className="text-2xl print:hidden">✨</span>
             <h3 className="text-base font-extrabold text-[#12151B] uppercase tracking-wide">
-              Luminares Estética
+              {datosEmpresa.nombre}
             </h3>
+            {datosEmpresa.cuit && (
+              <p className="text-[10px] text-gray-500 font-medium">CUIT: {datosEmpresa.cuit}</p>
+            )}
             <p className="text-[11px] text-gray-500 font-medium">Ticket de Venta Presencial</p>
+            {datosEmpresa.direccion && (
+              <p className="text-[10px] text-gray-400 mt-0.5">{datosEmpresa.direccion}</p>
+            )}
             {nombreCliente && (
               <p className="mt-1 text-xs font-semibold text-gray-700">
                 Cliente: {nombreCliente}
@@ -244,11 +294,11 @@ export default function TicketVenta({
           </div>
 
           <div className="mt-3 text-center text-[10px] text-gray-400">
-            <p>¡Gracias por tu preferencia! ✨</p>
+            <p>{datosEmpresa.mensajeTicket || "¡Gracias por tu preferencia! ✨"}</p>
           </div>
         </div>
 
-        {/* Botones de Acción (No se imprimen) */}
+        {/* Botones de Acción */}
         <div className="no-print mt-5 space-y-2">
           <button
             onClick={handleEnviarWhatsApp}
@@ -275,4 +325,3 @@ export default function TicketVenta({
     </div>
   );
 }
- 

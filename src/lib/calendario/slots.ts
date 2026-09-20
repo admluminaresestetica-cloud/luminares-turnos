@@ -48,17 +48,28 @@ export function isDateEnabled(
   date: Date,
   tipo: 'laser' | 'general',
   fechasLaser: string[],
-  diasSemana: number[] = [1, 2, 3, 4, 5]
+  diasSemana: number[]
 ): boolean {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (date < today) return false;
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
 
+  // 1. Si la fecha es anterior a hoy, deshabilitar
+  const checkDate = new Date(date);
+  checkDate.setHours(0, 0, 0, 0);
+  if (checkDate < hoy) return false;
+
+  // 2. Si es servicio Láser
   if (tipo === 'laser') {
-    return fechasLaser.includes(formatDateISO(date));
+    const iso = formatDateISO(date);
+    return fechasLaser.includes(iso);
   }
 
-  return diasSemana.includes(getIsoWeekday(date));
+  // 3. Para servicio General (Verificación de Días Hábiles)
+  const jsDay = date.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+  const isoDay = jsDay === 0 ? 7 : jsDay; // 1 = Lunes, ..., 7 = Domingo
+
+  // Evaluamos si diasSemana contiene el día en formato JS (0-6) O en formato ISO (1-7)
+  return diasSemana.includes(jsDay) || diasSemana.includes(isoDay);
 }
 
 function hasOverlap(

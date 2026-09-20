@@ -15,6 +15,9 @@ export interface ConfiguracionEmpresa {
   cbu?: string;
   banco?: string;
   titular_cuenta?: string;
+  // Campos de personalización de Ticket / Comprobante
+  cuit?: string;            // <-- Agregado
+  mensaje_ticket?: string;  // <-- Agregado
   // Campos de configuración de Envíos
   envio_domicilio_activo?: boolean;
   costo_envio_base?: number;
