@@ -1,9 +1,10 @@
-// src/components/admin/AdminHeader.tsx
+// src/app/admin/turnos/AdminHeader.tsx
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { LogOut, Calendar, User } from 'lucide-react'
+import { LogOut, Calendar, User, ShieldCheck, UserCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { usePerfil } from '@/hooks/usePerfil'
 
 interface AdminHeaderProps {
   onLogout: () => void
@@ -16,10 +17,14 @@ export default function AdminHeader({
   userEmail,
   logoUrl = '/logo.jpg',
 }: AdminHeaderProps) {
-  const [email, setEmail] = useState<string>(userEmail || 'Admin')
+  const [email, setEmail] = useState<string>(userEmail || 'Cargando...')
+  const { perfil, esAdmin, cargando: cargandoPerfil } = usePerfil()
 
   useEffect(() => {
-    if (userEmail) return
+    if (userEmail) {
+      setEmail(userEmail)
+      return
+    }
     supabase.auth.getUser().then(({ data }) => {
       if (data?.user?.email) setEmail(data.user.email)
     })
@@ -65,10 +70,10 @@ export default function AdminHeader({
           </div>
         </div>
 
-        {/* Lado Derecho: Avatar de Usuario y Acción */}
+        {/* Lado Derecho: Avatar de Usuario, Rol y Acción */}
         <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-100 dark:border-zinc-800">
 
-          {/* Avatar / Usuario */}
+          {/* Avatar / Usuario con datos del hook usePerfil */}
           <div className="flex items-center gap-2.5 sm:gap-3 bg-gray-50/80 dark:bg-zinc-900/80 px-2.5 sm:px-3 py-1.5 rounded-full border border-gray-100 dark:border-zinc-800 min-w-0">
             <div className="relative shrink-0">
               <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-zinc-300 font-semibold text-xs ring-2 ring-white dark:ring-zinc-950">
@@ -76,11 +81,23 @@ export default function AdminHeader({
               </div>
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 ring-2 ring-white dark:ring-zinc-950 rounded-full"></span>
             </div>
+
             <div className="text-left pr-1 min-w-0">
               <p className="text-xs font-semibold text-gray-700 dark:text-zinc-200 truncate max-w-[110px] sm:max-w-[180px]">
-                {email}
+                {perfil?.nombre || email}
               </p>
-              <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-medium">Administrador</p>
+              
+              <div className="flex items-center gap-1">
+                {!cargandoPerfil && esAdmin ? (
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold flex items-center gap-0.5">
+                    <ShieldCheck className="w-3 h-3 inline" /> Admin
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
+                    <UserCheck className="w-3 h-3 inline" /> Empleado
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
