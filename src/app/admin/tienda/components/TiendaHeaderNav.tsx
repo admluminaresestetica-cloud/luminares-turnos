@@ -59,34 +59,36 @@ export default function TiendaHeaderNav({
         </div>
       </header>
 
-      {/* Pestañas tipo "pill", deslizables horizontalmente */}
-      <div className="no-scrollbar -mx-4 mb-6 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0 mt-6">
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-xs font-bold transition-all active:scale-95 sm:text-sm ${
-                isActive
-                  ? "bg-[#0E6E55] text-white shadow-md shadow-[#0E6E55]/20"
-                  : "bg-white text-[#6B675F] border border-[#E7E5E0] hover:border-[#0E6E55]/40 hover:text-[#12151B]"
-              }`}
-            >
-              <span>{tab.icono}</span>
-              <span>{tab.label}</span>
-              {!!tab.badge && tab.badge > 0 && (
-                <span
-                  className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold ${
-                    isActive ? "bg-white/25 text-white" : "animate-pulse bg-[#C84343] text-white"
-                  }`}
-                >
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
+      {/* Pestañas tipo "pill", centradas con el mismo ancho del contenido */}
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-10 mt-6 mb-6">
+        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-xs font-bold transition-all active:scale-95 sm:text-sm ${
+                  isActive
+                    ? "bg-[#0E6E55] text-white shadow-md shadow-[#0E6E55]/20"
+                    : "bg-white text-[#6B675F] border border-[#E7E5E0] hover:border-[#0E6E55]/40 hover:text-[#12151B]"
+                }`}
+              >
+                <span>{tab.icono}</span>
+                <span>{tab.label}</span>
+                {!!tab.badge && tab.badge > 0 && (
+                  <span
+                    className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold ${
+                      isActive ? "bg-white/25 text-white" : "animate-pulse bg-[#C84343] text-white"
+                    }`}
+                  >
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </>
   );

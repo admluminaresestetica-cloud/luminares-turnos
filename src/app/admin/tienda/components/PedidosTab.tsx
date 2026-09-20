@@ -1,6 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import ModalPinAutorizacion from '@/app/admin/components/ModalPinAutorizacion';
+import { createBrowserClient } from '@supabase/ssr';
+
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface PedidoItem {
   id: string;
@@ -45,14 +52,58 @@ export default function PedidosTab({
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [filtroFecha, setFiltroFecha] = useState('');
 
+  // Estado para el PIN real de la base de datos
+  const [pinAdminBD, setPinAdminBD] = useState<string>('1234');
+
+  // Estados para controlar el Modal de PIN
+  const [mostrarModalPin, setMostrarModalPin] = useState(false);
+  const [accionPendiente, setAccionPendiente] = useState<{
+    tipo: 'cancelar' | 'eliminar';
+    pedidoId: string;
+  } | null>(null);
+
+  // Consultar el PIN configurado en 'configuracion_empresa'
+  useEffect(() => {
+    const fetchPin = async () => {
+      const { data } = await supabase
+        .from('configuracion_empresa')
+        .select('pin_admin')
+        .limit(1)
+        .maybeSingle();
+
+      if (data?.pin_admin) {
+        setPinAdminBD(data.pin_admin);
+      }
+    };
+    fetchPin();
+  }, []);
+
+  // Abrir modal pidiendo PIN
+  const solicitarAutorizacion = (tipo: 'cancelar' | 'eliminar', pedidoId: string) => {
+    setAccionPendiente({ tipo, pedidoId });
+    setMostrarModalPin(true);
+  };
+
+  // Se ejecuta solo si el PIN ingresado es correcto
+  const ejecutarAccionConfirmada = () => {
+    if (!accionPendiente) return;
+
+    if (accionPendiente.tipo === 'cancelar') {
+      onCancelarPedido(accionPendiente.pedidoId);
+    } else if (accionPendiente.tipo === 'eliminar') {
+      onEliminarPedido(accionPendiente.pedidoId);
+    }
+
+    setMostrarModalPin(false);
+    setAccionPendiente(null);
+  };
+
   // Filtrado de pedidos según los criterios seleccionados
   const pedidosFiltrados = pedidos.filter((pedido) => {
-    // 1. Filtro por Estado
     if (filtroEstado !== 'todos' && pedido.estado !== filtroEstado) {
       return false;
     }
 
-    // 2. Filtro por Fecha (formato YYYY-MM-DD)
     if (filtroFecha) {
       const fechaPedido = new Date(pedido.created_at).toISOString().split('T')[0];
       if (fechaPedido !== filtroFecha) {
@@ -60,7 +111,6 @@ export default function PedidosTab({
       }
     }
 
-    // 3. Buscador por Nombre o ID
     if (busqueda.trim() !== '') {
       const termino = busqueda.toLowerCase();
       const coincideNombre = pedido.nombre_cliente?.toLowerCase().includes(termino) ?? false;
@@ -73,7 +123,7 @@ export default function PedidosTab({
     return true;
   });
 
-  // Función para exportar los pedidos filtrados a CSV (compatible con Excel)
+  // Función para exportar los pedidos filtrados a CSV
   const exportarACSV = () => {
     if (pedidosFiltrados.length === 0) {
       alert("No hay pedidos para exportar con los filtros actuales.");
@@ -214,11 +264,7 @@ export default function PedidosTab({
                   </span>
 
                   <button
-                    onClick={() => {
-                      if (window.confirm("¿Estás seguro de eliminar este pedido de prueba?")) {
-                        onEliminarPedido(pedido.id);
-                      }
-                    }}
+                    onClick={() => solicitarAutorizacion('eliminar', pedido.id)}
                     title="Eliminar pedido"
                     className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7E5E0] bg-white text-xs font-bold text-gray-400 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 active:scale-95"
                   >
@@ -267,7 +313,7 @@ export default function PedidosTab({
                 {pedido.estado === "pendiente" && (
                   <div className="flex gap-2">
                     <button
-                      onClick={() => onCancelarPedido(pedido.id)}
+                      onClick={() => solicitarAutorizacion('cancelar', pedido.id)}
                       disabled={procesandoPedidoId === pedido.id}
                       className="h-10 flex-1 rounded-lg border border-[#C84343] px-3 text-xs font-semibold text-[#C84343] transition-colors hover:bg-red-50 active:scale-95 disabled:opacity-50 sm:flex-none"
                     >
@@ -286,6 +332,23 @@ export default function PedidosTab({
             </div>
           ))}
         </div>
+      )}
+
+      {/* MODAL DE AUTORIZACIÓN VÍA PIN DE ADMIN */}
+      {mostrarModalPin && (
+        <ModalPinAutorizacion
+          isOpen={mostrarModalPin}
+          onClose={() => {
+            setMostrarModalPin(false);
+            setAccionPendiente(null);
+          }}
+          onSuccess={ejecutarAccionConfirmada}
+          pinCorrecto={pinAdminBD}
+          titulo="Autorización requerida"
+          subtitulo={`Ingresá el PIN de Administrador para ${
+            accionPendiente?.tipo === 'cancelar' ? 'cancelar' : 'eliminar'
+          } este pedido.`}
+        />
       )}
     </div>
   );
