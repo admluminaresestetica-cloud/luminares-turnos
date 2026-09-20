@@ -42,6 +42,11 @@ export function usePreciosLaser() {
     [servicios]
   )
 
+  const promosLaserActivas = useMemo(
+    () => promos.filter((p) => p.activo),
+    [promos]
+  )
+
   const abrirModalServicio = (serv?: ServicioLaser) => {
     if (serv) {
       setServicioEdit({ ...serv })
@@ -241,6 +246,7 @@ export function usePreciosLaser() {
     loadingPrecios,
     seccionPrecios, setSeccionPrecios,
     serviciosLaserActivos,
+    promosLaserActivas,
 
     modalServicio, servicioEdit, setServicioEdit,
     abrirModalServicio, cerrarModalServicio, guardarServicio,

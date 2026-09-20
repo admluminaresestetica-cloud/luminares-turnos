@@ -33,7 +33,7 @@ export default function AppointmentsChart({ data }: AppointmentsChartProps) {
   const dataFiltrada = data.filter((item) => item.value > 0);
 
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 rounded-2xl shadow-sm space-y-4">
+    <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 rounded-2xl shadow-sm space-y-2">
       <div>
         <h2 className="text-base font-bold text-slate-800 dark:text-zinc-100">
           Estado de Turnos
@@ -54,9 +54,9 @@ export default function AppointmentsChart({ data }: AppointmentsChartProps) {
               <Pie
                 data={dataFiltrada}
                 cx="50%"
-                cy="50%"
-                innerRadius={50}
-                outerRadius={80}
+                cy="40%"
+                innerRadius={45}
+                outerRadius={65}
                 paddingAngle={4}
                 dataKey="value"
               >
@@ -74,7 +74,12 @@ export default function AppointmentsChart({ data }: AppointmentsChartProps) {
                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                 }}
               />
-              <Legend verticalAlign="bottom" height={36} iconType="circle" />
+              <Legend 
+                verticalAlign="bottom" 
+                align="center" 
+                iconType="circle"
+                wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+              />
             </PieChart>
           </ResponsiveContainer>
         )}

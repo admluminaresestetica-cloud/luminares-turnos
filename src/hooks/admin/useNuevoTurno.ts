@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
+  PromoLaser,
   Reserva,
   ServicioGeneral,
   ServicioLaser,
@@ -13,22 +14,27 @@ import {
 
 interface UseNuevoTurnoParams {
   servicios: ServicioLaser[]
+  promos?: PromoLaser[]
   serviciosGenerales: ServicioGeneral[]
   serviciosLaserActivos: ServicioLaser[]
+  promosLaserActivas?: PromoLaser[]
   serviciosGeneralesActivos: ServicioGeneral[]
   setTurnos: React.Dispatch<React.SetStateAction<Reserva[]>>
 }
 
 export function useNuevoTurno({
   servicios,
+  promos = [],
   serviciosGenerales,
   serviciosLaserActivos,
+  promosLaserActivas = [],
   serviciosGeneralesActivos,
   setTurnos
 }: UseNuevoTurnoParams) {
-  const [tipoTurnoNuevo, setTipoTurnoNuevo] = useState<'laser' | 'general'>('laser')
+  const [tipoTurnoNuevo, setTipoTurnoNuevo] = useState<'laser' | 'promo' | 'general'>('laser')
   const [filtroGeneroLaserNuevo, setFiltroGeneroLaserNuevo] = useState<string>('todos')
   const [zonasSeleccionadasNuevo, setZonasSeleccionadasNuevo] = useState<string[]>([])
+  const [promoSeleccionadaNuevo, setPromoSeleccionadaNuevo] = useState<string>('')
   const [servicioGeneralSeleccionadoNuevo, setServicioGeneralSeleccionadoNuevo] = useState<string>('')
 
   const [modalNuevoTurno, setModalNuevoTurno] = useState<boolean>(false)
@@ -37,6 +43,10 @@ export function useNuevoTurno({
 
   const zonasLaserFiltradas = serviciosLaserActivos.filter(
     (s) => filtroGeneroLaserNuevo === 'todos' || s.genero === filtroGeneroLaserNuevo
+  )
+
+  const promosLaserFiltradas = promosLaserActivas.filter(
+    (p) => filtroGeneroLaserNuevo === 'todos' || p.genero === filtroGeneroLaserNuevo
   )
 
   const toggleZonaSeleccionadaNuevo = (id: string) => {
@@ -54,6 +64,17 @@ export function useNuevoTurno({
       const total = zonas.reduce((acc, z) => acc + (Number(z.precio_lista) || 0), 0)
       const detalle = zonas.map((z) => z.nombre_zona).filter(Boolean).join(' + ')
       setNuevoTurno((prev) => ({ ...prev, precio_total: total, detalle_texto: detalle }))
+    } else if (tipoTurnoNuevo === 'promo') {
+      const promoElegida = promosLaserActivas.find((p) => p.id === promoSeleccionadaNuevo)
+      if (promoElegida) {
+        setNuevoTurno((prev) => ({
+          ...prev,
+          precio_total: Number(promoElegida.precio_promo) || 0,
+          detalle_texto: `Combo/Promo: ${promoElegida.nombre_promo}`
+        }))
+      } else {
+        setNuevoTurno((prev) => ({ ...prev, precio_total: 0, detalle_texto: '' }))
+      }
     } else {
       const serv = serviciosGeneralesActivos.find((s) => s.id === servicioGeneralSeleccionadoNuevo)
       if (serv) {
@@ -66,8 +87,10 @@ export function useNuevoTurno({
   }, [
     tipoTurnoNuevo,
     zonasSeleccionadasNuevo,
+    promoSeleccionadaNuevo,
     servicioGeneralSeleccionadoNuevo,
     serviciosLaserActivos,
+    promosLaserActivas,
     serviciosGeneralesActivos,
     modalNuevoTurno
   ])
@@ -77,6 +100,7 @@ export function useNuevoTurno({
     setTipoTurnoNuevo('laser')
     setFiltroGeneroLaserNuevo('todos')
     setZonasSeleccionadasNuevo([])
+    setPromoSeleccionadaNuevo('')
     setServicioGeneralSeleccionadoNuevo('')
     setModalNuevoTurno(true)
   }
@@ -100,7 +124,12 @@ export function useNuevoTurno({
       duracionReal = zonasSeleccionadasNuevo.reduce((total, idZona) => {
         const zonaEncontrada = servicios.find(s => s.id === idZona)
         return total + (zonaEncontrada?.duracion_minutos || 0)
-      }, 0)
+      }, 0) || 30
+    } else if (tipoTurnoNuevo === 'promo') {
+      const promoElegida = promos.find((p) => p.id === promoSeleccionadaNuevo)
+      if (promoElegida?.duracion_total_min) {
+        duracionReal = promoElegida.duracion_total_min
+      }
     } else {
       const servicioElegido = serviciosGenerales.find(
         (sg) => sg.id === servicioGeneralSeleccionadoNuevo
@@ -115,7 +144,7 @@ export function useNuevoTurno({
       cliente_nombre: nuevoTurno.cliente_nombre,
       cliente_celular: nuevoTurno.cliente_celular,
       fecha_hora_inicio: datetimeLocalToIso(nuevoTurno.fecha_hora_local),
-      servicio_tipo: tipoTurnoNuevo,
+      servicio_tipo: tipoTurnoNuevo === 'general' ? 'general' : 'laser',
       duracion_total: duracionReal,
       detalle_reserva: { detalle_texto: nuevoTurno.detalle_texto },
       precio_total: Number(nuevoTurno.precio_total),
@@ -155,6 +184,8 @@ export function useNuevoTurno({
     filtroGeneroLaserNuevo, setFiltroGeneroLaserNuevo,
     zonasSeleccionadasNuevo, toggleZonaSeleccionadaNuevo,
     zonasLaserFiltradas,
+    promoSeleccionadaNuevo, setPromoSeleccionadaNuevo,
+    promosLaserFiltradas,
     servicioGeneralSeleccionadoNuevo, setServicioGeneralSeleccionadoNuevo,
 
     guardandoNuevoTurno,

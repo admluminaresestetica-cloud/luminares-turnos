@@ -556,3 +556,292 @@ export async function getTopProductos(
     .sort((a, b) => b.cantidad - a.cantidad)
     .slice(0, limite);
 }
+
+export interface MetricaNoShow {
+  totalReservas: number;
+  canceladas: number;
+  porcentajeCanceladas: number;
+}
+
+export interface DistribucionFranjaHoraria {
+  franja: 'Mañana (8-12h)' | 'Mediodía (12-16h)' | 'Tarde (16-20h)' | 'Noche (20h+)';
+  turnos: number;
+}
+
+/**
+ * Obtiene la tasa de cancelaciones y ausentismo dentro del rango seleccionado
+ */
+export async function getTasaNoShow(rango: { desde: string; hasta: string }): Promise<MetricaNoShow> {
+  // Construimos las fechas límite en formato ISO UTC
+  const desdeISO = new Date(`${rango.desde}T00:00:00`).toISOString();
+  const hastaISO = new Date(`${rango.hasta}T23:59:59.999`).toISOString();
+
+  // Consultamos usando la columna correcta: fecha_hora_inicio
+  const { data, error } = await supabase
+    .from('reservas')
+    .select('id, estado, estado_pago, eliminado, fecha_hora_inicio')
+    .gte('fecha_hora_inicio', desdeISO)
+    .lte('fecha_hora_inicio', hastaISO);
+
+  if (error || !data) {
+    console.error('Error al obtener tasa de no-show:', error);
+    return { totalReservas: 0, canceladas: 0, porcentajeCanceladas: 0 };
+  }
+
+  const totalReservas = data.length;
+
+  // Verificamos si está cancelado por 'estado', 'estado_pago' o si fue marcado en 'eliminado'
+  const canceladas = data.filter((r) => {
+    const estadoStr = r.estado?.toString().toLowerCase().trim() || '';
+    const estadoPagoStr = r.estado_pago?.toString().toLowerCase().trim() || '';
+    
+    const esCancelado = 
+      estadoStr === 'cancelado' || 
+      estadoStr === 'cancelada' ||
+      estadoPagoStr === 'cancelado' ||
+      r.eliminado === true;
+
+    return esCancelado;
+  }).length;
+
+  const porcentajeCanceladas =
+    totalReservas > 0 ? Number(((canceladas / totalReservas) * 100).toFixed(1)) : 0;
+
+  return { totalReservas, canceladas, porcentajeCanceladas };
+}
+
+/**
+ * Obtiene la distribución de turnos agrupados por franja horaria
+ */
+export async function getDistribucionFranjasHorarias(
+  rango: { desde: string; hasta: string }
+): Promise<DistribucionFranjaHoraria[]> {
+  const desdeISO = new Date(`${rango.desde}T00:00:00`).toISOString();
+  const hastaISO = new Date(`${rango.hasta}T23:59:59.999`).toISOString();
+
+  const { data, error } = await supabase
+    .from('reservas')
+    .select('fecha_hora_inicio, estado, eliminado')
+    .gte('fecha_hora_inicio', desdeISO)
+    .lte('fecha_hora_inicio', hastaISO);
+
+  if (error || !data) {
+    console.error('Error al obtener franjas horarias:', error);
+    return [];
+  }
+
+  // Filtrar cancelados o eliminados
+  const reservasValidas = data.filter((r) => {
+    const est = r.estado?.toString().toLowerCase().trim();
+    return est !== 'cancelado' && est !== 'cancelada' && !r.eliminado;
+  });
+
+  const franjas: Record<string, number> = {
+    'Mañana (8-12h)': 0,
+    'Mediodía (12-16h)': 0,
+    'Tarde (16-20h)': 0,
+    'Noche (20h+)': 0,
+  };
+
+  reservasValidas.forEach((item) => {
+    if (!item.fecha_hora_inicio) return;
+    
+    // Convertir la fecha a hora local del navegador/servidor
+    const hora = new Date(item.fecha_hora_inicio).getHours();
+
+    if (hora >= 8 && hora < 12) franjas['Mañana (8-12h)']++;
+    else if (hora >= 12 && hora < 16) franjas['Mediodía (12-16h)']++;
+    else if (hora >= 16 && hora < 20) franjas['Tarde (16-20h)']++;
+    else if (hora >= 20 || hora < 8) franjas['Noche (20h+)']++;
+  });
+
+  return Object.entries(franjas).map(([franja, turnos]) => ({
+    franja: franja as any,
+    turnos,
+  }));
+}
+
+// ==========================================
+// ETAPA 3: CROSS-SELLING Y TICKET DESGLOSADO
+// ==========================================
+
+export interface MetricaCrossSelling {
+  totalTurnos: number;
+  turnosConProducto: number;
+  tasaConversion: number;
+  ticketMedioSoloServicio: number;
+  ticketMedioConProducto: number;
+}
+
+export async function getMetricasCrossSelling(rango: { desde: string; hasta: string }): Promise<MetricaCrossSelling> {
+  const desdeISO = new Date(`${rango.desde}T00:00:00`).toISOString();
+  const hastaISO = new Date(`${rango.hasta}T23:59:59.999`).toISOString();
+
+  // Consultar reservas del período
+  const { data: reservas, error } = await supabase
+    .from('reservas')
+    .select('id, precio_total, detalle_reserva, estado, eliminado')
+    .gte('fecha_hora_inicio', desdeISO)
+    .lte('fecha_hora_inicio', hastaISO);
+
+  if (error || !reservas) {
+    console.error('Error al obtener métricas de cross-selling:', error);
+    return {
+      totalTurnos: 0,
+      turnosConProducto: 0,
+      tasaConversion: 0,
+      ticketMedioSoloServicio: 0,
+      ticketMedioConProducto: 0,
+    };
+  }
+
+  const reservasValidas = reservas.filter((r) => {
+    const est = r.estado?.toString().toLowerCase().trim();
+    return est !== 'cancelado' && est !== 'cancelada' && !r.eliminado;
+  });
+
+  const totalTurnos = reservasValidas.length;
+  if (totalTurnos === 0) {
+    return {
+      totalTurnos: 0,
+      turnosConProducto: 0,
+      tasaConversion: 0,
+      ticketMedioSoloServicio: 0,
+      ticketMedioConProducto: 0,
+    };
+  }
+
+  let turnosConProducto = 0;
+  let sumaSoloServicio = 0;
+  let conteoSoloServicio = 0;
+  let sumaConProducto = 0;
+
+  reservasValidas.forEach((r) => {
+    const monto = Number(r.precio_total) || 0;
+    // Verificar si en detalle_reserva existen productos
+    const tieneProducto = Array.isArray(r.detalle_reserva?.productos) && r.detalle_reserva.productos.length > 0;
+
+    if (tieneProducto) {
+      turnosConProducto++;
+      sumaConProducto += monto;
+    } else {
+      conteoSoloServicio++;
+      sumaSoloServicio += monto;
+    }
+  });
+
+  const tasaConversion = Number(((turnosConProducto / totalTurnos) * 100).toFixed(1));
+  const ticketMedioSoloServicio = conteoSoloServicio > 0 ? Math.round(sumaSoloServicio / conteoSoloServicio) : 0;
+  const ticketMedioConProducto = turnosConProducto > 0 ? Math.round(sumaConProducto / turnosConProducto) : 0;
+
+  return {
+    totalTurnos,
+    turnosConProducto,
+    tasaConversion,
+    ticketMedioSoloServicio,
+    ticketMedioConProducto,
+  };
+}
+
+// ==========================================
+// ETAPA 4: ORIGEN DE RESERVAS E IMPACTO FINANCIERO
+// ==========================================
+
+export interface DistribucionOrigen {
+  origen: 'Web' | 'Manual (Admin)';
+  cantidad: number;
+  porcentaje: number;
+}
+
+export interface ImpactoMedioPago {
+  medio: string;
+  totalMonto: number;
+  cantidad: number;
+  porcentajeUso: number;
+}
+
+export async function getOrigenReservas(rango: { desde: string; hasta: string }): Promise<DistribucionOrigen[]> {
+  const desdeISO = new Date(`${rango.desde}T00:00:00`).toISOString();
+  const hastaISO = new Date(`${rango.hasta}T23:59:59.999`).toISOString();
+
+  const { data, error } = await supabase
+    .from('reservas')
+    .select('modificado_por_admin, estado, eliminado')
+    .gte('fecha_hora_inicio', desdeISO)
+    .lte('fecha_hora_inicio', hastaISO);
+
+  if (error || !data) return [];
+
+  const validas = data.filter((r) => {
+    const est = r.estado?.toString().toLowerCase().trim();
+    return est !== 'cancelado' && est !== 'cancelada' && !r.eliminado;
+  });
+
+  const total = validas.length;
+  if (total === 0) return [];
+
+  const creadasAdmin = validas.filter((r) => r.modificado_por_admin === true).length;
+  const creadasWeb = total - creadasAdmin;
+
+  return [
+    {
+      origen: 'Web',
+      cantidad: creadasWeb,
+      porcentaje: Number(((creadasWeb / total) * 100).toFixed(1)),
+    },
+    {
+      origen: 'Manual (Admin)',
+      cantidad: creadasAdmin,
+      porcentaje: Number(((creadasAdmin / total) * 100).toFixed(1)),
+    },
+  ];
+}
+
+export async function getImpactoFinancieroMediosPago(rango: { desde: string; hasta: string }): Promise<ImpactoMedioPago[]> {
+  const desdeISO = new Date(`${rango.desde}T00:00:00`).toISOString();
+  const hastaISO = new Date(`${rango.hasta}T23:59:59.999`).toISOString();
+
+  const { data, error } = await supabase
+    .from('reservas')
+    .select('medio_pago, metodo_pago, precio_total, estado, eliminado')
+    .gte('fecha_hora_inicio', desdeISO)
+    .lte('fecha_hora_inicio', hastaISO);
+
+  if (error || !data) return [];
+
+  const validas = data.filter((r) => {
+    const est = r.estado?.toString().toLowerCase().trim();
+    return est !== 'cancelado' && est !== 'cancelada' && !r.eliminado;
+  });
+
+  const totalReservas = validas.length;
+  if (totalReservas === 0) return [];
+
+  const resumen: Record<string, { totalMonto: number; cantidad: number }> = {};
+
+  validas.forEach((r) => {
+    const medio = (r.medio_pago || r.metodo_pago || 'Otro').toLowerCase().trim();
+    const nombreFormateado = medio.includes('mercadopago') || medio.includes('mp') 
+      ? 'Mercado Pago' 
+      : medio.includes('efectivo') 
+      ? 'Efectivo' 
+      : medio.includes('transfer') 
+      ? 'Transferencia' 
+      : 'Otro / No especificado';
+
+    const monto = Number(r.precio_total) || 0;
+
+    if (!resumen[nombreFormateado]) {
+      resumen[nombreFormateado] = { totalMonto: 0, cantidad: 0 };
+    }
+    resumen[nombreFormateado].totalMonto += monto;
+    resumen[nombreFormateado].cantidad += 1;
+  });
+
+  return Object.entries(resumen).map(([medio, val]) => ({
+    medio,
+    totalMonto: val.totalMonto,
+    cantidad: val.cantidad,
+    porcentajeUso: Number(((val.cantidad / totalReservas) * 100).toFixed(1)),
+  }));
+}

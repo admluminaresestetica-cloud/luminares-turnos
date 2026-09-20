@@ -108,11 +108,11 @@ export default function ModalCobro({
 
     try {
       const itemsPayload = carrito.map((item) => ({
-        producto_id: item.producto_id,
-        titulo: item.titulo,
-        cantidad: item.cantidad,
-        precio_unitario: item.precio_unitario,
-      }));
+  producto_id: Number(item.producto_id),
+  titulo: item.titulo,
+  cantidad: item.cantidad,
+  precio_unitario: item.precio_unitario,
+}));
 
       const metodoFinal = esPagoMixto
         ? `mixto (Efectivo: $${numEfectivoMixto} + ${metodoDigitalSecundario.toUpperCase()}: $${numDigitalMixto})`
@@ -125,15 +125,15 @@ export default function ModalCobro({
         : totalConAjuste;
 
       const { data, error } = await supabase.rpc("registrar_venta_pos", {
-        p_items: itemsPayload,
-        p_metodo_pago: metodoFinal,
-        p_total: totalConAjuste,
-        p_pago_con: pagoConFinal,
-        p_vuelto: vuelto,
-        p_cliente_nombre: nombreCliente.trim() || "Cliente Ocasional",
-        p_descuento_monto: descuentoTotalMonto,
-        p_recargo_monto: recargoMonto,
-      });
+  p_items: itemsPayload,
+  p_metodo_pago: metodoFinal,
+  p_total: totalConAjuste,
+  p_pago_con: pagoConFinal,
+  p_vuelto: vuelto,
+  p_cliente_nombre: nombreCliente.trim() || "Cliente Ocasional",
+  p_descuento_monto: descuentoTotalMonto,
+  p_recargo_monto: recargoMonto,
+});
 
       if (error) throw error;
 

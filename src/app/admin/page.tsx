@@ -1,28 +1,50 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { 
   UserCheck, 
   Sparkles, 
   CalendarDays, 
   ShoppingBag, 
-  BarChart3, // 👈 1. Importamos el ícono de Métricas
+  BarChart3, 
   Settings, 
-  LogOut 
+  LogOut,
+  Lock
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import AdminChatWidget from './components/AdminChatWidget';
+import ModalPinAutorizacion from './components/ModalPinAutorizacion';
 
-// Cliente configurado para manejar cookies de sesión en el navegador
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export default function AdminHubPage() {
+  const router = useRouter();
   const [cerrandoSesion, setCerrandoSesion] = useState(false);
+  const [pinAdmin, setPinAdmin] = useState('1234');
+  const [modalPinOpen, setModalPinOpen] = useState(false);
+  const [rutaDestino, setRutaDestino] = useState<string | null>(null);
+
+  // Cargar PIN desde Supabase
+  useEffect(() => {
+    const fetchPin = async () => {
+      const { data } = await supabase
+        .from('configuracion_empresa')
+        .select('pin_admin')
+        .limit(1)
+        .maybeSingle();
+
+      if (data?.pin_admin) {
+        setPinAdmin(data.pin_admin);
+      }
+    };
+    fetchPin();
+  }, []);
 
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -41,11 +63,20 @@ export default function AdminHubPage() {
     }
   };
 
+  const handleNavegacion = (e: React.MouseEvent, ruta: string, requierePin: boolean) => {
+    if (requierePin) {
+      e.preventDefault();
+      setRutaDestino(ruta);
+      setModalPinOpen(true);
+    }
+  };
+
   const modulos = [
     {
       titulo: 'Recepción',
       icono: UserCheck,
       ruta: '/admin/gestion/recepcion',
+      requierePin: false,
       bgHover: 'hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 hover:border-indigo-300 dark:hover:border-indigo-800 hover:shadow-indigo-500/10',
       iconBg: 'bg-indigo-100/70 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white dark:group-hover:bg-indigo-500',
       textColor: 'group-hover:text-indigo-700 dark:group-hover:text-indigo-300',
@@ -54,6 +85,7 @@ export default function AdminHubPage() {
       titulo: 'Gabinete',
       icono: Sparkles,
       ruta: '/admin/gestion/gabinete',
+      requierePin: false,
       bgHover: 'hover:bg-emerald-50/60 dark:hover:bg-emerald-950/30 hover:border-emerald-300 dark:hover:border-emerald-800 hover:shadow-emerald-500/10',
       iconBg: 'bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white dark:group-hover:bg-emerald-500',
       textColor: 'group-hover:text-emerald-700 dark:group-hover:text-emerald-300',
@@ -62,6 +94,7 @@ export default function AdminHubPage() {
       titulo: 'Reservas',
       icono: CalendarDays,
       ruta: '/admin/turnos',
+      requierePin: false,
       bgHover: 'hover:bg-amber-50/60 dark:hover:bg-amber-950/30 hover:border-amber-300 dark:hover:border-amber-800 hover:shadow-amber-500/10',
       iconBg: 'bg-amber-100/70 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 group-hover:scale-110 group-hover:bg-amber-600 group-hover:text-white dark:group-hover:bg-amber-500',
       textColor: 'group-hover:text-amber-700 dark:group-hover:text-amber-300',
@@ -70,25 +103,25 @@ export default function AdminHubPage() {
       titulo: 'Tienda',
       icono: ShoppingBag,
       ruta: '/admin/tienda',
+      requierePin: false,
       bgHover: 'hover:bg-teal-50/60 dark:hover:bg-teal-950/30 hover:border-teal-300 dark:hover:border-teal-800 hover:shadow-teal-500/10',
       iconBg: 'bg-teal-100/70 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 group-hover:scale-110 group-hover:bg-teal-600 group-hover:text-white dark:group-hover:bg-teal-500',
       textColor: 'group-hover:text-teal-700 dark:group-hover:text-teal-300',
     },
-    
-    // 🟢 2. NUEVO MÓDULO DE MÉTRICAS (Ubicado entre Tienda y Ajustes)
     {
       titulo: 'Métricas',
       icono: BarChart3,
       ruta: '/admin/metricas',
+      requierePin: true,
       bgHover: 'hover:bg-violet-50/60 dark:hover:bg-violet-950/30 hover:border-violet-300 dark:hover:border-violet-800 hover:shadow-violet-500/10',
       iconBg: 'bg-violet-100/70 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 group-hover:scale-110 group-hover:bg-violet-600 group-hover:text-white dark:group-hover:bg-violet-500',
       textColor: 'group-hover:text-violet-700 dark:group-hover:text-violet-300',
     },
-
     {
       titulo: 'Ajustes',
       icono: Settings,
       ruta: '/admin/ajustes',
+      requierePin: true,
       bgHover: 'hover:bg-slate-100/80 dark:hover:bg-zinc-800/60 hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-slate-500/10',
       iconBg: 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 group-hover:scale-110 group-hover:bg-slate-800 dark:group-hover:bg-zinc-200 group-hover:text-white dark:group-hover:text-zinc-900',
       textColor: 'group-hover:text-slate-800 dark:group-hover:text-zinc-200',
@@ -98,7 +131,7 @@ export default function AdminHubPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col justify-between p-6 sm:p-10 select-none transition-colors duration-200 relative">
 
-      {/* ENCABEZADO SUPERIOR CON BOTÓN DE CERRAR SESIÓN Y THEME TOGGLE */}
+      {/* ENCABEZADO SUPERIOR */}
       <header className="w-full max-w-xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
           <ThemeToggle />
@@ -116,14 +149,14 @@ export default function AdminHubPage() {
           onClick={handleLogout}
           disabled={cerrandoSesion}
           type="button"
-          className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-white dark:bg-zinc-900 border border-rose-200/80 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-3.5 py-2 rounded-xl shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+          className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-white dark:bg-zinc-900 border border-rose-200/80 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-3.5 py-2 rounded-xl shadow-xs hover:shadow-sm transition-all active:scale-95 cursor-pointer disabled:opacity-50"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>{cerrandoSesion ? 'Saliendo...' : 'Cerrar sesión'}</span>
         </button>
       </header>
 
-      {/* GRILLA DE BOTONES CUADRADOS */}
+      {/* GRILLA DE MÓDULOS */}
       <main className="w-full max-w-xl mx-auto my-auto py-8">
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
           {modulos.map((modulo, index) => {
@@ -134,10 +167,18 @@ export default function AdminHubPage() {
               <Link
                 key={modulo.ruta}
                 href={modulo.ruta}
-                className={`group flex flex-col items-center justify-center p-6 sm:p-8 aspect-square bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl shadow-sm transition-all duration-200 active:scale-95 hover:-translate-y-1 ${
+                onClick={(e) => handleNavegacion(e, modulo.ruta, modulo.requierePin)}
+                className={`group relative flex flex-col items-center justify-center p-6 sm:p-8 aspect-square bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl shadow-xs transition-all duration-200 active:scale-95 hover:-translate-y-1 ${
                   modulo.bgHover
                 } ${esUltimoImpar ? 'col-span-2 sm:col-span-1 sm:col-start-1' : ''}`}
               >
+                {/* Badge de PIN */}
+                {modulo.requierePin && (
+                  <span className="absolute top-3 right-3 flex items-center gap-1 rounded-full border border-amber-200/80 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                    <Lock className="w-2.5 h-2.5" /> PIN
+                  </span>
+                )}
+
                 <div
                   className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-inner mb-3 sm:mb-4 ${modulo.iconBg}`}
                 >
@@ -162,6 +203,22 @@ export default function AdminHubPage() {
 
       {/* WIDGET FLOTANTE DE IA */}
       <AdminChatWidget />
+
+      {/* MODAL DE VALIDACIÓN DE PIN */}
+      <ModalPinAutorizacion
+        isOpen={modalPinOpen}
+        pinCorrecto={pinAdmin}
+        titulo="Acceso Restringido"
+        subtitulo="Ingresá el PIN de Administrador para ingresar a este módulo"
+        onCerrar={() => {
+          setModalPinOpen(false);
+          setRutaDestino(null);
+        }}
+        onExito={() => {
+          setModalPinOpen(false);
+          if (rutaDestino) router.push(rutaDestino);
+        }}
+      />
 
     </div>
   );

@@ -1,11 +1,15 @@
 "use client";
+
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+
+// Componentes modulares de la vista
+import TiendaHeaderNav, { TabKey } from "./components/TiendaHeaderNav";
+import ModalAnulacionPedido, { ItemAAnular } from "./components/ModalAnulacionPedido";
+import MetricasHeader from "./components/MetricasHeader";
 import FormularioProducto from "./components/FormularioProducto";
 import ListaProductos from "./components/ListaProductos";
 import PedidosTab, { Pedido } from "./components/PedidosTab";
-import MetricasHeader from "./components/MetricasHeader";
 import CategoriasTab from "./components/CategoriasTab";
 import BannersTab from "../ajustes/components/BannersTab";
 import TagsTab from "./components/TagsTab";
@@ -18,22 +22,26 @@ const supabase = createClient(
 );
 
 export default function AdminTiendaPage() {
-  const [activeTab, setActiveTab] = useState<"catalogo" | "pos" | "caja" | "pedidos" | "banners" | "tags">("catalogo");
+  const [activeTab, setActiveTab] = useState<TabKey>("catalogo");
   const [mounted, setMounted] = useState(false);
 
+  // Estados de datos de la tienda
   const [productos, setProductos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
-
-  // ESTADO PARA GUARDAR LA CONFIGURACIÓN DE LA EMPRESA DESDE SUPABASE
   const [configEmpresa, setConfigEmpresa] = useState<any | null>(null);
 
+  // Estados de interfaz y edición
   const [cargandoCat, setCargandoCat] = useState(false);
   const [productoEditando, setProductoEditando] = useState<any | null>(null);
   const [cargandoPedidos, setCargandoPedidos] = useState(false);
   const [procesandoPedidoId, setProcesandoPedidoId] = useState<string | null>(null);
 
-  // FETCH DE CONFIGURACIÓN DE LA EMPRESA
+  // Estados del Modal de Anulación
+  const [pedidoAAnular, setPedidoAAnular] = useState<Pedido | null>(null);
+  const [itemsAAnular, setItemsAAnular] = useState<ItemAAnular[]>([]);
+
+  // CARGA DE DATOS DESDE SUPABASE
   const fetchConfigEmpresa = async () => {
     const { data, error } = await supabase
       .from("configuracion_empresa")
@@ -64,13 +72,44 @@ export default function AdminTiendaPage() {
 
   const fetchPedidos = async () => {
     setCargandoPedidos(true);
-    const { data, error } = await supabase
+
+    const resPedidos = await supabase
       .from("pedidos")
-      .select("*, pedido_items(*)")
+      .select("*")
       .order("created_at", { ascending: false });
 
-    if (error) console.error("Error al cargar pedidos:", error);
-    else setPedidos(data || []);
+    const resItems = await supabase.from("pedido_items").select("*");
+
+    if (resPedidos.data) {
+      const pedidosFormateados = resPedidos.data.map((pedido) => {
+        const itemsPOS = resItems.data
+          ? resItems.data.filter((item) => item.pedido_id === pedido.id)
+          : [];
+
+        let itemsWeb: any[] = [];
+        if (pedido.items) {
+          try {
+            itemsWeb = typeof pedido.items === "string" ? JSON.parse(pedido.items) : pedido.items;
+          } catch (e) {
+            console.error("Error al parsear JSON de items web:", e);
+          }
+        } else if (pedido.productos) {
+          try {
+            itemsWeb = typeof pedido.productos === "string" ? JSON.parse(pedido.productos) : pedido.productos;
+          } catch (e) {
+            console.error("Error al parsear JSON de productos web:", e);
+          }
+        }
+
+        return {
+          ...pedido,
+          pedido_items: itemsPOS.length > 0 ? itemsPOS : itemsWeb,
+        };
+      });
+
+      setPedidos(pedidosFormateados);
+    }
+
     setCargandoPedidos(false);
   };
 
@@ -82,50 +121,125 @@ export default function AdminTiendaPage() {
     fetchPedidos();
   }, []);
 
+  // LÓGICA DE ANULACIÓN
+  const iniciarAnulacion = (pedido: Pedido) => {
+    const rawItems =
+      pedido.pedido_items && pedido.pedido_items.length > 0
+        ? pedido.pedido_items
+        : (pedido as any).items || [];
+
+    const itemsMapeados: ItemAAnular[] = rawItems.map((item: any) => {
+      let rawProdId =
+        item.producto_id ??
+        item.id_producto ??
+        item.id ??
+        item.producto?.id;
+
+      if (!rawProdId && item.nombre_producto) {
+        const prodEncontrado = productos.find(
+          (p) => p.nombre?.trim().toLowerCase() === item.nombre_producto?.trim().toLowerCase()
+        );
+        if (prodEncontrado) rawProdId = prodEncontrado.id;
+      }
+
+      const cantVendida = Number(item.cantidad) || 1;
+
+      return {
+        id: item.id || Math.random().toString(),
+        producto_id: rawProdId !== undefined && rawProdId !== null ? Number(rawProdId) : null,
+        nombre_producto:
+          item.nombre_producto ||
+          item.titulo ||
+          item.nombre ||
+          item.producto?.nombre ||
+          "Producto",
+        cantidadVendida: cantVendida,
+        cantReponer: cantVendida,
+        cantBaja: 0,
+      };
+    });
+
+    setItemsAAnular(itemsMapeados);
+    setPedidoAAnular(pedido);
+  };
+
+  const procesarAnulacionConfirmada = async () => {
+    if (!pedidoAAnular) return;
+
+    const pedidoId = pedidoAAnular.id;
+    setProcesandoPedidoId(pedidoId);
+    setPedidoAAnular(null);
+
+    try {
+      let totalReintegrado = 0;
+      let totalBajas = 0;
+
+      for (const item of itemsAAnular) {
+        if (item.cantReponer > 0 && item.producto_id && !isNaN(item.producto_id)) {
+          const { data: prod, error: errProd } = await supabase
+            .from("productos")
+            .select("stock")
+            .eq("id", item.producto_id)
+            .maybeSingle();
+
+          if (!errProd && prod) {
+            const stockActual = Number(prod.stock) || 0;
+            const nuevoStock = stockActual + item.cantReponer;
+
+            await supabase
+              .from("productos")
+              .update({ stock: nuevoStock })
+              .eq("id", item.producto_id);
+          }
+        }
+
+        totalReintegrado += item.cantReponer;
+        totalBajas += item.cantBaja;
+      }
+
+      let notaFinal = "[Cancelado]";
+      if (totalReintegrado > 0 && totalBajas === 0) {
+        notaFinal = `[Cancelado: ${totalReintegrado} un. reintegradas al stock]`;
+      } else if (totalReintegrado === 0 && totalBajas > 0) {
+        notaFinal = `[Cancelado: ${totalBajas} un. dadas de baja por rotura/falla]`;
+      } else if (totalReintegrado > 0 && totalBajas > 0) {
+        notaFinal = `[Cancelado parcial: ${totalReintegrado} un. al stock / ${totalBajas} un. baja por rotura]`;
+      }
+
+      const { error: errorUpdate } = await supabase
+        .from("pedidos")
+        .update({
+          estado: "cancelado",
+          nota_adicional: notaFinal,
+        })
+        .eq("id", pedidoId);
+
+      if (errorUpdate) throw errorUpdate;
+
+      await Promise.all([fetchPedidos(), fetchProductos()]);
+    } catch (err: any) {
+      alert("Error al procesar la anulación: " + (err.message || err));
+    } finally {
+      setProcesandoPedidoId(null);
+    }
+  };
+
   if (!mounted) return null;
 
   const totalProductos = productos.length;
   const stockTotal = productos.reduce((acc, p) => acc + (Number(p.stock) || 0), 0);
   const pedidosPendientes = pedidos.filter((p) => p.estado === "pendiente").length;
 
-  const TABS: { key: typeof activeTab; label: string; icono: string; badge?: number }[] = [
-    { key: "catalogo", label: "Catálogo", icono: "📦" },
-    { key: "pos", label: "Escáner / POS", icono: "📷" },
-    { key: "caja", label: "Control de Caja", icono: "💵" },
-    { key: "pedidos", label: "Pedidos", icono: "📋", badge: pedidosPendientes },
-    { key: "banners", label: "Banners", icono: "🖼️" },
-    { key: "tags", label: "Tags", icono: "🏷️" },
-  ];
-
   return (
     <div className="min-h-screen bg-[#F7F7F5]">
-      {/* HEADER STICKY con blur tipo app nativa */}
-      <header className="sticky top-0 z-30 border-b border-[#E7E5E0]/80 bg-white/80 backdrop-blur-md px-4 py-4 sm:px-10 sm:py-6">
-        <div className="mx-auto flex max-w-[1200px] items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#12151B] text-lg text-white shadow-sm">
-              🛍️
-            </span>
-            <div>
-              <p className="m-0 text-[10px] font-semibold uppercase tracking-wider text-[#0E6E55] sm:text-xs">
-                Panel de administración
-              </p>
-              <h1 className="m-0 text-lg font-bold tracking-tight text-[#12151B] sm:text-2xl">
-                Gestión de Tienda
-              </h1>
-            </div>
-          </div>
+      {/* Header y Pestañas */}
+      <TiendaHeaderNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        pedidosPendientes={pedidosPendientes}
+      />
 
-          <Link
-            href="/admin"
-            className="inline-flex h-11 items-center gap-2 rounded-xl border border-[#E7E5E0] bg-gray-50 px-3.5 text-xs font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-100 active:scale-95 sm:px-4 sm:text-sm"
-          >
-            ← <span className="hidden sm:inline">Menú Admin</span>
-          </Link>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-10 sm:py-8">
+      <div className="mx-auto max-w-[1200px] px-4 pb-12 sm:px-10">
         <MetricasHeader
           totalProductos={totalProductos}
           stockTotal={stockTotal}
@@ -133,37 +247,7 @@ export default function AdminTiendaPage() {
           totalCategorias={categorias.length}
         />
 
-        {/* Pestañas tipo "pill", deslizables horizontalmente */}
-        <div className="no-scrollbar -mx-4 mb-6 flex items-center gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 text-xs font-bold transition-all active:scale-95 sm:text-sm ${
-                  isActive
-                    ? "bg-[#0E6E55] text-white shadow-md shadow-[#0E6E55]/20"
-                    : "bg-white text-[#6B675F] border border-[#E7E5E0] hover:border-[#0E6E55]/40 hover:text-[#12151B]"
-                }`}
-              >
-                <span>{tab.icono}</span>
-                <span>{tab.label}</span>
-                {!!tab.badge && tab.badge > 0 && (
-                  <span
-                    className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold ${
-                      isActive ? "bg-white/25 text-white" : "animate-pulse bg-[#C84343] text-white"
-                    }`}
-                  >
-                    {tab.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Contenido de cada pestaña */}
+        {/* Contenido según Pestaña Activa */}
         <div className="space-y-6">
           {activeTab === "catalogo" && (
             <>
@@ -226,7 +310,10 @@ export default function AdminTiendaPage() {
             <PuntoVentaTab
               productos={productos}
               supabase={supabase}
-              onActualizarProductos={fetchProductos}
+              onActualizarProductos={() => {
+                fetchProductos();
+                fetchPedidos();
+              }}
             />
           )}
 
@@ -239,18 +326,26 @@ export default function AdminTiendaPage() {
               procesandoPedidoId={procesandoPedidoId}
               onFetchPedidos={fetchPedidos}
               onAprobarPedido={async (id) => {
-                await supabase.rpc("aprobar_pedido_y_descontar_stock", { p_pedido_id: id });
-                fetchPedidos();
-                fetchProductos();
+                setProcesandoPedidoId(id);
+                const { error } = await supabase.rpc(
+                  "aprobar_pedido_y_descontar_stock",
+                  { p_pedido_id: id }
+                );
+
+                if (error) {
+                  alert("Error al aprobar pedido: " + error.message);
+                } else {
+                  await Promise.all([fetchPedidos(), fetchProductos()]);
+                }
+                setProcesandoPedidoId(null);
               }}
-              onCancelarPedido={async (id) => {
-                await supabase.from("pedidos").update({ estado: "cancelado" }).eq("id", id);
-                fetchPedidos();
+              onCancelarPedido={(id) => {
+                const ped = pedidos.find((p) => p.id === id);
+                if (ped) iniciarAnulacion(ped);
               }}
-              onEliminarPedido={async (id) => {
-                await supabase.from("pedido_items").delete().eq("pedido_id", id);
-                await supabase.from("pedidos").delete().eq("id", id);
-                fetchPedidos();
+              onEliminarPedido={(id) => {
+                const ped = pedidos.find((p) => p.id === id);
+                if (ped) iniciarAnulacion(ped);
               }}
             />
           )}
@@ -259,6 +354,15 @@ export default function AdminTiendaPage() {
           {activeTab === "tags" && <TagsTab />}
         </div>
       </div>
+
+      {/* Modal de Anulación Modularizado */}
+      <ModalAnulacionPedido
+        pedidoAAnular={pedidoAAnular}
+        itemsAAnular={itemsAAnular}
+        setItemsAAnular={setItemsAAnular}
+        onCerrar={() => setPedidoAAnular(null)}
+        onConfirmar={procesarAnulacionConfirmada}
+      />
     </div>
   );
 }

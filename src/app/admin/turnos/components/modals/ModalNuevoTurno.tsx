@@ -1,18 +1,17 @@
-// src/components/admin/modals/ModalNuevoTurno.tsx
 'use client'
 
 import {
-  Sparkles, Scissors, X, User, Phone, Calendar, FileText,
+  Sparkles, Scissors, Tag, X, User, Phone, Calendar, FileText,
   DollarSign, CreditCard, CheckCircle2, Loader2
 } from 'lucide-react'
-import { ServicioGeneral, ServicioLaser, TurnoForm } from '../types'
+import { PromoLaser, ServicioGeneral, ServicioLaser, TurnoForm } from '../types'
 
 interface ModalNuevoTurnoProps {
   nuevoTurno: TurnoForm
   setNuevoTurno: (t: TurnoForm) => void
 
-  tipoTurnoNuevo: 'laser' | 'general'
-  setTipoTurnoNuevo: (v: 'laser' | 'general') => void
+  tipoTurnoNuevo: 'laser' | 'promo' | 'general'
+  setTipoTurnoNuevo: (v: 'laser' | 'promo' | 'general') => void
 
   filtroGeneroLaserNuevo: string
   setFiltroGeneroLaserNuevo: (v: string) => void
@@ -20,6 +19,10 @@ interface ModalNuevoTurnoProps {
   zonasSeleccionadasNuevo: string[]
   toggleZonaSeleccionadaNuevo: (id: string) => void
   zonasLaserFiltradas: ServicioLaser[]
+
+  promoSeleccionadaNuevo: string
+  setPromoSeleccionadaNuevo: (id: string) => void
+  promosLaserFiltradas: PromoLaser[]
 
   servicioGeneralSeleccionadoNuevo: string
   setServicioGeneralSeleccionadoNuevo: (id: string) => void
@@ -40,6 +43,9 @@ export default function ModalNuevoTurno({
   zonasSeleccionadasNuevo,
   toggleZonaSeleccionadaNuevo,
   zonasLaserFiltradas,
+  promoSeleccionadaNuevo,
+  setPromoSeleccionadaNuevo,
+  promosLaserFiltradas,
   servicioGeneralSeleccionadoNuevo,
   setServicioGeneralSeleccionadoNuevo,
   serviciosGeneralesActivos,
@@ -128,35 +134,50 @@ export default function ModalNuevoTurno({
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2 dark:text-zinc-400">
               Tipo de Turno
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setTipoTurnoNuevo('laser')}
-                className={`py-3.5 sm:py-3 px-4 rounded-xl border text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                className={`py-2.5 px-2 rounded-xl border text-[11px] font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
                   tipoTurnoNuevo === 'laser'
                     ? 'bg-rose-500 border-rose-600 text-white shadow-sm ring-2 ring-rose-300 ring-offset-1 dark:ring-offset-zinc-900'
                     : 'bg-white border-gray-200 text-gray-600 hover:bg-rose-50/50 hover:border-rose-200 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700'
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                Depilación Láser
+                Zonas Laser
               </button>
+
+              <button
+                type="button"
+                onClick={() => setTipoTurnoNuevo('promo')}
+                className={`py-2.5 px-2 rounded-xl border text-[11px] font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
+                  tipoTurnoNuevo === 'promo'
+                    ? 'bg-amber-500 border-amber-600 text-white shadow-sm ring-2 ring-amber-300 ring-offset-1 dark:ring-offset-zinc-900'
+                    : 'bg-white border-gray-200 text-gray-600 hover:bg-amber-50/50 hover:border-amber-200 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700'
+                }`}
+              >
+                <Tag className="w-3.5 h-3.5" />
+                Combos / Promo
+              </button>
+
               <button
                 type="button"
                 onClick={() => setTipoTurnoNuevo('general')}
-                className={`py-3.5 sm:py-3 px-4 rounded-xl border text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                className={`py-2.5 px-2 rounded-xl border text-[11px] font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
                   tipoTurnoNuevo === 'general'
                     ? 'bg-gray-900 border-gray-900 text-white shadow-sm ring-2 ring-gray-300 ring-offset-1 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100 dark:ring-zinc-700 dark:ring-offset-zinc-900'
                     : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700'
                 }`}
               >
                 <Scissors className="w-3.5 h-3.5" />
-                Servicio General
+                General
               </button>
             </div>
           </div>
 
-          {tipoTurnoNuevo === 'laser' ? (
+          {/* Opciones según tipo */}
+          {tipoTurnoNuevo === 'laser' && (
             <div>
               <div className="flex items-center justify-between mb-2 gap-2">
                 <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
@@ -210,7 +231,46 @@ export default function ModalNuevoTurno({
                 )}
               </div>
             </div>
-          ) : (
+          )}
+
+          {tipoTurnoNuevo === 'promo' && (
+            <div>
+              <div className="flex items-center justify-between mb-1.5 gap-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+                  Combo / Promoción
+                </label>
+                <select
+                  value={filtroGeneroLaserNuevo}
+                  onChange={(e) => setFiltroGeneroLaserNuevo(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-2 py-1 text-[11px] font-medium outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
+                >
+                  <option value="todos">Todos los géneros</option>
+                  <option value="femenino">Femenino</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="unisex">Unisex</option>
+                </select>
+              </div>
+
+              <select
+                value={promoSeleccionadaNuevo}
+                onChange={(e) => setPromoSeleccionadaNuevo(e.target.value)}
+                className="w-full px-3.5 py-3 sm:py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
+              >
+                <option value="">Seleccioná un combo o promoción...</option>
+                {promosLaserFiltradas.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre_promo} ({p.genero}) - ${(p.precio_promo || 0).toLocaleString('es-AR')} [{p.duracion_total_min || 30} min]
+                  </option>
+                ))}
+              </select>
+
+              {promosLaserFiltradas.length === 0 && (
+                <p className="text-[11px] text-gray-400 mt-1.5 dark:text-zinc-500">No hay promociones activas para este filtro.</p>
+              )}
+            </div>
+          )}
+
+          {tipoTurnoNuevo === 'general' && (
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 dark:text-zinc-400">
                 Servicio General

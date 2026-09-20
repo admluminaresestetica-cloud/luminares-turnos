@@ -2,7 +2,12 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
+import { ArrowLeft } from 'lucide-react'
+
 import { useConfigCalendario } from '@/hooks/admin/useConfigCalendario'
 import { usePreciosLaser } from '@/hooks/admin/usePreciosLaser'
 import { useServiciosGenerales } from '@/hooks/admin/useServiciosGenerales'
@@ -16,26 +21,76 @@ import GeneralesTab from './components/GeneralesTab'
 import BannersAjustesTab from './components/BannersAjustesTab'
 import ReferidosTab from './components/ReferidosTab'
 import ConfiguracionAnamnesisTab from './components/ConfiguracionAnamnesis'
+import ConfiguracionPinTab from './components/ConfiguracionPinTab' // 1. IMPORTAMOS LA PESTAÑA DE PIN
 
 import ModalServicioLaser from '@/app/admin/turnos/components/modals/ModalServicioLaser'
 import ModalPromo from '@/app/admin/turnos/components/modals/ModalPromo'
 import ModalServicioGeneral from '@/app/admin/turnos/components/modals/ModalServicioGeneral'
 
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
 export default function AjustesAdminPage() {
-  const [activeTab, setActiveTab] = useState<'empresa' | 'agenda' | 'precios' | 'generales' | 'banners' | 'referidos' | 'anamnesis' | 'faqs'>('empresa')
+  const router = useRouter()
+  const [cargandoSesion, setCargandoSesion] = useState(true)
+  const [autenticado, setAutenticado] = useState(false)
+
+  // 2. SUMAMOS 'seguridad' AL TIPO DE activeTab
+  const [activeTab, setActiveTab] = useState<
+    'empresa' | 'agenda' | 'precios' | 'generales' | 'banners' | 'referidos' | 'anamnesis' | 'faqs' | 'seguridad'
+  >('empresa')
 
   const configAgendaProps = useConfigCalendario()
   const precios = usePreciosLaser()
   const generales = useServiciosGenerales()
   const referidos = useReferidosConfig()
 
+  // Validación de Sesión de Admin
+  useEffect(() => {
+    const verificarSesion = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session) {
+        router.push('/admin/login?redirect=/admin/ajustes')
+      } else {
+        setAutenticado(true)
+      }
+      setCargandoSesion(false)
+    }
+
+    verificarSesion()
+  }, [router])
+
+  if (cargandoSesion) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-zinc-950">
+        <p className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Verificando permisos...</p>
+      </div>
+    )
+  }
+
+  if (!autenticado) return null
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100">Ajustes del Negocio</h1>
-        <p className="text-sm text-slate-500 dark:text-zinc-400">
-          Administrá la información dinámica de tu marca, datos de contacto, horarios, servicios, tarifas, banners, referidos y ficha médica.
-        </p>
+      {/* Encabezado con Botón de Volver */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100">Ajustes del Negocio</h1>
+          <p className="text-sm text-slate-500 dark:text-zinc-400">
+            Administrá la información dinámica de tu marca, datos de contacto, horarios, servicios, tarifas, banners, referidos, ficha médica y claves de acceso.
+          </p>
+        </div>
+
+        <Link
+          href="/admin"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-700 transition-all shadow-xs shrink-0"
+        >
+          <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
+          <span>Volver al Menú Admin</span>
+        </Link>
       </div>
 
       {/* Navegación entre pestañas */}
@@ -127,6 +182,18 @@ export default function AjustesAdminPage() {
         >
           Preguntas Frecuentes (FAQ)
         </button>
+
+        {/* 3. BOTÓN DE LA PESTAÑA SEGURIDAD */}
+        <button
+          onClick={() => setActiveTab('seguridad')}
+          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === 'seguridad'
+              ? 'bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm'
+              : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
+          }`}
+        >
+          PIN de Seguridad
+        </button>
       </div>
 
       {/* Contenido según la pestaña activa */}
@@ -183,6 +250,9 @@ export default function AjustesAdminPage() {
           <FaqTab />
         </div>
       )}
+
+      {/* 4. CONTENIDO DE LA PESTAÑA SEGURIDAD */}
+      {activeTab === 'seguridad' && <ConfiguracionPinTab />}
 
       {/* MODALES DE EDICIÓN Y ALTA DE SERVICIOS */}
       {precios.modalServicio && precios.servicioEdit && (

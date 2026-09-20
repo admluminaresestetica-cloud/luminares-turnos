@@ -31,20 +31,88 @@ export default function PuntoVentaTab({ productos, supabase, onActualizarProduct
 
     setLoading(true);
     const stockActual = Number(selectedProduct.stock) || 0;
-    const nuevoStock = modo === "venta" ? Math.max(0, stockActual - num) : stockActual + num;
 
-    const { error } = await supabase
+    if (modo === "restock") {
+      const nuevoStock = stockActual + num;
+      const { error } = await supabase
+        .from("productos")
+        .update({ stock: nuevoStock })
+        .eq("id", selectedProduct.id);
+
+      if (error) {
+        alert("Error al actualizar stock: " + error.message);
+      } else {
+        alert(`Stock actualizado correctamente. Nuevo stock: ${nuevoStock}`);
+        setSelectedProduct({ ...selectedProduct, stock: nuevoStock });
+        onActualizarProductos();
+      }
+      setLoading(false);
+      return;
+    }
+
+    // SI ES VENTA DESDE EL POS:
+    if (num > stockActual) {
+      alert(`No hay suficiente stock. Disponible: ${stockActual}`);
+      setLoading(false);
+      return;
+    }
+
+    const totalVenta = (Number(selectedProduct.precio) || 0) * num;
+
+    // 1. Insertar pedido en la tabla principal
+    const { data: pedidoCreado, error: errPedido } = await supabase
+      .from("pedidos")
+      .insert([
+        {
+          nombre_cliente: "Cliente Ocasional (POS)",
+          estado: "completado",
+          metodo_envio: "Retiro en local",
+          metodo_pago: "Efectivo",
+          total: totalVenta,
+          origen: "POS",
+        },
+      ])
+      .select()
+      .single();
+
+    if (errPedido) {
+      alert("Error crítico al crear pedido en Supabase: " + errPedido.message);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Insertar detalle en pedido_items
+    const { error: errItems } = await supabase.from("pedido_items").insert([
+      {
+        pedido_id: pedidoCreado.id,
+        producto_id: selectedProduct.id,
+        nombre_producto: selectedProduct.nombre,
+        precio_unitario: Number(selectedProduct.precio) || 0,
+        cantidad: num,
+      },
+    ]);
+
+    if (errItems) {
+      alert("Error al insertar ítem del pedido: " + errItems.message);
+      setLoading(false);
+      return;
+    }
+
+    // 3. Descontar el stock
+    const nuevoStock = stockActual - num;
+    const { error: errStock } = await supabase
       .from("productos")
       .update({ stock: nuevoStock })
       .eq("id", selectedProduct.id);
 
-    if (error) {
-      alert("Error al actualizar el stock: " + error.message);
+    if (errStock) {
+      alert("Error al descontar stock: " + errStock.message);
     } else {
-      alert(`Stock actualizado correctamente. Nuevo stock: ${nuevoStock}`);
+      alert("Venta registrada y guardada con éxito en Pedidos.");
       setSelectedProduct({ ...selectedProduct, stock: nuevoStock });
       onActualizarProductos();
     }
+
     setLoading(false);
   };
 
@@ -54,7 +122,6 @@ export default function PuntoVentaTab({ productos, supabase, onActualizarProduct
 
   return (
     <div className="space-y-6">
-      {/* Sección Escáner POS */}
       <div className="rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -73,7 +140,7 @@ export default function PuntoVentaTab({ productos, supabase, onActualizarProduct
           <div className="mt-6 rounded-xl border border-[#0E6E55]/30 bg-[#E6F4F1]/40 p-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <span className="text-[10px] font-bold text-[#0E6E55]">CÓDIGO: {selectedProduct.codigo_barras}</span>
+                <span className="text-[10px] font-bold text-[#0E6E55]">CÓDIGO: {selectedProduct.codigo_barras || "S/C"}</span>
                 <h3 className="text-base font-bold text-[#12151B]">{selectedProduct.nombre}</h3>
                 <p className="text-xs font-bold text-[#12151B]">Precio: ${selectedProduct.precio} | Stock actual: {selectedProduct.stock}</p>
               </div>
@@ -89,14 +156,14 @@ export default function PuntoVentaTab({ productos, supabase, onActualizarProduct
                 <button
                   onClick={() => handleAjustarStock("venta")}
                   disabled={loading}
-                  className="rounded-lg bg-[#C84343] px-3 py-2 text-xs font-bold text-white hover:bg-[#A33434]"
+                  className="rounded-lg bg-[#C84343] px-3 py-2 text-xs font-bold text-white hover:bg-[#A33434] disabled:opacity-50"
                 >
-                  Descontar Venta
+                  {loading ? "Procesando..." : "Descontar Venta"}
                 </button>
                 <button
                   onClick={() => handleAjustarStock("restock")}
                   disabled={loading}
-                  className="rounded-lg bg-[#0E6E55] px-3 py-2 text-xs font-bold text-white hover:bg-[#0A5340]"
+                  className="rounded-lg bg-[#0E6E55] px-3 py-2 text-xs font-bold text-white hover:bg-[#0A5340] disabled:opacity-50"
                 >
                   Sumar Stock
                 </button>
@@ -106,7 +173,6 @@ export default function PuntoVentaTab({ productos, supabase, onActualizarProduct
         )}
       </div>
 
-      {/* Alertas de Stock Bajo */}
       <div className="rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-sm">
         <h2 className="text-lg font-bold text-[#12151B]">⚠️ Alertas de Stock Bajo ({productosStockBajo.length})</h2>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">

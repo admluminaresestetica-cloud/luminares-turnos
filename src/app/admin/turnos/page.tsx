@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Store } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 import AdminHeader from '@/app/admin/turnos/AdminHeader'
 import AdminTabs from './components/AdminTabs'
@@ -31,12 +31,14 @@ export default function AdminDashboard() {
   const generales = useServiciosGenerales()
 
   const nuevoTurno = useNuevoTurno({
-    servicios: precios.servicios,
-    serviciosGenerales: generales.serviciosGenerales,
-    serviciosLaserActivos: precios.serviciosLaserActivos,
-    serviciosGeneralesActivos: generales.serviciosGeneralesActivos,
-    setTurnos: agenda.setTurnos
-  })
+  servicios: precios.servicios,
+  promos: precios.promos, 
+  serviciosGenerales: generales.serviciosGenerales,
+  serviciosLaserActivos: precios.serviciosLaserActivos,
+  promosLaserActivas: precios.promosLaserActivas, 
+  serviciosGeneralesActivos: generales.serviciosGeneralesActivos,
+  setTurnos: agenda.setTurnos
+})
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-zinc-950 font-sans text-gray-900 dark:text-zinc-100 transition-colors">
@@ -60,14 +62,6 @@ export default function AdminDashboard() {
             >
               <ArrowLeft className="h-4 w-4 text-slate-500 dark:text-zinc-400" />
               <span>Menú Admin</span>
-            </Link>
-
-            <Link
-              href="/admin/tienda"
-              className="flex-1 sm:flex-none bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-95 shadow-xs hover:shadow flex items-center justify-center gap-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-              <Store className="h-4 w-4" />
-              <span>Admin Tienda</span>
             </Link>
           </div>
         </div>
@@ -132,6 +126,9 @@ export default function AdminDashboard() {
           zonasSeleccionadasNuevo={nuevoTurno.zonasSeleccionadasNuevo}
           toggleZonaSeleccionadaNuevo={nuevoTurno.toggleZonaSeleccionadaNuevo}
           zonasLaserFiltradas={nuevoTurno.zonasLaserFiltradas}
+          promoSeleccionadaNuevo={nuevoTurno.promoSeleccionadaNuevo}
+          setPromoSeleccionadaNuevo={nuevoTurno.setPromoSeleccionadaNuevo}
+          promosLaserFiltradas={nuevoTurno.promosLaserFiltradas}
           servicioGeneralSeleccionadoNuevo={nuevoTurno.servicioGeneralSeleccionadoNuevo}
           setServicioGeneralSeleccionadoNuevo={nuevoTurno.setServicioGeneralSeleccionadoNuevo}
           serviciosGeneralesActivos={generales.serviciosGeneralesActivos}

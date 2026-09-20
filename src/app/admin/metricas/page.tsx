@@ -1,6 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createBrowserClient } from '@supabase/ssr';
+import { ArrowLeft, Loader2, LayoutDashboard, BarChart3, CalendarDays } from 'lucide-react';
+
 import DateRangePicker, { RangoFecha } from './components/DateRangePicker';
 import RevenueChart from './components/RevenueChart';
 import AppointmentsChart from './components/AppointmentsChart';
@@ -9,7 +14,10 @@ import KpiCards from './components/KpiCards';
 import MediosPagoCard from './components/MediosPagoCard';
 import CategoriasCard from './components/CategoriasCard';
 import GraficoDiasSemana from './components/GraficoDiasSemana';
-import { Loader2, LayoutDashboard, BarChart3, CalendarDays } from 'lucide-react';
+import FranjasHorariasCard from './components/FranjasHorariasCard';
+import CrossSellingCard from './components/CrossSellingCard';
+import OrigenFinanzasCard from './components/OrigenFinanzasCard';
+
 import {
   getKpisReservas,
   getTopServicios,
@@ -17,24 +25,59 @@ import {
   getDesgloseMediosPago,
   getComparativaCategorias,
   getDistribucionDiasSemana,
-  getTopProductos, // <-- IMPORTADO
+  getTopProductos,
+  getTasaNoShow, 
+  getDistribucionFranjasHorarias, 
   KpisResumen,
   ServicioTop,
   SerieIngresosPorFecha,
   DesgloseMedioPago,
   ComparativaCategorias,
   DistribucionDiaSemana,
-  ProductoTop, // <-- IMPORTADO
+  ProductoTop,
+  MetricaNoShow,
+  DistribucionFranjaHoraria, 
+  getMetricasCrossSelling,
+  getOrigenReservas,
+  getImpactoFinancieroMediosPago,
+  MetricaCrossSelling,
+  DistribucionOrigen,
+  ImpactoMedioPago,
 } from '@/lib/admin/metricas';
+
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 type TabTipo = 'general' | 'ventas' | 'agenda';
 
 export default function MetricasPage() {
+  const router = useRouter();
+  const [cargandoSesion, setCargandoSesion] = useState<boolean>(true);
+  const [autenticado, setAutenticado] = useState<boolean>(false);
+
   const [tabActiva, setTabActiva] = useState<TabTipo>('general');
   const [rango, setRango] = useState<RangoFecha>('mes');
   const [fechaInicio, setFechaInicio] = useState<string>('');
   const [fechaFin, setFechaFin] = useState<string>('');
   const [cargando, setCargando] = useState<boolean>(true);
+
+  // Verificación de Sesión Supabase Auth
+  useEffect(() => {
+    const verificarSesion = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        router.push('/admin/login?redirect=/admin/metricas');
+      } else {
+        setAutenticado(true);
+      }
+      setCargandoSesion(false);
+    };
+
+    verificarSesion();
+  }, [router]);
 
   // Estados KPIs, Medios de Pago y Categorías
   const [kpis, setKpis] = useState<KpisResumen>({
@@ -59,11 +102,29 @@ export default function MetricasPage() {
   });
   const [diasSemana, setDiasSemana] = useState<DistribucionDiaSemana[]>([]);
 
-  // Estados Gráficos
+  // Estados Gráficos y Tablas
   const [serieIngresos, setSerieIngresos] = useState<{ fecha: string; total: number }[]>([]);
   const [topServicios, setTopServicios] = useState<ServicioTop[]>([]);
-  const [topProductos, setTopProductos] = useState<ProductoTop[]>([]); // <-- NUEVO ESTADO
+  const [topProductos, setTopProductos] = useState<ProductoTop[]>([]);
   const [estadoTurnosChart, setEstadoTurnosChart] = useState<{ name: string; value: number }[]>([]);
+
+  // Nuevos Estados
+  const [noShow, setNoShow] = useState<MetricaNoShow>({
+    totalReservas: 0,
+    canceladas: 0,
+    porcentajeCanceladas: 0,
+  });
+  const [franjasHorarias, setFranjasHorarias] = useState<DistribucionFranjaHoraria[]>([]);
+
+  const [crossSelling, setCrossSelling] = useState<MetricaCrossSelling>({
+    totalTurnos: 0,
+    turnosConProducto: 0,
+    tasaConversion: 0,
+    ticketMedioSoloServicio: 0,
+    ticketMedioConProducto: 0,
+  });
+  const [origenReservas, setOrigenReservas] = useState<DistribucionOrigen[]>([]);
+  const [impactoFinanciero, setImpactoFinanciero] = useState<ImpactoMedioPago[]>([]);
 
   // Ajuste de rango de fechas
   useEffect(() => {
@@ -94,7 +155,7 @@ export default function MetricasPage() {
 
   // Cargar métricas
   const cargarMetricas = useCallback(async () => {
-    if (!fechaInicio || !fechaFin) return;
+    if (!fechaInicio || !fechaFin || !autenticado) return;
     setCargando(true);
 
     try {
@@ -107,7 +168,12 @@ export default function MetricasPage() {
         resMediosPago,
         resCategorias,
         resDiasSemana,
-        resTopProductos, // <-- AGREGADO AL PROMISE.ALL
+        resTopProductos,
+        resNoShow, 
+        resFranjas, 
+        resCrossSelling,
+        resOrigen,
+        resImpacto,
       ] = await Promise.all([
         getKpisReservas(rangoParam),
         getTopServicios(rangoParam, 5),
@@ -115,14 +181,24 @@ export default function MetricasPage() {
         getDesgloseMediosPago(rangoParam),
         getComparativaCategorias(rangoParam),
         getDistribucionDiasSemana(rangoParam),
-        getTopProductos(rangoParam, 5), // <-- LLAMADA
+        getTopProductos(rangoParam, 5),
+        getTasaNoShow(rangoParam),
+        getDistribucionFranjasHorarias(rangoParam),
+        getMetricasCrossSelling(rangoParam),
+        getOrigenReservas(rangoParam),
+        getImpactoFinancieroMediosPago(rangoParam),
       ]);
 
       setKpis(resKpis);
       setMediosPago(resMediosPago);
       setComparativaCat(resCategorias);
       setDiasSemana(resDiasSemana);
-      setTopProductos(resTopProductos); // <-- SET DEL ESTADO
+      setTopProductos(resTopProductos);
+      setNoShow(resNoShow);
+      setFranjasHorarias(resFranjas);
+      setCrossSelling(resCrossSelling);
+      setOrigenReservas(resOrigen);
+      setImpactoFinanciero(resImpacto);
 
       setSerieIngresos(
         resEvolucion.map((item: SerieIngresosPorFecha) => ({
@@ -143,15 +219,28 @@ export default function MetricasPage() {
     } finally {
       setCargando(false);
     }
-  }, [fechaInicio, fechaFin]);
+  }, [fechaInicio, fechaFin, autenticado]);
 
   useEffect(() => {
     cargarMetricas();
   }, [cargarMetricas]);
 
+  if (cargandoSesion) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-zinc-950">
+        <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 text-xs font-semibold">
+          <Loader2 className="w-4 h-4 animate-spin text-violet-500" />
+          <span>Verificando permisos...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!autenticado) return null;
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Encabezado */}
+      {/* Encabezado con Botón de Volver */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-zinc-100">
@@ -161,6 +250,14 @@ export default function MetricasPage() {
             Rendimiento en tiempo real sincronizado con tus reservas y turnos
           </p>
         </div>
+
+        <Link
+          href="/admin"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-700 transition-all shadow-xs"
+        >
+          <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
+          <span>Volver al Menú Admin</span>
+        </Link>
       </div>
 
       {/* Selector de Rango de Fechas */}
@@ -244,6 +341,12 @@ export default function MetricasPage() {
                   <AppointmentsChart data={estadoTurnosChart} />
                 </div>
               </div>
+
+              <OrigenFinanzasCard 
+                origen={origenReservas} 
+                mediosPago={impactoFinanciero} 
+                loading={cargando} 
+              />
             </div>
           )}
 
@@ -259,7 +362,6 @@ export default function MetricasPage() {
                 </div>
               </div>
 
-              {/* Lista/Tarjeta de Productos Más Vendidos */}
               <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-100 mb-4">
                   Productos Más Vendidos
@@ -293,18 +395,24 @@ export default function MetricasPage() {
                   </div>
                 )}
               </div>
+
+              <CrossSellingCard data={crossSelling} loading={cargando} />
             </div>
           )}
 
           {/* Pestaña 3: Rubros y Días */}
           {tabActiva === 'agenda' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div>
-                <CategoriasCard data={comparativaCat} loading={cargando} />
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div>
+                  <CategoriasCard data={comparativaCat} loading={cargando} />
+                </div>
+                <div className="lg:col-span-2">
+                  <GraficoDiasSemana data={diasSemana} loading={cargando} />
+                </div>
               </div>
-              <div className="lg:col-span-2">
-                <GraficoDiasSemana data={diasSemana} loading={cargando} />
-              </div>
+
+              <FranjasHorariasCard franjas={franjasHorarias} noShow={noShow} loading={cargando} />
             </div>
           )}
         </>

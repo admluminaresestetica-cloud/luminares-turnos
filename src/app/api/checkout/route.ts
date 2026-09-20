@@ -121,6 +121,7 @@ export async function POST(request: Request) {
       });
 
       itemsValidados.push({
+        producto_id: Number(productoDb.id),
         nombre_producto: String(productoDb.nombre),
         cantidad: cantidad,
         precio_unitario: precioUnitarioConRecargo,
