@@ -112,8 +112,8 @@ export default function ServiciosPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100/80 pb-36 font-sans selection:bg-rose-100 selection:text-rose-900">
-      <div className="max-w-2xl mx-auto p-4 sm:p-6 md:p-8">
+  <main className="min-h-screen bg-white pb-36 font-sans selection:bg-rose-100 selection:text-rose-900">
+    <div className="max-w-2xl mx-auto p-4 sm:p-6 md:p-8">
         
         {/* Navegación y Encabezado Superior */}
         <div className="mb-6">

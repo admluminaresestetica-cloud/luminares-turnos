@@ -124,8 +124,8 @@ export default function MisTurnosPage() {
   const urlWhatsAppReprogramar = `https://wa.me/${numeroWhatsApp}?text=${mensajeReprogramar}`;
 
   return (
-    <main className="min-h-screen bg-slate-100/80 p-4 sm:p-6 md:p-12 relative font-sans selection:bg-rose-100 selection:text-rose-900">
-      <div className="max-w-md mx-auto space-y-6">
+  <main className="min-h-screen bg-white p-4 sm:p-6 md:p-12 relative font-sans selection:bg-rose-100 selection:text-rose-900">
+    <div className="max-w-md mx-auto space-y-6">
 
         {/* Volver */}
         <Link 

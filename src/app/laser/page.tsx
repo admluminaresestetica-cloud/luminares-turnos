@@ -185,8 +185,8 @@ export default function LaserPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-100/70 flex flex-col items-center justify-start p-4 sm:p-6 pb-32 font-sans">
-      <div className="max-w-md sm:max-w-2xl w-full space-y-4">
+  <main className="min-h-screen bg-white flex flex-col items-center justify-start p-4 sm:p-6 pb-32 font-sans">
+    <div className="max-w-md sm:max-w-2xl w-full space-y-4">
         
         {/* Volver */}
         <div className="w-full flex justify-start">

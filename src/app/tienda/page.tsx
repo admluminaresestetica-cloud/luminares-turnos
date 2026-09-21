@@ -217,12 +217,12 @@ export default function TiendaPage() {
   const hayTagActivo = Boolean(tagSeleccionado);
 
   return (
-    <div
-      className={`min-h-screen text-[#12151B] flex flex-col justify-between transition-colors duration-500 ease-in-out ${
-        hayTagActivo ? "bg-[#EEF5F2]" : "bg-[#F7F7F5]"
-      }`}
-    >
-      <div>
+  <div
+    className={`min-h-screen text-[#12151B] flex flex-col justify-between transition-colors duration-500 ease-in-out ${
+      hayTagActivo ? "bg-white" : "bg-white"
+    }`}
+  >
+    <div>
         {/* Barra de navegación superior optimizada tipo App Bar */}
         <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0]/80 bg-white/85 px-4 py-3.5 backdrop-blur-xl sm:px-10 sm:py-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-3">
