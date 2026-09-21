@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Zap, Sparkles } from 'lucide-react';
 import SelectorGenero from '@/components/laser/SelectorGenero';
 import SelectorModoLaser from '@/components/laser/SelectorModoLaser';
 import PanelPromos from '@/components/laser/PanelPromos';
@@ -114,7 +114,6 @@ export default function LaserPage() {
 
   const detalleBarra = useMemo(() => {
     if (modo === 'promo' && promoSeleccionada) {
-      // Obtenemos los nombres de las zonas resueltas de la promo
       const zonasNombres = getZonasPromoResueltas(promoSeleccionada, zonas, swaps)
         .map((z) => z.nombre_zona);
 
@@ -186,48 +185,64 @@ export default function LaserPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-32">
-      <div className="max-w-3xl mx-auto p-6 md:p-10">
-        {/* Botón Volver Minimalista */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors mb-8 group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Volver al inicio
-        </Link>
+    <main className="min-h-screen bg-slate-100/70 flex flex-col items-center justify-start p-4 sm:p-6 pb-32 font-sans">
+      <div className="max-w-md w-full space-y-4">
+        
+        {/* Volver */}
+        <div className="w-full flex justify-start">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs hover:bg-slate-50 active:scale-95 transition-all"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Volver al menú principal</span>
+          </Link>
+        </div>
 
-        <header className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+        {/* Header */}
+        <header className="text-center space-y-1 my-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200/80 shadow-xs mb-1">
+            <Zap className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+            <span className="text-[10px] font-black tracking-[0.18em] uppercase text-slate-700">
+              Reserva Online
+            </span>
+          </div>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
             Depilación Láser
           </h1>
-          <p className="text-slate-500 mt-1 text-sm">
+          <p className="text-xs text-slate-500 font-medium">
             {!genero
               ? 'Paso 1: Seleccioná tu perfil'
-              : 'Paso 2: Elegí promos o zonas individuales'}
+              : 'Paso 2: Elegí combos o zonas individuales'}
           </p>
         </header>
 
         {/* Paso 1: Género */}
-        <section className="mb-8">
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-            Género
-          </h2>
+        <section className="bg-white border border-slate-200/80 rounded-[22px] p-4 sm:p-5 shadow-xs space-y-3">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-slate-700">
+              Seleccioná tu perfil
+            </h2>
+          </div>
           <SelectorGenero genero={genero} onSelect={handleGenero} />
         </section>
 
         {/* Paso 2: Selección de servicios */}
         {genero && (
-          <section>
+          <section className="space-y-4 animate-in fade-in duration-200">
             {cargando ? (
-              <div className="flex items-center justify-center py-16 text-slate-400 text-sm font-medium">
-                Cargando servicios...
+              <div className="bg-white border border-slate-200/80 rounded-[22px] p-8 text-center shadow-xs">
+                <div className="w-6 h-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                <p className="text-xs font-bold text-slate-400">Cargando opciones disponibles...</p>
               </div>
             ) : (
               <>
-                <SelectorModoLaser modo={modo} onChange={handleModoChange} />
+                <div className="bg-white border border-slate-200/80 rounded-[22px] p-3 shadow-xs">
+                  <SelectorModoLaser modo={modo} onChange={handleModoChange} />
+                </div>
 
-                <div className="mt-6">
+                <div className="space-y-3">
                   {modo === 'promo' ? (
                     <>
                       <PanelPromos

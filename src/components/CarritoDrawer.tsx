@@ -373,8 +373,21 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     key={item.id}
                     className="flex items-center justify-between p-3 border border-[#E7E5E0] rounded-xl bg-gray-50/50 gap-3"
                   >
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-xs text-gray-800">{item.nombre}</h4>
+                    {/* Miniatura del producto */}
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white border border-gray-200 flex items-center justify-center">
+                      {item.imagen_url ? (
+                        <img
+                          src={item.imagen_url}
+                          alt={item.nombre}
+                          className="h-full w-full object-cover object-center"
+                        />
+                      ) : (
+                        <span className="text-base">🛍️</span>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-xs text-gray-800 truncate">{item.nombre}</h4>
                       <p className="text-xs text-gray-500">${(Number(item.precio) || 0).toLocaleString("es-AR")}</p>
                     </div>
 

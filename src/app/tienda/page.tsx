@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { ShoppingBag, ArrowLeft, Tag as TagIcon, X } from "lucide-react";
+import { ShoppingBag, ArrowLeft, Tag as TagIcon, X, Sparkles } from "lucide-react";
 import CarritoDrawer from "@/components/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
 import BeneficiosTienda from "./components/BeneficiosTienda";
@@ -56,7 +56,6 @@ export default function TiendaPage() {
 
     if (status === "success" && typeof vaciarCarrito === "function") {
       vaciarCarrito();
-      // Limpiamos los parámetros de la URL para que no quede el status colgado
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [vaciarCarrito]);
@@ -143,7 +142,6 @@ export default function TiendaPage() {
   const productosFiltrados = useMemo(() => {
     let resultado = productos;
 
-    // 1. Filtro estricto por Tag (sin buscar en la descripción)
     if (tagSeleccionado) {
       const criterio = tagSeleccionado.toLowerCase();
       resultado = resultado.filter((p) => {
@@ -161,7 +159,6 @@ export default function TiendaPage() {
       });
     }
 
-    // 2. Buscador por texto libre (Amplio con Fuse.js, sí incluye descripción)
     if (busqueda.trim() !== "") {
       const fuseOptions = {
         keys: ["nombre", "categoria", "descripcion", "etiquetas"],
@@ -173,7 +170,6 @@ export default function TiendaPage() {
       resultado = fuse.search(busqueda).map((res) => res.item);
     }
 
-    // 3. Filtro por Categoría
     if (categoriaFiltro === "Ofertas") {
       resultado = resultado.filter((p) => {
         const precioBase = Number(p.precio_original) || 0;
@@ -227,53 +223,57 @@ export default function TiendaPage() {
       }`}
     >
       <div>
-        <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0] bg-white/90 px-4 py-3 backdrop-blur-md sm:px-10 sm:py-4">
+        {/* Barra de navegación superior optimizada tipo App Bar */}
+        <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0]/80 bg-white/85 px-4 py-3.5 backdrop-blur-xl sm:px-10 sm:py-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B675F] hover:text-[#12151B] bg-[#F7F7F5] hover:bg-[#E7E5E0]/60 px-2.5 py-2 rounded-xl transition-all border border-[#E7E5E0]"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#6B675F] hover:text-[#12151B] bg-slate-100/80 hover:bg-slate-200/80 px-3.5 py-2 rounded-xl transition-all active:scale-95 border border-[#E7E5E0]/60 shadow-xs"
               title="Volver a la selección principal"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 stroke-[2.2]" />
               <span className="hidden md:inline">Inicio</span>
             </Link>
 
             <Link
               href="/tienda"
               onClick={resetearFiltros}
-              className="flex min-w-0 items-center gap-2 sm:gap-3 cursor-pointer transition-opacity hover:opacity-80 active:scale-[0.98]"
+              className="flex min-w-0 items-center gap-3 cursor-pointer transition-opacity hover:opacity-85 active:scale-[0.98]"
             >
-              <div className="relative flex h-9 w-9 shrink-0 items-center justify-center sm:h-12 sm:w-12">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center sm:h-11 sm:w-11 rounded-2xl bg-white border border-slate-200/80 shadow-xs p-1.5 overflow-hidden">
                 <Image
                   src={config?.logo_url || "/logodoradoo.svg"}
                   alt={config?.nombre_empresa || "Logo"}
-                  width={48}
-                  height={48}
+                  width={44}
+                  height={44}
                   className="h-full w-full object-contain"
                   priority
                 />
               </div>
 
               <div className="flex min-w-0 flex-col leading-tight">
-                <h2 className="m-0 truncate text-base font-bold tracking-tight text-[#12151B] sm:text-lg">
+                <h2 className="m-0 truncate text-sm sm:text-base font-extrabold tracking-tight text-[#12151B]">
                   {config?.nombre_empresa || "Luminares"}
                 </h2>
-                <span className="hidden truncate text-[11px] font-medium text-[#6B675F] sm:block sm:text-sm">
-                  {config?.subtitulo_tienda || "Tienda Oficial"}
-                </span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0E6E55] animate-pulse" />
+                  <span className="truncate text-[11px] font-semibold text-[#6B675F]">
+                    {config?.subtitulo_tienda || "Tienda Oficial"}
+                  </span>
+                </div>
               </div>
             </Link>
           </div>
 
           <button
             onClick={() => setModalAbierto(true)}
-            className="relative flex shrink-0 items-center justify-center gap-2 rounded-full border border-[#E7E5E0] bg-white p-2.5 text-sm font-semibold text-[#12151B] transition-all duration-200 hover:border-[#12151B]/40 hover:shadow-sm active:scale-95 sm:px-4 sm:py-2.5 cursor-pointer"
+            className="relative flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200/90 bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-[#12151B] transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm active:scale-95 cursor-pointer shadow-xs"
           >
-            <ShoppingBag className="h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4" strokeWidth={2} />
+            <ShoppingBag className="h-4 w-4 shrink-0 text-slate-700" strokeWidth={2.2} />
             <span className="hidden sm:inline">Mi Carrito</span>
 
             {totalItems > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-[#0E6E55] px-1 text-[10px] font-extrabold leading-none text-white shadow-sm sm:static sm:ml-1 sm:h-5 sm:min-w-[20px] sm:border-0 sm:text-[11px]">
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-[#0E6E55] px-1 text-[10px] font-extrabold leading-none text-white shadow-xs sm:static sm:ml-1 sm:h-5 sm:min-w-[20px] sm:border-0 sm:text-[11px]">
                 {totalItems}
               </span>
             )}
@@ -291,22 +291,24 @@ export default function TiendaPage() {
             onSelectTag={(slug) => setTagSeleccionado(slug)}
           />
 
-          {/* Indicador visual de la etiqueta filtrada */}
+          {/* Indicador visual moderno de etiqueta activa */}
           {hayTagActivo && (
-            <div className="mb-4 flex items-center justify-between bg-white border border-[#0E6E55]/30 rounded-2xl px-4 py-3 shadow-sm animate-in fade-in duration-300">
-              <div className="flex items-center gap-2 text-sm font-semibold text-[#0E6E55]">
-                <TagIcon className="w-4 h-4" />
+            <div className="mb-6 flex items-center justify-between bg-white border border-[#0E6E55]/30 rounded-[22px] px-4 sm:px-5 py-3.5 shadow-[0_8px_20px_-6px_rgba(14,110,85,0.08)] animate-in fade-in duration-300">
+              <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-[#0E6E55]">
+                <div className="w-7 h-7 rounded-xl bg-[#0E6E55]/10 flex items-center justify-center shrink-0">
+                  <TagIcon className="w-3.5 h-3.5 stroke-[2.2]" />
+                </div>
                 <span>
-                  Viendo productos etiquetados con:{" "}
-                  <strong className="underline decoration-2">#{tagSeleccionado}</strong>
+                  Filtrando por etiqueta:{" "}
+                  <strong className="underline decoration-2 underline-offset-2">#{tagSeleccionado}</strong>
                 </span>
               </div>
               <button
                 onClick={() => setTagSeleccionado(null)}
-                className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/80 px-3 py-2 rounded-xl transition-all cursor-pointer active:scale-95"
               >
-                <span>Limpiar filtro</span>
-                <X className="w-3.5 h-3.5" />
+                <span>Limpiar</span>
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
               </button>
             </div>
           )}
