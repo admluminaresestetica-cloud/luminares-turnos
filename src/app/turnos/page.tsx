@@ -69,19 +69,19 @@ function HomeContent() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 font-sans">
-      <div className="max-w-md w-full flex flex-col items-center">
-        
-        {/* Volver */}
-        <div className="w-full flex justify-start mb-3">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs hover:bg-slate-50 active:scale-95 transition-all"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Volver al inicio</span>
-          </Link>
-        </div>
+<main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 font-sans">
+  <div className="max-w-md w-full flex flex-col items-center">
+    
+    {/* Volver */}
+    <div className="w-full flex justify-start mb-3">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs hover:bg-slate-50 active:scale-95 transition-all"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        <span>Volver al inicio</span>
+      </Link>
+    </div>
 
         {/* Banner */}
         <div className="w-full mb-3">
