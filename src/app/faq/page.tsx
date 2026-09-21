@@ -8,7 +8,7 @@ export default function FAQPage() {
       <div className="max-w-2xl mx-auto">
         {/* Botón de volver */}
         <Link
-          href="/"
+          href="/turnos"
           className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />

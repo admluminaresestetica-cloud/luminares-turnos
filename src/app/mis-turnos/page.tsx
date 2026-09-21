@@ -129,7 +129,7 @@ export default function MisTurnosPage() {
 
         {/* Volver */}
         <Link 
-          href="/" 
+          href="/turnos" 
           className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white/85 backdrop-blur-sm border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs transition-all active:scale-95"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -251,7 +251,7 @@ export default function MisTurnosPage() {
               </div>
 
               <div className="flex items-center gap-2.5 text-slate-700 bg-slate-50/80 p-3 rounded-xl border border-slate-200/60">
-                <Sparkles className="w-4 h-4 text-rose-500 shrink-0" />
+                
                 <span>Servicio: <strong className="text-slate-900 font-bold">{formatDetalleReservaDisplay(reserva)}</strong></span>
               </div>
 

@@ -119,7 +119,7 @@ export default function ServiciosPage() {
         <div className="mb-6">
           {paso === 'categoria' ? (
             <Link
-              href="/"
+              href="/turnos"
               className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white/80 backdrop-blur-sm border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs transition-all active:scale-95 mb-4"
             >
               <ArrowLeft className="w-3.5 h-3.5" />

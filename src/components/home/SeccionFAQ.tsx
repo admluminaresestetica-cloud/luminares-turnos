@@ -41,7 +41,7 @@ export default function SeccionFAQ() {
       {/* Header de la sección */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-50 text-rose-700 text-xs sm:text-sm font-semibold border border-rose-200/80 mb-3 shadow-xs">
-          <Sparkles className="w-4 h-4 text-rose-500 animate-pulse" />
+          
           <span>Dudas frecuentes</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">

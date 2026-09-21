@@ -189,7 +189,7 @@ export default function FormConfirmacion({
           </div>
 
           <div className="flex justify-between items-center text-slate-500 text-[11px]">
-            <span>Seña sugerida para congelar turno ({porcentajeSena}%):</span>
+            <span>Seña minima para congelar turno ({porcentajeSena}%):</span>
             <span className="font-semibold text-slate-700">${montoSenaBase.toLocaleString('es-AR')}</span>
           </div>
         </div>

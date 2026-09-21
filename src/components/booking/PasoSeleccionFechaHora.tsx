@@ -76,7 +76,7 @@ export default function PasoSeleccionFechaHora({
       {/* Resumen Total */}
       <div className={`border rounded-xl p-3.5 sm:p-4 flex justify-between items-center transition-colors ${summaryBgStyle}`}>
         <div className="flex items-center gap-1.5 sm:gap-2 text-slate-600 text-xs font-medium">
-          <Sparkles className="w-4 h-4 text-slate-700 shrink-0" />
+          <quare-pen className="w-4 h-4 text-slate-700 shrink-0" />
           <span>Resumen</span>
         </div>
         <div className="text-right">

@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles, Layers } from 'lucide-react';
+import { Star, Layers } from 'lucide-react';
 import type { ModoLaser } from '@/lib/laser/calculos';
 
 interface Props {
@@ -20,7 +20,7 @@ export default function SelectorModoLaser({ modo, onChange }: Props) {
             : 'text-slate-500 hover:text-slate-800'
         }`}
       >
-        <Sparkles className={`w-3.5 h-3.5 ${modo === 'promo' ? 'text-slate-900' : 'text-slate-400'}`} />
+        <Star className={`w-3.5 h-3.5 ${modo === 'promo' ? 'text-slate-900' : 'text-slate-400'}`} />
         Promos fijas
       </button>
 

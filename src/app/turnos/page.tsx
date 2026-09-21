@@ -91,7 +91,7 @@ function HomeContent() {
         {/* Header */}
         <header className="text-center mb-5">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200/80 shadow-xs mb-2">
-            <Sparkles className="w-3 h-3 text-rose-500" />
+            
             <span className="text-[10px] font-black tracking-[0.18em] uppercase text-slate-700">
               {nombreEmpresa}
             </span>
