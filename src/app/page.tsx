@@ -3,8 +3,9 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, ShoppingBag, MessageCircle, ChevronRight, Sparkles } from 'lucide-react';
+import { Calendar, ShoppingBag, MessageCircle, ChevronRight, Sparkles, Gamepad2 } from 'lucide-react';
 import { useConfig } from '@/context/ConfigContext';
+import BubbleGameWrapper from '@/components/game/BubbleGameWrapper';
 
 export default function LandingPagePrueba() {
   const { config } = useConfig();
@@ -116,6 +117,21 @@ export default function LandingPagePrueba() {
             </div>
           </Link>
 
+        </div>
+
+        {/* Sección del Juego Luminares */}
+        <div className="w-full mb-8 flex flex-col items-center">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 mb-3">
+            <Gamepad2 className="w-3.5 h-3.5 text-indigo-600" />
+            <span className="text-[10px] font-black tracking-[0.2em] uppercase text-indigo-800">
+              Juego Exclusivo
+            </span>
+          </div>
+
+          {/* Lienzo del Juego en Phaser */}
+          <div className="w-full max-w-sm">
+            <BubbleGameWrapper />
+          </div>
         </div>
 
         {/* Tarjeta inferior de WhatsApp estilo píldora interactiva */}
