@@ -13,7 +13,8 @@ import {
   Sparkles, 
   Scissors,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Phone
 } from 'lucide-react';
 import type { CierreJornada, ConfiguracionCalendario, Reserva } from '@/lib/types';
 import { matchBusqueda, renderDetalleReserva, renderFechaHora } from '@/lib/admin/helpers';
@@ -30,6 +31,18 @@ import ModalEditarReserva from './ModalEditarReserva';
 import { supabase } from '@/lib/supabase';
 
 type VistaAgenda = 'proximos' | 'historial';
+
+// Solo estilos visuales para los badges de las tarjetas móviles
+const BADGE_ESTADO: Record<string, string> = {
+  confirmado: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20',
+  completado: 'bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-100 dark:border-sky-500/20',
+  cancelado: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-100 dark:border-red-500/20',
+  pendiente: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-500/20',
+};
+const BADGE_NEUTRO =
+  'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border-gray-200 dark:border-zinc-700';
+const BADGE_PAGO =
+  'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-100 dark:border-rose-500/20';
 
 interface Props {
   reservas: Reserva[];
@@ -117,7 +130,7 @@ export default function AgendaPanel({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 md:space-y-5">
       {/* Control de Jornada / Cierre */}
       <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 p-4 sm:p-5 shadow-sm transition-colors">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
@@ -195,7 +208,7 @@ export default function AgendaPanel({
       {/* Lista de Reservas */}
       <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm overflow-hidden transition-colors">
         {/* Barra superior de filtros y búsqueda */}
-        <div className="p-4 border-b border-gray-100 dark:border-zinc-800 flex flex-col sm:flex-row gap-3 items-center justify-between bg-gray-50/30 dark:bg-zinc-900/50">
+        <div className="p-3 sm:p-4 border-b border-gray-100 dark:border-zinc-800 flex flex-col sm:flex-row gap-3 items-center justify-between bg-gray-50/30 dark:bg-zinc-900/50">
           <div className="relative flex-1 w-full">
             <Search className="w-4 h-4 text-gray-400 dark:text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
@@ -241,106 +254,248 @@ export default function AgendaPanel({
             <p className="text-gray-500 dark:text-zinc-400 text-xs font-medium">No se encontraron reservas con los filtros seleccionados.</p>
           </div>
         ) : (
-          <div className="p-3 sm:p-0">
-            <p className="sm:hidden text-[11px] text-gray-400 dark:text-zinc-500 font-medium mb-2 px-1">
-              ↔ Deslizá la tabla hacia los costados para ver más columnas
-            </p>
-            <div className="overflow-x-auto scroll-smooth">
-              <table className="w-full text-left text-xs min-w-[900px] sm:min-w-0">
-                <thead className="bg-gray-50/80 dark:bg-zinc-800/50 text-gray-500 dark:text-zinc-400 font-semibold uppercase tracking-wider text-[11px] border-b border-gray-100 dark:border-zinc-800">
-                  <tr>
-                    <th className="px-4 py-3 w-8" />
-                    <th className="px-4 py-3">Código</th>
-                    <th className="px-4 py-3">Cliente</th>
-                    <th className="px-4 py-3">Fecha / Hora</th>
-                    <th className="px-4 py-3">Servicio</th>
-                    <th className="px-4 py-3">Medio Pago</th>
-                    <th className="px-4 py-3">Asistencia</th>
-                    <th className="px-4 py-3">Estado</th>
-                    <th className="px-4 py-3 text-right">Acción</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/60">
-                  {filtradas.map((r) => {
-                    const cerrada = isJornadaCerrada(fechaDeReserva(r.fecha_hora_inicio), r.servicio_tipo, cierres);
-                    return (
-                      <tr 
-                        key={r.id} 
-                        className={`hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-colors ${cerrada ? 'bg-gray-50/50 dark:bg-zinc-800/30 opacity-75' : ''}`}
-                      >
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-block w-2.5 h-2.5 rounded-full ${
-                              r.fue_modificado ? 'bg-amber-500' : 'bg-emerald-500'
-                            }`}
-                            title={r.fue_modificado ? 'Modificado por admin' : 'Reserva original'}
-                          />
-                        </td>
-                        <td className="px-4 py-3 font-mono font-bold text-gray-700 dark:text-zinc-300">{r.codigo_unico}</td>
-                        <td className="px-4 py-3">
-                          <div className="font-semibold text-gray-800 dark:text-zinc-100">{r.cliente_nombre}</div>
-                          <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">{r.cliente_celular}</div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-zinc-300 font-medium">
-                          {renderFechaHora(r.fecha_hora_inicio)}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600 dark:text-zinc-300 max-w-[150px] truncate" title={renderDetalleReserva(r)}>
-                          {renderDetalleReserva(r)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <select
-                            value={r.medio_pago || ''}
-                            onChange={(e) => handleCampo(r.id, { medio_pago: e.target.value || null })}
-                            disabled={cerrada}
-                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none max-w-[110px] transition-all"
-                          >
-                            <option value="" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">—</option>
-                            {MEDIOS_PAGO.map((m) => (
-                              <option key={m.value} value={m.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{m.label}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-4 py-3">
-                          <select
-                            value={r.estado_asistencia || 'pendiente'}
-                            onChange={(e) => handleCampo(r.id, { estado_asistencia: e.target.value as typeof r.estado_asistencia })}
-                            disabled={cerrada}
-                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none transition-all"
-                          >
-                            {ESTADOS_ASISTENCIA.map((e) => (
-                              <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-4 py-3">
-                          <select
-                            value={r.estado}
-                            onChange={(e) => handleCampo(r.id, { estado: e.target.value as typeof r.estado })}
-                            disabled={cerrada}
-                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none font-medium transition-all"
-                          >
-                            {ESTADOS_RESERVA.map((e) => (
-                              <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => setEditReserva(r)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2.5 py-1.5 rounded-lg transition-all active:scale-95"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            Editar
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          <>
+            {/* ───────────── VISTA PC / TABLET (md y superior): tabla ───────────── */}
+            <div className="hidden md:block">
+              <div className="overflow-x-auto scroll-smooth">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-gray-50/80 dark:bg-zinc-800/50 text-gray-500 dark:text-zinc-400 font-semibold uppercase tracking-wider text-[11px] border-b border-gray-100 dark:border-zinc-800">
+                    <tr>
+                      <th className="px-4 py-3 w-8" />
+                      <th className="px-4 py-3">Código</th>
+                      <th className="px-4 py-3">Cliente</th>
+                      <th className="px-4 py-3">Fecha / Hora</th>
+                      <th className="px-4 py-3">Servicio</th>
+                      <th className="px-4 py-3">Medio Pago</th>
+                      <th className="px-4 py-3">Asistencia</th>
+                      <th className="px-4 py-3">Estado</th>
+                      <th className="px-4 py-3 text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/60">
+                    {filtradas.map((r) => {
+                      const cerrada = isJornadaCerrada(fechaDeReserva(r.fecha_hora_inicio), r.servicio_tipo, cierres);
+                      return (
+                        <tr 
+                          key={r.id} 
+                          className={`hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-colors ${cerrada ? 'bg-gray-50/50 dark:bg-zinc-800/30 opacity-75' : ''}`}
+                        >
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-block w-2.5 h-2.5 rounded-full ${
+                                r.fue_modificado ? 'bg-amber-500' : 'bg-emerald-500'
+                              }`}
+                              title={r.fue_modificado ? 'Modificado por admin' : 'Reserva original'}
+                            />
+                          </td>
+                          <td className="px-4 py-3 font-mono font-bold text-gray-700 dark:text-zinc-300">{r.codigo_unico}</td>
+                          <td className="px-4 py-3">
+                            <div className="font-semibold text-gray-800 dark:text-zinc-100">{r.cliente_nombre}</div>
+                            <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">{r.cliente_celular}</div>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-zinc-300 font-medium">
+                            {renderFechaHora(r.fecha_hora_inicio)}
+                          </td>
+                          <td className="px-4 py-3 text-gray-600 dark:text-zinc-300 max-w-[150px] truncate" title={renderDetalleReserva(r)}>
+                            {renderDetalleReserva(r)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <select
+                              value={r.medio_pago || ''}
+                              onChange={(e) => handleCampo(r.id, { medio_pago: e.target.value || null })}
+                              disabled={cerrada}
+                              className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none max-w-[110px] transition-all"
+                            >
+                              <option value="" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">—</option>
+                              {MEDIOS_PAGO.map((m) => (
+                                <option key={m.value} value={m.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{m.label}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-4 py-3">
+                            <select
+                              value={r.estado_asistencia || 'pendiente'}
+                              onChange={(e) => handleCampo(r.id, { estado_asistencia: e.target.value as typeof r.estado_asistencia })}
+                              disabled={cerrada}
+                              className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none transition-all"
+                            >
+                              {ESTADOS_ASISTENCIA.map((e) => (
+                                <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-4 py-3">
+                            <select
+                              value={r.estado}
+                              onChange={(e) => handleCampo(r.id, { estado: e.target.value as typeof r.estado })}
+                              disabled={cerrada}
+                              className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none font-medium transition-all"
+                            >
+                              {ESTADOS_RESERVA.map((e) => (
+                                <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => setEditReserva(r)}
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2.5 py-1.5 rounded-lg transition-all active:scale-95"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              Editar
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            {/* ───────────── VISTA MÓVIL (< md): tarjetas verticales ───────────── */}
+            <div className="block md:hidden p-3 space-y-3">
+              {filtradas.map((r) => {
+                const cerrada = isJornadaCerrada(fechaDeReserva(r.fecha_hora_inicio), r.servicio_tipo, cierres);
+                const estadoLabel = ESTADOS_RESERVA.find((e) => e.value === r.estado)?.label ?? r.estado;
+                const pagoLabel = r.medio_pago
+                  ? MEDIOS_PAGO.find((m) => m.value === r.medio_pago)?.label ?? r.medio_pago
+                  : null;
+
+                return (
+                  <article
+                    key={r.id}
+                    className={`rounded-2xl border border-gray-100 dark:border-zinc-800 p-4 shadow-sm transition-colors ${
+                      cerrada
+                        ? 'bg-gray-50/70 dark:bg-zinc-800/30 opacity-80'
+                        : 'bg-white dark:bg-zinc-900'
+                    }`}
+                  >
+                    {/* Hora + badges de estado / medio de pago */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug">
+                        {renderFechaHora(r.fecha_hora_inicio)}
+                      </div>
+                      <div className="flex flex-wrap justify-end gap-1.5 shrink-0 max-w-[62%]">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border whitespace-nowrap ${
+                            BADGE_ESTADO[r.estado] ?? BADGE_NEUTRO
+                          }`}
+                        >
+                          {estadoLabel}
+                        </span>
+                        {pagoLabel && (
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border whitespace-nowrap ${BADGE_PAGO}`}
+                          >
+                            {pagoLabel}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Cliente y código */}
+                    <div className="mt-2.5 flex items-center gap-2 min-w-0">
+                      <span
+                        className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                          r.fue_modificado ? 'bg-amber-500' : 'bg-emerald-500'
+                        }`}
+                        title={r.fue_modificado ? 'Modificado por admin' : 'Reserva original'}
+                      />
+                      <span className="text-sm font-semibold text-gray-800 dark:text-zinc-100 truncate">
+                        {r.cliente_nombre}
+                      </span>
+                      <span className="text-gray-300 dark:text-zinc-600">•</span>
+                      <span className="text-xs font-mono font-bold text-gray-500 dark:text-zinc-400 shrink-0">
+                        {r.codigo_unico}
+                      </span>
+                      {cerrada && (
+                        <Lock className="w-3 h-3 text-gray-400 dark:text-zinc-500 shrink-0" aria-label="Jornada cerrada" />
+                      )}
+                    </div>
+
+                    {/* Teléfono */}
+                    <a
+                      href={`tel:${r.cliente_celular}`}
+                      className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-mono text-gray-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      {r.cliente_celular}
+                    </a>
+
+                    {/* Detalle del servicio */}
+                    <div className="mt-2 text-xs text-gray-600 dark:text-zinc-300 leading-relaxed">
+                      {renderDetalleReserva(r)}
+                    </div>
+
+                    {/* Controles (mismos handlers que la tabla) + acción */}
+                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-zinc-800 grid grid-cols-2 gap-2">
+                      <label className="block min-w-0">
+                        <span className="block text-[10px] font-semibold text-gray-400 dark:text-zinc-500 mb-1">
+                          Medio de pago
+                        </span>
+                        <select
+                          value={r.medio_pago || ''}
+                          onChange={(e) => handleCampo(r.id, { medio_pago: e.target.value || null })}
+                          disabled={cerrada}
+                          className="w-full text-xs border border-gray-200 dark:border-zinc-700 rounded-xl px-2.5 py-2.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none transition-all"
+                        >
+                          <option value="" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">—</option>
+                          {MEDIOS_PAGO.map((m) => (
+                            <option key={m.value} value={m.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{m.label}</option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block min-w-0">
+                        <span className="block text-[10px] font-semibold text-gray-400 dark:text-zinc-500 mb-1">
+                          Asistencia
+                        </span>
+                        <select
+                          value={r.estado_asistencia || 'pendiente'}
+                          onChange={(e) => handleCampo(r.id, { estado_asistencia: e.target.value as typeof r.estado_asistencia })}
+                          disabled={cerrada}
+                          className="w-full text-xs border border-gray-200 dark:border-zinc-700 rounded-xl px-2.5 py-2.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none transition-all"
+                        >
+                          {ESTADOS_ASISTENCIA.map((e) => (
+                            <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="block min-w-0">
+                        <span className="block text-[10px] font-semibold text-gray-400 dark:text-zinc-500 mb-1">
+                          Estado del turno
+                        </span>
+                        <select
+                          value={r.estado}
+                          onChange={(e) => handleCampo(r.id, { estado: e.target.value as typeof r.estado })}
+                          disabled={cerrada}
+                          className="w-full text-xs border border-gray-200 dark:border-zinc-700 rounded-xl px-2.5 py-2.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none font-medium transition-all"
+                        >
+                          {ESTADOS_RESERVA.map((e) => (
+                            <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <div className="flex items-end">
+                        <button
+                          type="button"
+                          onClick={() => setEditReserva(r)}
+                          className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-zinc-200 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-3 py-2.5 rounded-xl transition-all active:scale-95"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          Editar
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 

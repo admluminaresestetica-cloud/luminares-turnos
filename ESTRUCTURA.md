@@ -3,11 +3,25 @@
  ┃ ┣ 📂admin
  ┃ ┃ ┣ 📂ajustes
  ┃ ┃ ┃ ┣ 📂components
+ ┃ ┃ ┃ ┃ ┣ 📜BannersAjustesTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜BannersTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜BannerTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜ConfiguracionAnamnesis.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜ConfiguracionPinTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜FaqTab.tsx
- ┃ ┃ ┃ ┃ ┗ 📜FormularioEmpresaTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜FormularioEmpresaTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜GeneralesTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜HorariosTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜PreciosTab.tsx
+ ┃ ┃ ┃ ┃ ┗ 📜ReferidosTab.tsx
  ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂components
- ┃ ┃ ┃ ┗ 📜AdminChatWidget.tsx
+ ┃ ┃ ┃ ┣ 📜AdminChatWidget.tsx
+ ┃ ┃ ┃ ┣ 📜ModalPinAutorizacion.tsx
+ ┃ ┃ ┃ ┗ 📜SeccionSeguridad.tsx
+ ┃ ┃ ┣ 📂empleados
+ ┃ ┃ ┃ ┣ 📜actions.ts
+ ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂gestion
  ┃ ┃ ┃ ┣ 📂components
  ┃ ┃ ┃ ┃ ┣ 📜BannerAlertasClinicas.tsx
@@ -26,11 +40,27 @@
  ┃ ┃ ┃ ┃ ┣ 📂components
  ┃ ┃ ┃ ┃ ┃ ┣ 📜BuscadorMulticoincidencia.tsx
  ┃ ┃ ┃ ┃ ┃ ┣ 📜ChecklistAnamnesis.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜ConfiguracionAnamnesis.tsx
  ┃ ┃ ┃ ┃ ┃ ┣ 📜ResumenReservaCobro.tsx
  ┃ ┃ ┃ ┃ ┃ ┗ 📜SelectorZonasBotones.tsx
  ┃ ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂login
+ ┃ ┃ ┃ ┗ 📜page.tsx
+ ┃ ┃ ┣ 📂metricas
+ ┃ ┃ ┃ ┣ 📂components
+ ┃ ┃ ┃ ┃ ┣ 📜AppointmentsChart.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜CategoriasCard.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜CrossSellingCard.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜DateRangePicker.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜FranjasHorariasCard.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜GraficoDiasSemana.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜GraficoEvolucionIngresos.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜GraficoTopProductos.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜GraficoTopServicios.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜KpiCards.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜MediosPagoCard.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜OrigenFinanzasCard.tsx
+ ┃ ┃ ┃ ┃ ┗ 📜RevenueChart.tsx
+ ┃ ┃ ┃ ┣ 📂utils
  ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂tienda
  ┃ ┃ ┃ ┣ 📂components
@@ -44,18 +74,19 @@
  ┃ ┃ ┃ ┃ ┃ ┣ 📜PuntoVentaTab.tsx
  ┃ ┃ ┃ ┃ ┃ ┣ 📜TicketVenta.tsx
  ┃ ┃ ┃ ┃ ┃ ┗ 📜types.ts
- ┃ ┃ ┃ ┃ ┣ 📜BannersTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜CargadorImagenes.tsx
  ┃ ┃ ┃ ┃ ┣ 📜CategoriasTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜ControlCajaTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜FormularioProducto.tsx
  ┃ ┃ ┃ ┃ ┣ 📜ListaProductos.tsx
  ┃ ┃ ┃ ┃ ┣ 📜MetricasHeader.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜ModalAnulacionPedido.tsx
  ┃ ┃ ┃ ┃ ┣ 📜PedidosTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜PuntoVentaTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜ScannerModal.tsx
  ┃ ┃ ┃ ┃ ┣ 📜SeccionEtiquetas.tsx
- ┃ ┃ ┃ ┃ ┗ 📜TagsTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜TagsTab.tsx
+ ┃ ┃ ┃ ┃ ┗ 📜TiendaHeaderNav.tsx
  ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂turnos
  ┃ ┃ ┃ ┣ 📂components
@@ -68,12 +99,7 @@
  ┃ ┃ ┃ ┃ ┃ ┗ 📜ModalServicioLaser.tsx
  ┃ ┃ ┃ ┃ ┣ 📂tabs
  ┃ ┃ ┃ ┃ ┃ ┣ 📜AgendaTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜BannerTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜GeneralesTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜HorariosTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜OverviewTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┣ 📜PreciosTab.tsx
- ┃ ┃ ┃ ┃ ┃ ┗ 📜ReferidosTab.tsx
+ ┃ ┃ ┃ ┃ ┃ ┗ 📜OverviewTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜AdminTabs.tsx
  ┃ ┃ ┃ ┃ ┣ 📜AgendaPanel.tsx
  ┃ ┃ ┃ ┃ ┣ 📜DashboardOverview.tsx
@@ -180,6 +206,7 @@
  ┃ ┣ 📜CarritoDrawer.tsx
  ┃ ┣ 📜footer.tsx
  ┃ ┣ 📜FooterTienda.tsx
+ ┃ ┣ 📜PinModal.tsx
  ┃ ┣ 📜ProductoCard.tsx
  ┃ ┣ 📜ThemeProvider.tsx
  ┃ ┣ 📜ThemeToggle.tsx
@@ -196,9 +223,11 @@
  ┃ ┃ ┣ 📜usePreciosLaser.ts
  ┃ ┃ ┣ 📜useReferidosConfig.ts
  ┃ ┃ ┗ 📜useServiciosGenerales.ts
+ ┃ ┣ 📜usePerfil.ts
  ┃ ┗ 📜useReferidos.ts
  ┣ 📂lib
  ┃ ┣ 📂admin
+ ┃ ┃ ┣ 📜ajustes.ts
  ┃ ┃ ┣ 📜api.ts
  ┃ ┃ ┣ 📜constants.ts
  ┃ ┃ ┣ 📜helpers.ts
