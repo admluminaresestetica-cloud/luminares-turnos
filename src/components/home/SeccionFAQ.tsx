@@ -37,30 +37,34 @@ export default function SeccionFAQ() {
   };
 
   return (
-    <section className="py-10 px-2 sm:px-4 max-w-lg mx-auto">
+    <section className="py-16 px-4 sm:px-6 max-w-3xl mx-auto">
       {/* Header de la sección */}
-      <div className="text-center mb-6">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200/80 mb-2">
-          <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-rose-50 text-rose-700 text-xs sm:text-sm font-semibold border border-rose-200/80 mb-3 shadow-xs">
+          <Sparkles className="w-4 h-4 text-rose-500 animate-pulse" />
           <span>Dudas frecuentes</span>
         </div>
-        <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-          Preguntas Frecuentes y Información útil
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          Preguntas Frecuentes e Información Útil
         </h2>
-        <p className="text-xs text-slate-500 mt-1 font-medium">
+        <p className="text-sm sm:text-base text-slate-500 mt-2 font-normal">
           Todo lo que necesitás saber antes de tu primera sesión
         </p>
       </div>
 
       {/* Lista de acordeones */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {loading ? (
-          <div className="text-center py-6 text-xs text-slate-400 font-medium">
-            Cargando preguntas...
+          <div className="flex flex-col items-center justify-center py-12 space-y-3 bg-white rounded-2xl border border-slate-100 shadow-xs">
+            <div className="w-6 h-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-xs sm:text-sm text-slate-400 font-medium">Cargando preguntas...</p>
           </div>
         ) : faqs.length === 0 ? (
-          <div className="text-center py-6 text-xs text-slate-400 font-medium">
-            No hay preguntas frecuentes cargadas todavía.
+          <div className="text-center py-12 px-4 bg-white rounded-2xl border border-slate-100 shadow-xs">
+            <HelpCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-xs sm:text-sm text-slate-500 font-medium">
+              No hay preguntas frecuentes cargadas todavía.
+            </p>
           </div>
         ) : (
           faqs.map((faq) => {
@@ -69,44 +73,56 @@ export default function SeccionFAQ() {
             return (
               <div
                 key={faq.id}
-                className={`border rounded-2xl transition-all duration-200 overflow-hidden bg-white ${
+                className={`border rounded-2xl transition-all duration-300 overflow-hidden bg-white shadow-xs ${
                   estaAbierto
-                    ? 'border-rose-300 shadow-xs ring-1 ring-rose-200'
-                    : 'border-slate-200/80 hover:border-slate-300'
+                    ? 'border-rose-300 shadow-md ring-2 ring-rose-100/50'
+                    : 'border-slate-200/80 hover:border-slate-300 hover:shadow-sm'
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => toggleFAQ(faq.id)}
-                  className="w-full text-left p-4 flex items-center justify-between gap-3 cursor-pointer select-none"
+                  className="w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer select-none group"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <HelpCircle
-                      className={`w-4 h-4 shrink-0 transition-colors ${
-                        estaAbierto ? 'text-rose-500' : 'text-slate-400'
+                  <div className="flex items-center gap-3.5">
+                    <div
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-200 ${
+                        estaAbierto
+                          ? 'bg-rose-500 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-500 group-hover:bg-rose-50 group-hover:text-rose-600'
                       }`}
-                    />
-                    <span className="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
+                    >
+                      <HelpCircle className="w-4 h-4" />
+                    </div>
+                    <span className="text-sm sm:text-base font-semibold text-slate-800 leading-snug group-hover:text-slate-900">
                       {faq.pregunta}
                     </span>
                   </div>
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 ${
+                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 ${
                       estaAbierto
                         ? 'bg-rose-100 text-rose-600 rotate-180'
-                        : 'bg-slate-100 text-slate-500'
+                        : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
                     }`}
                   >
-                    <ChevronDown className="w-3.5 h-3.5" />
+                    <ChevronDown className="w-4 h-4" />
                   </div>
                 </button>
 
-                {/* Contenido desplegable */}
-                {estaAbierto && (
-                  <div className="px-4 pb-4 text-xs text-slate-600 font-medium leading-relaxed border-t border-slate-100 pt-3 animate-in fade-in duration-200">
-                    {faq.respuesta}
+                {/* Contenido desplegable con animación fluida */}
+                <div
+                  className={`grid transition-all duration-300 ease-in-out ${
+                    estaAbierto
+                      ? 'grid-rows-[1fr] opacity-100 pb-5 px-5 sm:px-6'
+                      : 'grid-rows-[0fr] opacity-0 pb-0 px-5 sm:px-6'
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed border-t border-slate-100 pt-4">
+                      {faq.respuesta}
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             );
           })
