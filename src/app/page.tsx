@@ -20,7 +20,10 @@ export default function LandingPagePrueba() {
   const whatsappUrl = `https://wa.me/${numeroLimpio}?text=Hola!%20Tengo%20una%20consulta.`;
 
   return (
-    <main className="min-h-screen bg-white flex flex-col items-center justify-between p-6 md:p-12 font-sans selection:bg-emerald-100 selection:text-emerald-900">
+    <main 
+      style={{ WebkitTapHighlightColor: 'transparent' }}
+      className="min-h-screen bg-white flex flex-col items-center justify-between p-6 md:p-12 font-sans selection:bg-emerald-100 selection:text-emerald-900"
+    >
       
       {/* Contenedor tipo pantalla de celular */}
       <div className="max-w-md w-full my-auto flex flex-col items-center">

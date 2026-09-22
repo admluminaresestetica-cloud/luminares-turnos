@@ -1,6 +1,19 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { SupabaseClient } from "@supabase/supabase-js";
+import { 
+  DollarSign, 
+  TrendingUp, 
+  TrendingDown, 
+  Wallet, 
+  Lock, 
+  Unlock, 
+  PlusCircle, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Clock 
+} from "lucide-react";
 
 interface ControlCajaTabProps {
   supabase: SupabaseClient;
@@ -65,12 +78,9 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
           const metodo = (p.metodo_pago || "").toLowerCase();
 
           if (metodo.includes("mixto")) {
-            // Ejemplo: "mixto (efectivo: $1000 + transferencia: $22980)"
             try {
-              // Cortamos el texto justo donde dice "efectivo: $"
               const partes = metodo.split("efectivo: $");
               if (partes.length > 1) {
-                // Tomamos la parte del monto y extraemos solo el número
                 const montoTexto = partes[1].split(" ")[0].replace("+", "").trim();
                 const efecMonto = parseFloat(montoTexto) || 0;
 
@@ -194,40 +204,41 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
 
   if (cargando) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-sm text-gray-500">Cargando datos de la caja...</p>
+      <div className="flex items-center justify-center py-20">
+        <p className="text-xs font-medium text-gray-500 dark:text-zinc-400 animate-pulse">Cargando datos de la caja...</p>
       </div>
     );
   }
 
   if (!cajaActual) {
     return (
-      <div className="mx-auto max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:rounded-3xl">
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0E6E55]/10 text-2xl">
-          💵
+      <div className="mx-auto max-w-md rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-xs sm:rounded-3xl sm:p-8 mb-20 sm:mb-8">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0E6E55]/10 dark:bg-emerald-950/50 text-[#0E6E55] dark:text-emerald-400">
+          <Wallet className="h-6 w-6 stroke-[2]" />
         </div>
-        <h2 className="mb-2 text-lg font-bold text-[#12151B]">Apertura de Caja</h2>
-        <p className="mb-6 text-xs text-gray-500">
+        <h2 className="mb-2 text-base font-bold text-gray-900 dark:text-zinc-100 sm:text-lg">Apertura de Caja</h2>
+        <p className="mb-6 text-xs text-gray-500 dark:text-zinc-400">
           No hay una caja abierta actualmente. Ingrese el monto inicial con el que comienza el día.
         </p>
 
         <div className="space-y-4">
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-gray-700">Monto Inicial ($)</label>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">Monto Inicial ($)</label>
             <input
               type="number"
               value={montoApertura}
               onChange={(e) => setMontoApertura(e.target.value)}
               placeholder="0.00"
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3 text-sm outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+              className="h-11 w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 px-3.5 text-sm text-gray-900 dark:text-zinc-100 outline-none transition-colors focus:border-[#0E6E55] focus:bg-white dark:focus:bg-zinc-900"
             />
           </div>
 
           <button
             onClick={abrirCaja}
-            className="w-full rounded-xl bg-[#0E6E55] py-3.5 text-xs font-bold text-white shadow-sm transition-all hover:opacity-90 active:scale-[0.98]"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#0E6E55] text-xs font-bold text-white shadow-xs transition-all hover:bg-[#0A5340] active:scale-[0.98]"
           >
-            Abrir Caja Día
+            <Unlock className="h-4 w-4 stroke-[2.5]" />
+            <span>Abrir Caja Día</span>
           </button>
         </div>
       </div>
@@ -237,33 +248,33 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
   const efectivoEsperado = calcularEfectivoEsperado();
 
   return (
-    <div className="space-y-5 sm:space-y-6">
+    <div className="space-y-5 sm:space-y-6 mb-20 sm:mb-8">
       {/* Resumen Superior */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="text-[11px] font-medium text-gray-500 sm:text-xs">Monto Inicial</p>
-          <p className="mt-1 text-lg font-extrabold text-gray-800 sm:text-xl">
+        <div className="rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs">
+          <p className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 sm:text-xs">Monto Inicial</p>
+          <p className="mt-1 text-lg font-extrabold text-gray-800 dark:text-zinc-100 sm:text-xl">
             ${Number(cajaActual.monto_inicial).toLocaleString()}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="text-[11px] font-medium text-gray-500 sm:text-xs">Ventas Efectivo</p>
-          <p className="mt-1 text-lg font-extrabold text-emerald-600 sm:text-xl">
+        <div className="rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs">
+          <p className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 sm:text-xs">Ventas Efectivo</p>
+          <p className="mt-1 text-lg font-extrabold text-emerald-600 dark:text-emerald-400 sm:text-xl">
             +${ventasEfectivoTotal.toLocaleString()}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="text-[11px] font-medium text-gray-500 sm:text-xs">Otros Métodos</p>
-          <p className="mt-1 text-lg font-extrabold text-blue-600 sm:text-xl">
+        <div className="rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs">
+          <p className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 sm:text-xs">Otros Métodos</p>
+          <p className="mt-1 text-lg font-extrabold text-blue-600 dark:text-blue-400 sm:text-xl">
             +${ventasDigitalesTotal.toLocaleString()}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-[#0E6E55]/20 bg-[#0E6E55]/5 p-4">
-          <p className="text-[11px] font-semibold text-[#0E6E55] sm:text-xs">Efectivo Esperado</p>
-          <p className="mt-1 text-lg font-extrabold text-[#0E6E55] sm:text-xl">
+        <div className="rounded-2xl border border-[#0E6E55]/20 dark:border-emerald-900/50 bg-[#0E6E55]/5 dark:bg-emerald-950/30 p-4 shadow-xs">
+          <p className="text-[11px] font-semibold text-[#0E6E55] dark:text-emerald-400 sm:text-xs">Efectivo Esperado</p>
+          <p className="mt-1 text-lg font-extrabold text-[#0E6E55] dark:text-emerald-400 sm:text-xl">
             ${efectivoEsperado.toLocaleString()}
           </p>
         </div>
@@ -271,75 +282,81 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
         {/* Registrar Movimiento Manual */}
-        <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5">
-          <h3 className="text-sm font-bold text-gray-800">Registrar Ingreso / Egreso Manual</h3>
+        <div className="space-y-4 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xs">
+          <h3 className="text-sm font-bold text-gray-800 dark:text-zinc-100 flex items-center gap-2">
+            <PlusCircle className="h-4 w-4 text-[#0E6E55] dark:text-emerald-400" />
+            Registrar Ingreso / Egreso Manual
+          </h3>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-gray-600">Tipo</label>
+              <label className="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-zinc-400">Tipo</label>
               <select
                 value={tipoMovimiento}
                 onChange={(e) => setTipoMovimiento(e.target.value as any)}
-                className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs font-medium outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+                className="h-11 w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 px-3 text-xs font-medium text-gray-900 dark:text-zinc-100 outline-none transition-colors focus:border-[#0E6E55]"
               >
                 <option value="egreso">Egreso (Retiro / Pago)</option>
                 <option value="ingreso">Ingreso Adicional</option>
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-gray-600">Monto ($)</label>
+              <label className="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-zinc-400">Monto ($)</label>
               <input
                 type="number"
                 value={montoMovimiento}
                 onChange={(e) => setMontoMovimiento(e.target.value)}
                 placeholder="0.00"
-                className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+                className="h-11 w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 outline-none transition-colors focus:border-[#0E6E55]"
               />
             </div>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-gray-600">Concepto / Motivo</label>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-zinc-400">Concepto / Motivo</label>
             <input
               type="text"
               value={conceptoMovimiento}
               onChange={(e) => setConceptoMovimiento(e.target.value)}
               placeholder="Ej: Pago a proveedor de insumos"
-              className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 text-xs outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+              className="h-11 w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 px-3 text-xs text-gray-900 dark:text-zinc-100 outline-none transition-colors focus:border-[#0E6E55]"
             />
           </div>
           <button
             onClick={registrarMovimiento}
-            className="h-11 w-full rounded-xl bg-gray-900 text-xs font-bold text-white transition-colors hover:bg-black active:scale-[0.98]"
+            className="h-11 w-full rounded-xl bg-gray-900 dark:bg-zinc-800 text-xs font-bold text-white transition-colors hover:bg-black dark:hover:bg-zinc-700 active:scale-[0.98]"
           >
             Registrar Movimiento
           </button>
         </div>
 
         {/* Realizar Cierre de Caja */}
-        <div className="space-y-4 rounded-2xl border border-rose-100 bg-rose-50/30 p-5">
-          <h3 className="text-sm font-bold text-gray-800">Cierre de Caja y Arqueo</h3>
-          <p className="text-xs text-gray-500">
+        <div className="space-y-4 rounded-2xl border border-rose-100 dark:border-rose-950/50 bg-rose-50/30 dark:bg-rose-950/10 p-5 shadow-xs">
+          <h3 className="text-sm font-bold text-gray-800 dark:text-zinc-100 flex items-center gap-2">
+            <Lock className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+            Cierre de Caja y Arqueo
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-zinc-400">
             Cuente el efectivo físico disponible en la caja e ingrese el total para verificar si existen diferencias.
           </p>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-gray-700">Efectivo Real Contado ($)</label>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-700 dark:text-zinc-300">Efectivo Real Contado ($)</label>
             <input
               type="number"
               value={efectivoContado}
               onChange={(e) => setEfectivoContado(e.target.value)}
               placeholder="0.00"
-              className="h-11 w-full rounded-xl border border-gray-300 bg-white px-3 text-sm outline-none transition-colors focus:border-rose-500"
+              className="h-11 w-full rounded-xl border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-sm text-gray-900 dark:text-zinc-100 outline-none transition-colors focus:border-rose-500"
             />
           </div>
           {efectivoContado !== "" && !isNaN(Number(efectivoContado)) && (
-            <div className="rounded-lg bg-white/70 p-2.5 text-xs font-medium">
+            <div className="rounded-xl bg-white/70 dark:bg-zinc-800/80 p-3 text-xs font-medium border border-rose-100 dark:border-rose-900/30">
               Diferencia:{" "}
               <span
                 className={
                   Number(efectivoContado) - efectivoEsperado === 0
-                    ? "font-bold text-emerald-600"
+                    ? "font-bold text-emerald-600 dark:text-emerald-400"
                     : Number(efectivoContado) - efectivoEsperado > 0
-                    ? "font-bold text-blue-600"
-                    : "font-bold text-rose-600"
+                    ? "font-bold text-blue-600 dark:text-blue-400"
+                    : "font-bold text-rose-600 dark:text-rose-400"
                 }
               >
                 ${(Number(efectivoContado) - efectivoEsperado).toLocaleString()}
@@ -348,33 +365,40 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
           )}
           <button
             onClick={cerrarCaja}
-            className="h-11 w-full rounded-xl bg-rose-600 text-xs font-bold text-white transition-colors hover:bg-rose-700 active:scale-[0.98]"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-rose-600 text-xs font-bold text-white transition-colors hover:bg-rose-700 active:scale-[0.98]"
           >
-            Cerrar Caja
+            <Lock className="h-4 w-4 stroke-[2.5]" />
+            <span>Cerrar Caja</span>
           </button>
         </div>
       </div>
 
       {/* Historial de Movimientos de la Caja */}
-      <div className="space-y-1 rounded-2xl border border-gray-200 bg-white p-5">
-        <h3 className="mb-2 text-sm font-bold text-gray-800">Movimientos Manuales Registrados</h3>
+      <div className="space-y-2 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-xs">
+        <h3 className="mb-2 text-sm font-bold text-gray-800 dark:text-zinc-100 flex items-center gap-2">
+          <Clock className="h-4 w-4 text-gray-400 dark:text-zinc-500" />
+          Movimientos Manuales Registrados
+        </h3>
         {movimientos.length === 0 ? (
-          <p className="py-2 text-xs text-gray-400">No hay ingresos ni egresos manuales en esta sesión.</p>
+          <p className="py-3 text-xs text-gray-400 dark:text-zinc-500">No hay ingresos ni egresos manuales en esta sesión.</p>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-zinc-800">
             {movimientos.map((m) => (
               <div key={m.id} className="flex items-center justify-between gap-3 py-3 text-xs">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-gray-700">{m.concepto}</p>
-                  <p className="text-[10px] text-gray-400">
+                  <p className="truncate font-semibold text-gray-700 dark:text-zinc-300">{m.concepto}</p>
+                  <p className="text-[10px] text-gray-400 dark:text-zinc-500">
                     {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-2 py-1 font-bold ${
-                    m.tipo === "ingreso" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                  className={`inline-flex items-center gap-1 shrink-0 rounded-full px-2.5 py-1 font-bold ${
+                    m.tipo === "ingreso" 
+                      ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400" 
+                      : "bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400"
                   }`}
                 >
+                  {m.tipo === "ingreso" ? <ArrowUpRight className="h-3 w-3 stroke-[2.5]" /> : <ArrowDownRight className="h-3 w-3 stroke-[2.5]" />}
                   {m.tipo === "ingreso" ? "+" : "-"}${Number(m.monto).toLocaleString()}
                 </span>
               </div>
