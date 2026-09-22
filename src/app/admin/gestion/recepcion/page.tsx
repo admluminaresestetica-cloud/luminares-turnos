@@ -50,7 +50,7 @@ export default function RecepcionPage() {
   const [reservaHoy, setReservaHoy] = useState<any>(null);
   const [esNuevo, setEsNuevo] = useState(false);
 
-  // Navegación por pestañas optimizada para Celular (App Experience)
+  // Navegación por pestañas optimizada para Celular
   const [pestanaActiva, setPestanaActiva] = useState<PestañaMovil>('paciente');
 
   // Campos del Paciente
@@ -137,14 +137,13 @@ export default function RecepcionPage() {
       setAntecedentes({});
     }
 
-    // Al seleccionar un cliente, por comodidad lo llevamos directo al flujo de operación o anamnesis
     setPestanaActiva('operacion');
   };
 
   const handleEnviarAGabinete = async () => {
     if (zonasSeleccionadas.length === 0) {
       setMensaje('⚠️ Seleccioná al menos una zona para realizar hoy.');
-      setPestanaActiva('operacion'); // Auto-redirigir a la pestaña donde está el error
+      setPestanaActiva('operacion');
       return;
     }
 
@@ -294,7 +293,7 @@ export default function RecepcionPage() {
           </div>
         </header>
 
-        {/* Buscador Multicoincidencia (Siempre visible para cambiar o buscar rápido) */}
+        {/* Buscador Multicoincidencia */}
         <BuscadorMulticoincidencia
           onClienteSeleccionado={handleClienteSeleccionado}
           onVerHistorialDirecto={(id) => setPacienteIdModal(id)}
@@ -309,17 +308,14 @@ export default function RecepcionPage() {
 
         {hayPacienteActivo && (
           <div className="space-y-4">
-{/* ──────────────────────────────────────────────────────────────
-                SELECTOR DE PESTAÑAS MÓVILES (Optimizado tipo App App Store/Native)
-                En PC grande (lg) se oculta y muestra todo en grid de 3 columnas.
-               ────────────────────────────────────────────────────────────── */}
+            {/* Pestañas Móviles */}
             <div className="flex rounded-2xl bg-slate-200/70 p-1 dark:bg-zinc-900 lg:hidden">
               <button
                 type="button"
                 onClick={() => setPestanaActiva('paciente')}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
                   pestanaActiva === 'paciente'
-                    , 'bg-white text-slate-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100'
+                    ? 'bg-white text-slate-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100'
                     : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400'
                 }`}
               >
@@ -359,10 +355,7 @@ export default function RecepcionPage() {
               </button>
             </div>
 
-            {/* ──────────────────────────────────────────────────────────────
-                CONTENEDOR DE SECCIONES (En celular se muestra solo la pestaña activa.
-                En escritorio 'lg' se despliegan las 3 columnas completas lado a lado).
-               ────────────────────────────────────────────────────────────── */}
+            {/* Contenedor de Secciones */}
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:items-start">
               
               {/* SECCIÓN 1 · DATOS DEL PACIENTE */}
@@ -427,7 +420,6 @@ export default function RecepcionPage() {
                   </button>
                 )}
 
-                {/* Botón táctil para pasar rápido de pestaña en móvil */}
                 <div className="pt-2 lg:hidden">
                   <button
                     type="button"
@@ -440,7 +432,7 @@ export default function RecepcionPage() {
                 </div>
               </div>
 
-              {/* SECCIÓN 2 · INFORMACIÓN MÉDICA / ANAMNESIS */}
+              {/* SECCIÓN 2 · ANAMNESIS */}
               <div className={`space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 sm:p-5 ${pestanaActiva === 'anamnesis' ? 'block' : 'hidden lg:block'}`}>
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                   <FileHeart className="h-3.5 w-3.5" />
@@ -463,7 +455,6 @@ export default function RecepcionPage() {
                   setObservacionesFijas={setObservacionesFijas}
                 />
 
-                {/* Botón táctil para pasar a la última pestaña en móvil */}
                 <div className="pt-2 lg:hidden">
                   <button
                     type="button"
@@ -476,7 +467,7 @@ export default function RecepcionPage() {
                 </div>
               </div>
 
-              {/* SECCIÓN 3 · ESTADO DE ATENCIÓN / ZONAS Y COBRO */}
+              {/* SECCIÓN 3 · ESTADO Y OPERACIÓN */}
               <div className={`space-y-5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 sm:p-5 lg:sticky lg:top-6 ${pestanaActiva === 'operacion' ? 'block' : 'hidden lg:block'}`}>
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                   <ClipboardCheck className="h-3.5 w-3.5" />
@@ -554,10 +545,8 @@ export default function RecepcionPage() {
           </div>
         )}
       </div>
-{/* ──────────────────────────────────────────────────────────────
-          BARRA INFERIOR FIJA (STICKY FOOTER MÓVIL)
-          Diseñada con altura de toque cómoda y espacio de seguridad inferior (pb-safe)
-         ────────────────────────────────────────────────────────────── */}
+
+      {/* Barra Inferior Fija Móvil */}
       {hayPacienteActivo && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95 lg:hidden shadow-2xl">
           <div className="mx-auto flex max-w-7xl items-center gap-2.5">
