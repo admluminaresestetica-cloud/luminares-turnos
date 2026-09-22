@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, ShoppingBag, MessageCircle, ChevronRight, Sparkles } from 'lucide-react';
 import { useConfig } from '@/context/ConfigContext';
+import { Badge } from '@/components/ui/badge';
 
 export default function LandingPagePrueba() {
   const { config } = useConfig();
@@ -42,12 +43,14 @@ export default function LandingPagePrueba() {
             </div>
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100/80 mb-2">
-            <Sparkles className="w-3 h-3 text-emerald-600" />
-            <span className="text-[10px] font-black tracking-[0.2em] uppercase text-emerald-800">
-              {nombreEmpresa}
-            </span>
-          </div>
+          {/* Badge Oficial de Shadcn UI */}
+          <Badge 
+            variant="outline" 
+            className="mb-3 px-3 py-1 bg-emerald-50/80 border-emerald-200/80 text-emerald-800 font-bold tracking-[0.15em] text-[10px] uppercase gap-1.5 shadow-2xs"
+          >
+            <Sparkles className="w-3 h-3 text-emerald-600 shrink-0" />
+            {nombreEmpresa}
+          </Badge>
 
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
             ¿Qué te gustaría hacer hoy?
@@ -63,7 +66,7 @@ export default function LandingPagePrueba() {
           {/* Botón 1: Reservar Turnos */}
           <Link
             href="/turnos"
-            className="group relative bg-white border border-slate-200/80 rounded-[30px] p-5 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 hover:border-emerald-300 active:scale-[0.96] transition-all duration-200 flex flex-col items-center text-center justify-between aspect-square overflow-hidden"
+            className="group relative bg-white border border-slate-200/80 rounded-[30px] p-5 shadow-xs hover:shadow-xl hover:shadow-emerald-900/5 hover:border-emerald-300 active:scale-[0.96] transition-all duration-200 flex flex-col items-center text-center justify-between aspect-square overflow-hidden"
           >
             {/* Indicador de acción en la esquina superior */}
             <div className="w-full flex justify-end">
@@ -91,7 +94,7 @@ export default function LandingPagePrueba() {
           {/* Botón 2: Tienda Online */}
           <Link
             href="/tienda"
-            className="group relative bg-white border border-slate-200/80 rounded-[30px] p-5 shadow-sm hover:shadow-xl hover:shadow-slate-900/5 hover:border-slate-400 active:scale-[0.96] transition-all duration-200 flex flex-col items-center text-center justify-between aspect-square overflow-hidden"
+            className="group relative bg-white border border-slate-200/80 rounded-[30px] p-5 shadow-xs hover:shadow-xl hover:shadow-slate-900/5 hover:border-slate-400 active:scale-[0.96] transition-all duration-200 flex flex-col items-center text-center justify-between aspect-square overflow-hidden"
           >
             {/* Indicador de acción en la esquina superior */}
             <div className="w-full flex justify-end">
@@ -124,7 +127,7 @@ export default function LandingPagePrueba() {
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full bg-white/80 backdrop-blur-md border border-slate-200/80 hover:border-emerald-200 hover:bg-emerald-50/50 p-3.5 rounded-2xl shadow-sm active:scale-[0.98] transition-all flex items-center justify-between group"
+            className="w-full bg-white/80 backdrop-blur-md border border-slate-200/80 hover:border-emerald-200 hover:bg-emerald-50/50 p-3.5 rounded-2xl shadow-xs active:scale-[0.98] transition-all flex items-center justify-between group"
           >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center font-bold">

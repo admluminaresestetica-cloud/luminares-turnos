@@ -3,9 +3,12 @@
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from 'next/link';
-import { Zap, Sparkles, Calendar, HelpCircle, MessageCircle, ArrowLeft, UserStar, ShieldCheck } from 'lucide-react';
+import { Zap, Calendar, HelpCircle, MessageCircle, ArrowLeft, UserStar, ShieldCheck } from 'lucide-react';
 import BannerPrincipal from '@/components/BannerPrincipal';
 import { useConfig } from '@/context/ConfigContext';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 const ACCESOS = [
   {
@@ -69,33 +72,37 @@ function HomeContent() {
   }
 
   return (
-<main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 font-sans">
-  <div className="max-w-md w-full flex flex-col items-center">
-    
-    {/* Volver */}
-    <div className="w-full flex justify-start mb-3">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs hover:bg-slate-50 active:scale-95 transition-all"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        <span>Volver al inicio</span>
-      </Link>
-    </div>
+    <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 font-sans">
+      <div className="max-w-md w-full flex flex-col items-center">
+        
+        {/* Volver con Button de Shadcn */}
+        <div className="w-full flex justify-start mb-3">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="rounded-xl font-bold text-xs text-slate-600 bg-white shadow-xs border-slate-200/80 active:scale-95"
+          >
+            <Link href="/" className="inline-flex items-center gap-2">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Volver al inicio</span>
+            </Link>
+          </Button>
+        </div>
 
         {/* Banner */}
         <div className="w-full mb-3">
           <BannerPrincipal />
         </div>
 
-        {/* Header */}
+        {/* Header con Badge de Shadcn */}
         <header className="text-center mb-5">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200/80 shadow-xs mb-2">
-            
-            <span className="text-[10px] font-black tracking-[0.18em] uppercase text-slate-700">
-              {nombreEmpresa}
-            </span>
-          </div>
+          <Badge
+            variant="outline"
+            className="bg-white border-slate-200/80 shadow-xs mb-2 px-3 py-1 rounded-full text-[10px] font-black tracking-[0.18em] uppercase text-slate-700"
+          >
+            {nombreEmpresa}
+          </Badge>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
             ¿Qué querés agendar hoy?
           </h1>
@@ -104,46 +111,43 @@ function HomeContent() {
           </p>
         </header>
 
-        {/* Grilla 2x2 compacta con altura fija ergonométrica */}
+        {/* Grilla 2x2 basada en Cards de Shadcn */}
         <nav className="w-full grid grid-cols-2 gap-3">
           {ACCESOS.map((acceso) => {
             const Icon = acceso.icon;
             return (
-              <Link
-                key={acceso.href}
-                href={acceso.href}
-                className={`group relative bg-white border border-slate-200/80 rounded-[22px] p-4 h-36 shadow-xs hover:shadow-md ${acceso.cardBorder} transition-all duration-200 active:scale-[0.96] flex flex-col items-center justify-center text-center select-none overflow-hidden`}
-              >
-                {/* Ícono de tamaño proporcionado con sombra proyectada */}
-                <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-md mb-2.5 group-hover:scale-110 transition-transform duration-200 ${acceso.iconBg}`}
-                >
-                  <Icon className="w-6 h-6 stroke-[2.2]" />
-                </div>
+              <Link key={acceso.href} href={acceso.href} className="group">
+                <Card className={`relative p-4 h-36 rounded-[22px] border-slate-200/80 shadow-xs hover:shadow-md ${acceso.cardBorder} transition-all duration-200 active:scale-[0.96] flex flex-col items-center justify-center text-center select-none overflow-hidden bg-white`}>
+                  {/* Ícono con elevación */}
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-md mb-2.5 group-hover:scale-110 transition-transform duration-200 ${acceso.iconBg}`}>
+                    <Icon className="w-6 h-6 stroke-[2.2]" />
+                  </div>
 
-                {/* Textos con jerarquía definida */}
-                <span className="text-sm font-extrabold text-slate-900 group-hover:text-rose-600 transition-colors leading-tight">
-                  {acceso.titulo}
-                </span>
-                <span className="text-[11px] font-medium text-slate-400 mt-1 truncate max-w-[90%]">
-                  {acceso.subtitulo}
-                </span>
+                  {/* Textos con jerarquía definida */}
+                  <span className="text-sm font-extrabold text-slate-900 group-hover:text-rose-600 transition-colors leading-tight">
+                    {acceso.titulo}
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-400 mt-1 truncate max-w-[90%]">
+                    {acceso.subtitulo}
+                  </span>
+                </Card>
               </Link>
             );
           })}
         </nav>
 
-        {/* WhatsApp */}
+        {/* WhatsApp con Button de Shadcn */}
         <div className="mt-4 w-full">
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 w-full bg-white border border-slate-200/80 hover:border-emerald-300 py-3 px-4 rounded-xl shadow-xs text-xs font-bold text-slate-700 hover:text-emerald-700 active:scale-[0.98] transition-all"
+          <Button
+            asChild
+            variant="outline"
+            className="w-full h-11 bg-white border-slate-200/80 hover:border-emerald-300 text-xs font-bold text-slate-700 hover:text-emerald-700 rounded-xl shadow-xs active:scale-[0.98]"
           >
-            <MessageCircle className="w-4 h-4 text-[#25D366]" />
-            <span>¿Dudas? Escribinos por WhatsApp</span>
-          </a>
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2">
+              <MessageCircle className="w-4 h-4 text-[#25D366]" />
+              <span>¿Dudas? Escribinos por WhatsApp</span>
+            </a>
+          </Button>
         </div>
 
         {/* Badge inferior */}
