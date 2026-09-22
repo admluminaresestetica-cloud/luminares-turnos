@@ -231,24 +231,33 @@ export default function AdminTiendaPage() {
   const pedidosPendientes = pedidos.filter((p) => p.estado === "pendiente").length;
 
   return (
-    <div className="min-h-screen bg-[#F7F7F5]">
-      {/* Header y Pestañas */}
+    <div className="min-h-screen bg-[#F7F7F5] dark:bg-zinc-950 transition-colors pb-24 sm:pb-12">
+      {/* Header y Navegación Móvil/Desktop */}
       <TiendaHeaderNav
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         pedidosPendientes={pedidosPendientes}
       />
 
-      <div className="mx-auto max-w-[1200px] px-4 pb-12 sm:px-10">
-        <MetricasHeader
-          totalProductos={totalProductos}
-          stockTotal={stockTotal}
-          pedidosPendientes={pedidosPendientes}
-          totalCategorias={categorias.length}
-        />
+      <div
+        className={`mx-auto transition-all ${
+          activeTab === "pos"
+            ? "max-w-full px-2 sm:px-6 sm:max-w-[1200px]"
+            : "max-w-[1200px] px-3 sm:px-10"
+        }`}
+      >
+        {/* Mostrar métricas resumidas en móvil excepto en vista POS */}
+        {activeTab !== "pos" && (
+          <MetricasHeader
+            totalProductos={totalProductos}
+            stockTotal={stockTotal}
+            pedidosPendientes={pedidosPendientes}
+            totalCategorias={categorias.length}
+          />
+        )}
 
         {/* Contenido según Pestaña Activa */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {activeTab === "catalogo" && (
             <>
               <CategoriasTab
@@ -285,7 +294,7 @@ export default function AdminTiendaPage() {
                 }}
                 onEditar={(prod) => {
                   setProductoEditando(prod);
-                  window.scrollTo({ top: 300, behavior: "smooth" });
+                  window.scrollTo({ top: 180, behavior: "smooth" });
                 }}
                 onRestock={async (id, cantidadASumar) => {
                   const prod = productos.find((p) => p.id === id);
@@ -355,7 +364,7 @@ export default function AdminTiendaPage() {
         </div>
       </div>
 
-      {/* Modal de Anulación Modularizado */}
+      {/* Modal de Anulación */}
       <ModalAnulacionPedido
         pedidoAAnular={pedidoAAnular}
         itemsAAnular={itemsAAnular}

@@ -1,4 +1,3 @@
-// src/components/admin/AgendaPanel.tsx
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -12,7 +11,6 @@ import {
   History, 
   Sparkles, 
   Scissors,
-  CheckCircle2,
   AlertCircle
 } from 'lucide-react';
 import type { CierreJornada, ConfiguracionCalendario, Reserva } from '@/lib/types';
@@ -58,16 +56,15 @@ export default function AgendaPanel({
   const [editReserva, setEditReserva] = useState<Reserva | null>(null);
   const [cerrando, setCerrando] = useState(false);
 
-  const ahora = Date.now();
-
   const filtradas = useMemo(() => {
+    const ahora = Date.now();
     return reservas.filter((r) => {
       if (!matchBusqueda(r, busqueda)) return false;
       const ts = new Date(r.fecha_hora_inicio).getTime();
       if (vista === 'proximos') return ts >= ahora;
       return ts < ahora;
     });
-  }, [reservas, busqueda, vista, ahora]);
+  }, [reservas, busqueda, vista]);
 
   const delDia = useMemo(
     () => reservas.filter((r) => fechaDeReserva(r.fecha_hora_inicio) === fechaVista),

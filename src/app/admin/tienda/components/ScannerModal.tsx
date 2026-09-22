@@ -94,7 +94,7 @@ export default function ScannerModal({ isOpen, onClose, onScan }: ScannerModalPr
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4 pb-24 sm:pb-4 backdrop-blur-sm animate-fadeIn">
       <div className="w-full max-w-md rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between border-b border-[#E7E5E0] pb-3">
           <h3 className="text-base font-bold text-[#12151B]">📷 Escanear Código de Barras</h3>
