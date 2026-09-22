@@ -136,7 +136,8 @@ export default function AdminHubPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50/80 dark:bg-zinc-950 flex flex-col justify-between p-4 sm:p-8 select-none transition-colors duration-200 relative">
+    // Cambiamos justify-between por justify-center (o flex-col simple) para que no busque estirarse al sacar el footer
+    <div className="min-h-screen bg-slate-50/80 dark:bg-zinc-950 flex flex-col justify-center p-4 sm:p-8 select-none transition-colors duration-200 relative">
 
       {/* ENCABEZADO SUPERIOR */}
       <header className="w-full max-w-lg mx-auto flex items-center justify-between pt-2 pb-4">
@@ -165,7 +166,7 @@ export default function AdminHubPage() {
       </header>
 
       {/* GRILLA DE MÓDULOS */}
-      <main className="w-full max-w-lg mx-auto my-auto py-4">
+      <main className="w-full max-w-lg mx-auto py-4">
         <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
           {modulos.map((modulo, index) => {
             const IconoComponente = modulo.icono;
@@ -213,13 +214,6 @@ export default function AdminHubPage() {
           })}
         </div>
       </main>
-
-      {/* PIE DE PÁGINA */}
-      <footer className="w-full max-w-lg mx-auto text-center py-2">
-        <span className="text-[11px] text-slate-400 dark:text-zinc-600 font-semibold tracking-wide uppercase">
-          Luminares OS v2.0
-        </span>
-      </footer>
 
       {/* WIDGET FLOTANTE DE IA */}
       <AdminChatWidget />
