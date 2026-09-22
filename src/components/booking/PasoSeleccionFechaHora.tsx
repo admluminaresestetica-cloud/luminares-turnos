@@ -46,7 +46,7 @@ export default function PasoSeleccionFechaHora({
       {/* Sección Fecha */}
       <section>
         <div className="flex items-center gap-2 mb-3">
-          <Badge variant="outline" className="p-1.5 rounded-lg bg-slate-50 border-slate-200">
+          <Badge variant="outline" className="p-1.5 rounded-lg bg-white border-slate-200/80 shadow-xs">
             <Calendar className="w-4 h-4 text-slate-700" />
           </Badge>
           <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
@@ -66,7 +66,7 @@ export default function PasoSeleccionFechaHora({
       {fecha && (
         <section className="animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center gap-2 mb-3">
-            <Badge variant="outline" className="p-1.5 rounded-lg bg-slate-50 border-slate-200">
+            <Badge variant="outline" className="p-1.5 rounded-lg bg-white border-slate-200/80 shadow-xs">
               <Clock className="w-4 h-4 text-slate-700" />
             </Badge>
             <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
@@ -83,7 +83,7 @@ export default function PasoSeleccionFechaHora({
       )}
 
       {/* Resumen Total con Card de Shadcn */}
-      <Card className={`p-4 border shadow-sm transition-colors ${summaryBgStyle}`}>
+      <Card className={`p-4 border border-slate-200/80 shadow-xs transition-colors bg-white ${summaryBgStyle}`}>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 text-slate-600 text-xs font-semibold">
             <Sparkles className="w-4 h-4 text-slate-700 shrink-0" />
@@ -105,7 +105,7 @@ export default function PasoSeleccionFechaHora({
         type="button"
         disabled={!fecha || !hora}
         onClick={onContinuar}
-        className={`w-full h-12 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all active:scale-[0.98] ${buttonStyle}`}
+        className={`w-full h-12 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all active:scale-[0.98] cursor-pointer ${buttonStyle}`}
       >
         <span>Continuar a confirmación</span>
         <ChevronRight className="w-4 h-4 ml-1" />

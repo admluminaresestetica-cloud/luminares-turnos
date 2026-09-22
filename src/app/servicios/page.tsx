@@ -125,7 +125,7 @@ export default function ServiciosPage() {
               asChild
               variant="outline"
               size="sm"
-              className="rounded-xl font-bold text-xs text-slate-600 bg-white/80 border-slate-200/80 shadow-xs mb-4 active:scale-95"
+              className="rounded-xl font-bold text-xs text-slate-600 bg-white border-slate-200/80 shadow-xs mb-4 active:scale-95"
             >
               <Link href="/turnos" className="inline-flex items-center gap-2">
                 <ArrowLeft className="w-3.5 h-3.5" />
@@ -142,7 +142,7 @@ export default function ServiciosPage() {
                 setCategoria(null);
                 setSeleccionados([]);
               }}
-              className="rounded-xl font-bold text-xs text-rose-600 hover:text-rose-800 bg-rose-50/80 border-rose-100 mb-4 active:scale-95 cursor-pointer"
+              className="rounded-xl font-bold text-xs text-rose-600 hover:text-rose-800 bg-rose-50/50 border-rose-100 mb-4 active:scale-95 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Cambiar categoría</span>
@@ -213,7 +213,7 @@ export default function ServiciosPage() {
                     </span>
                   </div>
 
-                  <div className="w-7 h-7 rounded-full bg-slate-50 group-hover:bg-slate-900 group-hover:text-white text-slate-400 flex items-center justify-center shrink-0 transition-colors duration-200">
+                  <div className="w-7 h-7 rounded-full bg-white border border-slate-200 group-hover:bg-slate-900 group-hover:border-slate-900 group-hover:text-white text-slate-400 flex items-center justify-center shrink-0 transition-colors duration-200">
                     <ChevronRight className="w-4 h-4" />
                   </div>
                 </Card>
@@ -240,7 +240,7 @@ export default function ServiciosPage() {
                     w-full rounded-[24px] border overflow-hidden transition-all duration-200 bg-white shadow-xs
                     ${
                       activo
-                        ? 'border-rose-300 bg-rose-50/30 ring-1 ring-rose-300/50'
+                        ? 'border-rose-300 bg-rose-50/20 ring-1 ring-rose-300/50'
                         : 'border-slate-200/80 hover:border-slate-300'
                     }
                   `}
@@ -289,7 +289,7 @@ export default function ServiciosPage() {
                             onClick={() =>
                               setLightbox({ src: imagenSrc, alt: servicio.subtipo })
                             }
-                            className="group/img relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-rose-100 bg-slate-100 cursor-zoom-in block mt-2"
+                            className="group/img relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-rose-100 bg-white cursor-zoom-in block mt-2"
                           >
                             <img
                               src={imagenSrc}

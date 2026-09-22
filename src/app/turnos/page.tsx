@@ -72,7 +72,7 @@ function HomeContent() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 font-sans">
+    <main className="min-h-screen bg-white flex flex-col items-center justify-center p-4 sm:p-6 font-sans">
       <div className="max-w-md w-full flex flex-col items-center">
         
         {/* Volver con Button de Shadcn */}
