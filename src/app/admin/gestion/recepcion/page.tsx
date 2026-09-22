@@ -17,11 +17,13 @@ import {
   FileHeart,
   ClipboardCheck,
   IdCard,
+  ArrowLeft,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 
 import BuscadorMulticoincidencia from './components/BuscadorMulticoincidencia';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import ResumenReservaCobro from './components/ResumenReservaCobro';
 import ChecklistAnamnesis from './components/ChecklistAnamnesis';
 import SelectorZonasBotones from './components/SelectorZonasBotones';
@@ -41,10 +43,15 @@ const ESTADOS_ATENCION = [
   { key: 'cancelado', label: 'Cancelado', icon: Ban },
 ] as const;
 
+type PestañaMovil = 'paciente' | 'anamnesis' | 'operacion';
+
 export default function RecepcionPage() {
   const [pacienteFicha, setPacienteFicha] = useState<any>(null);
   const [reservaHoy, setReservaHoy] = useState<any>(null);
   const [esNuevo, setEsNuevo] = useState(false);
+
+  // Navegación por pestañas optimizada para Celular (App Experience)
+  const [pestanaActiva, setPestanaActiva] = useState<PestañaMovil>('paciente');
 
   // Campos del Paciente
   const [nombre, setNombre] = useState('');
@@ -129,11 +136,15 @@ export default function RecepcionPage() {
       setObservacionesFijas('');
       setAntecedentes({});
     }
+
+    // Al seleccionar un cliente, por comodidad lo llevamos directo al flujo de operación o anamnesis
+    setPestanaActiva('operacion');
   };
 
   const handleEnviarAGabinete = async () => {
     if (zonasSeleccionadas.length === 0) {
       setMensaje('⚠️ Seleccioná al menos una zona para realizar hoy.');
+      setPestanaActiva('operacion'); // Auto-redirigir a la pestaña donde está el error
       return;
     }
 
@@ -220,6 +231,7 @@ export default function RecepcionPage() {
     setObservacionesHoy('');
     setCobradoEnPuerta(false);
     setAntecedentes({});
+    setPestanaActiva('paciente');
   };
 
   const hayPacienteActivo = pacienteFicha || esNuevo;
@@ -246,26 +258,26 @@ export default function RecepcionPage() {
 
   const textoBoton = guardando
     ? 'Enviando...'
-    : `Enviar a Gabinete${zonasSeleccionadas.length ? ` (${zonasSeleccionadas.length})` : ''}`;
+    : `Derivar a Gabinete${zonasSeleccionadas.length ? ` (${zonasSeleccionadas.length})` : ''}`;
 
   return (
     <div className="min-h-screen bg-slate-50 transition-colors dark:bg-zinc-950">
       <div
-        className={`mx-auto max-w-7xl space-y-6 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 ${
-          hayPacienteActivo ? 'pb-28 lg:pb-8' : 'pb-8'
+        className={`mx-auto max-w-7xl space-y-5 px-3 py-3 sm:px-6 sm:py-6 lg:px-8 ${
+          hayPacienteActivo ? 'pb-36 lg:pb-12' : 'pb-10'
         }`}
       >
-        {/* Encabezado */}
-        <header className="flex flex-col gap-3 border-b border-slate-200/80 pb-4 transition-colors dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
+        {/* Encabezado Principal */}
+        <header className="flex flex-col gap-3 border-b border-slate-200/80 pb-3 transition-colors dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <span className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm shadow-teal-600/20 sm:flex">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm shadow-teal-600/20 sm:h-11 sm:w-11">
               <IdCard className="h-5 w-5" />
             </span>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-zinc-100 sm:text-2xl">
+              <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-zinc-100 sm:text-2xl">
                 Recepción
               </h1>
-              <p className="text-sm text-slate-500 dark:text-zinc-400">
+              <p className="text-xs text-slate-500 dark:text-zinc-400 sm:text-sm">
                 Búsqueda, evaluación clínica y derivación a gabinete
               </p>
             </div>
@@ -274,7 +286,7 @@ export default function RecepcionPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/admin"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-95 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-95 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 sm:h-11 sm:text-sm"
             >
               <ArrowLeft className="h-4 w-4 text-slate-500 dark:text-zinc-400" />
               <span>Menú Admin</span>
@@ -282,202 +294,288 @@ export default function RecepcionPage() {
           </div>
         </header>
 
-        {/* Buscador */}
+        {/* Buscador Multicoincidencia (Siempre visible para cambiar o buscar rápido) */}
         <BuscadorMulticoincidencia
           onClienteSeleccionado={handleClienteSeleccionado}
           onVerHistorialDirecto={(id) => setPacienteIdModal(id)}
         />
 
         {mensaje && !hayPacienteActivo && (
-          <div className={`flex items-start gap-2 rounded-xl border p-3.5 text-sm font-semibold shadow-sm ${configMensaje.wrap}`}>
+          <div className={`flex items-start gap-2 rounded-xl border p-3.5 text-xs font-semibold shadow-sm sm:text-sm ${configMensaje.wrap}`}>
             {configMensaje.icon}
             <span>{mensaje}</span>
           </div>
         )}
 
         {hayPacienteActivo && (
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 xl:items-start">
-            {/* ───────────────────────── SECCIÓN 1 · PACIENTE ───────────────────────── */}
-            <section className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 hover:shadow-md sm:p-5 xl:col-span-1">
-              <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                  <IdCard className="h-3.5 w-3.5" />
-                  Datos del paciente
-                </span>
-                <button
-                  type="button"
-                  onClick={limpiar}
-                  title="Quitar paciente seleccionado"
-                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-rose-200/70 bg-rose-50/70 px-2.5 text-[11px] font-semibold text-rose-600 transition-all hover:bg-rose-100 active:scale-95 dark:border-rose-900/50 dark:bg-rose-950/50 dark:text-rose-400 dark:hover:bg-rose-900/70"
-                >
-                  <X className="h-3.5 w-3.5" />
-                  Quitar
-                </button>
-              </div>
-
-              <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-zinc-800">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 ring-1 ring-teal-100 dark:bg-teal-950/60 dark:text-teal-400 dark:ring-teal-900">
-                  {esNuevo ? <UserPlus className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-base font-bold text-slate-900 dark:text-zinc-100">
-                    {esNuevo ? 'Nuevo paciente' : nombre || 'Paciente'}
-                  </p>
-                  {esNuevo ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-teal-700 dark:text-teal-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                      Se creará una ficha nueva
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-zinc-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      Ficha clínica registrada
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <dl className="space-y-2.5 text-sm">
-                <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50/70 px-3 py-2 dark:bg-zinc-800/60">
-                  <dt className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Celular</dt>
-                  <dd className="truncate font-medium text-slate-800 dark:text-zinc-200">{celular || '—'}</dd>
-                </div>
-                <div className="flex items-center justify-between gap-3 rounded-lg bg-slate-50/70 px-3 py-2 dark:bg-zinc-800/60">
-                  <dt className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Fototipo</dt>
-                  <dd className="truncate font-medium text-slate-800 dark:text-zinc-200">{fototipo}</dd>
-                </div>
-              </dl>
-
-              {pacienteFicha && (
-                <button
-                  type="button"
-                  onClick={() => setPacienteIdModal(pacienteFicha.id)}
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100 hover:text-slate-900 active:scale-[0.98] dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
-                >
-                  <ClipboardList className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                  Ver historial completo
-                </button>
-              )}
-            </section>
-
-            {/* ─────────────────── SECCIÓN 2 · INFO MÉDICA / HISTORIAL ─────────────────── */}
-            <section className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 hover:shadow-md sm:p-5 xl:col-span-1">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                <FileHeart className="h-3.5 w-3.5" />
-                Historial e información médica
-              </span>
-
-              <div className="border-b border-slate-100 pb-4 dark:border-zinc-800">
-                <BannerAlertasClinicas
-                  antecedentes={antecedentes}
-                  observacionesFijas={observacionesFijas}
-                />
-              </div>
-
-              <ChecklistAnamnesis
-                fototipo={fototipo}
-                setFototipo={setFototipo}
-                antecedentes={antecedentes}
-                setAntecedentes={setAntecedentes}
-                observacionesFijas={observacionesFijas}
-                setObservacionesFijas={setObservacionesFijas}
-              />
-            </section>
-
-            {/* ───────────────── SECCIÓN 3 · ESTADO DE ATENCIÓN / OPERACIÓN ───────────────── */}
-            <section className="space-y-5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 hover:shadow-md sm:p-5 xl:sticky xl:top-6 xl:col-span-1">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-                <ClipboardCheck className="h-3.5 w-3.5" />
-                Estado de atención
-              </span>
-
-              <div className="grid grid-cols-2 gap-2">
-                {ESTADOS_ATENCION.map(({ key, label, icon: Icon }) => {
-                  const activo = key === 'en_espera';
-                  return (
-                    <div
-                      key={key}
-                      className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all ${
-                        activo
-                          ? 'border-teal-300 bg-teal-50 text-teal-800 ring-1 ring-teal-200 dark:border-teal-800 dark:bg-teal-950/60 dark:text-teal-300 dark:ring-teal-900'
-                          : 'border-slate-200/70 bg-slate-50/60 text-slate-400 dark:border-zinc-800 dark:bg-zinc-800/40 dark:text-zinc-500'
-                      }`}
-                    >
-                      <Icon className={`h-4 w-4 shrink-0 ${activo ? 'text-teal-600 dark:text-teal-400' : 'text-slate-300 dark:text-zinc-600'}`} />
-                      {label}
-                    </div>
-                  );
-                })}
-              </div>
-              <p className="-mt-2 flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-zinc-500">
-                <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-zinc-600" />
-                Al enviar, el paciente pasa a "En espera" en Gabinete.
-              </p>
-
-              <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
-                <ResumenReservaCobro
-                  reserva={reservaHoy}
-                  cobradoEnPuerta={cobradoEnPuerta}
-                  onToggleCobrado={setCobradoEnPuerta}
-                />
-              </div>
-
-              <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
-                <SelectorZonasBotones
-                  zonasSeleccionadas={zonasSeleccionadas}
-                  setZonasSeleccionadas={setZonasSeleccionadas}
-                />
-              </div>
-
-              <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
-                <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
-                  Notas para gabinete
-                </label>
-                <input
-                  type="text"
-                  value={observacionesHoy}
-                  onChange={(e) => setObservacionesHoy(e.target.value)}
-                  placeholder="Ej: Sensibilidad leve en axilas..."
-                  className="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                />
-              </div>
-
-              {mensaje && (
-                <div className={`flex items-start gap-2 rounded-xl border p-3 text-xs font-semibold ${configMensaje.wrap}`}>
-                  {configMensaje.icon}
-                  <span>{mensaje}</span>
-                </div>
-              )}
+          <div className="space-y-4">
+{/* ──────────────────────────────────────────────────────────────
+                SELECTOR DE PESTAÑAS MÓVILES (Optimizado tipo App App Store/Native)
+                En PC grande (lg) se oculta y muestra todo en grid de 3 columnas.
+               ────────────────────────────────────────────────────────────── */}
+            <div className="flex rounded-2xl bg-slate-200/70 p-1 dark:bg-zinc-900 lg:hidden">
+              <button
+                type="button"
+                onClick={() => setPestanaActiva('paciente')}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
+                  pestanaActiva === 'paciente'
+                    , 'bg-white text-slate-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400'
+                }`}
+              >
+                <UserRound className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+                <span>Paciente</span>
+              </button>
 
               <button
-                onClick={handleEnviarAGabinete}
-                disabled={guardando}
-                className="hidden h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none lg:flex"
+                type="button"
+                onClick={() => setPestanaActiva('anamnesis')}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
+                  pestanaActiva === 'anamnesis'
+                    ? 'bg-white text-slate-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400'
+                }`}
               >
-                {textoBoton}
+                <FileHeart className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+                <span>Anamnesis</span>
               </button>
-            </section>
+
+              <button
+                type="button"
+                onClick={() => setPestanaActiva('operacion')}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
+                  pestanaActiva === 'operacion'
+                    ? 'bg-white text-slate-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100'
+                    : 'text-slate-500 hover:text-slate-900 dark:text-zinc-400'
+                }`}
+              >
+                <ClipboardCheck className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+                <span>Gabinete</span>
+                {zonasSeleccionadas.length > 0 && (
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-teal-600 text-[10px] text-white">
+                    {zonasSeleccionadas.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* ──────────────────────────────────────────────────────────────
+                CONTENEDOR DE SECCIONES (En celular se muestra solo la pestaña activa.
+                En escritorio 'lg' se despliegan las 3 columnas completas lado a lado).
+               ────────────────────────────────────────────────────────────── */}
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:items-start">
+              
+              {/* SECCIÓN 1 · DATOS DEL PACIENTE */}
+              <div className={`space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 sm:p-5 ${pestanaActiva === 'paciente' ? 'block' : 'hidden lg:block'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                    <IdCard className="h-3.5 w-3.5" />
+                    Datos del paciente
+                  </span>
+                  <button
+                    type="button"
+                    onClick={limpiar}
+                    title="Quitar paciente seleccionado"
+                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-rose-200/70 bg-rose-50/70 px-2.5 text-[11px] font-semibold text-rose-600 transition-all hover:bg-rose-100 active:scale-95 dark:border-rose-900/50 dark:bg-rose-950/50 dark:text-rose-400 dark:hover:bg-rose-900/70"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    Quitar
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-zinc-800">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 ring-1 ring-teal-100 dark:bg-teal-950/60 dark:text-teal-400 dark:ring-teal-900">
+                    {esNuevo ? <UserPlus className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-bold text-slate-900 dark:text-zinc-100">
+                      {esNuevo ? 'Nuevo paciente' : nombre || 'Paciente'}
+                    </p>
+                    {esNuevo ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-teal-700 dark:text-teal-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
+                        Se creará ficha nueva hoy
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 dark:text-zinc-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Ficha clínica registrada
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <dl className="space-y-2.5 text-sm">
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-slate-50/70 px-3.5 py-2.5 dark:bg-zinc-800/60">
+                    <dt className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Celular</dt>
+                    <dd className="truncate font-medium text-slate-800 dark:text-zinc-200">{celular || '—'}</dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-slate-50/70 px-3.5 py-2.5 dark:bg-zinc-800/60">
+                    <dt className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Fototipo</dt>
+                    <dd className="truncate font-medium text-slate-800 dark:text-zinc-200">{fototipo}</dd>
+                  </div>
+                </dl>
+
+                {pacienteFicha && (
+                  <button
+                    type="button"
+                    onClick={() => setPacienteIdModal(pacienteFicha.id)}
+                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-slate-50 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100 hover:text-slate-900 active:scale-[0.98] dark:border-zinc-800 dark:bg-zinc-800/60 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+                  >
+                    <ClipboardList className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                    Ver historial completo
+                  </button>
+                )}
+
+                {/* Botón táctil para pasar rápido de pestaña en móvil */}
+                <div className="pt-2 lg:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setPestanaActiva('anamnesis')}
+                    className="flex h-11 w-full items-center justify-between rounded-xl bg-teal-50 px-4 text-xs font-bold text-teal-800 transition-all active:scale-[0.98] dark:bg-teal-950/60 dark:text-teal-300"
+                  >
+                    <span>Siguiente: Anamnesis clínica</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* SECCIÓN 2 · INFORMACIÓN MÉDICA / ANAMNESIS */}
+              <div className={`space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 sm:p-5 ${pestanaActiva === 'anamnesis' ? 'block' : 'hidden lg:block'}`}>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                  <FileHeart className="h-3.5 w-3.5" />
+                  Historial e información médica
+                </span>
+
+                <div className="border-b border-slate-100 pb-4 dark:border-zinc-800">
+                  <BannerAlertasClinicas
+                    antecedentes={antecedentes}
+                    observacionesFijas={observacionesFijas}
+                  />
+                </div>
+
+                <ChecklistAnamnesis
+                  fototipo={fototipo}
+                  setFototipo={setFototipo}
+                  antecedentes={antecedentes}
+                  setAntecedentes={setAntecedentes}
+                  observacionesFijas={observacionesFijas}
+                  setObservacionesFijas={setObservacionesFijas}
+                />
+
+                {/* Botón táctil para pasar a la última pestaña en móvil */}
+                <div className="pt-2 lg:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setPestanaActiva('operacion')}
+                    className="flex h-11 w-full items-center justify-between rounded-xl bg-teal-50 px-4 text-xs font-bold text-teal-800 transition-all active:scale-[0.98] dark:bg-teal-950/60 dark:text-teal-300"
+                  >
+                    <span>Siguiente: Gabinete y Zonas</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* SECCIÓN 3 · ESTADO DE ATENCIÓN / ZONAS Y COBRO */}
+              <div className={`space-y-5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900 sm:p-5 lg:sticky lg:top-6 ${pestanaActiva === 'operacion' ? 'block' : 'hidden lg:block'}`}>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                  <ClipboardCheck className="h-3.5 w-3.5" />
+                  Estado de atención
+                </span>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {ESTADOS_ATENCION.map(({ key, label, icon: Icon }) => {
+                    const activo = key === 'en_espera';
+                    return (
+                      <div
+                        key={key}
+                        className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-all ${
+                          activo
+                            ? 'border-teal-300 bg-teal-50 text-teal-800 ring-1 ring-teal-200 dark:border-teal-800 dark:bg-teal-950/60 dark:text-teal-300 dark:ring-teal-900'
+                            : 'border-slate-200/70 bg-slate-50/60 text-slate-400 dark:border-zinc-800 dark:bg-zinc-800/40 dark:text-zinc-500'
+                        }`}
+                      >
+                        <Icon className={`h-4 w-4 shrink-0 ${activo ? 'text-teal-600 dark:text-teal-400' : 'text-slate-300 dark:text-zinc-600'}`} />
+                        {label}
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="-mt-2 flex items-center gap-1.5 text-[11px] text-slate-400 dark:text-zinc-500">
+                  <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-zinc-600" />
+                  Al enviar, el paciente pasa automáticamente a "En espera" en Gabinete.
+                </p>
+
+                <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
+                  <ResumenReservaCobro
+                    reserva={reservaHoy}
+                    cobradoEnPuerta={cobradoEnPuerta}
+                    onToggleCobrado={setCobradoEnPuerta}
+                  />
+                </div>
+
+                <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
+                  <SelectorZonasBotones
+                    zonasSeleccionadas={zonasSeleccionadas}
+                    setZonasSeleccionadas={setZonasSeleccionadas}
+                  />
+                </div>
+
+                <div className="border-t border-slate-100 pt-4 dark:border-zinc-800">
+                  <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                    Notas para gabinete
+                  </label>
+                  <input
+                    type="text"
+                    value={observacionesHoy}
+                    onChange={(e) => setObservacionesHoy(e.target.value)}
+                    placeholder="Ej: Sensibilidad leve en axilas..."
+                    className="h-11 w-full rounded-xl border border-slate-200 px-3.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                  />
+                </div>
+
+                {mensaje && (
+                  <div className={`flex items-start gap-2 rounded-xl border p-3 text-xs font-semibold ${configMensaje.wrap}`}>
+                    {configMensaje.icon}
+                    <span>{mensaje}</span>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleEnviarAGabinete}
+                  disabled={guardando}
+                  className="hidden h-12 w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none lg:flex"
+                >
+                  {textoBoton}
+                </button>
+              </div>
+
+            </div>
           </div>
         )}
       </div>
-
+{/* ──────────────────────────────────────────────────────────────
+          BARRA INFERIOR FIJA (STICKY FOOTER MÓVIL)
+          Diseñada con altura de toque cómoda y espacio de seguridad inferior (pb-safe)
+         ────────────────────────────────────────────────────────────── */}
       {hayPacienteActivo && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200/80 bg-white/95 p-3 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95 lg:hidden">
-          <div className="mx-auto flex max-w-7xl items-center gap-2">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95 lg:hidden shadow-2xl">
+          <div className="mx-auto flex max-w-7xl items-center gap-2.5">
             <button
               type="button"
               onClick={limpiar}
               title="Quitar paciente seleccionado"
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-rose-200/70 bg-rose-50/70 text-rose-600 transition-all active:scale-95 dark:border-rose-900/50 dark:bg-rose-950/50 dark:text-rose-400"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-rose-200/70 bg-rose-50/70 text-rose-600 transition-all active:scale-95 dark:border-rose-900/50 dark:bg-rose-950/50 dark:text-rose-400 shadow-sm"
             >
               <X className="h-5 w-5" />
             </button>
             <button
               onClick={handleEnviarAGabinete}
               disabled={guardando}
-              className="flex h-12 flex-1 items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
+              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
             >
-              {textoBoton}
+              <Sparkles className="h-4 w-4 shrink-0" />
+              <span>{textoBoton}</span>
             </button>
           </div>
         </div>
