@@ -1,5 +1,8 @@
+'use client';
+
 import type { Viewport } from "next";
 import localFont from "next/font/local";
+import { usePathname } from "next/navigation";
 import "./globals.css";
 import Footer from "@/components/footer";
 import { CarritoProvider } from "@/context/CarritoContext";
@@ -18,26 +21,14 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const viewport: Viewport = {
-  themeColor: "#ffffff",
-};
-
-export const metadata = {
-  title: "Luminares - Estética",
-  description: "Servicios de estética y tienda online",
-  manifest: "/manifest.json",
-  icons: {
-    icon: "/icon-192.png",
-    shortcut: "/icon-192.png",
-    apple: "/icon-192.png",
-  },
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith('/admin');
+
   return (
     <html lang="es" className="bg-white" suppressHydrationWarning>
       <body
@@ -52,7 +43,8 @@ export default function RootLayout({
           <ConfigProvider>
             <CarritoProvider>
               {children}
-              <Footer />
+              {/* El footer se muestra en la web pública, pero se oculta en todo el panel /admin */}
+              {!isAdmin && <Footer />}
             </CarritoProvider>
           </ConfigProvider>
         </ThemeProvider>
