@@ -92,39 +92,68 @@ export default function ModalCaja({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-          <h3 className="text-lg font-bold text-[#12151B]">💰 Gestión de Caja Diaria</h3>
-          <button onClick={onClose} className="text-xs font-bold text-gray-400 hover:text-gray-600">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 backdrop-blur-xs animate-fadeIn">
+      {/* Contenedor Modal / Bottom Sheet */}
+      <div className="w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        
+        {/* Handle táctil para deslizamiento en teléfono */}
+        <div className="sm:hidden w-12 h-1.5 bg-gray-300 dark:bg-zinc-700 rounded-full mx-auto mb-3" />
+
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-3">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+            💰 Gestión de Caja Diaria
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-xs font-bold text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 transition-colors p-1"
+          >
             ✕
           </button>
         </div>
 
         {loading ? (
-          <div className="py-8 text-center text-xs font-medium text-gray-500">Cargando datos de caja...</div>
+          <div className="py-12 text-center text-xs font-semibold text-gray-500 dark:text-zinc-400 flex flex-col items-center gap-2">
+            <span className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+            Cargando estado de la caja...
+          </div>
         ) : !sesionActual ? (
           /* VISTA: APERTURA DE CAJA */
           <div className="my-4 space-y-4">
-            <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-800 border border-amber-200">
-              ⚠️ La caja está actualmente <strong>CERRADA</strong>. Abrí turno para iniciar ventas.
+            <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/40 p-3.5 text-xs text-amber-800 dark:text-amber-300 border border-amber-200/80 dark:border-amber-900/50 leading-relaxed">
+              ⚠️ La caja se encuentra <strong>CERRADA</strong>. Abrí turno indicando el monto inicial de cambio en cajón para registrar operaciones.
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#12151B]">Monto Inicial en Efectivo ($)</label>
+              <label className="text-xs font-bold text-gray-800 dark:text-zinc-200">
+                Monto Inicial en Efectivo ($)
+              </label>
               <input
                 type="number"
                 value={montoInicialInput}
                 onChange={(e) => setMontoInicialInput(e.target.value)}
-                placeholder="Monto de cambio en cajón (ej. 5000)"
-                className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 text-sm font-bold text-[#12151B] outline-none focus:border-[#0E6E55]"
+                placeholder="Ej. 5000"
+                className="mt-1 w-full rounded-xl border border-gray-300 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 p-3 text-sm font-bold text-gray-900 dark:text-zinc-100 outline-none focus:border-[#0E6E55]"
               />
+
+              {/* Botones de billetes sugeridos */}
+              <div className="grid grid-cols-4 gap-1.5 mt-2">
+                {[2000, 5000, 10000, 20000].map((monto) => (
+                  <button
+                    key={monto}
+                    type="button"
+                    onClick={() => setMontoInicialInput(monto.toString())}
+                    className="rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/80 py-1.5 text-[10px] font-bold text-gray-700 dark:text-zinc-300 active:scale-95 transition-all"
+                  >
+                    ${monto / 1000}k
+                  </button>
+                ))}
+              </div>
             </div>
 
             <button
               onClick={handleAbrirCaja}
               disabled={loading}
-              className="w-full rounded-xl bg-[#0E6E55] py-3 text-xs font-bold text-white transition-all hover:bg-[#0A5340]"
+              className="w-full rounded-xl bg-[#0E6E55] py-3.5 text-xs font-bold text-white shadow-md transition-all hover:bg-[#0A5340] active:scale-95 disabled:opacity-50 mt-2"
             >
               🔓 Abrir Turno de Caja
             </button>
@@ -132,36 +161,42 @@ export default function ModalCaja({
         ) : (
           /* VISTA: ARQUEO Y CIERRE DE CAJA */
           <div className="my-4 space-y-4">
-            <div className="rounded-xl bg-emerald-50 p-3 text-xs text-emerald-800 border border-emerald-200">
-              ✅ Caja <strong>ABIERTA</strong> desde el{" "}
-              {new Date(sesionActual.fecha_apertura).toLocaleTimeString("es-AR", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+            <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 p-3.5 text-xs text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-900/50">
+              ✅ Caja <strong>ABIERTA</strong> desde las{" "}
+              <strong>
+                {new Date(sesionActual.fecha_apertura).toLocaleTimeString("es-AR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })} hs
+              </strong>
             </div>
 
-            <div className="rounded-xl border border-gray-100 bg-[#F7F7F5] p-3 text-xs space-y-1.5">
-              <div className="flex justify-between text-gray-600">
+            <div className="rounded-xl border border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800/40 p-3 text-xs space-y-1.5">
+              <div className="flex justify-between text-gray-600 dark:text-zinc-400">
                 <span>Monto Inicial (Cambio):</span>
-                <span className="font-bold">${Number(sesionActual.monto_inicial).toLocaleString("es-AR")}</span>
+                <span className="font-extrabold text-gray-900 dark:text-zinc-100">
+                  ${Number(sesionActual.monto_inicial).toLocaleString("es-AR")}
+                </span>
               </div>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-[#12151B]">Efectivo Real en Cajón ($)</label>
+              <label className="text-xs font-bold text-gray-800 dark:text-zinc-200">
+                Efectivo Real en Cajón ($)
+              </label>
               <input
                 type="number"
                 value={montoCierreInput}
                 onChange={(e) => setMontoCierreInput(e.target.value)}
-                placeholder="Ingresar dinero contado al final del turno..."
-                className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-white p-3 text-sm font-bold text-[#12151B] outline-none focus:border-[#0E6E55]"
+                placeholder="Monto contado al finalizar..."
+                className="mt-1 w-full rounded-xl border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-3 text-sm font-bold text-gray-900 dark:text-zinc-100 outline-none focus:border-[#0E6E55]"
               />
             </div>
 
             <button
               onClick={handleCerrarCaja}
               disabled={loading || !montoCierreInput}
-              className="w-full rounded-xl bg-[#C84343] py-3 text-xs font-bold text-white transition-all hover:bg-[#A33434] disabled:opacity-50"
+              className="w-full rounded-xl bg-red-600 dark:bg-red-700 py-3.5 text-xs font-bold text-white shadow-md transition-all hover:bg-red-700 active:scale-95 disabled:opacity-50 mt-2"
             >
               🔒 Arqueo y Cierre de Caja
             </button>

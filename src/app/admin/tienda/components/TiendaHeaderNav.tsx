@@ -80,7 +80,7 @@ export default function TiendaHeaderNav({
           strokeWidth={active ? "2.2" : "1.8"}
           viewBox="0 0 24 24"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 022 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
         </svg>
       ),
     },
@@ -176,8 +176,8 @@ export default function TiendaHeaderNav({
         </div>
       </div>
 
-      {/* BOTTOM NAVIGATION BAR NATIVA (Para Móviles - Pantallas < 640px) */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-lg border-t border-gray-200/80 px-2 py-1.5 shadow-lg">
+      {/* BOTTOM NAVIGATION BAR NATIVA (Para Móviles - z-[9999] garante que siempre flote por encima) */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 backdrop-blur-lg border-t border-gray-200/80 px-2 py-1.5 shadow-2xl">
         <div className="grid grid-cols-6 gap-1 items-center max-w-md mx-auto">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;
