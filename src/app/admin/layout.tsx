@@ -10,14 +10,15 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname()
   const isLogin = pathname === '/admin/login'
+  const isTienda = pathname?.includes('/tienda') // <-- Validamos si estamos en la tienda
 
   return (
     <div className="relative min-h-screen">
       {/* Carga todas las subpáginas del admin */}
       {children}
 
-      {/* Widget Flotante de IA: Se muestra SOLO si NO estamos en el login */}
-      {!isLogin && <AdminChatWidget />}
+      {/* Widget Flotante de IA: Se muestra SOLO si NO estamos en el login NI en la tienda */}
+      {!isLogin && !isTienda && <AdminChatWidget />}
     </div>
   )
 }
