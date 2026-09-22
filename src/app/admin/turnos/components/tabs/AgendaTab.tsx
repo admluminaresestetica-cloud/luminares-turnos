@@ -111,7 +111,7 @@ export default function AgendaTab({
             placeholder="Buscar cliente, tel o código..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+            className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-3 sm:py-2.5 text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
           />
         </div>
 
@@ -119,7 +119,7 @@ export default function AgendaTab({
           <select
             value={filtroFechaTipo}
             onChange={(e) => setFiltroFechaTipo(e.target.value as any)}
-            className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
+            className="border border-gray-200 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
           >
             <option value="todos">Todas las fechas</option>
             <option value="hoy">Ver solo Hoy</option>
@@ -131,14 +131,14 @@ export default function AgendaTab({
               type="date"
               value={fechaEspecifica}
               onChange={(e) => setFechaEspecifica(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
+              className="border border-gray-200 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
             />
           )}
 
           <select
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
+            className="border border-gray-200 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
           >
             <option value="todos">Todos los estados</option>
             <option value="pendiente_sena">⏳ Pendiente Seña</option>
@@ -150,7 +150,7 @@ export default function AgendaTab({
           <select
             value={filtroMedioPago}
             onChange={(e) => setFiltroMedioPago(e.target.value)}
-            className="border border-blue-200 bg-blue-50/50 text-blue-900 rounded-xl px-3 py-2.5 text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/30 transition-all dark:bg-blue-950/60 dark:border-blue-900 dark:text-blue-300"
+            className="border border-blue-200 bg-blue-50/50 text-blue-900 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/30 transition-all dark:bg-blue-950/60 dark:border-blue-900 dark:text-blue-300"
           >
             <option value="todos">Todos los medios de pago</option>
             <option value="mercadopago">💳 Mercado Pago</option>
@@ -160,7 +160,7 @@ export default function AgendaTab({
 
           <button
             onClick={onNuevoTurno}
-            className="px-4 py-2.5 text-xs sm:text-sm bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="min-h-[44px] px-4 py-3 sm:py-2.5 text-xs sm:text-sm bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 active:scale-95 select-none dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             <Plus className="w-4 h-4" />
             Nuevo Turno
@@ -186,8 +186,8 @@ export default function AgendaTab({
             ↔ Deslizá la tabla hacia los costados para ver más columnas
           </p>
 
-          {/* Contenedor con altura delimitada y scroll en ambas direcciones */}
-          <div className="w-full max-h-[70vh] overflow-auto scroll-smooth border border-gray-100 rounded-2xl relative dark:border-zinc-800">
+          {/* Contenedor con altura delimitada y scroll en ambas direcciones, sin scrollbar visible */}
+          <div className="w-full max-h-[70vh] overflow-auto scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] border border-gray-100 rounded-2xl relative dark:border-zinc-800">
             <table className="w-full min-w-[950px] text-left text-sm border-collapse">
               <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase text-[11px] font-semibold tracking-wider sticky top-0 z-10 backdrop-blur-md dark:bg-zinc-900/90 dark:border-zinc-800 dark:text-zinc-500">
                 <tr>
@@ -266,14 +266,14 @@ export default function AgendaTab({
                       <div className="inline-flex items-center gap-1.5">
                         <button
                           onClick={() => onEditarTurno(t)}
-                          className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1.5 rounded-lg hover:bg-gray-200 font-bold transition-all active:scale-95 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                          className="text-xs bg-gray-100 text-gray-700 px-2.5 py-2 rounded-lg hover:bg-gray-200 font-bold transition-all active:scale-95 select-none dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
                         >
                           Editar
                         </button>
                         {t.estado !== 'confirmado' && t.estado !== 'completado' && (
                           <button
                             onClick={() => onActualizarEstado(t.id, 'confirmado')}
-                            className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 font-bold transition-all active:scale-95 dark:bg-blue-950/60 dark:text-blue-400 dark:hover:bg-blue-900/60"
+                            className="text-xs bg-blue-50 text-blue-600 px-2.5 py-2 rounded-lg hover:bg-blue-100 font-bold transition-all active:scale-95 select-none dark:bg-blue-950/60 dark:text-blue-400 dark:hover:bg-blue-900/60"
                           >
                             Confirmar
                           </button>
@@ -281,7 +281,7 @@ export default function AgendaTab({
                         {t.estado !== 'completado' && (
                           <button
                             onClick={() => onActualizarEstado(t.id, 'completado')}
-                            className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 font-bold transition-all active:scale-95 dark:bg-emerald-950/60 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
+                            className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-2 rounded-lg hover:bg-emerald-100 font-bold transition-all active:scale-95 select-none dark:bg-emerald-950/60 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
                           >
                             Completar
                           </button>
@@ -289,7 +289,7 @@ export default function AgendaTab({
                         {t.estado !== 'cancelado' && (
                           <button
                             onClick={() => onActualizarEstado(t.id, 'cancelado')}
-                            className="text-xs bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-100 font-bold transition-all active:scale-95 dark:bg-red-950/60 dark:text-red-400 dark:hover:bg-red-900/60"
+                            className="text-xs bg-red-50 text-red-600 px-2.5 py-2 rounded-lg hover:bg-red-100 font-bold transition-all active:scale-95 select-none dark:bg-red-950/60 dark:text-red-400 dark:hover:bg-red-900/60"
                           >
                             Cancelar
                           </button>
@@ -297,7 +297,7 @@ export default function AgendaTab({
 
                         <button
                           onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-95 ml-1 dark:text-zinc-500 dark:hover:text-red-400 dark:hover:bg-red-950/60"
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-95 select-none ml-1 dark:text-zinc-500 dark:hover:text-red-400 dark:hover:bg-red-950/60"
                           title="Eliminar reserva permanentemente"
                         >
                           <Trash2 className="w-4 h-4" />
