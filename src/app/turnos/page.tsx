@@ -64,15 +64,15 @@ function HomeContent() {
 
   if (isAdmin) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-slate-800 font-sans">
         <div className="w-8 h-8 border-3 border-rose-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-xs font-bold tracking-widest uppercase text-slate-300">Entrando al panel admin...</p>
+        <p className="text-xs font-bold tracking-widest uppercase text-slate-500">Entrando al panel admin...</p>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white flex flex-col items-center justify-center p-4 sm:p-6 font-sans">
+    <main className="min-h-screen bg-white flex flex-col items-center justify-center p-4 sm:p-6 font-sans selection:bg-rose-100 selection:text-rose-900">
       <div className="max-w-md w-full flex flex-col items-center">
         
         {/* Volver con Button de Shadcn */}
@@ -164,7 +164,7 @@ export default function HomePrueba() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+        <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="w-8 h-8 border-3 border-rose-500 border-t-transparent rounded-full animate-spin" />
         </div>
       }

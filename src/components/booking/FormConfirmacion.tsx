@@ -41,7 +41,6 @@ interface Props {
   onPagarMercadoPago?: (montoAPagar: number) => void;
   cargandoMP?: boolean;
   onCancelarMP?: () => void;
-  // Nuevas props opcionales para los datos bancarios
   banco?: string;
   titularCuenta?: string;
   cbu?: string;
@@ -102,27 +101,30 @@ export default function FormConfirmacion({
     onPagarMercadoPago ? 'mercadopago' : 'whatsapp'
   );
 
-  // Estado para la animación visual del botón copiar
   const [copiadoCbu, setCopiadoCbu] = useState(false);
   const [copiadoAlias, setCopiadoAlias] = useState(false);
 
-  const copiarAlPortapapeles = (texto: string, tipo: 'cbu' | 'alias') => {
+  const copiarAlPortapapeles = async (texto: string, tipo: 'cbu' | 'alias') => {
     if (!texto) return;
-    navigator.clipboard.writeText(texto);
-    if (tipo === 'cbu') {
-      setCopiadoCbu(true);
-      setTimeout(() => setCopiadoCbu(false), 2000);
-    } else {
-      setCopiadoAlias(true);
-      setTimeout(() => setCopiadoAlias(false), 2000);
+    try {
+      await navigator.clipboard.writeText(texto);
+      if (tipo === 'cbu') {
+        setCopiadoCbu(true);
+        setTimeout(() => setCopiadoCbu(false), 2000);
+      } else {
+        setCopiadoAlias(true);
+        setTimeout(() => setCopiadoAlias(false), 2000);
+      }
+    } catch (err) {
+      console.error('Error al copiar al portapapeles:', err);
     }
   };
 
   const styles = ACCENT_STYLES[colorAccent] || ACCENT_STYLES.violet;
 
-  // Formatear fecha para mostrar limpia
-  const [year, month, day] = fecha.split('-');
-  const fechaObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  // Fix de Zona Horaria: fijar mediodía (12:00) evita saltos de día por UTC offset
+  const [year, month, day] = fecha.split('-').map(Number);
+  const fechaObj = new Date(year, month - 1, day, 12, 0, 0);
   const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
     weekday: 'long',
     day: 'numeric',
@@ -133,7 +135,7 @@ export default function FormConfirmacion({
   const precioFinalCalculado = Math.max(0, precioTotal - descuentoMonto);
   const montoSenaBase = Math.round((precioFinalCalculado * porcentajeSena) / 100);
 
-  // Cálculos de Mercado Pago con el 10% de recargo por servicio
+  // Cálculos de Mercado Pago con 10% de recargo por servicio
   const montoSenaMP = Math.round(montoSenaBase * 1.10);
   const montoTotalMP = Math.round(precioFinalCalculado * 1.10);
 
@@ -189,7 +191,7 @@ export default function FormConfirmacion({
           </div>
 
           <div className="flex justify-between items-center text-slate-500 text-[11px]">
-            <span>Seña minima para congelar turno ({porcentajeSena}%):</span>
+            <span>Seña mínima para congelar turno ({porcentajeSena}%):</span>
             <span className="font-semibold text-slate-700">${montoSenaBase.toLocaleString('es-AR')}</span>
           </div>
         </div>
@@ -198,12 +200,13 @@ export default function FormConfirmacion({
       {/* FORMULARIO DE DATOS DEL CLIENTE */}
       <div className="space-y-3">
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
+          <label htmlFor="input-nombre" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
             Nombre y Apellido *
           </label>
           <div className="relative">
             <User className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
+              id="input-nombre"
               type="text"
               placeholder="Ej: María González"
               value={nombre}
@@ -214,12 +217,13 @@ export default function FormConfirmacion({
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
+          <label htmlFor="input-celular" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
             Celular (WhatsApp) *
           </label>
           <div className="relative">
             <Phone className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
+              id="input-celular"
               type="tel"
               inputMode="numeric"
               maxLength={10}
@@ -234,12 +238,13 @@ export default function FormConfirmacion({
         {/* CÓDIGO DE REFERIDO */}
         {referidosActivo && (
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
+            <label htmlFor="input-referido" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
               ¿Tenés un código de recomendada? <span className="text-slate-400 font-normal lowercase">(opcional)</span>
             </label>
             <div className="relative">
               <Gift className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
+                id="input-referido"
                 type="text"
                 placeholder="Ej: MARIA-A8F2"
                 value={codigoReferidoUsado}
@@ -270,7 +275,7 @@ export default function FormConfirmacion({
           Elegí cómo confirmar
         </span>
 
-        {/* RADIO CARDS: MERCADO PAGO / WHATSAPP */}
+        {/* RADIO CARDS */}
         <div className={`grid gap-2.5 ${onPagarMercadoPago ? 'grid-cols-2' : 'grid-cols-1'}`}>
           {onPagarMercadoPago && (
             <button
@@ -279,7 +284,7 @@ export default function FormConfirmacion({
               aria-pressed={metodoPago === 'mercadopago'}
               className={`relative text-left p-3.5 rounded-2xl border-2 transition-all duration-150 ${
                 metodoPago === 'mercadopago'
-                  ? 'border-sky-500 bg-sky-50/70 shadow-sm shadow-sky-500/10'
+                  ? 'border-sky-500 bg-sky-50/70 shadow-xs shadow-sky-500/10'
                   : 'border-slate-200 bg-white hover:border-slate-300'
               }`}
             >
@@ -305,7 +310,7 @@ export default function FormConfirmacion({
             aria-pressed={metodoPago === 'whatsapp'}
             className={`relative text-left p-3.5 rounded-2xl border-2 transition-all duration-150 ${
               metodoPago === 'whatsapp'
-                ? 'border-emerald-500 bg-emerald-50/70 shadow-sm shadow-emerald-500/10'
+                ? 'border-emerald-500 bg-emerald-50/70 shadow-xs shadow-emerald-500/10'
                 : 'border-slate-200 bg-white hover:border-slate-300'
             }`}
           >
@@ -384,59 +389,53 @@ export default function FormConfirmacion({
           </div>
         )}
 
-        {/* PANEL WHATSAPP / TRANSFERENCIA CON DATOS BANCARIOS */}
+        {/* PANEL WHATSAPP / TRANSFERENCIA */}
         {metodoPago === 'whatsapp' && (
           <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-            
-            {/* Tarjeta Informativa de Datos Bancarios */}
-            <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 space-y-2.5 text-xs text-slate-700">
-              <div className="font-bold text-amber-900 flex items-center gap-1.5">
-                <Building2 className="w-4 h-4 text-amber-700" />
-                <span>Datos para la Transferencia Bancaria</span>
-              </div>
+            {(banco || titularCuenta || cbu || alias) && (
+              <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 space-y-2.5 text-xs text-slate-700">
+                <div className="font-bold text-amber-900 flex items-center gap-1.5">
+                  <Building2 className="w-4 h-4 text-amber-700" />
+                  <span>Datos para la Transferencia Bancaria</span>
+                </div>
 
-              <div className="space-y-1.5 pt-1 border-t border-amber-200/60">
-                {banco && (
-                  <p><strong>Banco:</strong> {banco}</p>
-                )}
-                {titularCuenta && (
-                  <p><strong>Titular:</strong> {titularCuenta}</p>
-                )}
-                
-                {/* CBU con botón de copiar */}
-                {cbu && (
-                  <div className="flex items-center justify-between bg-white/80 p-2 rounded-xl border border-amber-200/50">
-                    <span className="truncate pr-2"><strong>CBU:</strong> <span className="font-mono">{cbu}</span></span>
-                    <button
-                      type="button"
-                      onClick={() => copiarAlPortapapeles(cbu, 'cbu')}
-                      className="shrink-0 px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg text-[10px] flex items-center gap-1 transition-colors"
-                    >
-                      {copiadoCbu ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                      {copiadoCbu ? '¡Copiado!' : 'Copiar CBU'}
-                    </button>
-                  </div>
-                )}
+                <div className="space-y-1.5 pt-1 border-t border-amber-200/60">
+                  {banco && <p><strong>Banco:</strong> {banco}</p>}
+                  {titularCuenta && <p><strong>Titular:</strong> {titularCuenta}</p>}
+                  
+                  {cbu && (
+                    <div className="flex items-center justify-between bg-white/80 p-2 rounded-xl border border-amber-200/50">
+                      <span className="truncate pr-2"><strong>CBU:</strong> <span className="font-mono">{cbu}</span></span>
+                      <button
+                        type="button"
+                        onClick={() => copiarAlPortapapeles(cbu, 'cbu')}
+                        className="shrink-0 px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg text-[10px] flex items-center gap-1 transition-colors"
+                      >
+                        {copiadoCbu ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                        {copiadoCbu ? '¡Copiado!' : 'Copiar CBU'}
+                      </button>
+                    </div>
+                  )}
 
-                {/* Alias con botón de copiar */}
-                {alias && (
-                  <div className="flex items-center justify-between bg-white/80 p-2 rounded-xl border border-amber-200/50">
-                    <span className="truncate pr-2"><strong>Alias:</strong> <span className="font-mono text-emerald-800 font-bold">{alias}</span></span>
-                    <button
-                      type="button"
-                      onClick={() => copiarAlPortapapeles(alias, 'alias')}
-                      className="shrink-0 px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg text-[10px] flex items-center gap-1 transition-colors"
-                    >
-                      {copiadoAlias ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                      {copiadoAlias ? '¡Copiado!' : 'Copiar Alias'}
-                    </button>
-                  </div>
-                )}
+                  {alias && (
+                    <div className="flex items-center justify-between bg-white/80 p-2 rounded-xl border border-amber-200/50">
+                      <span className="truncate pr-2"><strong>Alias:</strong> <span className="font-mono text-emerald-800 font-bold">{alias}</span></span>
+                      <button
+                        type="button"
+                        onClick={() => copiarAlPortapapeles(alias, 'alias')}
+                        className="shrink-0 px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg text-[10px] flex items-center gap-1 transition-colors"
+                      >
+                        {copiadoAlias ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                        {copiadoAlias ? '¡Copiado!' : 'Copiar Alias'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <p className="text-[10px] text-amber-800/80 italic pt-0.5">
+                  * Recordá enviar el comprobante por WhatsApp una vez realizada la transferencia.
+                </p>
               </div>
-              <p className="text-[10px] text-amber-800/80 italic pt-0.5">
-                * Recordá enviar el comprobante por WhatsApp una vez realizada la transferencia.
-              </p>
-            </div>
+            )}
 
             <button
               type="button"

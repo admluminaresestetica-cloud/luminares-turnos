@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { X, Plus, Minus, ShoppingBag, Share2, CreditCard, Tag } from "lucide-react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
@@ -31,7 +31,7 @@ export default function ModalDetalleProducto({
   const [startY, setStartY] = useState<number | null>(null);
   const [currentOffsetY, setCurrentOffsetY] = useState<number>(0);
   const [imagenSeleccionada, setImagenSeleccionada] = useState<string>("");
-  
+
   // Estado para controlar el mini carrusel desplegable por etiqueta
   const [tagSeleccionadoCarrusel, setTagSeleccionadoCarrusel] = useState<string | null>(null);
 
@@ -129,6 +129,31 @@ export default function ModalDetalleProducto({
     setStartY(null);
   };
 
+  // Cálculo optimizado de productos relacionados con puntuación inteligente
+  const productosRelacionados = useMemo(() => {
+    if (!producto || !todosProductos.length) return [];
+
+    return todosProductos
+      .filter((p) => p.id !== producto.id && (p.stock ?? 0) > 0)
+      .map((p) => {
+        let puntos = 0;
+
+        // Si comparten etiquetas (#), suma 10 puntos por cada etiqueta igual
+        if (producto.etiquetas && p.etiquetas) {
+          const coincideTag = p.etiquetas.some((tag) => producto.etiquetas?.includes(tag));
+          if (coincideTag) puntos += 10;
+        }
+
+        // Si es de la misma categoría, suma 5 puntos
+        if (p.categoria === producto.categoria) puntos += 5;
+
+        return { producto: p, puntos };
+      })
+      .sort((a, b) => b.puntos - a.puntos)
+      .map((item) => item.producto)
+      .slice(0, 3);
+  }, [producto, todosProductos]);
+
   if (!producto) return null;
 
   const precioOriginal = Number(producto.precio_original ?? (producto as any).precio_anterior) || 0;
@@ -202,14 +227,6 @@ export default function ModalDetalleProducto({
     }
   };
 
-  const complementosOtrasCategorias = todosProductos.filter(
-    (p) => p.id !== producto.id && p.categoria !== producto.categoria
-  );
-  const deLaMismaCategoria = todosProductos.filter(
-    (p) => p.id !== producto.id && p.categoria === producto.categoria
-  );
-  const productosRelacionados = [...complementosOtrasCategorias, ...deLaMismaCategoria].slice(0, 3);
-
   const puedeSumar = cantidad < maximoPermitidoParaAgregar;
   const puedeRestar = cantidad > 1;
 
@@ -224,21 +241,23 @@ export default function ModalDetalleProducto({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white p-6 sm:p-8 shadow-2xl pb-24"
+        className="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[88vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white p-4 sm:p-8 shadow-2xl flex flex-col justify-between"
         style={{
           overscrollBehaviorY: "contain",
           transform: `translateY(${currentOffsetY}px)`,
           transition: startY === null ? "transform 0.2s ease-out" : "none",
         }}
       >
-        <div className="flex justify-center -mt-2 mb-2 py-2 sm:hidden cursor-grab active:cursor-grabbing">
+        {/* Barra superior indicadora de deslizamiento para mobile */}
+        <div className="flex justify-center -mt-1 mb-3 sm:hidden cursor-grab active:cursor-grabbing">
           <span className="h-1.5 w-12 rounded-full bg-slate-300" />
         </div>
 
-        <div className="sticky top-0 float-right z-20 -mr-2 -mt-2 sm:-mr-4 sm:-mt-4 flex items-center gap-2">
+        {/* Botones Flotantes de Cierre / Compartir */}
+        <div className="sticky top-0 float-right z-30 -mr-1 -mt-1 sm:-mr-4 sm:-mt-4 flex items-center gap-2">
           <button
             onClick={handleCompartir}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-600 backdrop-blur-md transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-90 cursor-pointer shadow-sm"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-600 backdrop-blur-md border border-slate-100 shadow-sm transition-all hover:bg-slate-100 active:scale-90 cursor-pointer"
             title="Compartir producto"
           >
             <Share2 className="h-4 w-4" />
@@ -246,7 +265,7 @@ export default function ModalDetalleProducto({
 
           <button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100/90 text-slate-500 backdrop-blur-md transition-all hover:bg-slate-200 hover:text-slate-800 active:scale-90 cursor-pointer shadow-sm"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-500 backdrop-blur-md border border-slate-100 shadow-sm transition-all hover:bg-slate-100 active:scale-90 cursor-pointer"
             title="Cerrar (Esc)"
           >
             <X className="h-5 w-5" />
@@ -265,18 +284,18 @@ export default function ModalDetalleProducto({
             sinStock={sinStock}
           />
 
-          {/* INFORMACIÓN Y ACCIONES DEL PRODUCTO */}
+          {/* INFORMACIÓN DEL PRODUCTO */}
           <div className="flex flex-col justify-between space-y-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#0E6E55]">
                 {producto.categoria}
               </span>
 
-              <h2 className="text-xl font-bold text-slate-900 sm:text-2xl mt-1">
+              <h2 className="text-xl font-bold text-slate-900 sm:text-2xl mt-1 leading-snug">
                 {producto.nombre}
               </h2>
 
-              {/* ETIQUETAS / TAGS DEBAJO DEL NOMBRE */}
+              {/* ETIQUETAS / TAGS */}
               {producto.etiquetas && producto.etiquetas.length > 0 && (
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
                   {producto.etiquetas.map((tag, idx) => (
@@ -294,6 +313,7 @@ export default function ModalDetalleProducto({
                 </div>
               )}
 
+              {/* PRECIOS Y CUOTAS */}
               <div className="mt-3 flex items-baseline gap-2">
                 <span className="text-2xl font-extrabold text-slate-900">
                   ${producto.precio.toLocaleString("es-AR")}
@@ -336,7 +356,8 @@ export default function ModalDetalleProducto({
               )}
             </div>
 
-            <div className="space-y-4 pt-2">
+            {/* CONTROLES DE CANTIDAD (DESKTOP) */}
+            <div className="hidden sm:block pt-2 space-y-4">
               <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-2">
                 <span className="text-xs font-semibold text-slate-600 pl-2">Cantidad a agregar:</span>
                 <div className="flex items-center gap-3 bg-white rounded-xl border border-slate-200 p-1">
@@ -348,7 +369,6 @@ export default function ModalDetalleProducto({
                         ? "text-slate-700 hover:bg-slate-100 cursor-pointer"
                         : "text-slate-300 cursor-not-allowed"
                     }`}
-                    title="Restar cantidad"
                   >
                     <Minus className="h-3.5 w-3.5" />
                   </button>
@@ -365,7 +385,6 @@ export default function ModalDetalleProducto({
                         ? "text-slate-700 hover:bg-slate-100 cursor-pointer"
                         : "text-slate-300 cursor-not-allowed"
                     }`}
-                    title={!puedeSumar ? "Límite de stock alcanzado" : "Sumar cantidad"}
                   >
                     <Plus className="h-3.5 w-3.5" />
                   </button>
@@ -394,10 +413,8 @@ export default function ModalDetalleProducto({
               <button
                 onClick={handleComprarAhora}
                 disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all mt-2.5 active:scale-[0.98] ${
-                  sinStock || maximoPermitidoParaAgregar <= 0
-                    ? "bg-slate-200 text-slate-400 cursor-not-allowed border-transparent"
-                    : "border-2 border-[#0E6E55] bg-transparent text-[#0E6E55] hover:bg-[#0E6E55]/10 cursor-pointer"
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold transition-all border-2 border-[#0E6E55] bg-transparent text-[#0E6E55] hover:bg-[#0E6E55]/10 cursor-pointer ${
+                  sinStock || maximoPermitidoParaAgregar <= 0 ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
                 <span>Comprar ahora</span>
@@ -417,25 +434,80 @@ export default function ModalDetalleProducto({
           handleRestarRecomendado={handleRestarRecomendado}
         />
 
+        {/* BARRA STICKY INFERIOR EXCLUSIVA PARA MOVILES */}
+        <div className="sticky bottom-0 -mx-4 -mb-4 mt-6 p-3 bg-white/95 backdrop-blur-md border-t border-slate-200 sm:hidden z-20 space-y-2 pb-safe">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-xs font-semibold text-slate-600">Cantidad:</span>
+            <div className="flex items-center gap-3 bg-slate-100 rounded-xl p-1">
+              <button
+                onClick={() => puedeRestar && setCantidad(cantidad - 1)}
+                disabled={!puedeRestar}
+                className={`flex h-7 w-7 items-center justify-center rounded-lg active:scale-90 ${
+                  puedeRestar ? "bg-white text-slate-700 shadow-sm" : "text-slate-300"
+                }`}
+              >
+                <Minus className="h-3 w-3" />
+              </button>
+              <span className="w-5 text-center text-xs font-bold text-slate-900">{cantidad}</span>
+              <button
+                onClick={() => puedeSumar && setCantidad(cantidad + 1)}
+                disabled={!puedeSumar}
+                className={`flex h-7 w-7 items-center justify-center rounded-lg active:scale-90 ${
+                  puedeSumar ? "bg-white text-slate-700 shadow-sm" : "text-slate-300"
+                }`}
+              >
+                <Plus className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={handleAgregarPrincipal}
+              disabled={sinStock || maximoPermitidoParaAgregar <= 0}
+              className={`flex items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold transition-all ${
+                sinStock || maximoPermitidoParaAgregar <= 0
+                  ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                  : "bg-[#0E6E55] text-white active:scale-[0.98] shadow-sm"
+              }`}
+            >
+              <ShoppingBag className="h-3.5 w-3.5" />
+              <span>
+                {sinStock ? "Sin Stock" : `$${(producto.precio * cantidad).toLocaleString("es-AR")}`}
+              </span>
+            </button>
+
+            <button
+              onClick={handleComprarAhora}
+              disabled={sinStock || maximoPermitidoParaAgregar <= 0}
+              className={`flex items-center justify-center rounded-xl py-3 text-xs font-bold border border-[#0E6E55] text-[#0E6E55] active:scale-[0.98] ${
+                sinStock || maximoPermitidoParaAgregar <= 0 ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              <span>Comprar ahora</span>
+            </button>
+          </div>
+        </div>
+
         {/* CARRUSEL DESPLEGABLE DE PRODUCTOS POR ETIQUETA */}
         {tagSeleccionadoCarrusel && (
           <CarruselEtiquetaModal
-         isOpen={Boolean(tagSeleccionadoCarrusel)}
-         tag={tagSeleccionadoCarrusel}
-         productos={todosProductos}
-         items={items} // <-- Agregá esto
-         handleSumarRecomendado={handleSumarRecomendado} // <-- Agregá esto
-         handleRestarRecomendado={handleRestarRecomendado} // <-- Agregá esto
-         onClose={() => setTagSeleccionadoCarrusel(null)}
-         onSeleccionarProducto={(prod) => {
-         setTagSeleccionadoCarrusel(null);
-         onSeleccionarProducto(prod);
-  }}
-  onVerMasGlobal={(tag) => {
-    if (onFiltrarPorTag) onFiltrarPorTag(tag);
-    onClose();
-  }}
-/>
+            isOpen={Boolean(tagSeleccionadoCarrusel)}
+            tag={tagSeleccionadoCarrusel}
+            productos={todosProductos}
+            items={items}
+            handleSumarRecomendado={handleSumarRecomendado}
+            handleRestarRecomendado={handleRestarRecomendado}
+            onClose={() => setTagSeleccionadoCarrusel(null)}
+            onSeleccionarProducto={(prod) => {
+              setTagSeleccionadoCarrusel(null);
+              onSeleccionarProducto(prod);
+            }}
+            onVerMasGlobal={(tag) => {
+              if (onFiltrarPorTag) onFiltrarPorTag(tag);
+              onClose();
+            }}
+          />
         )}
       </div>
     </div>
