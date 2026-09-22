@@ -136,7 +136,6 @@ export default function AdminHubPage() {
   ];
 
   return (
-    // Cambiamos justify-between por justify-center (o flex-col simple) para que no busque estirarse al sacar el footer
     <div className="min-h-screen bg-slate-50/80 dark:bg-zinc-950 flex flex-col justify-center p-4 sm:p-8 select-none transition-colors duration-200 relative">
 
       {/* ENCABEZADO SUPERIOR */}
