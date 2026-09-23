@@ -1,5 +1,6 @@
 'use client';
 
+<<<<<<< Updated upstream
 import { ejecutarAccionAdmin } from '@/lib/admin/api';
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
@@ -32,10 +33,21 @@ import BannerAlertasClinicas from '../components/BannerAlertasClinicas';
 import ModalHistorialSesiones from '../components/ModalHistorialSesiones';
 
 const supabase = createClient(
+=======
+import { useState, useEffect } from 'react';
+import { createBrowserClient } from '@supabase/ssr';
+import AgendaRecepcion from '../components/AgendaRecepcion';
+import PanelFichaPaciente from './components/PanelFichaPaciente';
+import ModalEditarServiciosTurno from '../components/ModalEditarServiciosTurno';
+import { Sparkles } from 'lucide-react';
+
+const supabase = createBrowserClient(
+>>>>>>> Stashed changes
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+<<<<<<< Updated upstream
 const ESTADOS_ATENCION = [
   { key: 'en_espera', label: 'En espera', icon: Clock },
   { key: 'en_atencion', label: 'Atendiendo', icon: UserCheck },
@@ -45,11 +57,19 @@ const ESTADOS_ATENCION = [
 
 type PestañaMovil = 'paciente' | 'anamnesis' | 'operacion';
 
+=======
+>>>>>>> Stashed changes
 export default function RecepcionPage() {
-  const [pacienteFicha, setPacienteFicha] = useState<any>(null);
-  const [reservaHoy, setReservaHoy] = useState<any>(null);
-  const [esNuevo, setEsNuevo] = useState(false);
+  const [turnoSeleccionado, setTurnoSeleccionado] = useState<any | null>(null);
+  const [pacienteFichaListo, setPacienteFichaListo] = useState<any | null>(null);
+  
+  // Estados para catálogos, promos y el modal de edición
+  const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false);
+  const [serviciosLaser, setServiciosLaser] = useState<any[]>([]);
+  const [serviciosGenerales, setServiciosGenerales] = useState<any[]>([]);
+  const [promosLaser, setPromosLaser] = useState<any[]>([]);
 
+<<<<<<< Updated upstream
   // Navegación por pestañas optimizada para Celular
   const [pestanaActiva, setPestanaActiva] = useState<PestañaMovil>('paciente');
 
@@ -59,17 +79,26 @@ export default function RecepcionPage() {
   const [fototipo, setFototipo] = useState('Fototipo III');
   const [observacionesFijas, setObservacionesFijas] = useState('');
   const [antecedentes, setAntecedentes] = useState<Record<string, boolean>>({});
+=======
+  // Cargar catálogos de servicios, zonas láser y promos al montar la página
+  useEffect(() => {
+    const cargarCatalogos = async () => {
+      const [resLaser, resGen, resPromos] = await Promise.all([
+        supabase.from('servicios_laser').select('*').eq('activo', true),
+        supabase.from('servicios_generales').select('*').eq('activo', true),
+        supabase.from('promos_laser').select('*').eq('activo', true)
+      ]);
+>>>>>>> Stashed changes
 
-  // Operación del Día
-  const [cobradoEnPuerta, setCobradoEnPuerta] = useState(false);
-  const [zonasSeleccionadas, setZonasSeleccionadas] = useState<string[]>([]);
-  const [observacionesHoy, setObservacionesHoy] = useState('');
+      if (resLaser.data) setServiciosLaser(resLaser.data);
+      if (resGen.data) setServiciosGenerales(resGen.data);
+      if (resPromos.data) setPromosLaser(resPromos.data);
+    };
 
-  // Modales y Estados de UI
-  const [pacienteIdModal, setPacienteIdModal] = useState<string | null>(null);
-  const [guardando, setGuardando] = useState(false);
-  const [mensaje, setMensaje] = useState<string | null>(null);
+    cargarCatalogos();
+  }, []);
 
+<<<<<<< Updated upstream
   const extraerZonasDeReserva = (reserva: any): string[] => {
     if (!reserva) return [];
 
@@ -149,77 +178,49 @@ export default function RecepcionPage() {
 
     setGuardando(true);
     setMensaje(null);
+=======
+  // Función para guardar los cambios del carrito/servicios en el turno
+  const handleGuardarServiciosTurno = async (datosNuevos: {
+    idsLaser: string[];
+    idsGenerales: string[];
+    idsPromos: string[];
+    nuevoPrecio: number;
+    nuevaDuracion: number;
+    detalleTexto: string;
+  }) => {
+    if (!turnoSeleccionado) return;
+>>>>>>> Stashed changes
 
     try {
-      let pacienteId = pacienteFicha?.id;
+      const { error } = await supabase
+        .from('reservas')
+        .update({
+          precio_total: datosNuevos.nuevoPrecio,
+          duracion_total: datosNuevos.nuevaDuracion,
+          detalle_texto: datosNuevos.detalleTexto,
+          estado: 'confirmado', // Actualizamos estado de forma limpia al modificar en recepción
+        })
+        .eq('id', turnoSeleccionado.id);
 
-      const inicioHoy = new Date();
-      inicioHoy.setHours(0, 0, 0, 0);
-
-      let query = supabase
-        .from('pacientes_ficha')
-        .select('id, estado_atencion, updated_at')
-        .gte('updated_at', inicioHoy.toISOString());
-
-      if (pacienteId) {
-        query = query.eq('id', pacienteId);
-      } else if (celular) {
-        query = query.eq('celular', celular);
-      }
-
-      const { data: existente } = await query;
-
-      if (existente && existente.length > 0) {
-        const estadoActual = existente[0].estado_atencion;
-        if (['en_espera', 'en_atencion', 'atendido'].includes(estadoActual)) {
-          setMensaje(`⚠️ El paciente ya fue derivado a Gabinete el día de hoy (Estado: ${estadoActual}).`);
-          setGuardando(false);
-          return;
-        }
-      }
-
-      const payload = {
-        nombre_completo: nombre,
-        celular: celular,
-        fototipo: fototipo,
-        antecedentes_medicos: antecedentes,
-        observaciones_fijas: observacionesFijas,
-        estado_atencion: 'en_espera',
-        zonas_realizadas: zonasSeleccionadas,
-        observaciones_recepcion: observacionesHoy,
-        anamnesis_sesion: antecedentes,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (esNuevo || !pacienteId) {
-        const resultado = await ejecutarAccionAdmin({
-          tabla: 'pacientes_ficha',
-          accion: 'INSERT',
-          datos: payload,
-        });
-
-        if (resultado && resultado.length > 0) {
-          pacienteId = resultado[0].id;
-        }
+      if (error) {
+        console.error('Error al actualizar la reserva:', error);
+        alert('Hubo un error al actualizar el turno.');
       } else {
-        await ejecutarAccionAdmin({
-          tabla: 'pacientes_ficha',
-          accion: 'UPDATE',
-          id: pacienteId,
-          datos: payload,
+        setTurnoSeleccionado({
+          ...turnoSeleccionado,
+          precio_total: datosNuevos.nuevoPrecio,
+          duracion_total: datosNuevos.nuevaDuracion,
+          detalle_texto: datosNuevos.detalleTexto,
+          estado: 'confirmado',
         });
+        alert('¡Servicios del turno actualizados con éxito!');
       }
-
-      setMensaje('✅ ¡Paciente derivado a Gabinete (En Espera)!');
-      limpiar();
-    } catch (err: any) {
-      console.error(err);
-      setMensaje(`❌ Error: ${err.message}`);
-    } finally {
-      setGuardando(false);
+    } catch (err) {
+      console.error('Excepción al actualizar turno:', err);
     }
   };
 
+<<<<<<< Updated upstream
   const limpiar = () => {
     setPacienteFicha(null);
     setReservaHoy(null);
@@ -566,16 +567,80 @@ export default function RecepcionPage() {
               <Sparkles className="h-4 w-4 shrink-0" />
               <span>{textoBoton}</span>
             </button>
+=======
+  // Detección robusta del género del paciente (revisa props directas o estructura interna del jsonb detalle_reserva)
+  const obtenerGeneroPaciente = () => {
+    if (!turnoSeleccionado) return 'femenino';
+    if (turnoSeleccionado.genero_paciente) return turnoSeleccionado.genero_paciente;
+    
+    // Si viene anidado en el detalle_reserva
+    const detalle = turnoSeleccionado.detalle_reserva;
+    if (detalle && typeof detalle === 'object' && detalle.genero) {
+      return detalle.genero;
+    }
+    
+    return 'femenino'; // Valor por defecto seguro
+  };
+
+  return (
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-6 max-w-7xl mx-auto pb-24 sm:pb-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-800 dark:text-zinc-100">
+          Recepción y Gestión Diaria
+        </h1>
+        <p className="text-xs text-slate-500 dark:text-zinc-400">
+          Visualiza la agenda del día, gestiona ingresos y prepara la anamnesis para gabinete.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
+        {/* Columna Izquierda: Agenda del Día */}
+        <div className="lg:col-span-7 order-2 lg:order-1">
+          <AgendaRecepcion 
+            onSeleccionarTurno={(turno: any) => {
+              setTurnoSeleccionado(turno);
+              setPacienteFichaListo(null);
+            }}
+            turnoSeleccionadoId={turnoSeleccionado?.id}
+          />
+        </div>
+
+        {/* Columna Derecha: Panel de Ficha / Estado y Botón de Edición flotante/fijo en móvil */}
+        <div className="lg:col-span-5 order-1 lg:order-2 space-y-4">
+          <div className="sticky top-4 space-y-4">
+            <PanelFichaPaciente 
+              turnoSeleccionado={turnoSeleccionado}
+              onPacienteListo={(ficha: any) => setPacienteFichaListo(ficha)}
+            />
+
+            {/* Botón de acceso rápido para modificar servicios si hay un turno seleccionado */}
+            {turnoSeleccionado && (
+              <button
+                type="button"
+                onClick={() => setModalEdicionAbierto(true)}
+                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-rose-50 hover:bg-rose-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-rose-600 dark:text-rose-400 rounded-2xl text-xs font-bold transition-all border border-rose-200/60 dark:border-zinc-700 shadow-sm active:scale-[0.98]"
+              >
+                <Sparkles className="w-4 h-4 shrink-0" />
+                <span>Modificar Zonas / Promos de este Turno</span>
+              </button>
+            )}
+>>>>>>> Stashed changes
           </div>
         </div>
-      )}
+      </div>
 
-      <ModalHistorialSesiones
-        pacienteId={pacienteIdModal || ''}
-        celularPaciente={pacienteFicha?.celular || celular}
-        isOpen={!!pacienteIdModal}
-        onClose={() => setPacienteIdModal(null)}
-      />
+      {/* Modal del Carrito / Selector Dinámico con soporte para Promos y Género real */}
+      {modalEdicionAbierto && turnoSeleccionado && (
+        <ModalEditarServiciosTurno
+          turnoActual={turnoSeleccionado}
+          generoPaciente={obtenerGeneroPaciente()}
+          serviciosLaserDisponibles={serviciosLaser}
+          serviciosGeneralesDisponibles={serviciosGenerales}
+          promosLaserDisponibles={promosLaser}
+          onSave={handleGuardarServiciosTurno}
+          onClose={() => setModalEdicionAbierto(false)}
+        />
+      )}
     </div>
   );
 }

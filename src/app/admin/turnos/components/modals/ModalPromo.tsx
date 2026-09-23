@@ -1,16 +1,17 @@
-// src/components/admin/modals/ModalPromo.tsx
 'use client'
 
-import { Tag, X, Clock, DollarSign, Users, RefreshCw, CheckCircle2, Sparkles } from 'lucide-react'
+import { useState } from 'react'
+import { Tag, X, Clock, DollarSign, Users, RefreshCw, CheckCircle2, Sparkles, Loader2 } from 'lucide-react'
 import { PromoLaser, ServicioLaser } from '../types'
+import { supabase } from '@/lib/supabase'
 
 interface ModalPromoProps {
   promoEdit: Partial<PromoLaser>
   setPromoEdit: (p: Partial<PromoLaser>) => void
   servicios: ServicioLaser[]
   onToggleZona: (zonaId: string) => void
-  onSubmit: (e: React.FormEvent) => void
   onClose: () => void
+  onSaveSuccess: () => void // Callback para recargar la lista y cerrar
 }
 
 export default function ModalPromo({
@@ -18,10 +19,55 @@ export default function ModalPromo({
   setPromoEdit,
   servicios,
   onToggleZona,
-  onSubmit,
-  onClose
+  onClose,
+  onSaveSuccess
 }: ModalPromoProps) {
+  const [guardando, setGuardando] = useState(false)
+  const [errorMensaje, setErrorMensaje] = useState<string | null>(null)
+
   const generoActual = promoEdit.genero || 'femenino'
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setGuardando(true)
+    setErrorMensaje(null)
+
+    try {
+      const payload = {
+        nombre_promo: promoEdit.nombre_promo,
+        genero: promoEdit.genero || 'femenino',
+        zonas_incluidas: promoEdit.zonas_incluidas || [],
+        precio_promo: Number(promoEdit.precio_promo ?? 0),
+        duracion_total_min: Number(promoEdit.duracion_total_min ?? 0),
+        permite_swap: promoEdit.permite_swap ?? false,
+        activo: promoEdit.activo ?? true
+      }
+
+      if (promoEdit.id) {
+        // Actualizar promo existente
+        const { error } = await supabase
+          .from('promos_laser')
+          .update(payload)
+          .eq('id', promoEdit.id)
+
+        if (error) throw error
+      } else {
+        // Insertar nueva promo
+        const { error } = await supabase
+          .from('promos_laser')
+          .insert([payload])
+
+        if (error) throw error
+      }
+
+      onSaveSuccess()
+    } catch (error: any) {
+      console.error('Error al guardar promoción:', error)
+      setErrorMensaje(error.message || 'Ocurrió un error al guardar la promoción.')
+    } finally {
+      setGuardando(false)
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-all">
@@ -38,7 +84,8 @@ export default function ModalPromo({
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-2 right-2 sm:top-5 sm:right-5 text-gray-400 hover:text-gray-600 w-11 h-11 sm:w-8 sm:h-8 flex items-center justify-center rounded-full hover:bg-gray-100 active:scale-90 select-none transition-all dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-800"
+            disabled={guardando}
+            className="absolute top-2 right-2 sm:top-5 sm:right-5 text-gray-400 hover:text-gray-600 w-11 h-11 sm:w-8 sm:h-8 flex items-center justify-center rounded-full hover:bg-gray-100 active:scale-90 select-none transition-all disabled:opacity-50 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-800"
           >
             <X className="w-5 h-5" />
           </button>
@@ -60,7 +107,14 @@ export default function ModalPromo({
             </div>
           </div>
 
-          <form onSubmit={onSubmit} className="space-y-5">
+          {/* Alerta de Error si ocurre */}
+          {errorMensaje && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs dark:bg-red-950/50 dark:border-red-900 dark:text-red-300">
+              {errorMensaje}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             
             {/* Nombre Promoción */}
             <div>
@@ -71,9 +125,10 @@ export default function ModalPromo({
               <input
                 type="text"
                 required
+                disabled={guardando}
                 value={promoEdit.nombre_promo || ''}
                 onChange={(e) => setPromoEdit({ ...promoEdit, nombre_promo: e.target.value })}
-                className="w-full px-3.5 py-3 sm:py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
+                className="w-full px-3.5 py-3 sm:py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400 disabled:opacity-50"
                 placeholder="Ej: Promo Full Axilas + Cavado"
               />
             </div>
@@ -89,6 +144,7 @@ export default function ModalPromo({
                 {/* Opción Femenino */}
                 <button
                   type="button"
+                  disabled={guardando}
                   onClick={() => setPromoEdit({ ...promoEdit, genero: 'femenino' })}
                   className={`min-h-[44px] py-3.5 sm:py-3 px-4 rounded-xl border text-xs font-bold transition-all active:scale-95 select-none flex items-center justify-center gap-2 ${
                     generoActual === 'femenino'
@@ -102,6 +158,7 @@ export default function ModalPromo({
                 {/* Opción Masculino */}
                 <button
                   type="button"
+                  disabled={guardando}
                   onClick={() => setPromoEdit({ ...promoEdit, genero: 'masculino' })}
                   className={`min-h-[44px] py-3.5 sm:py-3 px-4 rounded-xl border text-xs font-bold transition-all active:scale-95 select-none flex items-center justify-center gap-2 ${
                     generoActual === 'masculino'
@@ -126,9 +183,10 @@ export default function ModalPromo({
                   type="number"
                   required
                   min={0}
+                  disabled={guardando}
                   value={promoEdit.precio_promo || 0}
                   onChange={(e) => setPromoEdit({ ...promoEdit, precio_promo: Number(e.target.value) })}
-                  className="w-full px-3.5 py-3 sm:py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
+                  className="w-full px-3.5 py-3 sm:py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400 disabled:opacity-50"
                 />
               </div>
 
@@ -141,9 +199,10 @@ export default function ModalPromo({
                   type="number"
                   required
                   min={0}
+                  disabled={guardando}
                   value={promoEdit.duracion_total_min || 0}
                   onChange={(e) => setPromoEdit({ ...promoEdit, duracion_total_min: Number(e.target.value) })}
-                  className="w-full px-3.5 py-3 sm:py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400"
+                  className="w-full px-3.5 py-3 sm:py-2.5 border border-gray-200 rounded-xl bg-white text-gray-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-gray-900 transition-all shadow-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:focus:ring-zinc-400 dark:focus:border-zinc-400 disabled:opacity-50"
                 />
               </div>
             </div>
@@ -170,6 +229,7 @@ export default function ModalPromo({
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
+                          disabled={guardando}
                           checked={estaSeleccionada}
                           onChange={() => onToggleZona(s.id)}
                           className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 dark:border-zinc-600 dark:bg-zinc-700 dark:checked:bg-zinc-100"
@@ -196,6 +256,7 @@ export default function ModalPromo({
                 <input
                   type="checkbox"
                   id="promoSwap"
+                  disabled={guardando}
                   checked={promoEdit.permite_swap ?? false}
                   onChange={(e) => setPromoEdit({ ...promoEdit, permite_swap: e.target.checked })}
                   className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 dark:border-zinc-600 dark:bg-zinc-700 dark:checked:bg-zinc-100"
@@ -210,6 +271,7 @@ export default function ModalPromo({
                 <input
                   type="checkbox"
                   id="promoActiva"
+                  disabled={guardando}
                   checked={promoEdit.activo ?? true}
                   onChange={(e) => setPromoEdit({ ...promoEdit, activo: e.target.checked })}
                   className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 dark:border-zinc-600 dark:bg-zinc-700 dark:checked:bg-emerald-600"
@@ -226,15 +288,18 @@ export default function ModalPromo({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full sm:w-auto min-h-[44px] px-4 py-3 sm:py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 active:scale-95 select-none rounded-xl transition-all dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+                disabled={guardando}
+                className="w-full sm:w-auto min-h-[44px] px-4 py-3 sm:py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 active:scale-95 select-none rounded-xl transition-all disabled:opacity-50 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="w-full sm:w-auto min-h-[44px] px-5 py-3 sm:py-2.5 text-xs font-semibold bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-all shadow-sm active:scale-95 select-none dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                disabled={guardando}
+                className="w-full sm:w-auto min-h-[44px] px-5 py-3 sm:py-2.5 text-xs font-semibold bg-gray-900 hover:bg-gray-800 text-white rounded-xl transition-all shadow-sm active:scale-95 select-none dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                Guardar Promoción
+                {guardando && <Loader2 className="w-4 h-4 animate-spin" />}
+                {guardando ? 'Guardando...' : 'Guardar Promoción'}
               </button>
             </div>
 
