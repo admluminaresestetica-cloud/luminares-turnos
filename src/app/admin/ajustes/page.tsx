@@ -19,9 +19,10 @@ import HorariosTab from './components/HorariosTab'
 import PreciosTab from './components/PreciosTab'
 import GeneralesTab from './components/GeneralesTab'
 import BannersAjustesTab from './components/BannersAjustesTab'
+import BannersHomeTab from './components/BannersHomeTab' // ✨ 1. IMPORTAMOS LA NUEVA PESTAÑA
 import ReferidosTab from './components/ReferidosTab'
 import ConfiguracionAnamnesisTab from './components/ConfiguracionAnamnesis'
-import ConfiguracionPinTab from './components/ConfiguracionPinTab' // 1. IMPORTAMOS LA PESTAÑA DE PIN
+import ConfiguracionPinTab from './components/ConfiguracionPinTab'
 
 import ModalServicioLaser from '@/app/admin/turnos/components/modals/ModalServicioLaser'
 import ModalPromo from '@/app/admin/turnos/components/modals/ModalPromo'
@@ -37,10 +38,10 @@ export default function AjustesAdminPage() {
   const [cargandoSesion, setCargandoSesion] = useState(true)
   const [autenticado, setAutenticado] = useState(false)
 
-  // 2. SUMAMOS 'seguridad' AL TIPO DE activeTab
+  // ✨ 2. SUMAMOS 'banners_home' AL TIPO Y ESTADO INICIAL (o podés dejarlo como predeterminado para testear)
   const [activeTab, setActiveTab] = useState<
-    'empresa' | 'agenda' | 'precios' | 'generales' | 'banners' | 'referidos' | 'anamnesis' | 'faqs' | 'seguridad'
-  >('empresa')
+    'empresa' | 'agenda' | 'precios' | 'generales' | 'banners' | 'banners_home' | 'referidos' | 'anamnesis' | 'faqs' | 'seguridad'
+  >('banners_home')
 
   const configAgendaProps = useConfigCalendario()
   const precios = usePreciosLaser()
@@ -106,6 +107,18 @@ export default function AjustesAdminPage() {
           Empresa y Configuración
         </button>
 
+        {/* ✨ 3. BOTÓN DE PESTAÑA NUEVA: BANNERS INICIO APP */}
+        <button
+          onClick={() => setActiveTab('banners_home')}
+          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === 'banners_home'
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
+          }`}
+        >
+          Banners Inicio App
+        </button>
+
         <button
           onClick={() => setActiveTab('agenda')}
           className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
@@ -147,7 +160,7 @@ export default function AjustesAdminPage() {
               : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
           }`}
         >
-          Banners y Visuales
+          Banners Secundarios
         </button>
 
         <button
@@ -183,7 +196,6 @@ export default function AjustesAdminPage() {
           Preguntas Frecuentes (FAQ)
         </button>
 
-        {/* 3. BOTÓN DE LA PESTAÑA SEGURIDAD */}
         <button
           onClick={() => setActiveTab('seguridad')}
           className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
@@ -198,6 +210,9 @@ export default function AjustesAdminPage() {
 
       {/* Contenido según la pestaña activa */}
       {activeTab === 'empresa' && <FormularioEmpresaTab />}
+
+      {/* ✨ 4. RENDERIZAMOS EL COMPONENTE DE BANNERS HOME */}
+      {activeTab === 'banners_home' && <BannersHomeTab />}
 
       {activeTab === 'agenda' && <HorariosTab {...configAgendaProps} />}
 
@@ -251,7 +266,6 @@ export default function AjustesAdminPage() {
         </div>
       )}
 
-      {/* 4. CONTENIDO DE LA PESTAÑA SEGURIDAD */}
       {activeTab === 'seguridad' && <ConfiguracionPinTab />}
 
       {/* MODALES DE EDICIÓN Y ALTA DE SERVICIOS */}
@@ -262,37 +276,32 @@ export default function AjustesAdminPage() {
           onClose={precios.cerrarModalServicio}
           onSaveSuccess={() => {
             precios.cerrarModalServicio()
-            // Aquí puedes llamar a la función que recarga tus datos de precios/servicios láser, por ejemplo:
-            // precios.recargarDatos() o equivalente que tengas en tu hook
           }}
         />
       )}
       {precios.modalPromo && precios.promoEdit && (
-  <ModalPromo
-    promoEdit={precios.promoEdit}
-    setPromoEdit={precios.setPromoEdit}
-    servicios={precios.servicios}
-    onToggleZona={precios.toggleZonaEnPromo}
-    onClose={precios.cerrarModalPromo}
-    onSaveSuccess={() => {
-      precios.cerrarModalPromo()
-      // precios.recargarPromos?.() // Si tienes una función para refrescar la tabla de promociones
-    }}
-  />
-)}
+        <ModalPromo
+          promoEdit={precios.promoEdit}
+          setPromoEdit={precios.setPromoEdit}
+          servicios={precios.servicios}
+          onToggleZona={precios.toggleZonaEnPromo}
+          onClose={precios.cerrarModalPromo}
+          onSaveSuccess={() => {
+            precios.cerrarModalPromo()
+          }}
+        />
+      )}
 
       {generales.modalGeneral && generales.servicioGeneralEdit && (
-  <ModalServicioGeneral
-    servicioGeneralEdit={generales.servicioGeneralEdit}
-    setServicioGeneralEdit={generales.setServicioGeneralEdit}
-    onClose={generales.cerrarModalGeneral}
-    onSaveSuccess={() => {
-      generales.cerrarModalGeneral()
-      // Si tienes alguna función para recargar la lista de servicios generales en tu hook, la puedes invocar aquí, por ejemplo:
-      // generales.recargarServicios?.()
-    }}
-  />
-)}
+        <ModalServicioGeneral
+          servicioGeneralEdit={generales.servicioGeneralEdit}
+          setServicioGeneralEdit={generales.setServicioGeneralEdit}
+          onClose={generales.cerrarModalGeneral}
+          onSaveSuccess={() => {
+            generales.cerrarModalGeneral()
+          }}
+        />
+      )}
     </div>
   )
 }
