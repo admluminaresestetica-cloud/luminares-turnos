@@ -108,11 +108,11 @@ export default function ModalCobro({
 
     try {
       const itemsPayload = carrito.map((item) => ({
-  producto_id: Number(item.producto_id),
-  titulo: item.titulo,
-  cantidad: item.cantidad,
-  precio_unitario: item.precio_unitario,
-}));
+        producto_id: Number(item.producto_id),
+        titulo: item.titulo,
+        cantidad: item.cantidad,
+        precio_unitario: item.precio_unitario,
+      }));
 
       const metodoFinal = esPagoMixto
         ? `mixto (Efectivo: $${numEfectivoMixto} + ${metodoDigitalSecundario.toUpperCase()}: $${numDigitalMixto})`
@@ -125,15 +125,15 @@ export default function ModalCobro({
         : totalConAjuste;
 
       const { data, error } = await supabase.rpc("registrar_venta_pos", {
-  p_items: itemsPayload,
-  p_metodo_pago: metodoFinal,
-  p_total: totalConAjuste,
-  p_pago_con: pagoConFinal,
-  p_vuelto: vuelto,
-  p_cliente_nombre: nombreCliente.trim() || "Cliente Ocasional",
-  p_descuento_monto: descuentoTotalMonto,
-  p_recargo_monto: recargoMonto,
-});
+        p_items: itemsPayload,
+        p_metodo_pago: metodoFinal,
+        p_total: totalConAjuste,
+        p_pago_con: pagoConFinal,
+        p_vuelto: vuelto,
+        p_cliente_nombre: nombreCliente.trim() || "Cliente Ocasional",
+        p_descuento_monto: descuentoTotalMonto,
+        p_recargo_monto: recargoMonto,
+      });
 
       if (error) throw error;
 
@@ -168,48 +168,56 @@ export default function ModalCobro({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 pb-20 sm:pb-4 backdrop-blur-xs animate-fadeIn">
+      {/* Card/Modal optimizado sin scroll innecesario en PC */}
       <div 
-        className="w-full max-w-md rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-2xl"
+        className="w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-2xl max-h-[85vh] sm:max-h-none overflow-y-auto sm:overflow-visible"
         onKeyDown={handleKeyDownForm}
       >
-        <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-          <h3 className="text-lg font-bold text-[#12151B]">💳 Procesar Pago POS</h3>
+        {/* Handle táctil en móvil */}
+        <div className="sm:hidden w-12 h-1 bg-gray-300 dark:bg-zinc-700 rounded-full mx-auto mb-2" />
+
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-2">
+          <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+            💳 Procesar Pago
+          </h3>
           <button
             onClick={onClose}
-            className="text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-xs font-bold text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 transition-colors p-1"
           >
             ✕
           </button>
         </div>
 
-        <div className="my-3 rounded-xl bg-[#F7F7F5] p-3 text-center">
-          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+        {/* Display Total a Cobrar */}
+        <div className="my-2 rounded-xl bg-gray-50 dark:bg-zinc-800/60 p-2.5 text-center border border-gray-100 dark:border-zinc-800">
+          <span className="text-[10px] font-extrabold text-gray-400 dark:text-zinc-400 uppercase tracking-wider">
             Total a Cobrar
           </span>
-          <p className="text-3xl font-black text-[#0E6E55]">
+          <p className="text-2xl sm:text-3xl font-black text-[#0E6E55] dark:text-emerald-400">
             ${totalConAjuste.toLocaleString("es-AR")}
           </p>
           
           {porcentajeAjuste !== 0 && (
-            <span className={`text-[11px] font-bold ${porcentajeAjuste > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+            <span className={`text-[10px] font-bold ${porcentajeAjuste > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
               {porcentajeAjuste > 0 ? `+${porcentajeAjuste}% Recargo` : `${porcentajeAjuste}% Descuento`} (${montoAjusteMedioPago > 0 ? '+' : ''}${Math.round(montoAjusteMedioPago)})
             </span>
           )}
         </div>
 
-        <div className="mb-3 flex items-center justify-between gap-1.5 rounded-xl bg-gray-50 p-2 border border-gray-100">
-          <span className="text-[11px] font-bold text-gray-700">Ajuste / Recargo:</span>
-          <div className="flex gap-1">
+        {/* Ajustes / Recargos */}
+        <div className="mb-2 flex flex-col gap-1 rounded-xl bg-gray-50 dark:bg-zinc-800/40 p-2 border border-gray-100 dark:border-zinc-800">
+          <span className="text-[10px] font-bold text-gray-600 dark:text-zinc-400">Ajuste / Recargo rápido:</span>
+          <div className="grid grid-cols-6 gap-1">
             {[-10, -5, 0, 5, 10, 15].map((pct) => (
               <button
                 key={pct}
                 type="button"
                 onClick={() => setPorcentajeAjuste(pct)}
-                className={`rounded-lg px-2 py-1 text-[10px] font-extrabold transition-all ${
+                className={`rounded-lg py-1 text-[10px] font-extrabold transition-all active:scale-95 ${
                   porcentajeAjuste === pct
-                    ? "bg-[#12151B] text-white shadow-sm"
-                    : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
+                    ? "bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-xs"
+                    : "bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700 hover:bg-gray-100"
                 }`}
               >
                 {pct > 0 ? `+${pct}%` : `${pct}%`}
@@ -218,12 +226,13 @@ export default function ModalCobro({
           </div>
         </div>
 
-        <div className="mb-3 flex rounded-xl bg-gray-100 p-1">
+        {/* Modalidad de pago (Único vs Mixto) */}
+        <div className="mb-2 flex rounded-xl bg-gray-100 dark:bg-zinc-800 p-0.5">
           <button
             type="button"
             onClick={() => setEsPagoMixto(false)}
             className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all ${
-              !esPagoMixto ? "bg-white text-[#12151B] shadow-sm" : "text-gray-500 hover:text-gray-800"
+              !esPagoMixto ? "bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100 shadow-xs" : "text-gray-500 dark:text-zinc-400"
             }`}
           >
             Pago Único
@@ -232,16 +241,17 @@ export default function ModalCobro({
             type="button"
             onClick={() => setEsPagoMixto(true)}
             className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all ${
-              esPagoMixto ? "bg-[#0E6E55] text-white shadow-sm" : "text-gray-500 hover:text-gray-800"
+              esPagoMixto ? "bg-[#0E6E55] text-white shadow-xs" : "text-gray-500 dark:text-zinc-400"
             }`}
           >
             🔀 Pago Mixto
           </button>
         </div>
 
+        {/* Pago Único */}
         {!esPagoMixto ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-2">
+          <div className="space-y-2">
+            <div className="grid grid-cols-3 gap-1.5">
               {[
                 { id: "efectivo", label: "💵 Efectivo" },
                 { id: "transferencia", label: "📱 Transfer/MP" },
@@ -251,10 +261,10 @@ export default function ModalCobro({
                   key={m.id}
                   type="button"
                   onClick={() => handleSeleccionarMetodo(m.id)}
-                  className={`rounded-xl border py-2.5 text-xs font-bold transition-all ${
+                  className={`rounded-xl border py-2 text-xs font-bold transition-all active:scale-95 ${
                     metodoPago === m.id
-                      ? "border-[#0E6E55] bg-[#0E6E55] text-white"
-                      : "border-[#E7E5E0] bg-white text-[#12151B] hover:bg-gray-50"
+                      ? "border-[#0E6E55] bg-[#0E6E55] text-white shadow-xs"
+                      : "border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-200 hover:bg-gray-50"
                   }`}
                 >
                   {m.label}
@@ -263,15 +273,15 @@ export default function ModalCobro({
             </div>
 
             {metodoPago === "efectivo" && (
-              <div className="space-y-2 rounded-xl border border-gray-200 bg-[#FAFAFA] p-3">
+              <div className="space-y-1.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/30 p-2.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-[#12151B]">Paga con ($):</label>
+                  <label className="text-xs font-bold text-gray-800 dark:text-zinc-200">Paga con ($):</label>
                   <button
                     type="button"
                     onClick={() => setPagoCon(totalConAjuste.toString())}
-                    className="text-[10px] font-bold text-[#0E6E55] hover:underline"
+                    className="text-[10px] font-bold text-[#0E6E55] dark:text-emerald-400 hover:underline"
                   >
-                    Paga Exacto
+                    Pago Exacto
                   </button>
                 </div>
 
@@ -281,16 +291,17 @@ export default function ModalCobro({
                   value={pagoCon}
                   onChange={(e) => setPagoCon(e.target.value)}
                   placeholder="Ej: 10000"
-                  className="w-full rounded-xl border border-[#E7E5E0] bg-white p-2.5 text-sm font-bold text-[#12151B] outline-none focus:border-[#0E6E55]"
+                  className="w-full rounded-xl border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-2 text-sm font-bold text-gray-900 dark:text-zinc-100 outline-none focus:border-[#0E6E55]"
                 />
 
-                <div className="grid grid-cols-5 gap-1 pt-1">
+                {/* Billetes rápidos */}
+                <div className="grid grid-cols-5 gap-1 pt-0.5">
                   {[1000, 2000, 5000, 10000, 20000].map((monto) => (
                     <button
                       key={monto}
                       type="button"
                       onClick={() => setPagoCon(monto.toString())}
-                      className="rounded-lg border border-gray-200 bg-white py-1.5 text-[10px] font-bold text-gray-700 hover:bg-emerald-50 hover:border-[#0E6E55] hover:text-[#0E6E55] transition-all"
+                      className="rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-1 text-[10px] font-bold text-gray-700 dark:text-zinc-300 active:scale-95 transition-all"
                     >
                       ${monto / 1000}k
                     </button>
@@ -298,11 +309,11 @@ export default function ModalCobro({
                 </div>
 
                 {montoEntregado > 0 && (
-                  <div className="mt-2 flex items-center justify-between border-t border-gray-200 pt-2 text-sm">
-                    <span className="font-bold text-gray-600">Vuelto:</span>
+                  <div className="mt-1 flex items-center justify-between border-t border-gray-200 dark:border-zinc-800 pt-1.5 text-xs">
+                    <span className="font-bold text-gray-600 dark:text-zinc-400">Vuelto:</span>
                     <span
-                      className={`font-black text-base ${
-                        esEfectivoInsuficiente ? "text-red-500" : "text-emerald-700"
+                      className={`font-black text-sm ${
+                        esEfectivoInsuficiente ? "text-red-500" : "text-emerald-600 dark:text-emerald-400"
                       }`}
                     >
                       {esEfectivoInsuficiente
@@ -315,11 +326,12 @@ export default function ModalCobro({
             )}
           </div>
         ) : (
-          <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/40 p-3">
-            <h4 className="text-xs font-extrabold text-[#0E6E55]">Desglose de Pago Mixto</h4>
+          /* Pago Mixto */
+          <div className="space-y-2 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 p-2.5">
+            <h4 className="text-[11px] font-extrabold text-[#0E6E55] dark:text-emerald-400">Desglose de Pago Mixto</h4>
 
             <div>
-              <label className="text-[11px] font-bold text-gray-700">Monto en Efectivo ($):</label>
+              <label className="text-[10px] font-bold text-gray-700 dark:text-zinc-300">Monto en Efectivo ($):</label>
               <input
                 type="number"
                 value={montoEfectivoMixto}
@@ -331,18 +343,18 @@ export default function ModalCobro({
                     setMontoDigitalMixto((totalConAjuste - num).toString());
                   }
                 }}
-                placeholder="Monto entregado en efectivo"
-                className="mt-1 w-full rounded-xl border border-gray-300 bg-white p-2 text-xs font-bold text-gray-800 outline-none focus:border-[#0E6E55]"
+                placeholder="Monto en efectivo"
+                className="mt-0.5 w-full rounded-xl border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1.5 text-xs font-bold text-gray-800 dark:text-zinc-100 outline-none focus:border-[#0E6E55]"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold text-gray-700">Monto Digital ($):</label>
+                <label className="text-[10px] font-bold text-gray-700 dark:text-zinc-300">Monto Digital ($):</label>
                 <select
                   value={metodoDigitalSecundario}
                   onChange={(e) => setMetodoDigitalSecundario(e.target.value)}
-                  className="rounded-md border border-gray-300 bg-white px-2 py-0.5 text-[10px] font-bold text-gray-700"
+                  className="rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold text-gray-700 dark:text-zinc-300"
                 >
                   <option value="transferencia">Transferencia / MP</option>
                   <option value="tarjeta">Tarjeta</option>
@@ -352,16 +364,16 @@ export default function ModalCobro({
                 type="number"
                 value={montoDigitalMixto}
                 onChange={(e) => setMontoDigitalMixto(e.target.value)}
-                placeholder="Monto cobrado digitalmente"
-                className="mt-1 w-full rounded-xl border border-gray-300 bg-white p-2 text-xs font-bold text-gray-800 outline-none focus:border-[#0E6E55]"
+                placeholder="Monto digital"
+                className="mt-0.5 w-full rounded-xl border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-1.5 text-xs font-bold text-gray-800 dark:text-zinc-100 outline-none focus:border-[#0E6E55]"
               />
             </div>
 
-            <div className="flex items-center justify-between border-t border-emerald-200 pt-2 text-xs">
-              <span className="font-bold text-gray-600">Suma total ingresada:</span>
+            <div className="flex items-center justify-between border-t border-emerald-200 dark:border-emerald-900/40 pt-1.5 text-[11px]">
+              <span className="font-bold text-gray-600 dark:text-zinc-400">Total ingresado:</span>
               <span
                 className={`font-black ${
-                  restanteMixto > 0 ? "text-amber-600" : restanteMixto === 0 ? "text-emerald-700" : "text-red-500"
+                  restanteMixto > 0 ? "text-amber-600" : restanteMixto === 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
                 }`}
               >
                 ${sumaMixto.toLocaleString("es-AR")}{" "}
@@ -371,32 +383,34 @@ export default function ModalCobro({
           </div>
         )}
 
-        <div className="pt-2">
-          <label className="text-xs font-bold text-[#12151B]">Nombre Cliente (Opcional)</label>
+        {/* Nombre Cliente */}
+        <div className="pt-1">
+          <label className="text-[11px] font-bold text-gray-800 dark:text-zinc-200">Nombre Cliente (Opcional)</label>
           <input
             type="text"
             value={nombreCliente}
             onChange={(e) => setNombreCliente(e.target.value)}
             placeholder="Cliente Ocasional"
-            className="mt-1 w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-2 text-xs font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
+            className="mt-0.5 w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800/50 p-2 text-xs font-medium text-gray-900 dark:text-zinc-100 outline-none focus:border-[#0E6E55]"
           />
         </div>
 
-        <div className="mt-5 flex items-center gap-3">
+        {/* Acciones del Modal */}
+        <div className="mt-3 flex items-center gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-[#E7E5E0] bg-white py-3 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-1 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-2.5 text-xs font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-50 active:scale-95 transition-all"
           >
-            Cancelar (Esc)
+            Cancelar
           </button>
           <button
             type="button"
             disabled={loading || esEfectivoInsuficiente || esMixtoIncompleto}
             onClick={handleConfirmarVenta}
-            className="flex-1 rounded-xl bg-[#0E6E55] py-3 text-xs font-bold text-white transition-all hover:bg-[#0A5340] active:scale-[0.98] disabled:opacity-50"
+            className="flex-1 rounded-xl bg-[#0E6E55] py-2.5 text-xs font-bold text-white transition-all hover:bg-[#0A5340] active:scale-95 disabled:opacity-50"
           >
-            {loading ? "Procesando..." : "Finalizar Venta (Enter)"}
+            {loading ? "Procesando..." : "Finalizar Venta"}
           </button>
         </div>
       </div>

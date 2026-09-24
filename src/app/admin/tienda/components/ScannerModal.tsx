@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
+import { Camera, X, CameraOff } from "lucide-react";
 
 interface ScannerModalProps {
   isOpen: boolean;
@@ -94,12 +95,17 @@ export default function ScannerModal({ isOpen, onClose, onScan }: ScannerModalPr
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-xl">
-        <div className="flex items-center justify-between border-b border-[#E7E5E0] pb-3">
-          <h3 className="text-base font-bold text-[#12151B]">📷 Escanear Código de Barras</h3>
-          <button onClick={handleClose} className="text-xs font-semibold text-[#6B675F] hover:text-[#12151B]">
-            ✕ Cerrar
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 pb-20 sm:pb-4 backdrop-blur-xs animate-fadeIn">
+      <div className="w-full max-w-md rounded-t-3xl sm:rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-2xl max-h-[85vh] overflow-y-auto">
+        {/* Handle de arrastre para móviles */}
+        <div className="sm:hidden w-12 h-1 bg-gray-300 dark:bg-zinc-700 rounded-full mx-auto mb-3" />
+
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-3">
+          <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+            <Camera className="h-5 w-5 text-[#0E6E55] dark:text-emerald-400" /> Escanear Código
+          </h3>
+          <button onClick={handleClose} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 transition-colors">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
@@ -107,39 +113,41 @@ export default function ScannerModal({ isOpen, onClose, onScan }: ScannerModalPr
           {!cameraActive ? (
             <button
               onClick={() => setCameraActive(true)}
-              className="w-full rounded-xl bg-[#0E6E55] py-3 text-xs font-bold text-white transition-all hover:bg-[#0A5340]"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0E6E55] py-3 text-xs font-bold text-white transition-all hover:bg-[#0A5340] active:scale-95 shadow-md"
             >
-              🎥 Activar Cámara
+              <Camera className="h-4 w-4" /> Activar Cámara
             </button>
           ) : (
             <div>
-              <div id="reader" className="overflow-hidden rounded-xl border border-[#E7E5E0]"></div>
+              <div id="reader" className="overflow-hidden rounded-2xl border border-gray-200 dark:border-zinc-800"></div>
               <button
                 onClick={() => {
                   stopCamera();
                   setCameraActive(false);
                 }}
-                className="mt-2 w-full rounded-xl bg-[#FEF2F2] py-2 text-xs font-semibold text-[#C84343]"
+                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl bg-red-50 dark:bg-red-950/40 py-2.5 text-xs font-bold text-red-600 dark:text-red-400 transition-all active:scale-95"
               >
-                Detener Cámara
+                <CameraOff className="h-4 w-4" /> Detener Cámara
               </button>
             </div>
           )}
 
-          <form onSubmit={handleManualSubmit} className="border-t border-[#E7E5E0] pt-4">
-            <label className="block text-xs font-medium text-[#6B675F]">Ingreso Manual / Probar Lector USB</label>
-            <div className="mt-1 flex gap-2">
+          <form onSubmit={handleManualSubmit} className="border-t border-gray-100 dark:border-zinc-800 pt-4">
+            <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300">
+              Ingreso Manual / Probar Lector USB
+            </label>
+            <div className="mt-1.5 flex gap-2">
               <input
                 type="text"
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value)}
                 placeholder="Código de barras..."
-                className="flex-1 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-2.5 text-xs outline-none focus:border-[#0E6E55]"
+                className="flex-1 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 p-2.5 text-xs font-medium text-gray-900 dark:text-zinc-100 outline-none focus:border-[#0E6E55]"
                 autoFocus
               />
               <button
                 type="submit"
-                className="rounded-xl bg-[#12151B] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#2C323E]"
+                className="rounded-xl bg-[#12151B] dark:bg-zinc-100 px-4 py-2.5 text-xs font-bold text-white dark:text-zinc-900 hover:bg-black active:scale-95 transition-all"
               >
                 Usar
               </button>

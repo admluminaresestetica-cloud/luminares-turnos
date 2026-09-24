@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Sparkles, ArrowLeft } from 'lucide-react';
+import { Sparkles, ArrowLeft, UserCheck, ShieldAlert, Activity } from 'lucide-react';
 import Link from 'next/link';
 import HeaderOperadoraReloj from './components/HeaderOperadoraReloj';
 import NotificacionNuevoCliente from './components/NotificacionNuevoCliente';
@@ -10,7 +10,6 @@ import VisorAnamnesisDia from './components/VisorAnamnesisDia';
 import FormularioCargaTecnica from './components/FormularioCargaTecnica';
 import CronometroSesion from './components/CronometroSesion';
 
-// Tipos sugeridos para mayor seguridad técnica
 export interface Paciente {
   id?: string;
   nombre_paciente?: string;
@@ -34,7 +33,6 @@ export default function GabinetePage() {
   const [sesionActual, setSesionActual] = useState<Sesion | null>(null);
   const [zonasSeleccionadas, setZonasSeleccionadas] = useState<string[]>([]);
 
-  // Cada vez que cambia la sesión actual (ficha del paciente en espera), sincronizamos las zonas
   useEffect(() => {
     if (sesionActual) {
       const rawZonas = sesionActual.zonas_realizadas || sesionActual.zonas_preasignadas || [];
@@ -61,7 +59,6 @@ export default function GabinetePage() {
   }, [sesionActual]);
 
   const handleSesionCompletada = () => {
-    // Limpiar selección actual al finalizar la atención
     setSesionActual(null);
     setPacienteSeleccionado(null);
     setZonasSeleccionadas([]);
@@ -76,44 +73,43 @@ export default function GabinetePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 transition-colors dark:bg-zinc-950">
-      <div className="mx-auto max-w-7xl space-y-5 p-4 sm:p-6 sm:space-y-6">
+      <div className="mx-auto max-w-7xl space-y-6 px-3 py-3 sm:px-6 sm:py-6 lg:px-8">
 
-        {/* TÍTULO DE LA VISTA CON BOTÓN DE RETORNO AL MENÚ ADMIN */}
-        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-teal-200 bg-teal-50 dark:border-teal-900 dark:bg-teal-950/40">
-              <Sparkles className="h-5 w-5 text-teal-600 dark:text-teal-400" strokeWidth={2} />
-            </div>
+        {/* Encabezado Principal */}
+        <header className="flex flex-col gap-3 border-b border-slate-200/85 pb-4 transition-colors dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3.5">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm shadow-teal-600/20">
+              <Activity className="h-5 w-5" />
+            </span>
             <div>
-              <h1 className="text-base font-semibold tracking-tight text-slate-800 dark:text-white sm:text-lg">
-                Gabinete
+              <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-zinc-100 sm:text-2xl">
+                Gabinete Técnico
               </h1>
-              <p className="text-xs text-slate-500 dark:text-zinc-400">
-                Control técnico, validación de anamnesis y registro de sesiones láser.
+              <p className="text-xs text-slate-500 dark:text-zinc-400 sm:text-sm">
+                Control clínico, validación de anamnesis y registro de sesiones láser
               </p>
             </div>
           </div>
 
-          {/* BOTÓN VOLVER AL MENÚ ADMIN */}
           <Link
             href="/admin"
-            className="inline-flex self-start items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 hover:shadow active:scale-95 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white sm:self-auto"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-95 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 sm:h-11 sm:text-sm"
           >
             <ArrowLeft className="h-4 w-4 text-slate-500 dark:text-zinc-400" />
             <span>Menú Admin</span>
           </Link>
-        </div>
+        </header>
 
-        {/* NOTIFICACIÓN EN TIEMPO REAL DE NUEVOS PACIENTES EN ESPERA */}
+        {/* Notificación en Tiempo Real */}
         <NotificacionNuevoCliente />
 
-        {/* HEADER: RELOJ Y OPERADORA (Conectado a la tabla operadoras) */}
+        {/* Header: Reloj y Operadora */}
         <HeaderOperadoraReloj
           operadoraActual={operadoraActual}
           setOperadoraActual={setOperadoraActual}
         />
 
-        {/* BANDEJA DE PACIENTES (ESPERA Y ATENDIDOS) DESDE PACIENTES_FICHA */}
+        {/* Bandeja de Pacientes (Espera / Atendidos) */}
         <SelectorPacientesDoble
           pacienteSeleccionado={pacienteSeleccionado}
           setPacienteSeleccionado={setPacienteSeleccionado}
@@ -121,41 +117,50 @@ export default function GabinetePage() {
           setSesionActual={setSesionActual}
         />
 
-        {/* BLOQUE CLÍNICO Y TÉCNICO (SE ACTIVA AL SELECCIONAR UN PACIENTE) */}
+        {/* Bloque Clínico y Técnico Activo */}
         {sesionActual && (
-          <div className="space-y-5 animate-fadeIn sm:space-y-6">
+          <div className="space-y-6 animate-fadeIn">
 
-            {/* CRONÓMETRO DE SESIÓN — fijo al hacer scroll para no perderlo de vista */}
-            <div className="sticky top-2 z-30">
+            {/* Cronógrafo de Sesión */}
+            <div className="sticky top-4 z-30">
               <CronometroSesion sesionActual={sesionActual} nombrePaciente={nombrePacienteActivo} />
             </div>
 
-            {/* INFORMACIÓN DEL PACIENTE ACTIVO */}
-            <div className="flex flex-col justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 text-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:flex-row sm:items-center sm:p-5">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="hidden h-2.5 w-2.5 shrink-0 rounded-full bg-teal-400 animate-pulse sm:flex" />
+            {/* Tarjeta de Información del Paciente Activo */}
+            <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600 ring-1 ring-teal-100 dark:bg-teal-950/60 dark:text-teal-400 dark:ring-teal-900">
+                  <UserCheck className="h-5 w-5" />
+                </span>
                 <div className="min-w-0">
-                  <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-zinc-400">
-                    Paciente en tratamiento activo
-                  </span>
-                  <h2 className="text-sm font-semibold truncate text-white">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                      Tratamiento activo en curso
+                    </span>
+                  </div>
+                  <h2 className="truncate text-base font-bold text-slate-900 dark:text-zinc-100 sm:text-lg">
                     {nombrePacienteActivo}
                   </h2>
                 </div>
               </div>
-              <div className="inline-flex self-start items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs dark:border-zinc-800 dark:bg-zinc-800/50 sm:self-auto">
-                <span className="text-slate-400 dark:text-zinc-400">DNI</span>
-                <span className="font-mono font-semibold text-white">{pacienteSeleccionado?.dni || 'N/A'}</span>
-                <span className="text-slate-600 dark:text-zinc-600">•</span>
-                <span className="text-slate-400 dark:text-zinc-400">Tel</span>
-                <span className="font-mono font-semibold text-white">{pacienteSeleccionado?.telefono || 'N/A'}</span>
+
+              <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-zinc-800 sm:border-0 sm:pt-0">
+                <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 dark:bg-zinc-800/60 dark:text-zinc-300">
+                  <span className="text-slate-400 dark:text-zinc-500">DNI</span>
+                  <span className="font-mono text-slate-800 dark:text-zinc-100">{pacienteSeleccionado?.dni || '—'}</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 dark:bg-zinc-800/60 dark:text-zinc-300">
+                  <span className="text-slate-400 dark:text-zinc-500">Tel</span>
+                  <span className="font-mono text-slate-800 dark:text-zinc-100">{pacienteSeleccionado?.telefono || '—'}</span>
+                </div>
               </div>
             </div>
 
-            {/* VISOR DE LA ANAMNESIS DEL DÍA */}
+            {/* Visor de Anamnesis del Día */}
             <VisorAnamnesisDia sesionActual={sesionActual} />
 
-            {/* FORMULARIO DE CARGA TÉCNICA Y CIERRE (INCLUYE CATÁLOGO Y TABLA DE ZONAS) */}
+            {/* Formulario de Carga Técnica */}
             <FormularioCargaTecnica
               sesionActual={sesionActual}
               operadoraActual={operadoraActual}

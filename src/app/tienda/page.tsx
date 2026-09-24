@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { ShoppingBag, ArrowLeft, Tag as TagIcon, X, Sparkles } from "lucide-react";
+import { ShoppingBag, ArrowLeft, Tag as TagIcon, X } from "lucide-react";
 import CarritoDrawer from "@/components/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
 import BeneficiosTienda from "./components/BeneficiosTienda";
@@ -201,8 +201,8 @@ export default function TiendaPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[#F7F7F5] flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0E6E55] border-t-transparent" />
+      <div className="min-h-screen bg-white flex items-center justify-center font-sans">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#0E6E55] border-t-transparent" />
       </div>
     );
   }
@@ -217,18 +217,14 @@ export default function TiendaPage() {
   const hayTagActivo = Boolean(tagSeleccionado);
 
   return (
-  <div
-    className={`min-h-screen text-[#12151B] flex flex-col justify-between transition-colors duration-500 ease-in-out ${
-      hayTagActivo ? "bg-white" : "bg-white"
-    }`}
-  >
-    <div>
-        {/* Barra de navegación superior optimizada tipo App Bar */}
-        <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-[#E7E5E0]/80 bg-white/85 px-4 py-3.5 backdrop-blur-xl sm:px-10 sm:py-4 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)]">
+    <div className="min-h-screen bg-white text-[#12151B] flex flex-col justify-between font-sans selection:bg-emerald-100 selection:text-emerald-900">
+      <div>
+        {/* Navbar / App Bar superior limpia */}
+        <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-4 py-3.5 backdrop-blur-md sm:px-10 sm:py-4 shadow-xs">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#6B675F] hover:text-[#12151B] bg-slate-100/80 hover:bg-slate-200/80 px-3.5 py-2 rounded-xl transition-all active:scale-95 border border-[#E7E5E0]/60 shadow-xs"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-white hover:text-slate-900 px-3.5 py-2 rounded-xl transition-all active:scale-95 border border-slate-200/80 shadow-xs"
               title="Volver a la selección principal"
             >
               <ArrowLeft className="w-4 h-4 stroke-[2.2]" />
@@ -252,12 +248,12 @@ export default function TiendaPage() {
               </div>
 
               <div className="flex min-w-0 flex-col leading-tight">
-                <h2 className="m-0 truncate text-sm sm:text-base font-extrabold tracking-tight text-[#12151B]">
+                <h2 className="m-0 truncate text-sm sm:text-base font-extrabold tracking-tight text-slate-900">
                   {config?.nombre_empresa || "Luminares"}
                 </h2>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#0E6E55] animate-pulse" />
-                  <span className="truncate text-[11px] font-semibold text-[#6B675F]">
+                  <span className="truncate text-[11px] font-semibold text-slate-500">
                     {config?.subtitulo_tienda || "Tienda Oficial"}
                   </span>
                 </div>
@@ -267,7 +263,7 @@ export default function TiendaPage() {
 
           <button
             onClick={() => setModalAbierto(true)}
-            className="relative flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200/90 bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-[#12151B] transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm active:scale-95 cursor-pointer shadow-xs"
+            className="relative flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-800 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 active:scale-95 cursor-pointer shadow-xs"
           >
             <ShoppingBag className="h-4 w-4 shrink-0 text-slate-700" strokeWidth={2.2} />
             <span className="hidden sm:inline">Mi Carrito</span>
@@ -291,9 +287,9 @@ export default function TiendaPage() {
             onSelectTag={(slug) => setTagSeleccionado(slug)}
           />
 
-          {/* Indicador visual moderno de etiqueta activa */}
+          {/* Indicador visual de etiqueta activa */}
           {hayTagActivo && (
-            <div className="mb-6 flex items-center justify-between bg-white border border-[#0E6E55]/30 rounded-[22px] px-4 sm:px-5 py-3.5 shadow-[0_8px_20px_-6px_rgba(14,110,85,0.08)] animate-in fade-in duration-300">
+            <div className="mb-6 flex items-center justify-between bg-white border border-[#0E6E55]/30 rounded-[22px] px-4 sm:px-5 py-3.5 shadow-xs animate-in fade-in duration-300">
               <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-[#0E6E55]">
                 <div className="w-7 h-7 rounded-xl bg-[#0E6E55]/10 flex items-center justify-center shrink-0">
                   <TagIcon className="w-3.5 h-3.5 stroke-[2.2]" />
@@ -305,7 +301,7 @@ export default function TiendaPage() {
               </div>
               <button
                 onClick={() => setTagSeleccionado(null)}
-                className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200/80 px-3 py-2 rounded-xl transition-all cursor-pointer active:scale-95"
+                className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-xl transition-all cursor-pointer active:scale-95 shadow-xs"
               >
                 <span>Limpiar</span>
                 <X className="w-3.5 h-3.5 stroke-[2.5]" />

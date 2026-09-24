@@ -129,7 +129,7 @@ export default function TicketVenta({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm print:p-0 print:bg-transparent print:static">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 backdrop-blur-xs animate-fadeIn print:p-0 print:bg-transparent print:static">
       <style jsx global>{`
         @media print {
           body * {
@@ -154,39 +154,46 @@ export default function TicketVenta({
         }
       `}</style>
 
-      <div className="w-full max-w-sm rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-2xl">
-        <div className="no-print mb-4 rounded-xl border border-gray-100 bg-gray-50 p-2 text-center">
-          <p className="text-[11px] font-bold text-gray-500 mb-1">Formato de Ticketera:</p>
+      {/* Card/Bottom Sheet */}
+      <div className="w-full max-w-sm rounded-t-3xl sm:rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+        {/* Handle de arrastre móvil */}
+        <div className="no-print sm:hidden w-12 h-1.5 bg-gray-300 dark:bg-zinc-700 rounded-full mx-auto mb-3" />
+
+        {/* Selector de Formato de Ticketera */}
+        <div className="no-print mb-4 rounded-2xl border border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800/50 p-2.5 text-center">
+          <p className="text-[10px] font-extrabold text-gray-500 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
+            Formato de Impresión
+          </p>
           <div className="flex justify-center gap-1.5">
             <button
               onClick={() => setFormatoImpresion("80mm")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all active:scale-95 ${
                 formatoImpresion === "80mm"
-                  ? "bg-[#0E6E55] text-white shadow-sm"
-                  : "bg-white text-gray-600 border border-gray-200"
+                  ? "bg-[#0E6E55] text-white shadow-xs"
+                  : "bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700"
               }`}
             >
-              80mm (Estándar)
+              80mm
             </button>
             <button
               onClick={() => setFormatoImpresion("58mm")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all active:scale-95 ${
                 formatoImpresion === "58mm"
-                  ? "bg-[#0E6E55] text-white shadow-sm"
-                  : "bg-white text-gray-600 border border-gray-200"
+                  ? "bg-[#0E6E55] text-white shadow-xs"
+                  : "bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700"
               }`}
             >
-              58mm (Mini)
+              58mm
             </button>
             <button
               onClick={() => setFormatoImpresion("a4")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all ${
+              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all active:scale-95 ${
                 formatoImpresion === "a4"
-                  ? "bg-[#0E6E55] text-white shadow-sm"
-                  : "bg-white text-gray-600 border border-gray-200"
+                  ? "bg-[#0E6E55] text-white shadow-xs"
+                  : "bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border border-gray-200 dark:border-zinc-700"
               }`}
             >
-              A4 / Hoja
+              A4
             </button>
           </div>
         </div>
@@ -194,34 +201,34 @@ export default function TicketVenta({
         {/* ÁREA IMPRIMIBLE DEL TICKET */}
         <div id="ticket-print-area">
           {/* Cabecera Ticket */}
-          <div className="border-b border-dashed border-gray-300 pb-4 text-center">
-            <span className="text-2xl print:hidden">✨</span>
-            <h3 className="text-base font-extrabold text-[#12151B] uppercase tracking-wide">
+          <div className="border-b border-dashed border-gray-300 dark:border-zinc-700 pb-3 text-center">
+            <span className="text-xl print:hidden">✨</span>
+            <h3 className="text-base font-extrabold text-gray-900 dark:text-zinc-100 uppercase tracking-wide">
               {datosEmpresa.nombre}
             </h3>
             {datosEmpresa.cuit && (
-              <p className="text-[10px] text-gray-500 font-medium">CUIT: {datosEmpresa.cuit}</p>
+              <p className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium">CUIT: {datosEmpresa.cuit}</p>
             )}
-            <p className="text-[11px] text-gray-500 font-medium">Ticket de Venta Presencial</p>
+            <p className="text-[11px] text-gray-500 dark:text-zinc-400 font-medium">Ticket de Venta Presencial</p>
             {datosEmpresa.direccion && (
-              <p className="text-[10px] text-gray-400 mt-0.5">{datosEmpresa.direccion}</p>
+              <p className="text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5">{datosEmpresa.direccion}</p>
             )}
             {nombreCliente && (
-              <p className="mt-1 text-xs font-semibold text-gray-700">
+              <p className="mt-1 text-xs font-bold text-gray-800 dark:text-zinc-200">
                 Cliente: {nombreCliente}
               </p>
             )}
             {pedidoId && (
-              <p className="mt-0.5 text-[10px] font-mono text-gray-400">
+              <p className="mt-0.5 text-[10px] font-mono text-gray-400 dark:text-zinc-500">
                 ID: #{pedidoId.slice(0, 8)}
               </p>
             )}
           </div>
 
           {/* Desglose de Ítems */}
-          <div className="my-3 max-h-48 overflow-y-auto print:max-h-none space-y-1.5 border-b border-dashed border-gray-300 pb-3 text-xs">
+          <div className="my-3 max-h-40 overflow-y-auto print:max-h-none space-y-1.5 border-b border-dashed border-gray-300 dark:border-zinc-700 pb-3 text-xs">
             {items.map((item, idx) => (
-              <div key={idx} className="flex justify-between font-medium text-[#12151B]">
+              <div key={idx} className="flex justify-between font-medium text-gray-800 dark:text-zinc-200">
                 <span className="pr-2 leading-tight">
                   {item.cantidad}x {item.titulo}
                 </span>
@@ -232,24 +239,24 @@ export default function TicketVenta({
             ))}
           </div>
 
-          {/* Totales, Descuentos, Recargos y Métodos de Pago */}
-          <div className="space-y-1.5 border-b border-dashed border-gray-300 pb-3 text-xs">
+          {/* Totales y Métodos de Pago */}
+          <div className="space-y-1.5 border-b border-dashed border-gray-300 dark:border-zinc-700 pb-3 text-xs">
             {(descuentoMonto > 0 || recargoMonto > 0) && (
               <>
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between text-gray-600 dark:text-zinc-400">
                   <span>Subtotal:</span>
                   <span>${baseSubtotal.toLocaleString("es-AR")}</span>
                 </div>
 
                 {descuentoMonto > 0 && (
-                  <div className="flex justify-between font-medium text-emerald-600">
+                  <div className="flex justify-between font-bold text-emerald-600 dark:text-emerald-400">
                     <span>Descuento:</span>
                     <span>-${descuentoMonto.toLocaleString("es-AR")}</span>
                   </div>
                 )}
 
                 {recargoMonto > 0 && (
-                  <div className="flex justify-between font-medium text-amber-600">
+                  <div className="flex justify-between font-bold text-amber-600 dark:text-amber-400">
                     <span>Recargo:</span>
                     <span>+${recargoMonto.toLocaleString("es-AR")}</span>
                   </div>
@@ -257,15 +264,15 @@ export default function TicketVenta({
               </>
             )}
 
-            <div className="flex justify-between text-sm font-black text-[#12151B] pt-1 border-t border-gray-100">
+            <div className="flex justify-between text-sm font-black text-gray-900 dark:text-zinc-100 pt-1 border-t border-gray-100 dark:border-zinc-800">
               <span>TOTAL:</span>
-              <span className="text-[#0E6E55] print:text-black">
+              <span className="text-[#0E6E55] dark:text-emerald-400 print:text-black">
                 ${total.toLocaleString("es-AR")}
               </span>
             </div>
 
-            <div className="flex flex-col gap-1 border-t border-b border-dashed border-gray-200 py-2 my-2 text-xs">
-              <div className="flex justify-between font-medium text-gray-700">
+            <div className="flex flex-col gap-1 border-t border-b border-dashed border-gray-200 dark:border-zinc-800 py-2 my-2 text-xs">
+              <div className="flex justify-between font-bold text-gray-700 dark:text-zinc-300">
                 <span>Método de Pago:</span>
                 <span className="capitalize">
                   {metodoPago.includes("Mixto") ? "Pago Mixto" : metodoPago}
@@ -273,7 +280,7 @@ export default function TicketVenta({
               </div>
 
               {metodoPago.includes("Mixto") && (
-                <p className="text-[11px] text-gray-500 text-right leading-tight bg-gray-50 p-1.5 rounded-md border border-gray-100 print:border-none print:bg-transparent">
+                <p className="text-[11px] text-gray-500 dark:text-zinc-400 text-right leading-tight bg-gray-50 dark:bg-zinc-800 p-1.5 rounded-md border border-gray-100 dark:border-zinc-700 print:border-none print:bg-transparent">
                   {metodoPago}
                 </p>
               )}
@@ -281,11 +288,11 @@ export default function TicketVenta({
 
             {metodoPago.toLowerCase().includes("efectivo") && pagoCon > 0 && (
               <>
-                <div className="flex justify-between text-gray-500">
+                <div className="flex justify-between text-gray-500 dark:text-zinc-400">
                   <span>Paga con:</span>
                   <span>${pagoCon.toLocaleString("es-AR")}</span>
                 </div>
-                <div className="flex justify-between font-semibold text-emerald-700 print:text-black">
+                <div className="flex justify-between font-bold text-emerald-600 dark:text-emerald-400 print:text-black">
                   <span>Vuelto:</span>
                   <span>${vuelto.toLocaleString("es-AR")}</span>
                 </div>
@@ -293,29 +300,29 @@ export default function TicketVenta({
             )}
           </div>
 
-          <div className="mt-3 text-center text-[10px] text-gray-400">
+          <div className="mt-3 text-center text-[10px] text-gray-400 dark:text-zinc-500">
             <p>{datosEmpresa.mensajeTicket || "¡Gracias por tu preferencia! ✨"}</p>
           </div>
         </div>
 
         {/* Botones de Acción */}
-        <div className="no-print mt-5 space-y-2">
+        <div className="no-print mt-4 space-y-2">
           <button
             onClick={handleEnviarWhatsApp}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-xs font-bold text-white transition-all hover:bg-emerald-700"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-xs font-bold text-white shadow-md active:scale-95 transition-all hover:bg-emerald-700"
           >
-            📱 Enviar Ticket por WhatsApp
+            📱 Enviar por WhatsApp
           </button>
           <div className="flex gap-2">
             <button
               onClick={handleImprimir}
-              className="flex-1 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] py-2 text-xs font-bold text-gray-700 hover:bg-gray-100"
+              className="flex-1 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 py-2.5 text-xs font-bold text-gray-700 dark:text-zinc-300 hover:bg-gray-100 active:scale-95 transition-all"
             >
-              🖨️ Imprimir Ticket
+              🖨️ Imprimir
             </button>
             <button
               onClick={onClose}
-              className="flex-1 rounded-xl bg-[#12151B] py-2 text-xs font-bold text-white hover:bg-[#2C323E]"
+              className="flex-1 rounded-xl bg-gray-900 dark:bg-zinc-100 py-2.5 text-xs font-bold text-white dark:text-zinc-900 hover:bg-gray-800 active:scale-95 transition-all"
             >
               Cerrar
             </button>

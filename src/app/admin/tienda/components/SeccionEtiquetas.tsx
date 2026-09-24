@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Plus, Tag, X } from "lucide-react";
 
 interface SeccionEtiquetasProps {
   etiquetas: string[];
@@ -34,8 +35,11 @@ export default function SeccionEtiquetas({ etiquetas, setEtiquetas }: SeccionEti
 
   return (
     <div className="sm:col-span-2 space-y-2.5">
-      <label className="block text-xs font-semibold text-[#6B675F]">
-        Etiquetas / Tags del Producto <span className="font-normal text-[#A6A29B]">(aparecen arriba de la foto pública)</span>
+      <label className="block text-xs font-bold text-gray-700 dark:text-zinc-300">
+        Etiquetas / Tags del Producto{" "}
+        <span className="font-normal text-gray-400 dark:text-zinc-500">
+          (aparecen arriba de la foto pública)
+        </span>
       </label>
 
       <div className="flex gap-2">
@@ -44,15 +48,16 @@ export default function SeccionEtiquetas({ etiquetas, setEtiquetas }: SeccionEti
           value={inputEtiqueta}
           onChange={(e) => setInputEtiqueta(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ej: Hipoalergénico, Piel Sensible, Recién Nacido..."
-          className="h-11 w-full min-w-0 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-3.5 text-sm font-medium text-[#12151B] outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+          placeholder="Ej: Hipoalergénico, Piel Sensible..."
+          className="h-11 w-full min-w-0 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 px-3.5 text-xs font-medium text-gray-900 dark:text-zinc-100 outline-none transition-colors focus:border-[#0E6E55]"
         />
         <button
           type="button"
           onClick={agregarEtiqueta}
-          className="h-11 shrink-0 rounded-xl bg-[#0E6E55] px-4 text-xs font-bold text-white transition-all hover:bg-[#0A5340] active:scale-95 whitespace-nowrap"
+          className="h-11 shrink-0 rounded-xl bg-[#0E6E55] px-4 text-xs font-bold text-white transition-all hover:bg-[#0A5340] active:scale-95 flex items-center gap-1.5 whitespace-nowrap shadow-xs"
         >
-          ➕ Agregar
+          <Plus className="h-4 w-4 stroke-[2.5]" />
+          <span>Agregar</span>
         </button>
       </div>
 
@@ -62,16 +67,17 @@ export default function SeccionEtiquetas({ etiquetas, setEtiquetas }: SeccionEti
           {etiquetas.map((tag, idx) => (
             <span
               key={idx}
-              className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#0E6E55]/20 bg-[#0E6E55]/10 px-3.5 text-xs font-semibold text-[#0E6E55] transition-colors hover:border-[#0E6E55]/40"
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/40 pl-3 pr-1.5 text-xs font-bold text-[#0E6E55] dark:text-emerald-400"
             >
-              🏷️ {tag}
+              <Tag className="h-3 w-3 shrink-0" />
+              <span>{tag}</span>
               <button
                 type="button"
                 onClick={() => eliminarEtiqueta(idx)}
-                className="flex h-4 w-4 items-center justify-center rounded-full font-bold text-[#0E6E55]/60 transition-colors hover:bg-red-100 hover:text-red-600"
+                className="flex h-5 w-5 items-center justify-center rounded-full text-[#0E6E55]/60 dark:text-emerald-400/60 transition-colors hover:bg-red-100 dark:hover:bg-red-950/60 hover:text-red-600 dark:hover:text-red-400 active:scale-90"
                 title="Eliminar etiqueta"
               >
-                ✕
+                <X className="h-3 w-3 stroke-[2.5]" />
               </button>
             </span>
           ))}

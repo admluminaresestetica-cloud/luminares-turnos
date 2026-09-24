@@ -249,67 +249,67 @@ export default function PuntoVentaTab({
       {/* Botón Flotante de Ayuda de Atajos */}
       <button
         onClick={() => setIsHelpOpen(true)}
-        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-[#12151B] px-3.5 py-2 text-xs font-semibold text-white shadow-lg transition-all hover:bg-[#0E6E55] hover:scale-105 active:scale-95"
+        className="fixed bottom-20 sm:bottom-5 right-4 sm:right-5 z-30 flex items-center gap-2 rounded-full bg-[#12151B] px-3.5 py-2 text-xs font-semibold text-white shadow-lg transition-all hover:bg-[#0E6E55] hover:scale-105 active:scale-95"
         title="Ver Atajos de Teclado"
       >
         <Keyboard className="h-4 w-4 text-emerald-400" />
-        <span>Atajos</span>
+        <span className="hidden sm:inline">Atajos</span>
       </button>
 
       {/* Pop-up de Ayuda */}
       {isHelpOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-gray-100 dark:bg-zinc-900 dark:border-zinc-800">
             <button
               onClick={() => setIsHelpOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="flex items-center gap-2.5 mb-4 border-b border-gray-100 pb-3">
-              <div className="p-2 bg-emerald-50 rounded-xl text-[#0E6E55]">
+            <div className="flex items-center gap-2.5 mb-4 border-b border-gray-100 dark:border-zinc-800 pb-3">
+              <div className="p-2 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-[#0E6E55] dark:text-emerald-400">
                 <Keyboard className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-gray-900">Atajos de Teclado Rápidos</h3>
-                <p className="text-xs text-gray-500">Agilizá las ventas en la caja sin usar el mouse</p>
+                <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100">Atajos de Teclado Rápidos</h3>
+                <p className="text-xs text-gray-500 dark:text-zinc-400">Agilizá las ventas en la caja sin usar el mouse</p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
-                <span className="text-xs font-medium text-gray-700 flex items-center gap-2">
-                  <Info className="h-3.5 w-3.5 text-emerald-600" /> Escanear / Buscar Producto
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-zinc-800/60">
+                <span className="text-xs font-medium text-gray-700 dark:text-zinc-200 flex items-center gap-2">
+                  <Info className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> Escanear / Buscar Producto
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-mono font-bold text-gray-800 border border-gray-200 shadow-sm">
+                <span className="inline-flex items-center gap-1 rounded-md bg-white dark:bg-zinc-800 px-2 py-1 text-xs font-mono font-bold text-gray-800 dark:text-zinc-200 border border-gray-200 dark:border-zinc-700 shadow-xs">
                   / <span className="text-gray-400">o</span> F4
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
-                <span className="text-xs font-medium text-gray-700 flex items-center gap-2">
-                  <Info className="h-3.5 w-3.5 text-emerald-600" /> Abrir Modal de Cobro
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-zinc-800/60">
+                <span className="text-xs font-medium text-gray-700 dark:text-zinc-200 flex items-center gap-2">
+                  <Info className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> Abrir Modal de Cobro
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 text-xs font-mono font-bold text-gray-800 border border-gray-200 shadow-sm">
+                <span className="inline-flex items-center gap-1 rounded-md bg-white dark:bg-zinc-800 px-2 py-1 text-xs font-mono font-bold text-gray-800 dark:text-zinc-200 border border-gray-200 dark:border-zinc-700 shadow-xs">
                   F2 <span className="text-gray-400">o</span> Enter
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
-                <span className="text-xs font-medium text-gray-700 flex items-center gap-2">
-                  <Info className="h-3.5 w-3.5 text-emerald-600" /> Cerrar / Vaciar Carrito
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 dark:bg-zinc-800/60">
+                <span className="text-xs font-medium text-gray-700 dark:text-zinc-200 flex items-center gap-2">
+                  <Info className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> Cerrar / Vaciar Carrito
                 </span>
-                <span className="rounded-md bg-white px-2 py-1 text-xs font-mono font-bold text-gray-800 border border-gray-200 shadow-sm">
+                <span className="rounded-md bg-white dark:bg-zinc-800 px-2 py-1 text-xs font-mono font-bold text-gray-800 dark:text-zinc-200 border border-gray-200 dark:border-zinc-700 shadow-xs">
                   Esc
                 </span>
               </div>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-gray-100 flex justify-end">
+            <div className="mt-5 pt-3 border-t border-gray-100 dark:border-zinc-800 flex justify-end">
               <button
                 onClick={() => setIsHelpOpen(false)}
-                className="w-full py-2.5 rounded-xl bg-[#12151B] text-white text-xs font-bold hover:bg-[#0E6E55] transition-colors"
+                className="w-full py-2.5 rounded-xl bg-[#12151B] dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold hover:bg-[#0E6E55] transition-colors"
               >
                 Entendido
               </button>
@@ -325,12 +325,6 @@ export default function PuntoVentaTab({
         supabase={supabase}
         onVentaAnulada={onActualizarProductos}
       />
-<ModalHistorialVentas
-  isOpen={isHistorialOpen}
-  onClose={() => setIsHistorialOpen(false)}
-  supabase={supabase}
-  onVentaAnulada={onActualizarProductos}
-/>
 
       {/* Modal de Cobro */}
       <ModalCobro

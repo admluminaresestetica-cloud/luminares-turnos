@@ -44,7 +44,8 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-100 dark:bg-zinc-950 font-sans text-gray-900 dark:text-zinc-100 transition-colors">
       <AdminHeader onLogout={handleLogout} />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-10">
+      {/* pb-24 + safe-area en mobile: evita que la Bottom Navigation Bar tape el contenido */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-zinc-800 shadow-sm">
           <div className="min-w-0">
             <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-zinc-100 tracking-tight">
@@ -58,7 +59,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2 shrink-0">
             <Link
               href="/admin"
-              className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-95 shadow-xs hover:shadow flex items-center justify-center gap-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-95 select-none shadow-xs hover:shadow flex items-center justify-center gap-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700"
             >
               <ArrowLeft className="h-4 w-4 text-slate-500 dark:text-zinc-400" />
               <span>Menú Admin</span>

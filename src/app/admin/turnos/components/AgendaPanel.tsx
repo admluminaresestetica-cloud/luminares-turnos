@@ -1,4 +1,3 @@
-// src/components/admin/AgendaPanel.tsx
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -12,7 +11,6 @@ import {
   History, 
   Sparkles, 
   Scissors,
-  CheckCircle2,
   AlertCircle
 } from 'lucide-react';
 import type { CierreJornada, ConfiguracionCalendario, Reserva } from '@/lib/types';
@@ -58,16 +56,15 @@ export default function AgendaPanel({
   const [editReserva, setEditReserva] = useState<Reserva | null>(null);
   const [cerrando, setCerrando] = useState(false);
 
-  const ahora = Date.now();
-
   const filtradas = useMemo(() => {
+    const ahora = Date.now();
     return reservas.filter((r) => {
       if (!matchBusqueda(r, busqueda)) return false;
       const ts = new Date(r.fecha_hora_inicio).getTime();
       if (vista === 'proximos') return ts >= ahora;
       return ts < ahora;
     });
-  }, [reservas, busqueda, vista, ahora]);
+  }, [reservas, busqueda, vista]);
 
   const delDia = useMemo(
     () => reservas.filter((r) => fechaDeReserva(r.fecha_hora_inicio) === fechaVista),
@@ -131,7 +128,7 @@ export default function AgendaPanel({
                 type="date"
                 value={fechaVista}
                 onChange={(e) => setFechaVista(e.target.value)}
-                className="w-full border border-gray-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-800 dark:text-zinc-100 bg-gray-50/50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all [color-scheme:light] dark:[color-scheme:dark]"
+                className="w-full border border-gray-200 dark:border-zinc-700 rounded-xl px-3 py-3 sm:py-2.5 text-xs font-medium text-gray-800 dark:text-zinc-100 bg-gray-50/50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all [color-scheme:light] dark:[color-scheme:dark]"
               />
             </div>
 
@@ -147,7 +144,7 @@ export default function AgendaPanel({
               <select
                 value={tipoJornada}
                 onChange={(e) => setTipoJornada(e.target.value as 'laser' | 'general')}
-                className="w-full border border-gray-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-800 dark:text-zinc-100 bg-gray-50/50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+                className="w-full border border-gray-200 dark:border-zinc-700 rounded-xl px-3 py-3 sm:py-2.5 text-xs font-medium text-gray-800 dark:text-zinc-100 bg-gray-50/50 dark:bg-zinc-800/50 focus:bg-white dark:focus:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
               >
                 <option value="laser" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">Láser</option>
                 <option value="general" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">General</option>
@@ -158,14 +155,14 @@ export default function AgendaPanel({
           <div className="flex items-center gap-2 self-stretch md:self-auto w-full md:w-auto">
             {jornadaCerrada ? (
               <>
-                <span className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 text-xs bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 px-3.5 py-2.5 rounded-xl font-medium border border-gray-200 dark:border-zinc-700">
+                <span className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 text-xs bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 px-3.5 py-3 sm:py-2.5 rounded-xl font-medium border border-gray-200 dark:border-zinc-700 select-none">
                   <Lock className="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400" />
                   Jornada cerrada
                 </span>
                 <button
                   type="button"
                   onClick={handleDesbloquear}
-                  className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 text-xs px-3.5 py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white active:scale-95 transition-all"
+                  className="flex-1 md:flex-none min-h-[44px] inline-flex items-center justify-center gap-1.5 text-xs px-3.5 py-3 sm:py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white active:scale-95 select-none transition-all"
                 >
                   <Unlock className="w-3.5 h-3.5 text-gray-500 dark:text-zinc-400" />
                   Desbloquear
@@ -176,7 +173,7 @@ export default function AgendaPanel({
                 type="button"
                 onClick={handleCerrarJornada}
                 disabled={cerrando}
-                className="w-full md:w-auto justify-center inline-flex items-center gap-2 text-xs font-semibold px-4 py-2.5 bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl hover:bg-gray-800 dark:hover:bg-white disabled:opacity-50 disabled:active:scale-100 active:scale-95 transition-all shadow-sm"
+                className="w-full md:w-auto min-h-[44px] justify-center inline-flex items-center gap-2 text-xs font-semibold px-4 py-3 sm:py-2.5 bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl hover:bg-gray-800 dark:hover:bg-white disabled:opacity-50 disabled:active:scale-100 active:scale-95 select-none transition-all shadow-sm"
               >
                 <Lock className="w-3.5 h-3.5" />
                 {cerrando ? 'Cerrando...' : 'Cerrar jornada del día'}
@@ -203,7 +200,7 @@ export default function AgendaPanel({
               placeholder="Buscar por nombre, celular, código (#7842) o fecha..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
+              className="w-full pl-9 pr-4 py-3 sm:py-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 transition-all"
             />
           </div>
 
@@ -211,7 +208,7 @@ export default function AgendaPanel({
             <button
               type="button"
               onClick={() => setVista('proximos')}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all active:scale-95 ${
+              className={`flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all active:scale-95 select-none ${
                 vista === 'proximos'
                   ? 'bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white'
@@ -223,7 +220,7 @@ export default function AgendaPanel({
             <button
               type="button"
               onClick={() => setVista('historial')}
-              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all active:scale-95 ${
+              className={`flex-1 sm:flex-initial min-h-[44px] sm:min-h-0 flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-1.5 text-xs font-semibold rounded-lg transition-all active:scale-95 select-none ${
                 vista === 'historial'
                   ? 'bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white'
@@ -245,7 +242,7 @@ export default function AgendaPanel({
             <p className="sm:hidden text-[11px] text-gray-400 dark:text-zinc-500 font-medium mb-2 px-1">
               ↔ Deslizá la tabla hacia los costados para ver más columnas
             </p>
-            <div className="overflow-x-auto scroll-smooth">
+            <div className="overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <table className="w-full text-left text-xs min-w-[900px] sm:min-w-0">
                 <thead className="bg-gray-50/80 dark:bg-zinc-800/50 text-gray-500 dark:text-zinc-400 font-semibold uppercase tracking-wider text-[11px] border-b border-gray-100 dark:border-zinc-800">
                   <tr>
@@ -292,7 +289,7 @@ export default function AgendaPanel({
                             value={r.medio_pago || ''}
                             onChange={(e) => handleCampo(r.id, { medio_pago: e.target.value || null })}
                             disabled={cerrada}
-                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none max-w-[110px] transition-all"
+                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-2 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none max-w-[110px] transition-all"
                           >
                             <option value="" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">—</option>
                             {MEDIOS_PAGO.map((m) => (
@@ -305,7 +302,7 @@ export default function AgendaPanel({
                             value={r.estado_asistencia || 'pendiente'}
                             onChange={(e) => handleCampo(r.id, { estado_asistencia: e.target.value as typeof r.estado_asistencia })}
                             disabled={cerrada}
-                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none transition-all"
+                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-2 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none transition-all"
                           >
                             {ESTADOS_ASISTENCIA.map((e) => (
                               <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
@@ -317,7 +314,7 @@ export default function AgendaPanel({
                             value={r.estado}
                             onChange={(e) => handleCampo(r.id, { estado: e.target.value as typeof r.estado })}
                             disabled={cerrada}
-                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none font-medium transition-all"
+                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-2 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none font-medium transition-all"
                           >
                             {ESTADOS_RESERVA.map((e) => (
                               <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
@@ -328,7 +325,7 @@ export default function AgendaPanel({
                           <button
                             type="button"
                             onClick={() => setEditReserva(r)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2.5 py-1.5 rounded-lg transition-all active:scale-95"
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2.5 py-2 rounded-lg transition-all active:scale-95 select-none"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                             Editar

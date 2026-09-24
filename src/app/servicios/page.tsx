@@ -11,6 +11,9 @@ import {
   LABELS_CATEGORIA,
 } from '@/lib/supabase/servicios-generales';
 import type { CategoriaGeneral, DetalleReservaGeneral, ServicioGeneral } from '@/lib/types';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 type Paso = 'categoria' | 'servicios' | 'agenda';
 
@@ -112,38 +115,47 @@ export default function ServiciosPage() {
   }
 
   return (
-  <main className="min-h-screen bg-white pb-36 font-sans selection:bg-rose-100 selection:text-rose-900">
-    <div className="max-w-2xl mx-auto p-4 sm:p-6 md:p-8">
+    <main className="min-h-screen bg-white pb-36 font-sans selection:bg-rose-100 selection:text-rose-900">
+      <div className="max-w-2xl mx-auto p-4 sm:p-6 md:p-8">
         
         {/* Navegación y Encabezado Superior */}
         <div className="mb-6">
           {paso === 'categoria' ? (
-            <Link
-              href="/turnos"
-              className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white/80 backdrop-blur-sm border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs transition-all active:scale-95 mb-4"
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="rounded-xl font-bold text-xs text-slate-600 bg-white border-slate-200/80 shadow-xs mb-4 active:scale-95"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Volver al inicio</span>
-            </Link>
+              <Link href="/turnos" className="inline-flex items-center gap-2">
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Volver al inicio</span>
+              </Link>
+            </Button>
           ) : (
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => {
                 setPaso('categoria');
                 setCategoria(null);
                 setSeleccionados([]);
               }}
-              className="inline-flex items-center gap-2 text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50/80 border border-rose-100 px-3.5 py-2 rounded-xl transition-all active:scale-95 mb-4 cursor-pointer"
+              className="rounded-xl font-bold text-xs text-rose-600 hover:text-rose-800 bg-rose-50/50 border-rose-100 mb-4 active:scale-95 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Cambiar categoría</span>
-            </button>
+            </Button>
           )}
 
           <header className="space-y-1">
-            <span className="text-[10px] font-black tracking-[0.2em] uppercase text-rose-600 block">
+            <Badge
+              variant="outline"
+              className="bg-white border-rose-200 text-rose-600 mb-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-[0.18em] uppercase"
+            >
               Servicios Generales
-            </span>
+            </Badge>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
               {paso === 'categoria'
                 ? 'Elegí una categoría'
@@ -163,13 +175,13 @@ export default function ServiciosPage() {
             <span className="text-xs font-semibold text-slate-400">Cargando servicios...</span>
           </div>
         ) : servicios.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs">
+          <Card className="text-center py-16 bg-white rounded-3xl border-slate-200/80 p-6 shadow-xs">
             <p className="text-sm font-semibold text-slate-600">
               No hay servicios disponibles en este momento.
             </p>
-          </div>
+          </Card>
         ) : paso === 'categoria' ? (
-          /* Lista de Categorías Estilo App */
+          /* Lista de Categorías */
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {categorias.map((cat) => {
               const serviciosDeCategoria = servicios.filter((s) => s.categoria === cat);
@@ -179,15 +191,14 @@ export default function ServiciosPage() {
               const IconoDinamico = obtenerIconoDinamico(iconoNombre);
 
               return (
-                <button
+                <Card
                   key={cat}
-                  type="button"
                   onClick={() => {
                     setCategoria(cat);
                     setSeleccionados([]);
                     setPaso('servicios');
                   }}
-                  className="group relative flex items-center gap-4 p-4 bg-white rounded-[24px] border border-slate-200/80 shadow-xs hover:shadow-md hover:border-slate-300 active:scale-[0.97] transition-all duration-200 cursor-pointer text-left overflow-hidden"
+                  className="group relative flex items-center gap-4 p-4 bg-white rounded-[24px] border-slate-200/80 shadow-xs hover:shadow-md hover:border-slate-300 active:scale-[0.97] transition-all duration-200 cursor-pointer text-left overflow-hidden"
                 >
                   <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-200">
                     <IconoDinamico className="w-6 h-6 stroke-[2]" />
@@ -202,10 +213,10 @@ export default function ServiciosPage() {
                     </span>
                   </div>
 
-                  <div className="w-7 h-7 rounded-full bg-slate-50 group-hover:bg-slate-900 group-hover:text-white text-slate-400 flex items-center justify-center shrink-0 transition-colors duration-200">
+                  <div className="w-7 h-7 rounded-full bg-white border border-slate-200 group-hover:bg-slate-900 group-hover:border-slate-900 group-hover:text-white text-slate-400 flex items-center justify-center shrink-0 transition-colors duration-200">
                     <ChevronRight className="w-4 h-4" />
                   </div>
-                </button>
+                </Card>
               );
             })}
           </div>
@@ -223,14 +234,14 @@ export default function ServiciosPage() {
               const tieneDespliegue = Boolean(servicio.descripcion || imagenSrc);
 
               return (
-                <div
+                <Card
                   key={servicio.id}
                   className={`
-                    w-full rounded-[24px] border overflow-hidden transition-all duration-200 bg-white
+                    w-full rounded-[24px] border overflow-hidden transition-all duration-200 bg-white shadow-xs
                     ${
                       activo
-                        ? 'border-rose-300 bg-rose-50/30 shadow-xs ring-1 ring-rose-300/50'
-                        : 'border-slate-200/80 shadow-xs hover:border-slate-300'
+                        ? 'border-rose-300 bg-rose-50/20 ring-1 ring-rose-300/50'
+                        : 'border-slate-200/80 hover:border-slate-300'
                     }
                   `}
                 >
@@ -278,7 +289,7 @@ export default function ServiciosPage() {
                             onClick={() =>
                               setLightbox({ src: imagenSrc, alt: servicio.subtipo })
                             }
-                            className="group/img relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-rose-100 bg-slate-100 cursor-zoom-in block mt-2"
+                            className="group/img relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-rose-100 bg-white cursor-zoom-in block mt-2"
                           >
                             <img
                               src={imagenSrc}
@@ -304,7 +315,7 @@ export default function ServiciosPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>
@@ -348,13 +359,13 @@ export default function ServiciosPage() {
                 </div>
                 <p className="text-[11px] text-slate-400 truncate">{totales.detalle}</p>
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={handleContinuarServicios}
-                className="shrink-0 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 active:scale-95 text-white font-extrabold px-5 py-2.5 rounded-xl shadow-md transition-all text-xs sm:text-sm cursor-pointer"
+                className="shrink-0 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 active:scale-95 text-white font-extrabold px-5 py-2.5 h-auto rounded-xl shadow-md transition-all text-xs sm:text-sm cursor-pointer"
               >
                 Continuar
-              </button>
+              </Button>
             </div>
           </div>
         </div>

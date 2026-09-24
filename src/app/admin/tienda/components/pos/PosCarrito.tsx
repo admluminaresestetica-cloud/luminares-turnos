@@ -1,7 +1,8 @@
 "use client";
+
 import { useState } from "react";
-import { PosCartItem, TipoDescuento } from "./types";
-import { ChevronUp, ChevronDown, ShoppingCart, Trash2 } from "lucide-react";
+import { PosCartItem } from "./types";
+import { ShoppingBag, Trash2, Plus, Minus, ChevronUp, ChevronDown } from "lucide-react";
 
 interface PosCarritoProps {
   carrito: PosCartItem[];
@@ -18,196 +19,179 @@ export default function PosCarrito({
   onVaciarCarrito,
   onIniciarCobro,
 }: PosCarritoProps) {
-  const [descuentoValor, setDescuentoValor] = useState<string>("");
-  const [tipoDescuento, setTipoDescuento] = useState<TipoDescuento>("monto");
-  const [expandidoMobile, setExpandidoMobile] = useState<boolean>(false);
+  const [expandidoMobile, setExpandidoMobile] = useState(false);
 
-  const totalUnidades = carrito.reduce((acc, item) => acc + item.cantidad, 0);
+  const totalItems = carrito.reduce((acc, i) => acc + i.cantidad, 0);
+  const subtotal = carrito.reduce((acc, i) => acc + i.precio_unitario * i.cantidad, 0);
 
-  const subtotal = carrito.reduce(
-    (acc, item) => acc + item.precio_unitario * item.cantidad,
-    0
-  );
-
-  const valDesc = Number(descuentoValor) || 0;
-  const descuentoCalculado =
-    tipoDescuento === "porcentaje"
-      ? (subtotal * valDesc) / 100
-      : valDesc;
-
-  const totalFinal = Math.max(0, subtotal - descuentoCalculado);
-
-  const handleVaciar = () => {
-    setDescuentoValor("");
-    onVaciarCarrito();
-  };
-
-  const handleIniciarCobro = () => {
-    onIniciarCobro(subtotal, descuentoCalculado, totalFinal);
-    setDescuentoValor("");
-    setExpandidoMobile(false);
+  const handleCobrarClick = () => {
+    if (carrito.length === 0) return;
+    onIniciarCobro(subtotal, 0, subtotal);
   };
 
   return (
-    <div
-      className={`fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 p-4 shadow-2xl transition-all duration-300 rounded-t-2xl lg:relative lg:bottom-auto lg:left-auto lg:right-auto lg:z-auto lg:border lg:border-[#E7E5E0] lg:p-4 lg:shadow-sm lg:rounded-2xl lg:h-[calc(100vh-180px)] lg:sticky lg:top-4 flex flex-col ${
-        expandidoMobile ? "h-[80vh]" : "h-auto"
-      }`}
-    >
-      {/* Cabecera / Barra resumida en Mobile */}
-      <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-        <button
-          onClick={() => setExpandidoMobile(!expandidoMobile)}
-          className="flex items-center gap-2 text-left lg:pointer-events-none"
-        >
-          <div className="rounded-xl bg-[#0E6E55]/10 p-2 text-[#0E6E55]">
-            <ShoppingCart className="h-4 w-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-[#12151B] lg:text-base">
-              Carrito de Venta {totalUnidades > 0 && `(${totalUnidades})`}
-            </h3>
-            <p className="text-[11px] font-semibold text-[#0E6E55] lg:hidden">
-              Total: ${totalFinal.toLocaleString("es-AR")}
-            </p>
-          </div>
-        </button>
-
-        <div className="flex items-center gap-2">
-          {carrito.length > 0 && (
+    <>
+      {/* BARRA FLOTANTE MÓVIL (Fija justo arriba del Bottom Nav) */}
+      <div className="lg:hidden fixed bottom-14 left-0 right-0 z-40 px-3 pb-2">
+        <div className="rounded-2xl border border-gray-200/80 bg-white/95 backdrop-blur-md p-3 shadow-xl dark:border-zinc-800 dark:bg-zinc-900/95">
+          <div className="flex items-center justify-between gap-2">
             <button
-              onClick={handleVaciar}
-              className="text-xs font-semibold text-[#C84343] hover:underline"
+              onClick={() => setExpandidoMobile(!expandidoMobile)}
+              className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
             >
-              Vaciar
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0E6E55] text-white font-bold">
+                <ShoppingBag className="h-5 w-5" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
+                    {totalItems}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-col truncate">
+                <span className="text-[11px] font-semibold text-gray-500 dark:text-zinc-400 flex items-center gap-1">
+                  Carrito ({totalItems}) {expandidoMobile ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                </span>
+                <span className="text-base font-extrabold text-gray-900 dark:text-zinc-100">
+                  ${subtotal.toLocaleString("es-AR")}
+                </span>
+              </div>
             </button>
-          )}
 
-          {/* Botón para desplegar/colapsar solo en móvil */}
-          <button
-            onClick={() => setExpandidoMobile(!expandidoMobile)}
-            className="rounded-lg bg-gray-100 p-1.5 text-gray-600 lg:hidden"
-          >
-            {expandidoMobile ? (
-              <ChevronDown className="h-5 w-5" />
-            ) : (
-              <ChevronUp className="h-5 w-5" />
+            <button
+              disabled={carrito.length === 0}
+              onClick={handleCobrarClick}
+              className="h-11 px-5 rounded-xl bg-[#0E6E55] text-white font-bold text-xs shadow-md active:scale-95 disabled:opacity-50 transition-all shrink-0"
+            >
+              Cobrar
+            </button>
+          </div>
+
+          {/* Lista desplegable móvil */}
+          {expandidoMobile && (
+            <div className="mt-3 pt-3 border-t border-gray-100 dark:border-zinc-800 max-h-[50vh] overflow-y-auto space-y-2">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-gray-700 dark:text-zinc-300">Items en orden</span>
+                {carrito.length > 0 && (
+                  <button onClick={onVaciarCarrito} className="text-[11px] text-red-500 font-semibold flex items-center gap-1">
+                    <Trash2 className="h-3 w-3" /> Vaciar
+                  </button>
+                )}
+              </div>
+
+              {carrito.length === 0 ? (
+                <p className="text-center text-xs text-gray-400 py-4">El carrito está vacío</p>
+              ) : (
+                carrito.map((item) => (
+                  <div key={item.producto_id} className="flex items-center justify-between gap-2 p-2 rounded-xl bg-gray-50 dark:bg-zinc-800/60">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-gray-800 dark:text-zinc-100 truncate">{item.titulo}</p>
+                      <p className="text-[10px] text-gray-500">${item.precio_unitario.toLocaleString("es-AR")}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={() => onModificarCantidad(item.producto_id, -1)} className="p-1 rounded-lg bg-white dark:bg-zinc-700 border border-gray-200 dark:border-zinc-600">
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="text-xs font-bold w-5 text-center">{item.cantidad}</span>
+                      <button onClick={() => onModificarCantidad(item.producto_id, 1)} className="p-1 rounded-lg bg-white dark:bg-zinc-700 border border-gray-200 dark:border-zinc-600">
+                        <Plus className="h-3 w-3" />
+                      </button>
+                      <button onClick={() => onEliminarItem(item.producto_id)} className="p-1 text-red-500 ml-1">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* CARRITO ESCRITORIO (LG+) */}
+      <div className="hidden lg:flex flex-col justify-between rounded-2xl border border-gray-200/80 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 sticky top-24 h-[calc(100vh-120px)]">
+        <div>
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-3">
+            <h2 className="text-base font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-[#0E6E55]" />
+              Orden Actual
+            </h2>
+            {carrito.length > 0 && (
+              <button
+                onClick={onVaciarCarrito}
+                className="text-xs font-semibold text-red-500 hover:text-red-700 flex items-center gap-1"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Vaciar
+              </button>
             )}
+          </div>
+
+          <div className="mt-4 max-h-[52vh] overflow-y-auto space-y-2.5 pr-1">
+            {carrito.length === 0 ? (
+              <div className="py-12 text-center text-gray-400">
+                <p className="text-xs font-medium">El carrito está vacío</p>
+                <p className="text-[11px] text-gray-300 mt-1">Seleccioná o escaneá productos</p>
+              </div>
+            ) : (
+              carrito.map((item) => (
+                <div
+                  key={item.producto_id}
+                  className="flex items-center justify-between gap-3 p-2.5 rounded-xl border border-gray-100 bg-gray-50/50 dark:border-zinc-800 dark:bg-zinc-800/40"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-gray-800 dark:text-zinc-100 truncate">{item.titulo}</p>
+                    <p className="text-[11px] font-semibold text-[#0E6E55]">
+                      ${(item.precio_unitario * item.cantidad).toLocaleString("es-AR")}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-1 py-0.5 dark:border-zinc-700 dark:bg-zinc-800">
+                      <button
+                        onClick={() => onModificarCantidad(item.producto_id, -1)}
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-md"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="text-xs font-bold px-1 min-w-[18px] text-center">{item.cantidad}</span>
+                      <button
+                        onClick={() => onModificarCantidad(item.producto_id, 1)}
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-md"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => onEliminarItem(item.producto_id)}
+                      className="text-gray-400 hover:text-red-500 p-1"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Resumen de Pago Escritorio */}
+        <div className="border-t border-gray-100 dark:border-zinc-800 pt-4 mt-4">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm font-semibold text-gray-500 dark:text-zinc-400">Total a Cobrar</span>
+            <span className="text-2xl font-extrabold text-gray-900 dark:text-zinc-100">
+              ${subtotal.toLocaleString("es-AR")}
+            </span>
+          </div>
+
+          <button
+            disabled={carrito.length === 0}
+            onClick={handleCobrarClick}
+            className="w-full py-3.5 rounded-xl bg-[#0E6E55] text-white font-bold text-sm shadow-md hover:bg-[#0A5340] active:scale-98 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Iniciar Cobro (F2)
           </button>
         </div>
       </div>
-
-      {/* Lista de productos seleccionados */}
-      <div
-        className={`no-scrollbar my-3 flex-1 overflow-y-auto space-y-2 ${
-          expandidoMobile ? "block" : "hidden lg:block"
-        }`}
-      >
-        {carrito.length === 0 ? (
-          <div className="flex h-full min-h-[140px] flex-col items-center justify-center text-center text-gray-400">
-            <span className="text-2xl">🛍️</span>
-            <p className="mt-1 text-xs font-medium">No hay productos en la orden</p>
-          </div>
-        ) : (
-          carrito.map((item) => (
-            <div
-              key={item.producto_id}
-              className="flex items-center justify-between rounded-xl border border-gray-100 bg-[#F7F7F5] p-2.5"
-            >
-              <div className="flex-1 pr-2">
-                <p className="line-clamp-1 text-xs font-bold text-[#12151B]">
-                  {item.titulo}
-                </p>
-                <p className="text-[11px] font-semibold text-gray-500">
-                  ${item.precio_unitario.toLocaleString("es-AR")} c/u
-                </p>
-              </div>
-
-              {/* Controles de cantidad */}
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => onModificarCantidad(item.producto_id, -1)}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-100"
-                >
-                  -
-                </button>
-                <span className="w-5 text-center text-xs font-bold text-[#12151B]">
-                  {item.cantidad}
-                </span>
-                <button
-                  onClick={() => onModificarCantidad(item.producto_id, 1)}
-                  disabled={item.cantidad >= item.stock_disponible}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-40"
-                >
-                  +
-                </button>
-                <button
-                  onClick={() => onEliminarItem(item.producto_id)}
-                  className="ml-1 text-gray-400 hover:text-red-500 text-xs p-1"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Totales y Cobro */}
-      <div className={`${expandidoMobile ? "block" : "hidden lg:block"} border-t border-gray-100 pt-3`}>
-        {carrito.length > 0 && (
-          <div className="flex items-center gap-2 mb-3">
-            <input
-              type="number"
-              placeholder="Descuento..."
-              value={descuentoValor}
-              onChange={(e) => setDescuentoValor(e.target.value)}
-              className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-2 text-xs font-medium text-[#12151B] outline-none focus:border-[#0E6E55]"
-            />
-            <button
-              onClick={() => setTipoDescuento(tipoDescuento === "monto" ? "porcentaje" : "monto")}
-              className="rounded-xl border border-[#E7E5E0] bg-gray-100 px-3 py-2 text-xs font-bold text-[#12151B]"
-            >
-              {tipoDescuento === "monto" ? "$" : "%"}
-            </button>
-          </div>
-        )}
-
-        <div className="space-y-1.5 text-xs">
-          <div className="flex justify-between text-gray-500">
-            <span>Subtotal:</span>
-            <span>${subtotal.toLocaleString("es-AR")}</span>
-          </div>
-          {descuentoCalculado > 0 && (
-            <div className="flex justify-between text-emerald-600 font-semibold">
-              <span>Descuento:</span>
-              <span>-${descuentoCalculado.toLocaleString("es-AR")}</span>
-            </div>
-          )}
-          <div className="flex justify-between border-t border-gray-100 pt-2 text-base font-extrabold text-[#12151B]">
-            <span>TOTAL:</span>
-            <span className="text-[#0E6E55]">${totalFinal.toLocaleString("es-AR")}</span>
-          </div>
-        </div>
-
-        <button
-          onClick={handleIniciarCobro}
-          disabled={carrito.length === 0}
-          className="mt-3 w-full rounded-xl bg-[#0E6E55] py-3 text-sm font-bold text-white transition-all hover:bg-[#0A5340] active:scale-[0.99] disabled:opacity-50"
-        >
-          💳 Cobrar ${totalFinal.toLocaleString("es-AR")}
-        </button>
-      </div>
-
-      {/* Botón rápido de cobro directo cuando está colapsado en móvil */}
-      {!expandidoMobile && carrito.length > 0 && (
-        <button
-          onClick={handleIniciarCobro}
-          className="mt-2 w-full rounded-xl bg-[#0E6E55] py-2.5 text-xs font-bold text-white transition-all lg:hidden"
-        >
-          💳 Cobrar ${totalFinal.toLocaleString("es-AR")}
-        </button>
-      )}
-    </div>
+    </>
   );
 }

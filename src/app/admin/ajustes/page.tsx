@@ -259,30 +259,40 @@ export default function AjustesAdminPage() {
         <ModalServicioLaser
           servicioEdit={precios.servicioEdit}
           setServicioEdit={precios.setServicioEdit}
-          onSubmit={precios.guardarServicio}
           onClose={precios.cerrarModalServicio}
+          onSaveSuccess={() => {
+            precios.cerrarModalServicio()
+            // Aquí puedes llamar a la función que recarga tus datos de precios/servicios láser, por ejemplo:
+            // precios.recargarDatos() o equivalente que tengas en tu hook
+          }}
         />
       )}
-
       {precios.modalPromo && precios.promoEdit && (
-        <ModalPromo
-          promoEdit={precios.promoEdit}
-          setPromoEdit={precios.setPromoEdit}
-          servicios={precios.servicios}
-          onToggleZona={precios.toggleZonaEnPromo}
-          onSubmit={precios.guardarPromo}
-          onClose={precios.cerrarModalPromo}
-        />
-      )}
+  <ModalPromo
+    promoEdit={precios.promoEdit}
+    setPromoEdit={precios.setPromoEdit}
+    servicios={precios.servicios}
+    onToggleZona={precios.toggleZonaEnPromo}
+    onClose={precios.cerrarModalPromo}
+    onSaveSuccess={() => {
+      precios.cerrarModalPromo()
+      // precios.recargarPromos?.() // Si tienes una función para refrescar la tabla de promociones
+    }}
+  />
+)}
 
       {generales.modalGeneral && generales.servicioGeneralEdit && (
-        <ModalServicioGeneral
-          servicioGeneralEdit={generales.servicioGeneralEdit}
-          setServicioGeneralEdit={generales.setServicioGeneralEdit}
-          onSubmit={generales.guardarServicioGeneral}
-          onClose={generales.cerrarModalGeneral}
-        />
-      )}
+  <ModalServicioGeneral
+    servicioGeneralEdit={generales.servicioGeneralEdit}
+    setServicioGeneralEdit={generales.setServicioGeneralEdit}
+    onClose={generales.cerrarModalGeneral}
+    onSaveSuccess={() => {
+      generales.cerrarModalGeneral()
+      // Si tienes alguna función para recargar la lista de servicios generales en tu hook, la puedes invocar aquí, por ejemplo:
+      // generales.recargarServicios?.()
+    }}
+  />
+)}
     </div>
   )
 }

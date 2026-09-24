@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   formatDateISO,
   getIsoWeekday,
@@ -52,31 +54,35 @@ export default function SelectorFecha({
   }, [hoy, mesOffset]);
 
   return (
-    <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-3 sm:p-5">
+    <Card className="bg-slate-50/50 border-slate-200/80 p-3 sm:p-5 shadow-xs">
       {/* Cabecera del Calendario */}
       <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           onClick={() => setMesOffset((m) => m - 1)}
           disabled={mesOffset === 0}
-          className="p-2 sm:p-1.5 rounded-xl border border-slate-200/80 text-slate-600 hover:bg-white hover:text-slate-900 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="h-8 w-8 rounded-xl border-slate-200/80 text-slate-600 bg-white hover:bg-slate-100 active:scale-95 disabled:opacity-30"
           aria-label="Mes anterior"
         >
           <ChevronLeft className="w-4 h-4" />
-        </button>
+        </Button>
 
         <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wide">
           {MESES[month]} {year}
         </h3>
 
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           onClick={() => setMesOffset((m) => m + 1)}
-          className="p-2 sm:p-1.5 rounded-xl border border-slate-200/80 text-slate-600 hover:bg-white hover:text-slate-900 active:scale-95 transition-all"
+          className="h-8 w-8 rounded-xl border-slate-200/80 text-slate-600 bg-white hover:bg-slate-100 active:scale-95"
           aria-label="Mes siguiente"
         >
           <ChevronRight className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
 
       {/* Días de la semana */}
@@ -132,6 +138,6 @@ export default function SelectorFecha({
           <span>Fechas exclusivas para la jornada de depilación láser.</span>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Zap, Sparkles } from 'lucide-react';
+import { ArrowLeft, Zap } from 'lucide-react';
 import SelectorGenero from '@/components/laser/SelectorGenero';
 import SelectorModoLaser from '@/components/laser/SelectorModoLaser';
 import PanelPromos from '@/components/laser/PanelPromos';
@@ -185,14 +185,14 @@ export default function LaserPage() {
   };
 
   return (
-  <main className="min-h-screen bg-white flex flex-col items-center justify-start p-4 sm:p-6 pb-32 font-sans">
-    <div className="max-w-md sm:max-w-2xl w-full space-y-4">
+    <main className="min-h-screen bg-white flex flex-col items-center justify-start p-4 sm:p-6 pb-32 font-sans selection:bg-rose-100 selection:text-rose-900">
+      <div className="max-w-md sm:max-w-2xl w-full space-y-4">
         
         {/* Volver */}
         <div className="w-full flex justify-start">
           <Link
             href="/turnos"
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs hover:bg-slate-50 active:scale-95 transition-all"
+            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs hover:text-slate-900 active:scale-95 transition-all"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Volver al menú principal</span>
@@ -207,7 +207,7 @@ export default function LaserPage() {
               Reserva Online
             </span>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Depilación Láser
           </h1>
           <p className="text-xs text-slate-500 font-medium">
@@ -219,12 +219,9 @@ export default function LaserPage() {
 
         {/* Paso 1: Género */}
         <section className="bg-white border border-slate-200/80 rounded-[22px] p-4 sm:p-5 shadow-xs space-y-3">
-          <div className="flex items-center gap-1.5">
-            
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-700">
-              Seleccioná tu perfil
-            </h2>
-          </div>
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-700">
+            Seleccioná tu perfil
+          </h2>
           <SelectorGenero genero={genero} onSelect={handleGenero} />
         </section>
 
