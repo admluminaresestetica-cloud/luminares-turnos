@@ -1,4 +1,4 @@
-4'use client';
+'use client';
 
 import { Zap, Flower2, ShoppingBag, Tag } from 'lucide-react';
 import Link from 'next/link';
