@@ -48,15 +48,12 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f4f7f5] dark:bg-zinc-950 transition-colors">
+    <div className="min-h-screen bg-[#e8eee9] dark:bg-zinc-950 transition-colors">
       <main className="max-w-md mx-auto min-h-screen pb-28 pt-3 px-4 space-y-6 text-stone-800 dark:text-zinc-100">
         
         {/* 1. Saludo y Búsqueda */}
         <section className="space-y-1">
-          <HeaderBusqueda
-            nombreEmpresa="Luminares Estética"
-            onSearchChange={() => {}}
-          />
+          <HeaderBusqueda nombreEmpresa="Luminares Estética" />
         </section>
 
         {/* 2. Botón Principal (Agendar Turno) */}
@@ -72,7 +69,7 @@ export default function HomePage() {
         {/* 4. Banners Promocionales */}
         <section className="space-y-2">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-xs font-black tracking-wider text-stone-500 uppercase dark:text-zinc-400">
+            <h2 className="text-xs font-black tracking-wider text-stone-600 uppercase dark:text-zinc-400">
               Novedades & Ofertas
             </h2>
           </div>
