@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useConfig } from '@/context/ConfigContext';
 
 import HeaderBusqueda from '@/components/Home/HeaderBusqueda';
 import AccionesRapidas from '@/components/Home/AccionesRapidas';
@@ -20,6 +21,9 @@ interface Banner {
 }
 
 export default function HomePage() {
+  const { config } = useConfig();
+  const nombreEmpresa = config?.nombre_empresa || 'Nuestro Centro';
+
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
 
@@ -49,30 +53,20 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#e8eee9] dark:bg-zinc-950 transition-colors">
-      <main className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-3 md:pt-8 px-4 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6 md:space-y-8">
+      <main className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-3 md:pt-8 px-4 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
         
         {/* 1. Header y Búsqueda */}
         <section>
-          <HeaderBusqueda nombreEmpresa="Luminares Estética" />
+          <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
         </section>
 
-        {/* 2. Banners Promocionales a Ancho Completo */}
-        <section className="space-y-2">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-xs font-black tracking-wider text-stone-600 uppercase dark:text-zinc-400">
-              Novedades & Ofertas
-            </h2>
-          </div>
-          <BannersCarousel banners={banners} isLoading={loadingBanners} />
-        </section>
-
-        {/* 3. Grilla Principal en 2 Columnas para Desktop */}
+        {/* 2. Grilla Principal Responsiva */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           
-          {/* Columna Izquierda: Acciones Operativas y Categorías */}
+          {/* Columna Izquierda: Botón principal, Categorías y Banners */}
           <div className="lg:col-span-7 space-y-6">
             
-            {/* Botón Principal (Agendar Turno) */}
+            {/* Acciones Rápidas (Agendar Turno) */}
             <section className="relative">
               <AccionesRapidas />
             </section>
@@ -82,37 +76,44 @@ export default function HomePage() {
               <CategoriasRapidas />
             </section>
 
-            {/* Bloque Extra Desktop: Destacados / Info para rellenar espacio */}
+            {/* Banners Promocionales (Debajo de Categorías) */}
+            <section className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-xs font-black tracking-wider text-stone-600 uppercase dark:text-zinc-400">
+                  Novedades & Ofertas
+                </h2>
+              </div>
+              <BannersCarousel banners={banners} isLoading={loadingBanners} />
+            </section>
+
+            {/* Bloque Neutro de Beneficios de Reserva (Sello Marca Blanca) */}
             <section className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border border-stone-200/80 dark:border-zinc-800 rounded-3xl p-5 space-y-3 shadow-sm hidden md:block">
-              <h3 className="text-sm font-bold text-stone-700 dark:text-zinc-200 uppercase tracking-wide">
-                ¿Por qué elegir Luminares?
+              <h3 className="text-xs font-bold text-stone-600 dark:text-zinc-300 uppercase tracking-wider">
+                ¿Por qué elegirnos?
               </h3>
               <div className="grid grid-cols-3 gap-3 text-xs text-stone-600 dark:text-zinc-400">
                 <div className="bg-white/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-stone-100 dark:border-zinc-700/50">
-                  <p className="font-semibold text-stone-800 dark:text-zinc-100">Atención Personalizada</p>
-                  <p className="text-[11px] text-stone-500 mt-1">Evaluación previa para cada tratamiento.</p>
-                </div>
-                <div className="bg-white/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-stone-100 dark:border-zinc-700/50">
-                  <p className="font-semibold text-stone-800 dark:text-zinc-100">Tecnología Láser</p>
-                  <p className="text-[11px] text-stone-500 mt-1">Equipamiento de última generación.</p>
-                </div>
-                <div className="bg-white/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-stone-100 dark:border-zinc-700/50">
                   <p className="font-semibold text-stone-800 dark:text-zinc-100">Reserva 24/7</p>
-                  <p className="text-[11px] text-stone-500 mt-1">Elegí tu turno online de forma inmediata.</p>
+                  <p className="text-[11px] text-stone-500 mt-1">Elegí tu turno en cualquier momento.</p>
+                </div>
+                <div className="bg-white/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-stone-100 dark:border-zinc-700/50">
+                  <p className="font-semibold text-stone-800 dark:text-zinc-100">Confirmación Inmediata</p>
+                  <p className="text-[11px] text-stone-500 mt-1">Gestión directa de tu cita.</p>
+                </div>
+                <div className="bg-white/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-stone-100 dark:border-zinc-700/50">
+                  <p className="font-semibold text-stone-800 dark:text-zinc-100">Atención Garantizada</p>
+                  <p className="text-[11px] text-stone-500 mt-1">Profesionales calificados a tu disposición.</p>
                 </div>
               </div>
             </section>
 
           </div>
 
-          {/* Columna Derecha: Consultas e Información */}
+          {/* Columna Derecha: Guías y Consultas de Turno */}
           <div className="lg:col-span-5 space-y-6">
-            
-            {/* Guías de Reserva y Consulta de Turnos */}
             <section className="space-y-2">
               <GuiaReservaCard />
             </section>
-
           </div>
 
         </div>
