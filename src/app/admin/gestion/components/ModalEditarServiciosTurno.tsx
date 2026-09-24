@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { X, Sparkles, Scissors, DollarSign, Clock, Loader2, Tag } from 'lucide-react'
+import { X, Sparkles, Scissors, DollarSign, Clock, Loader2, Tag, User } from 'lucide-react'
 
 export interface ServicioLaser {
   id: string
@@ -43,6 +43,7 @@ export interface TurnoFormLocal {
   estado?: string
   metodo_pago?: string
   genero_paciente?: string
+  detalle_reserva?: any
 }
 
 interface ModalEditarServiciosTurnoProps {
@@ -58,6 +59,7 @@ interface ModalEditarServiciosTurnoProps {
     nuevoPrecio: number
     nuevaDuracion: number
     detalleTexto: string 
+    genero: string
   }) => Promise<void>
   onClose: () => void
 }
@@ -71,6 +73,11 @@ export default function ModalEditarServiciosTurno({
   onSave,
   onClose
 }: ModalEditarServiciosTurnoProps) {
+  // Estado local para permitir alternar género dinámicamente en recepción
+  const [generoSeleccionado, setGeneroSeleccionado] = useState<string>(
+    generoPaciente?.toLowerCase() === 'masculino' ? 'masculino' : 'femenino'
+  )
+
   const [tipoSeleccion, setTipoSeleccion] = useState<'laser' | 'promos' | 'general'>(
     turnoActual.detalle_texto?.toLowerCase().includes('promo') ? 'promos' : 'laser'
   )
@@ -80,17 +87,17 @@ export default function ModalEditarServiciosTurno({
   const [idsGeneralesSeleccionados, setIdsGeneralesSeleccionados] = useState<string[]>([])
   const [guardando, setGuardando] = useState(false)
 
-  // Filtrado de zonas láser por género normalizado
+  // Filtrado de zonas láser por el género seleccionado en el modal
   const zonasLaserFiltradas = useMemo(() => {
     return serviciosLaserDisponibles.filter(z => {
       if (!z.activo) return false
-      const gen = (generoPaciente || '').toLowerCase()
+      const gen = generoSeleccionado.toLowerCase()
       const zGen = (z.genero || '').toLowerCase()
       if (gen === 'femenino') return zGen === 'femenino' || zGen === 'unisex'
       if (gen === 'masculino') return zGen === 'masculino' || zGen === 'unisex'
       return true
     })
-  }, [serviciosLaserDisponibles, generoPaciente])
+  }, [serviciosLaserDisponibles, generoSeleccionado])
 
   // Agrupamiento por categoría de zona
   const zonasPorCategoria = useMemo(() => {
@@ -103,17 +110,17 @@ export default function ModalEditarServiciosTurno({
     return grupos
   }, [zonasLaserFiltradas])
 
-  // Filtrado de promociones láser por género
+  // Filtrado de promociones láser por el género seleccionado
   const promosFiltradas = useMemo(() => {
     return promosLaserDisponibles.filter(p => {
       if (!p.activo) return false
-      const gen = (generoPaciente || '').toLowerCase()
+      const gen = generoSeleccionado.toLowerCase()
       const pGen = (p.genero || '').toLowerCase()
       if (gen === 'femenino') return pGen === 'femenino' || pGen === 'unisex'
       if (gen === 'masculino') return pGen === 'masculino' || pGen === 'unisex'
       return true
     })
-  }, [promosLaserDisponibles, generoPaciente])
+  }, [promosLaserDisponibles, generoSeleccionado])
 
   const toggleZonaLaser = (id: string) => {
     setIdsLaserSeleccionados(prev =>
@@ -133,7 +140,7 @@ export default function ModalEditarServiciosTurno({
     )
   }
 
-  // Recálculo dinámico de totales y textos
+// Recálculo dinámico de totales y textos
   const { precioCalculado, duracionCalculada, detalleGenerado } = useMemo(() => {
     let precio = 0
     let duracion = 0
@@ -153,7 +160,14 @@ export default function ModalEditarServiciosTurno({
       if (promo) {
         precio += promo.precio_promo || 0
         duracion += promo.duracion_total_min || 30
-        if (promo.nombre_promo) nombresSeleccionados.push(`Promo: ${promo.nombre_promo}`)
+        
+        // Si la promo tiene zonas incluidas, las detallamos entre paréntesis
+        if (promo.nombre_promo) {
+          const zonasTexto = promo.zonas_incluidas && promo.zonas_incluidas.length > 0 
+            ? ` (${promo.zonas_incluidas.join(', ')} )` 
+            : '';
+          nombresSeleccionados.push(`Promo: ${promo.nombre_promo}${zonasTexto}`)
+        }
       }
     })
 
@@ -172,7 +186,6 @@ export default function ModalEditarServiciosTurno({
       detalleGenerado: nombresSeleccionados.join(', ')
     }
   }, [idsLaserSeleccionados, idsPromosSeleccionadas, idsGeneralesSeleccionados, serviciosLaserDisponibles, promosLaserDisponibles, serviciosGeneralesDisponibles])
-
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
@@ -183,7 +196,8 @@ export default function ModalEditarServiciosTurno({
         idsPromos: idsPromosSeleccionadas,
         nuevoPrecio: precioCalculado > 0 ? precioCalculado : turnoActual.precio_total,
         nuevaDuracion: duracionCalculada,
-        detalleTexto: detalleGenerado || turnoActual.detalle_texto || ''
+        detalleTexto: detalleGenerado || turnoActual.detalle_texto || '',
+        genero: generoSeleccionado
       })
       onClose()
     } catch (error) {
@@ -200,14 +214,14 @@ export default function ModalEditarServiciosTurno({
         {/* Indicador táctil móvil */}
         <div className="w-12 h-1.5 bg-slate-300 dark:bg-zinc-700 rounded-full mx-auto my-1 sm:hidden" />
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-rose-50 dark:bg-zinc-800 text-rose-600 dark:text-rose-400 rounded-2xl shrink-0">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-gray-900 leading-tight dark:text-zinc-100">Modificar Carrito / Servicios</h2>
-              <p className="text-xs text-gray-500 mt-0.5 dark:text-zinc-400">Paciente: <span className="font-semibold text-gray-700 dark:text-zinc-200">{turnoActual.cliente_nombre}</span> ({generoPaciente})</p>
+              <p className="text-xs text-gray-500 mt-0.5 dark:text-zinc-400">Paciente: <span className="font-semibold text-gray-700 dark:text-zinc-200">{turnoActual.cliente_nombre}</span></p>
             </div>
           </div>
           <button
@@ -218,6 +232,30 @@ export default function ModalEditarServiciosTurno({
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* SELECTOR RÁPIDO DE GÉNERO (Femenino / Masculino) para ajustar catálogos al vuelo */}
+        <div className="mb-4 flex items-center justify-between bg-slate-50 dark:bg-zinc-800/60 p-2 rounded-2xl border border-slate-200/60 dark:border-zinc-700">
+          <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300 ml-2 flex items-center gap-1.5">
+            <User className="w-3.5 h-3.5 text-rose-500" />
+            Catálogo de Género:
+          </span>
+          <div className="flex items-center gap-1">
+            {['femenino', 'masculino'].map((gen) => (
+              <button
+                key={gen}
+                type="button"
+                onClick={() => setGeneroSeleccionado(gen)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all ${
+                  generoSeleccionado === gen
+                    ? 'bg-rose-500 text-white shadow-xs'
+                    : 'bg-transparent text-slate-600 hover:bg-slate-200/60 dark:text-zinc-400 dark:hover:bg-zinc-700'
+                }`}
+              >
+                {gen}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Pestañas adaptables para móviles */}
@@ -262,51 +300,52 @@ export default function ModalEditarServiciosTurno({
 
         <form onSubmit={handleGuardar} className="space-y-4">
           
-          {/* SECCIÓN ZONAS LÁSER */}
-          {tipoSeleccion === 'laser' && (
-            <div className="space-y-3 max-h-56 sm:max-h-64 overflow-y-auto pr-1">
-              {Object.keys(zonasPorCategoria).length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-8">No hay zonas láser activas para el género {generoPaciente}.</p>
+          {/* SECCIÓN PROMOCIONES LÁSER */}
+          {tipoSeleccion === 'promos' && (
+            <div className="space-y-2 max-h-52 sm:max-h-60 overflow-y-auto pr-1">
+              {promosFiltradas.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-8">No hay promociones láser disponibles para este género.</p>
               ) : (
-                Object.entries(zonasPorCategoria).map(([categoria, zonas]) => (
-                  <div key={categoria} className="space-y-1.5">
-                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400 px-1">{categoria}</h3>
-                    <div className="space-y-1">
-                      {zonas.map(zona => {
-                        const seleccionada = idsLaserSeleccionados.includes(zona.id)
-                        return (
-                          <div
-                            key={zona.id}
-                            onClick={() => toggleZonaLaser(zona.id)}
-                            className={`flex items-center justify-between p-3 rounded-xl text-xs cursor-pointer border transition-all ${
-                              seleccionada
-                                ? 'bg-rose-50/60 border-rose-300 dark:bg-zinc-800 dark:border-rose-500/50 font-semibold text-gray-900 dark:text-zinc-100'
-                                : 'bg-gray-50/50 border-gray-200 dark:bg-zinc-800/40 dark:border-zinc-700/50 text-gray-600 dark:text-zinc-400'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <input
-                                type="checkbox"
-                                checked={seleccionada}
-                                onChange={() => {}}
-                                className="w-4 h-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500 dark:bg-zinc-700 dark:border-zinc-600"
-                              />
-                              <span>{zona.nombre_zona}</span>
-                            </div>
-                            <span className="font-bold text-gray-800 dark:text-zinc-200">${(zona.precio_lista || 0).toLocaleString('es-AR')}</span>
-                          </div>
-                        )
-                      })}
+                promosFiltradas.map(promo => {
+                  const seleccionada = idsPromosSeleccionadas.includes(promo.id)
+                  return (
+                    <div
+                      key={promo.id}
+                      onClick={() => togglePromo(promo.id)}
+                      className={`flex items-center justify-between p-3.5 rounded-xl text-xs cursor-pointer border transition-all ${
+                        seleccionada
+                          ? 'bg-rose-50/60 border-rose-300 dark:bg-zinc-800 dark:border-rose-500/50 font-semibold text-gray-900 dark:text-zinc-100'
+                          : 'bg-gray-50/50 border-gray-200 dark:bg-zinc-800/40 dark:border-zinc-700/50 text-gray-600 dark:text-zinc-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <input
+                          type="checkbox"
+                          checked={seleccionada}
+                          onChange={() => {}}
+                          className="w-4 h-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500 dark:bg-zinc-700 dark:border-zinc-600"
+                        />
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-zinc-100">{promo.nombre_promo}</p>
+                          {promo.zonas_incluidas && promo.zonas_incluidas.length > 0 && (
+                            <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+                              Zonas: {promo.zonas_incluidas.join(', ')}
+                            </p>
+                          )}
+                          <p className="text-[10px] text-gray-500 dark:text-zinc-400">Duración: {promo.duracion_total_min || 30} min</p>
+                        </div>
+                      </div>
+                      <span className="font-bold text-rose-600 dark:text-rose-400 text-sm">${(promo.precio_promo || 0).toLocaleString('es-AR')}</span>
                     </div>
-                  </div>
-                ))
+                  )
+                })
               )}
             </div>
           )}
 
           {/* SECCIÓN PROMOCIONES LÁSER */}
           {tipoSeleccion === 'promos' && (
-            <div className="space-y-2 max-h-56 sm:max-h-64 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-52 sm:max-h-60 overflow-y-auto pr-1">
               {promosFiltradas.length === 0 ? (
                 <p className="text-xs text-gray-400 text-center py-8">No hay promociones láser disponibles para este género.</p>
               ) : (
@@ -344,7 +383,7 @@ export default function ModalEditarServiciosTurno({
 
           {/* SECCIÓN SERVICIOS GENERALES */}
           {tipoSeleccion === 'general' && (
-            <div className="space-y-1.5 max-h-56 sm:max-h-64 overflow-y-auto pr-1">
+            <div className="space-y-1.5 max-h-52 sm:max-h-60 overflow-y-auto pr-1">
               {serviciosGeneralesDisponibles.length === 0 ? (
                 <p className="text-xs text-gray-400 text-center py-8">No hay servicios generales activos.</p>
               ) : (

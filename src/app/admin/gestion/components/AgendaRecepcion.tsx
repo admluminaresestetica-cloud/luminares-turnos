@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { Calendar, Clock, Search, ChevronRight, CheckCircle2, UserCheck } from 'lucide-react';
+import BadgeModificado from './BadgeModificado';
+import { verificarSiFueModificado } from '@/utils/turnoHelpers';
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -152,6 +154,7 @@ export default function AgendaRecepcion({
               });
               const badge = obtenerBadgeEstado(turno.estado);
               const estaEnGabinete = turno.estado === 'en_gabinete';
+              const modificado = verificarSiFueModificado(turno);
 
               return (
                 <div
@@ -171,9 +174,12 @@ export default function AgendaRecepcion({
                       <span className="text-[10px] font-bold">{horaTurno}</span>
                     </div>
                     <div className="space-y-0.5 min-w-0">
-                      <p className="text-xs font-semibold text-slate-800 dark:text-zinc-200 truncate">
-                        {turno.cliente_nombre}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-semibold text-slate-800 dark:text-zinc-200 truncate">
+                          {turno.cliente_nombre}
+                        </p>
+                        <BadgeModificado fueModificado={modificado} />
+                      </div>
                       <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                         {turno.servicio_tipo || 'Servicio General'} • <span className="text-slate-400">{turno.cliente_celular || 'Sin celular'}</span>
                       </p>
