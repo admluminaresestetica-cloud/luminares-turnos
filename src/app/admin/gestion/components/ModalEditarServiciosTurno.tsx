@@ -17,7 +17,7 @@ export interface PromoLaser {
   id: string
   genero?: string
   nombre_promo?: string
-  zonas_incluidas?: string[]
+  zonas_incluidas?: string[] // Array de UUIDs que apuntan a ServicioLaser
   precio_promo?: number
   duracion_total_min?: number
   permite_swap?: boolean
@@ -87,6 +87,15 @@ export default function ModalEditarServiciosTurno({
   const [idsGeneralesSeleccionados, setIdsGeneralesSeleccionados] = useState<string[]>([])
   const [guardando, setGuardando] = useState(false)
 
+  // Función helper para traducir UUIDs de zonas_incluidas a nombres de zonas
+  const obtenerNombresZonasPromo = (uuidsZonas?: string[]): string => {
+    if (!uuidsZonas || uuidsZonas.length === 0) return ''
+    const nombres = uuidsZonas
+      .map(id => serviciosLaserDisponibles.find(z => z.id === id)?.nombre_zona)
+      .filter(Boolean)
+    return nombres.join(', ')
+  }
+
   // Filtrado de zonas láser por el género seleccionado en el modal
   const zonasLaserFiltradas = useMemo(() => {
     return serviciosLaserDisponibles.filter(z => {
@@ -140,7 +149,7 @@ export default function ModalEditarServiciosTurno({
     )
   }
 
-// Recálculo dinámico de totales y textos
+  // Recálculo dinámico de totales y textos
   const { precioCalculado, duracionCalculada, detalleGenerado } = useMemo(() => {
     let precio = 0
     let duracion = 0
@@ -160,12 +169,9 @@ export default function ModalEditarServiciosTurno({
       if (promo) {
         precio += promo.precio_promo || 0
         duracion += promo.duracion_total_min || 30
-        
-        // Si la promo tiene zonas incluidas, las detallamos entre paréntesis
         if (promo.nombre_promo) {
-          const zonasTexto = promo.zonas_incluidas && promo.zonas_incluidas.length > 0 
-            ? ` (${promo.zonas_incluidas.join(', ')} )` 
-            : '';
+          const detalleZonas = obtenerNombresZonasPromo(promo.zonas_incluidas)
+          const zonasTexto = detalleZonas ? ` (${detalleZonas})` : ''
           nombresSeleccionados.push(`Promo: ${promo.nombre_promo}${zonasTexto}`)
         }
       }
@@ -186,6 +192,7 @@ export default function ModalEditarServiciosTurno({
       detalleGenerado: nombresSeleccionados.join(', ')
     }
   }, [idsLaserSeleccionados, idsPromosSeleccionadas, idsGeneralesSeleccionados, serviciosLaserDisponibles, promosLaserDisponibles, serviciosGeneralesDisponibles])
+
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
@@ -234,7 +241,7 @@ export default function ModalEditarServiciosTurno({
           </button>
         </div>
 
-        {/* SELECTOR RÁPIDO DE GÉNERO (Femenino / Masculino) para ajustar catálogos al vuelo */}
+        {/* SELECTOR RÁPIDO DE GÉNERO */}
         <div className="mb-4 flex items-center justify-between bg-slate-50 dark:bg-zinc-800/60 p-2 rounded-2xl border border-slate-200/60 dark:border-zinc-700">
           <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300 ml-2 flex items-center gap-1.5">
             <User className="w-3.5 h-3.5 text-rose-500" />
@@ -258,7 +265,7 @@ export default function ModalEditarServiciosTurno({
           </div>
         </div>
 
-        {/* Pestañas adaptables para móviles */}
+        {/* Pestañas de tipo de servicio */}
         <div className="grid grid-cols-3 gap-1.5 mb-4 p-1 bg-gray-100 dark:bg-zinc-800 rounded-2xl text-xs font-bold">
           <button
             type="button"
@@ -300,45 +307,44 @@ export default function ModalEditarServiciosTurno({
 
         <form onSubmit={handleGuardar} className="space-y-4">
           
-          {/* SECCIÓN PROMOCIONES LÁSER */}
-          {tipoSeleccion === 'promos' && (
-            <div className="space-y-2 max-h-52 sm:max-h-60 overflow-y-auto pr-1">
-              {promosFiltradas.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-8">No hay promociones láser disponibles para este género.</p>
+          {/* SECCIÓN ZONAS LÁSER */}
+          {tipoSeleccion === 'laser' && (
+            <div className="space-y-3 max-h-52 sm:max-h-60 overflow-y-auto pr-1">
+              {Object.keys(zonasPorCategoria).length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-8">No hay zonas láser activas para el género {generoSeleccionado}.</p>
               ) : (
-                promosFiltradas.map(promo => {
-                  const seleccionada = idsPromosSeleccionadas.includes(promo.id)
-                  return (
-                    <div
-                      key={promo.id}
-                      onClick={() => togglePromo(promo.id)}
-                      className={`flex items-center justify-between p-3.5 rounded-xl text-xs cursor-pointer border transition-all ${
-                        seleccionada
-                          ? 'bg-rose-50/60 border-rose-300 dark:bg-zinc-800 dark:border-rose-500/50 font-semibold text-gray-900 dark:text-zinc-100'
-                          : 'bg-gray-50/50 border-gray-200 dark:bg-zinc-800/40 dark:border-zinc-700/50 text-gray-600 dark:text-zinc-400'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <input
-                          type="checkbox"
-                          checked={seleccionada}
-                          onChange={() => {}}
-                          className="w-4 h-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500 dark:bg-zinc-700 dark:border-zinc-600"
-                        />
-                        <div>
-                          <p className="font-semibold text-gray-900 dark:text-zinc-100">{promo.nombre_promo}</p>
-                          {promo.zonas_incluidas && promo.zonas_incluidas.length > 0 && (
-                            <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">
-                              Zonas: {promo.zonas_incluidas.join(', ')}
-                            </p>
-                          )}
-                          <p className="text-[10px] text-gray-500 dark:text-zinc-400">Duración: {promo.duracion_total_min || 30} min</p>
-                        </div>
-                      </div>
-                      <span className="font-bold text-rose-600 dark:text-rose-400 text-sm">${(promo.precio_promo || 0).toLocaleString('es-AR')}</span>
+                Object.entries(zonasPorCategoria).map(([categoria, zonas]) => (
+                  <div key={categoria} className="space-y-1.5">
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400 px-1">{categoria}</h3>
+                    <div className="space-y-1">
+                      {zonas.map(zona => {
+                        const seleccionada = idsLaserSeleccionados.includes(zona.id)
+                        return (
+                          <div
+                            key={zona.id}
+                            onClick={() => toggleZonaLaser(zona.id)}
+                            className={`flex items-center justify-between p-3 rounded-xl text-xs cursor-pointer border transition-all ${
+                              seleccionada
+                                ? 'bg-rose-50/60 border-rose-300 dark:bg-zinc-800 dark:border-rose-500/50 font-semibold text-gray-900 dark:text-zinc-100'
+                                : 'bg-gray-50/50 border-gray-200 dark:bg-zinc-800/40 dark:border-zinc-700/50 text-gray-600 dark:text-zinc-400'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <input
+                                type="checkbox"
+                                checked={seleccionada}
+                                onChange={() => {}}
+                                className="w-4 h-4 rounded border-gray-300 text-rose-600 focus:ring-rose-500 dark:bg-zinc-700 dark:border-zinc-600"
+                              />
+                              <span>{zona.nombre_zona}</span>
+                            </div>
+                            <span className="font-bold text-gray-800 dark:text-zinc-200">${(zona.precio_lista || 0).toLocaleString('es-AR')}</span>
+                          </div>
+                        )
+                      })}
                     </div>
-                  )
-                })
+                  </div>
+                ))
               )}
             </div>
           )}
@@ -351,6 +357,7 @@ export default function ModalEditarServiciosTurno({
               ) : (
                 promosFiltradas.map(promo => {
                   const seleccionada = idsPromosSeleccionadas.includes(promo.id)
+                  const nombresZonas = obtenerNombresZonasPromo(promo.zonas_incluidas)
                   return (
                     <div
                       key={promo.id}
@@ -370,7 +377,12 @@ export default function ModalEditarServiciosTurno({
                         />
                         <div>
                           <p className="font-semibold text-gray-900 dark:text-zinc-100">{promo.nombre_promo}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-zinc-400">Duración: {promo.duracion_total_min || 30} min</p>
+                          {nombresZonas && (
+                            <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium mt-0.5">
+                              Zonas: {nombresZonas}
+                            </p>
+                          )}
+                          <p className="text-[10px] text-gray-500 dark:text-zinc-400 mt-0.5">Duración: {promo.duracion_total_min || 30} min</p>
                         </div>
                       </div>
                       <span className="font-bold text-rose-600 dark:text-rose-400 text-sm">${(promo.precio_promo || 0).toLocaleString('es-AR')}</span>
