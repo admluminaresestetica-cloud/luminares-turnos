@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Zap } from 'lucide-react';
 import SelectorGenero from '@/components/laser/SelectorGenero';
 import SelectorModoLaser from '@/components/laser/SelectorModoLaser';
@@ -27,8 +27,14 @@ import type { GeneroLaser, PromoLaser, ServicioLaser } from '@/lib/types';
 
 const STORAGE_KEY = 'laser-seleccion';
 
-export default function LaserPage() {
+function LaserContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Parámetros opcionales enviados desde el buscador o links directos
+  const generoQuery = searchParams.get('genero');
+  const promoQuery = searchParams.get('promo');
+  const zonaQuery = searchParams.get('zona');
 
   const [genero, setGenero] = useState<GeneroLaser | null>(null);
   const [modo, setModo] = useState<ModoLaser>('promo');
@@ -60,6 +66,22 @@ export default function LaserPage() {
     }
   };
 
+  // 🎯 1. Auto-selección inicial de género si viene indicado por la URL o si se busca zona/promo
+  useEffect(() => {
+    if (generoQuery) {
+      const g = generoQuery.toLowerCase().trim();
+      if (g === 'femenino' || g === 'masculino') {
+        setGenero(g as GeneroLaser);
+        return;
+      }
+    }
+    // Si viene promo o zona y aún no hay género seleccionado, asignamos femenino por defecto
+    if ((promoQuery || zonaQuery) && !genero) {
+      setGenero('femenino');
+    }
+  }, [generoQuery, promoQuery, zonaQuery, genero]);
+
+  // Carga las zonas y promos cuando se define el género
   useEffect(() => {
     if (!genero) return;
 
@@ -72,6 +94,42 @@ export default function LaserPage() {
     }
     cargar();
   }, [genero]);
+
+  // 🎯 2. Auto-selección inteligente de Promo o Zona Individual una vez cargados los datos
+  useEffect(() => {
+    if (!cargando && genero) {
+      // Opción A: Viene una PROMO en la URL (?promo=3%20Zonas)
+      if (promoQuery && promos.length > 0) {
+        const pq = promoQuery.toLowerCase().trim();
+        const promoEncontrada = promos.find(
+          (p) =>
+            p.nombre_promo.toLowerCase().trim() === pq ||
+            p.nombre_promo.toLowerCase().includes(pq)
+        );
+
+        if (promoEncontrada) {
+          setModo('promo');
+          setPromoSeleccionada(promoEncontrada);
+          return;
+        }
+      }
+
+      // Opción B: Viene una ZONA INDIVIDUAL en la URL (?zona=Axilas)
+      if (zonaQuery && zonas.length > 0) {
+        const zq = zonaQuery.toLowerCase().trim();
+        const zonaEncontrada = zonas.find(
+          (z) =>
+            z.nombre_zona.toLowerCase().trim() === zq ||
+            z.nombre_zona.toLowerCase().includes(zq)
+        );
+
+        if (zonaEncontrada) {
+          setModo('zonas');
+          setZonasIndividualesIds([zonaEncontrada.id]);
+        }
+      }
+    }
+  }, [cargando, genero, promos, zonas, promoQuery, zonaQuery]);
 
   const handleModoChange = (nuevoModo: ModoLaser) => {
     setModo(nuevoModo);
@@ -183,19 +241,18 @@ export default function LaserPage() {
     setZonasIndividualesIds([]);
     setBannerDismissed(true);
   };
-
   return (
     <main className="min-h-screen bg-white flex flex-col items-center justify-start p-4 sm:p-6 pb-32 font-sans selection:bg-rose-100 selection:text-rose-900">
       <div className="max-w-md sm:max-w-2xl w-full space-y-4">
-        
+
         {/* Volver */}
         <div className="w-full flex justify-start">
           <Link
-            href="/turnos"
+            href="/"
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs hover:text-slate-900 active:scale-95 transition-all"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Volver al menú principal</span>
+            <span>Volver al inicio</span>
           </Link>
         </div>
 
@@ -308,5 +365,19 @@ export default function LaserPage() {
         />
       )}
     </main>
+  );
+}
+
+export default function LaserPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <LaserContent />
+    </Suspense>
   );
 }
