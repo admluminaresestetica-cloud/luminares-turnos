@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-import HeaderBusqueda from '@/components/home/HeaderBusqueda';
-import AccionesRapidas from '@/components/home/AccionesRapidas';
-import CategoriasRapidas from '@/components/home/CategoriasRapidas';
-import BannersCarousel from '@/components/home/BannersCarousel';
-import GuiaReservaCard from '@/components/home/GuiaReservaCard';
+import HeaderBusqueda from '@/components/Home/HeaderBusqueda';
+import AccionesRapidas from '@/components/Home/AccionesRapidas';
+import CategoriasRapidas from '@/components/Home/CategoriasRapidas';
+import BannersCarousel from '@/components/Home/BannersCarousel';
+import GuiaReservaCard from '@/components/Home/GuiaReservaCard';
 
 interface Banner {
   id: string;
