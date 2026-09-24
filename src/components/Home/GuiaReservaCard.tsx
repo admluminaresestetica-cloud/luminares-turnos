@@ -58,19 +58,19 @@ export default function GuiaReservaCard() {
               alert('Pronto estará disponible el video explicativo.');
             }
           }}
-          className="text-left p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-100 flex flex-col justify-between space-y-2 active:scale-[0.98] transition-transform shadow-2xs w-full"
+          className="text-left p-3.5 rounded-2xl bg-slate-50/80 dark:bg-zinc-900/60 border border-slate-100 dark:border-zinc-800/80 flex flex-col justify-between space-y-2 active:scale-[0.98] hover:scale-[1.01] transition-all shadow-2xs w-full group"
         >
-          <div className="w-full h-16 rounded-xl bg-emerald-100/80 flex items-center justify-center text-emerald-800">
+          <div className="w-full h-16 rounded-xl bg-slate-900/5 dark:bg-blue-500/10 flex items-center justify-center text-slate-800 dark:text-blue-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
-            <h4 className="text-xs font-black text-slate-900 leading-tight">
+            <h4 className="text-xs font-black text-slate-900 dark:text-zinc-100 leading-tight">
               {guiaPrincipal.titulo}
             </h4>
-            <p className="text-[10px] text-slate-600 font-medium leading-tight mt-0.5">
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium leading-tight mt-0.5">
               {guiaPrincipal.subtitulo}
             </p>
-            <span className="text-[10px] font-bold text-emerald-800 block mt-1 underline">
+            <span className="text-[10px] font-bold text-slate-700 dark:text-blue-400 block mt-1 underline">
               (Ver guía)
             </span>
           </div>
@@ -79,19 +79,19 @@ export default function GuiaReservaCard() {
         {/* Consultar Mi Reserva */}
         <Link
           href="/mis-turnos"
-          className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/60 flex flex-col justify-between space-y-2 active:scale-[0.98] transition-transform shadow-2xs"
+          className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-zinc-900/60 border border-slate-100 dark:border-zinc-800/80 flex flex-col justify-between space-y-2 active:scale-[0.98] hover:scale-[1.01] transition-all shadow-2xs group"
         >
-          <div className="w-full h-16 rounded-xl bg-slate-100/90 flex items-center justify-center text-[#114B5F]">
+          <div className="w-full h-16 rounded-xl bg-slate-900/5 dark:bg-blue-500/10 flex items-center justify-center text-slate-800 dark:text-blue-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
             <Lock className="w-6 h-6" />
           </div>
           <div>
-            <h4 className="text-xs font-black text-slate-900 leading-tight">
+            <h4 className="text-xs font-black text-slate-900 dark:text-zinc-100 leading-tight">
               Consultar Mi Reserva
             </h4>
-            <p className="text-[10px] text-slate-600 font-medium leading-tight mt-0.5">
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400 font-medium leading-tight mt-0.5">
               Ingresá Celular + Código
             </p>
-            <span className="text-[10px] font-bold text-[#114B5F] block mt-1 underline">
+            <span className="text-[10px] font-bold text-slate-700 dark:text-blue-400 block mt-1 underline">
               (Consultar aquí)
             </span>
           </div>
@@ -101,10 +101,10 @@ export default function GuiaReservaCard() {
       {/* Pop-up Modal cuando el usuario hace clic */}
       {guiaSeleccionada && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+          <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] border border-slate-200 dark:border-zinc-800">
             <button
               onClick={() => setGuiaSeleccionada(null)}
-              className="absolute top-3 right-3 z-20 p-2 rounded-full bg-black/50 text-white hover:bg-black/70"
+              className="absolute top-3 right-3 z-20 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -116,7 +116,7 @@ export default function GuiaReservaCard() {
               )}
             </div>
 
-            <div className="p-2 overflow-y-auto flex-1 flex items-center justify-center bg-slate-100">
+            <div className="p-2 overflow-y-auto flex-1 flex items-center justify-center bg-slate-100 dark:bg-zinc-950">
               {guiaSeleccionada.tipo_contenido === 'video' ? (
                 <video
                   src={guiaSeleccionada.media_url}
@@ -133,10 +133,10 @@ export default function GuiaReservaCard() {
               )}
             </div>
 
-            <div className="p-4 bg-white border-t border-slate-100">
+            <div className="p-4 bg-white dark:bg-zinc-900 border-t border-slate-100 dark:border-zinc-800">
               <button
                 onClick={() => setGuiaSeleccionada(null)}
-                className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-xs"
+                className="w-full py-3 bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-bold rounded-xl text-xs"
               >
                 Entendido
               </button>
