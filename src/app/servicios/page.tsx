@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import * as Icons from 'lucide-react';
-import { ChevronRight, X, ZoomIn, Check, Sparkles, ArrowLeft } from 'lucide-react';
+import { ChevronRight, X, ZoomIn, Check, Sparkles, ArrowLeft, Tag } from 'lucide-react';
 import FlujoAgendaConfirmacion from '@/components/booking/FlujoAgendaConfirmacion';
 import { SERVICIOS_STORAGE_KEY } from '@/lib/booking/session';
 import {
@@ -24,7 +25,23 @@ function obtenerIconoDinamico(nombreIcono?: string) {
   return IconoComponente || Sparkles;
 }
 
-export default function ServiciosPage() {
+// Helper para detectar si una categoría o servicio es un Combo/Promo
+function esPromocionOCombo(texto?: string): boolean {
+  if (!texto) return false;
+  const t = texto.toUpperCase();
+  return (
+    t.includes('PROMO') ||
+    t.includes('COMBO') ||
+    t.includes('OFERTA') ||
+    t.includes('PACK') ||
+    t.includes('+')
+  );
+}
+
+function ServiciosContent() {
+  const searchParams = useSearchParams();
+  const categoriaQuery = searchParams.get('categoria');
+
   const [servicios, setServicios] = useState<ServicioGeneral[]>([]);
   const [cargando, setCargando] = useState(true);
   const [paso, setPaso] = useState<Paso>('categoria');
@@ -42,6 +59,24 @@ export default function ServiciosPage() {
     cargar();
   }, []);
 
+  // Selecciona automáticamente la categoría si viene indicada por la URL (?categoria=promos o similar)
+  useEffect(() => {
+    if (!cargando && servicios.length > 0 && categoriaQuery) {
+      const q = categoriaQuery.toLowerCase();
+      
+      // Buscar coincidencia exacta o por coincidencia de palabras (ej: promos, combo)
+      const categoriaEncontrada = servicios.find((s) => {
+        const cat = s.categoria.toLowerCase();
+        return cat === q || (q === 'promos' && esPromocionOCombo(cat));
+      })?.categoria;
+
+      if (categoriaEncontrada) {
+        setCategoria(categoriaEncontrada as CategoriaGeneral);
+        setPaso('servicios');
+      }
+    }
+  }, [cargando, servicios, categoriaQuery]);
+
   // Cierra el lightbox con la tecla Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -53,7 +88,14 @@ export default function ServiciosPage() {
 
   const categorias = useMemo(() => {
     const cats = new Set(servicios.map((s) => s.categoria));
-    return Array.from(cats) as CategoriaGeneral[];
+    // Ordenar para que las categorías que sean Promos/Combos aparezcan primero
+    return Array.from(cats).sort((a, b) => {
+      const esA = esPromocionOCombo(a);
+      const esB = esPromocionOCombo(b);
+      if (esA && !esB) return -1;
+      if (!esA && esB) return 1;
+      return 0;
+    }) as CategoriaGeneral[];
   }, [servicios]);
 
   const serviciosCategoria = useMemo(
@@ -115,9 +157,9 @@ export default function ServiciosPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white pb-36 font-sans selection:bg-rose-100 selection:text-rose-900">
+    <main className="min-h-screen bg-white dark:bg-zinc-950 pb-36 font-sans selection:bg-stone-100">
       <div className="max-w-2xl mx-auto p-4 sm:p-6 md:p-8">
-        
+
         {/* Navegación y Encabezado Superior */}
         <div className="mb-6">
           {paso === 'categoria' ? (
@@ -125,9 +167,9 @@ export default function ServiciosPage() {
               asChild
               variant="outline"
               size="sm"
-              className="rounded-xl font-bold text-xs text-slate-600 bg-white border-slate-200/80 shadow-xs mb-4 active:scale-95"
+              className="rounded-xl font-bold text-xs text-stone-600 dark:text-zinc-300 bg-white dark:bg-zinc-900 border-stone-200/80 dark:border-zinc-800 shadow-xs mb-4 active:scale-95"
             >
-              <Link href="/turnos" className="inline-flex items-center gap-2">
+              <Link href="/" className="inline-flex items-center gap-2">
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Volver al inicio</span>
               </Link>
@@ -142,7 +184,7 @@ export default function ServiciosPage() {
                 setCategoria(null);
                 setSeleccionados([]);
               }}
-              className="rounded-xl font-bold text-xs text-rose-600 hover:text-rose-800 bg-rose-50/50 border-rose-100 mb-4 active:scale-95 cursor-pointer"
+              className="rounded-xl font-bold text-xs text-[#2d5747] dark:text-[#a3c9b8] bg-[#a3c9b8]/15 border-[#a3c9b8]/30 mb-4 active:scale-95 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Cambiar categoría</span>
@@ -152,18 +194,18 @@ export default function ServiciosPage() {
           <header className="space-y-1">
             <Badge
               variant="outline"
-              className="bg-white border-rose-200 text-rose-600 mb-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-[0.18em] uppercase"
+              className="bg-[#a3c9b8]/20 text-[#2d5747] dark:text-[#a3c9b8] border-[#a3c9b8]/40 mb-1 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-[0.18em] uppercase"
             >
               Servicios Generales
             </Badge>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl font-extrabold text-stone-900 dark:text-zinc-100 tracking-tight">
               {paso === 'categoria'
                 ? 'Elegí una categoría'
                 : LABELS_CATEGORIA[categoria!] ?? categoria}
             </h1>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-stone-500 dark:text-zinc-400 font-medium">
               {paso === 'categoria'
-                ? 'Seleccioná el tipo de tratamiento que buscás'
+                ? 'Seleccioná el tipo de tratamiento o combo que buscás'
                 : 'Seleccioná uno o más servicios para agendar'}
             </p>
           </header>
@@ -171,12 +213,12 @@ export default function ServiciosPage() {
 
         {cargando ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-3">
-            <div className="w-8 h-8 border-3 border-rose-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-semibold text-slate-400">Cargando servicios...</span>
+            <div className="w-8 h-8 border-3 border-[#2d5747] border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-semibold text-stone-400">Cargando servicios...</span>
           </div>
         ) : servicios.length === 0 ? (
-          <Card className="text-center py-16 bg-white rounded-3xl border-slate-200/80 p-6 shadow-xs">
-            <p className="text-sm font-semibold text-slate-600">
+          <Card className="text-center py-16 bg-white dark:bg-zinc-900 rounded-3xl border-stone-200/80 dark:border-zinc-800 p-6 shadow-xs">
+            <p className="text-sm font-semibold text-stone-600 dark:text-zinc-400">
               No hay servicios disponibles en este momento.
             </p>
           </Card>
@@ -186,7 +228,8 @@ export default function ServiciosPage() {
             {categorias.map((cat) => {
               const serviciosDeCategoria = servicios.filter((s) => s.categoria === cat);
               const count = serviciosDeCategoria.length;
-              
+              const esPromoCat = esPromocionOCombo(cat);
+
               const iconoNombre = serviciosDeCategoria.find((s) => s.icono)?.icono;
               const IconoDinamico = obtenerIconoDinamico(iconoNombre);
 
@@ -198,22 +241,39 @@ export default function ServiciosPage() {
                     setSeleccionados([]);
                     setPaso('servicios');
                   }}
-                  className="group relative flex items-center gap-4 p-4 bg-white rounded-[24px] border-slate-200/80 shadow-xs hover:shadow-md hover:border-slate-300 active:scale-[0.97] transition-all duration-200 cursor-pointer text-left overflow-hidden"
+                  className={`group relative flex items-center gap-4 p-4 rounded-[24px] shadow-xs hover:shadow-md active:scale-[0.97] transition-all duration-200 cursor-pointer text-left overflow-hidden ${
+                    esPromoCat
+                      ? 'bg-[#f7f5f0] dark:bg-zinc-900 border-[#a3c9b8] dark:border-[#a3c9b8]/50 ring-1 ring-[#a3c9b8]/30'
+                      : 'bg-white dark:bg-zinc-900 border-stone-200/80 dark:border-zinc-800 hover:border-stone-300'
+                  }`}
                 >
-                  <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 text-white flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-200">
+                  {/* Badge flotante de Promo para la categoría */}
+                  {esPromoCat && (
+                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-[#1e2e28] text-[#a3c9b8] text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                      <Tag className="w-2.5 h-2.5" /> PROMO
+                    </span>
+                  )}
+
+                  <div
+                    className={`w-13 h-13 rounded-2xl flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-200 ${
+                      esPromoCat
+                        ? 'bg-[#1e2e28] text-[#a3c9b8]'
+                        : 'bg-[#a3c9b8]/20 text-[#2d5747] dark:text-[#a3c9b8]'
+                    }`}
+                  >
                     <IconoDinamico className="w-6 h-6 stroke-[2]" />
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <p className="font-extrabold text-slate-900 capitalize text-sm leading-snug truncate">
+                  <div className="flex-1 min-w-0 pr-6">
+                    <p className="font-extrabold text-stone-900 dark:text-zinc-100 capitalize text-sm leading-snug truncate">
                       {LABELS_CATEGORIA[cat] ?? cat}
                     </p>
-                    <span className="inline-block text-[11px] font-medium text-slate-400 mt-0.5">
+                    <span className="inline-block text-[11px] font-medium text-stone-500 dark:text-zinc-400 mt-0.5">
                       {count} {count === 1 ? 'opción' : 'opciones'}
                     </span>
                   </div>
 
-                  <div className="w-7 h-7 rounded-full bg-white border border-slate-200 group-hover:bg-slate-900 group-hover:border-slate-900 group-hover:text-white text-slate-400 flex items-center justify-center shrink-0 transition-colors duration-200">
+                  <div className="w-7 h-7 rounded-full bg-white dark:bg-zinc-800 border border-stone-200 dark:border-zinc-700 group-hover:bg-[#1e2e28] group-hover:text-white text-stone-400 flex items-center justify-center shrink-0 transition-colors duration-200">
                     <ChevronRight className="w-4 h-4" />
                   </div>
                 </Card>
@@ -225,6 +285,7 @@ export default function ServiciosPage() {
           <div className="space-y-3">
             {serviciosCategoria.map((servicio: any) => {
               const activo = seleccionados.includes(servicio.id);
+              const esPromoItem = esPromocionOCombo(servicio.subtipo) || esPromocionOCombo(servicio.categoria);
               const imagenParaMostrar = servicio.imagen_url || servicio.imagen;
               const imagenSrc = imagenParaMostrar
                 ? imagenParaMostrar.startsWith('http')
@@ -237,14 +298,23 @@ export default function ServiciosPage() {
                 <Card
                   key={servicio.id}
                   className={`
-                    w-full rounded-[24px] border overflow-hidden transition-all duration-200 bg-white shadow-xs
+                    w-full rounded-[24px] border overflow-hidden transition-all duration-200 relative shadow-xs
                     ${
                       activo
-                        ? 'border-rose-300 bg-rose-50/20 ring-1 ring-rose-300/50'
-                        : 'border-slate-200/80 hover:border-slate-300'
+                        ? 'border-[#2d5747] bg-[#a3c9b8]/10 ring-1 ring-[#2d5747]/40'
+                        : esPromoItem
+                        ? 'border-[#a3c9b8] bg-[#f7f5f0]/60 dark:bg-zinc-900/80 hover:border-[#2d5747]'
+                        : 'border-stone-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-stone-300'
                     }
                   `}
                 >
+                  {/* Badge en la tarjeta individual del servicio si es Promo */}
+                  {esPromoItem && !activo && (
+                    <div className="px-3 py-0.5 bg-[#1e2e28] text-[#a3c9b8] text-[9px] font-bold tracking-wider uppercase inline-flex items-center gap-1 rounded-br-xl">
+                      <Tag className="w-2.5 h-2.5" /> COMBO DESTACADO
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => toggleServicio(servicio.id)}
@@ -254,27 +324,26 @@ export default function ServiciosPage() {
                       <div
                         className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all shrink-0 ${
                           activo
-                            ? 'bg-rose-500 border-rose-500 text-white'
-                            : 'border-slate-300 bg-white'
+                            ? 'bg-[#1e2e28] border-[#1e2e28] text-[#a3c9b8]'
+                            : 'border-stone-300 dark:border-zinc-700 bg-white dark:bg-zinc-800'
                         }`}
                       >
                         {activo && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-bold text-slate-900 text-sm leading-snug truncate">
+                        <p className="font-bold text-stone-900 dark:text-zinc-100 text-sm leading-snug truncate">
                           {servicio.subtipo}
                         </p>
-                        <p className="text-xs font-medium text-slate-400 mt-0.5">
+                        <p className="text-xs font-medium text-stone-500 dark:text-zinc-400 mt-0.5">
                           {servicio.duracion_minutos} min
                         </p>
                       </div>
                     </div>
-                    <p className="font-black text-slate-900 text-base shrink-0">
+                    <p className="font-black text-stone-900 dark:text-zinc-100 text-base shrink-0">
                       ${Number(servicio.precio).toLocaleString('es-AR')}
                     </p>
                   </button>
-
-                  <div
+               <div
                     className={`grid transition-all duration-300 ease-out ${
                       activo && tieneDespliegue
                         ? 'grid-rows-[1fr] opacity-100'
@@ -282,14 +351,14 @@ export default function ServiciosPage() {
                     }`}
                   >
                     <div className="overflow-hidden">
-                      <div className="px-4 pb-4 pt-1 space-y-3 border-t border-rose-100/80 mx-4 -mt-px">
+                      <div className="px-4 pb-4 pt-1 space-y-3 border-t border-[#a3c9b8]/30 mx-4 -mt-px">
                         {imagenSrc && (
                           <button
                             type="button"
                             onClick={() =>
                               setLightbox({ src: imagenSrc, alt: servicio.subtipo })
                             }
-                            className="group/img relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-rose-100 bg-white cursor-zoom-in block mt-2"
+                            className="group/img relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-stone-200 dark:border-zinc-800 bg-white cursor-zoom-in block mt-2"
                           >
                             <img
                               src={imagenSrc}
@@ -302,13 +371,13 @@ export default function ServiciosPage() {
                             />
                             <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
                               <div className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity shadow-xs">
-                                <ZoomIn className="w-4 h-4 text-slate-700" />
+                                <ZoomIn className="w-4 h-4 text-stone-700" />
                               </div>
                             </div>
                           </button>
                         )}
                         {servicio.descripcion && (
-                          <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                          <p className="text-xs text-stone-600 dark:text-zinc-300 leading-relaxed font-medium">
                             {servicio.descripcion}
                           </p>
                         )}
@@ -347,22 +416,22 @@ export default function ServiciosPage() {
 
       {/* Barra flotante inferior de confirmación */}
       {paso === 'servicios' && seleccionados.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 pointer-events-none">
+        <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 z-40 p-3 sm:p-4 pointer-events-none">
           <div className="max-w-2xl mx-auto pointer-events-auto">
-            <div className="bg-slate-900 text-white rounded-2xl sm:rounded-3xl shadow-xl px-5 py-3.5 flex items-center justify-between gap-4 border border-slate-800">
+            <div className="bg-[#1e2e28] text-white rounded-2xl sm:rounded-3xl shadow-xl px-5 py-3.5 flex items-center justify-between gap-4 border border-[#2d4239]">
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <p className="text-xl font-black tracking-tight">
+                  <p className="text-xl font-black tracking-tight text-[#a3c9b8]">
                     ${totales.precio.toLocaleString('es-AR')}
                   </p>
-                  <p className="text-slate-400 text-xs font-semibold">{totales.duracion} min</p>
+                  <p className="text-stone-300 text-xs font-semibold">{totales.duracion} min</p>
                 </div>
-                <p className="text-[11px] text-slate-400 truncate">{totales.detalle}</p>
+                <p className="text-[11px] text-stone-300 truncate">{totales.detalle}</p>
               </div>
               <Button
                 type="button"
                 onClick={handleContinuarServicios}
-                className="shrink-0 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 active:scale-95 text-white font-extrabold px-5 py-2.5 h-auto rounded-xl shadow-md transition-all text-xs sm:text-sm cursor-pointer"
+                className="shrink-0 bg-[#a3c9b8] hover:bg-[#8eb8a5] active:scale-95 text-[#1e2e28] font-extrabold px-5 py-2.5 h-auto rounded-xl shadow-md transition-all text-xs sm:text-sm cursor-pointer"
               >
                 Continuar
               </Button>
@@ -371,5 +440,19 @@ export default function ServiciosPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function ServiciosPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center">
+          <div className="w-8 h-8 border-3 border-[#2d5747] border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <ServiciosContent />
+    </Suspense>
   );
 }
