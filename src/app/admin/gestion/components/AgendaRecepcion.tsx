@@ -60,7 +60,7 @@ export default function AgendaRecepcion({
   const turnosFiltrados = turnos.filter((t) => {
     const coincideTexto = 
       `${t.cliente_nombre || ''} ${t.cliente_celular || ''}`.toLowerCase().includes(busqueda.toLowerCase());
-    
+
     if (filtroEstado === 'todos') return coincideTexto;
     return coincideTexto && t.estado === filtroEstado;
   });
@@ -70,26 +70,26 @@ export default function AgendaRecepcion({
     switch (estado?.toLowerCase()) {
       case 'en_gabinete':
         return {
-          clase: 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/60',
+          clase: 'bg-rose-500 text-white shadow-xs',
           texto: 'En Gabinete',
-          icono: <UserCheck className="w-3 h-3 shrink-0" />
+          icono: <UserCheck className="w-3.5 h-3.5 shrink-0" />
         };
       case 'atendido':
       case 'finalizado':
         return {
-          clase: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60',
+          clase: 'bg-emerald-600 text-white shadow-xs',
           texto: 'Atendido',
-          icono: <CheckCircle2 className="w-3 h-3 shrink-0" />
+          icono: <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
         };
       case 'confirmado':
         return {
-          clase: 'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400',
+          clase: 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-bold',
           texto: 'Confirmado',
           icono: null
         };
       default:
         return {
-          clase: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400',
+          clase: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 font-bold',
           texto: estado || 'Pendiente',
           icono: null
         };
@@ -97,25 +97,31 @@ export default function AgendaRecepcion({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-emerald-500 shrink-0" />
-          <h2 className="text-sm font-semibold text-slate-800 dark:text-zinc-200">
-            Agenda del Día ({turnos.length})
-          </h2>
+    <div className="space-y-4 rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+      
+      {/* Cabecera y Filtros */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-emerald-100 dark:bg-emerald-950/60 rounded-xl text-emerald-600 dark:text-emerald-400">
+              <Calendar className="h-4 w-4 shrink-0" />
+            </div>
+            <h2 className="text-base font-extrabold text-slate-900 dark:text-zinc-50 tracking-tight">
+              Agenda del Día ({turnos.length})
+            </h2>
+          </div>
         </div>
 
-        {/* Filtros rápidos de estado adaptables */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+        {/* Filtros rápidos estilo Pills con scroll horizontal táctil */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {['todos', 'confirmado', 'en_gabinete', 'atendido'].map((est) => (
             <button
               key={est}
               onClick={() => setFiltroEstado(est)}
-              className={`rounded-lg px-2.5 py-1 text-[11px] font-medium capitalize whitespace-nowrap transition-all ${
+              className={`rounded-full px-3.5 py-1.5 text-xs font-bold capitalize whitespace-nowrap transition-all active:scale-95 ${
                 filtroEstado === est
-                  ? 'bg-emerald-500 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800'
+                  ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700'
               }`}
             >
               {est.replace('_', ' ')}
@@ -124,27 +130,29 @@ export default function AgendaRecepcion({
         </div>
       </div>
 
-      {/* Buscador */}
+      {/* Buscador cómodo para celular */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           placeholder="Buscar por cliente o celular..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          className="w-full rounded-xl border border-slate-200/80 bg-slate-50/50 py-2.5 pl-9 pr-3 text-xs focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
+          className="w-full rounded-2xl border border-slate-200 bg-slate-50/80 py-3 pl-10 pr-4 text-sm font-medium text-slate-800 placeholder-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:bg-zinc-900 transition-all"
         />
       </div>
 
       {/* Lista de turnos */}
       {loading ? (
-        <div className="py-12 text-center text-xs text-slate-400">Cargando agenda de hoy...</div>
+        <div className="py-12 text-center text-sm font-semibold text-slate-400 dark:text-zinc-500">
+          Cargando agenda de hoy...
+        </div>
       ) : (
-        <div className="max-h-[460px] space-y-2.5 overflow-y-auto pr-1">
+        <div className="max-h-[500px] space-y-3 overflow-y-auto pr-1">
           {turnosFiltrados.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-xs text-slate-400 dark:border-zinc-800 dark:text-zinc-600">
+            <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm font-medium text-slate-400 dark:border-zinc-800 dark:text-zinc-500">
               No se encontraron turnos programados para hoy con esos filtros.
-            </p>
+            </div>
           ) : (
             turnosFiltrados.map((turno) => {
               const seleccionado = turnoSeleccionadoId === turno.id;
@@ -160,38 +168,40 @@ export default function AgendaRecepcion({
                 <div
                   key={turno.id}
                   onClick={() => onSeleccionarTurno(turno)}
-                  className={`group flex cursor-pointer items-center justify-between rounded-xl border p-3.5 transition-all active:scale-[0.99] ${
+                  className={`group flex cursor-pointer items-center justify-between rounded-2xl border p-3.5 sm:p-4 transition-all active:scale-[0.98] ${
                     seleccionado
-                      ? 'border-emerald-500 bg-emerald-50/60 shadow-xs dark:bg-emerald-950/30'
+                      ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 shadow-sm ring-2 ring-emerald-500/20'
                       : estaEnGabinete
-                      ? 'border-rose-200 bg-rose-50/30 dark:border-rose-900/40 dark:bg-rose-950/10'
-                      : 'border-slate-200/80 bg-slate-50/30 hover:bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900/40 dark:hover:bg-zinc-900'
+                      ? 'border-rose-300 bg-rose-50/40 dark:border-rose-900/60 dark:bg-rose-950/20'
+                      : 'border-slate-200/90 bg-white hover:border-slate-300 dark:border-zinc-800 dark:bg-zinc-800/60 dark:hover:bg-zinc-800 shadow-2xs'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-xl bg-emerald-100/60 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400">
-                      <Clock className="h-3.5 w-3.5" />
-                      <span className="text-[10px] font-bold">{horaTurno}</span>
+                    {/* Badge visual de hora */}
+                    <div className="flex h-11 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-2xs">
+                      <Clock className="h-3 w-3 opacity-70 mb-0.5" />
+                      <span className="text-xs font-black tracking-tighter">{horaTurno}</span>
                     </div>
+
                     <div className="space-y-0.5 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs font-semibold text-slate-800 dark:text-zinc-200 truncate">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="text-sm font-extrabold text-slate-900 dark:text-zinc-100 truncate capitalize">
                           {turno.cliente_nombre}
                         </p>
                         <BadgeModificado fueModificado={modificado} />
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
-                        {turno.servicio_tipo || 'Servicio General'} • <span className="text-slate-400">{turno.cliente_celular || 'Sin celular'}</span>
+                      <p className="text-xs font-semibold text-slate-500 dark:text-zinc-400 truncate">
+                        {turno.servicio_tipo || 'Servicio General'} • <span className="text-slate-600 dark:text-zinc-300 font-bold">{turno.cliente_celular || 'Sin cel'}</span>
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0 ml-2">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium capitalize ${badge.clase}`}>
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${badge.clase}`}>
                       {badge.icono}
                       <span>{badge.texto}</span>
                     </span>
-                    <ChevronRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5 hidden sm:block" />
+                    <ChevronRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-0.5" />
                   </div>
                 </div>
               );
