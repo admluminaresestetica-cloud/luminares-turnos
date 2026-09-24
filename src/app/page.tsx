@@ -63,7 +63,7 @@ export default function HomePage() {
         {/* 2. Grilla Principal Responsiva */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           
-          {/* Columna Izquierda: Botón principal, Categorías y Banners */}
+          {/* Columna Izquierda: Acciones, Categorías y Banners */}
           <div className="lg:col-span-7 space-y-6">
             
             {/* Acciones Rápidas (Agendar Turno) */}
@@ -76,7 +76,7 @@ export default function HomePage() {
               <CategoriasRapidas />
             </section>
 
-            {/* Banners Promocionales (Debajo de Categorías) */}
+            {/* Banners Promocionales */}
             <section className="space-y-2">
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-xs font-black tracking-wider text-stone-600 uppercase dark:text-zinc-400">
@@ -86,12 +86,22 @@ export default function HomePage() {
               <BannersCarousel banners={banners} isLoading={loadingBanners} />
             </section>
 
-            {/* Bloque Neutro de Beneficios de Reserva (Sello Marca Blanca) */}
+          </div>
+
+          {/* Columna Derecha: Guías y Beneficios del Sistema */}
+          <div className="lg:col-span-5 space-y-6">
+            
+            {/* Guías de Reserva y Consulta de Turnos */}
+            <section className="space-y-2">
+              <GuiaReservaCard />
+            </section>
+
+            {/* Bloque Neutro de Beneficios (Rellena la columna derecha en Desktop) */}
             <section className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border border-stone-200/80 dark:border-zinc-800 rounded-3xl p-5 space-y-3 shadow-sm hidden md:block">
               <h3 className="text-xs font-bold text-stone-600 dark:text-zinc-300 uppercase tracking-wider">
                 ¿Por qué elegirnos?
               </h3>
-              <div className="grid grid-cols-3 gap-3 text-xs text-stone-600 dark:text-zinc-400">
+              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3 gap-3 text-xs text-stone-600 dark:text-zinc-400">
                 <div className="bg-white/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-stone-100 dark:border-zinc-700/50">
                   <p className="font-semibold text-stone-800 dark:text-zinc-100">Reserva 24/7</p>
                   <p className="text-[11px] text-stone-500 mt-1">Elegí tu turno en cualquier momento.</p>
@@ -107,13 +117,6 @@ export default function HomePage() {
               </div>
             </section>
 
-          </div>
-
-          {/* Columna Derecha: Guías y Consultas de Turno */}
-          <div className="lg:col-span-5 space-y-6">
-            <section className="space-y-2">
-              <GuiaReservaCard />
-            </section>
           </div>
 
         </div>
