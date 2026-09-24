@@ -37,7 +37,7 @@ interface Props {
   onConfirmar: () => void;
   confirmando: boolean;
   error: string | null;
-  colorAccent?: 'violet' | 'indigo' | 'rose';
+  colorAccent?: 'violet' | 'indigo' | 'rose' | 'emerald';
   onPagarMercadoPago?: (montoAPagar: number) => void;
   cargandoMP?: boolean;
   onCancelarMP?: () => void;
@@ -50,20 +50,23 @@ interface Props {
 const ACCENT_STYLES = {
   violet: {
     badge: 'bg-violet-50 text-violet-700 border-violet-200/80',
-    button: 'bg-emerald-600 hover:bg-emerald-500 text-white',
+    button: 'bg-violet-600 hover:bg-violet-500 text-white',
     focusRing: 'focus:border-violet-500 focus:ring-violet-500/20',
   },
   indigo: {
     badge: 'bg-indigo-50 text-indigo-700 border-indigo-200/80',
-    badgeSecondary: 'bg-slate-100 text-slate-700 border-slate-200/80',
-    button: 'bg-emerald-600 hover:bg-emerald-500 text-white',
+    button: 'bg-indigo-600 hover:bg-indigo-500 text-white',
     focusRing: 'focus:border-indigo-500 focus:ring-indigo-500/20',
   },
   rose: {
     badge: 'bg-rose-50 text-rose-700 border-rose-200/80',
-    badgeSecondary: 'bg-slate-100 text-slate-700 border-slate-200/80',
-    button: 'bg-emerald-600 hover:bg-emerald-500 text-white',
+    button: 'bg-rose-600 hover:bg-rose-500 text-white',
     focusRing: 'focus:border-rose-500 focus:ring-rose-500/20',
+  },
+  emerald: {
+    badge: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+    button: 'bg-emerald-600 hover:bg-emerald-500 text-white',
+    focusRing: 'focus:border-emerald-500 focus:ring-emerald-500/20',
   },
 };
 
@@ -136,8 +139,8 @@ export default function FormConfirmacion({
   const montoSenaBase = Math.round((precioFinalCalculado * porcentajeSena) / 100);
 
   // Cálculos de Mercado Pago con 10% de recargo por servicio
-  const montoSenaMP = Math.round(montoSenaBase * 1.10);
-  const montoTotalMP = Math.round(precioFinalCalculado * 1.10);
+  const montoSenaMP = Math.round(montoSenaBase * 1.1);
+  const montoTotalMP = Math.round(precioFinalCalculado * 1.1);
 
   const montoSeleccionadoMP = opcionMP === 'sena' ? montoSenaMP : montoTotalMP;
   const montoSinRecargoMP = opcionMP === 'sena' ? montoSenaBase : precioFinalCalculado;
@@ -291,9 +294,11 @@ export default function FormConfirmacion({
               {metodoPago === 'mercadopago' && (
                 <CheckCircle2 className="w-4 h-4 text-sky-600 absolute top-3 right-3" />
               )}
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 ${
-                metodoPago === 'mercadopago' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-500'
-              }`}>
+              <div
+                className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 ${
+                  metodoPago === 'mercadopago' ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-500'
+                }`}
+              >
                 <CreditCard className="w-4 h-4" />
               </div>
               <p className="text-xs font-bold text-slate-900 leading-tight pr-5">Mercado Pago</p>
@@ -317,9 +322,11 @@ export default function FormConfirmacion({
             {metodoPago === 'whatsapp' && (
               <CheckCircle2 className="w-4 h-4 text-emerald-600 absolute top-3 right-3" />
             )}
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 ${
-              metodoPago === 'whatsapp' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'
-            }`}>
+            <div
+              className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 ${
+                metodoPago === 'whatsapp' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'
+              }`}
+            >
               <MessageCircle className="w-4 h-4" />
             </div>
             <p className="text-xs font-bold text-slate-900 leading-tight pr-5">Transferencia / WhatsApp</p>

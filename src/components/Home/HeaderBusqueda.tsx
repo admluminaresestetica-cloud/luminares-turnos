@@ -19,12 +19,13 @@ interface ProductoResultado {
 interface ServicioResultado {
   id: string;
   nombre: string;
-  tipo: 'general' | 'laser';
-  precio: number;
-  // Campos auxiliares para armar la URL exacta
+  tipo: 'general' | 'laser_zona' | 'laser_promo';
+  precio?: number;
   categoriaOriginal?: string;
   subtipoOriginal?: string;
   nombreZonaOriginal?: string;
+  nombrePromoOriginal?: string;
+  generoOriginal?: string;
 }
 
 interface TagBusqueda {
@@ -39,14 +40,12 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
   const [focused, setFocused] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Resultados dinámicos
   const [productos, setProductos] = useState<ProductoResultado[]>([]);
   const [servicios, setServicios] = useState<ServicioResultado[]>([]);
   const [tags, setTags] = useState<TagBusqueda[]>([]);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // 1. Cargar Tags Rápidos de la tabla `tags_busqueda` al presionar la barra
   useEffect(() => {
     async function fetchTags() {
       try {
@@ -65,7 +64,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
     fetchTags();
   }, []);
 
-  // 2. Búsqueda dinámica multitabla cuando cambia el término
   useEffect(() => {
     if (!query.trim() || query.length < 2) {
       setProductos([]);
@@ -95,18 +93,27 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           .or(`subtipo.ilike.${searchTerm},categoria.ilike.${searchTerm}`)
           .limit(3);
 
-        // C) Buscar en Servicios Láser
-        const reqServiciosLaser = supabase
+        // C) Buscar en Zonas Láser (Femenino/Masculino)
+        const reqZonasLaser = supabase
           .from('servicios_laser')
-          .select('id, nombre_zona, categoria_zona, precio_lista')
+          .select('id, nombre_zona, genero, precio_lista')
           .eq('activo', true)
-          .or(`nombre_zona.ilike.${searchTerm},categoria_zona.ilike.${searchTerm}`)
+          .ilike('nombre_zona', searchTerm)
           .limit(3);
 
-        const [resProd, resServGen, resServLaser] = await Promise.all([
+        // D) Buscar en Promos Láser (Femenino/Masculino)
+        const reqPromosLaser = supabase
+          .from('promos_laser')
+          .select('id, nombre_promo, genero, precio_promo')
+          .eq('activo', true)
+          .ilike('nombre_promo', searchTerm)
+          .limit(3);
+
+        const [resProd, resServGen, resZonasLaser, resPromosLaser] = await Promise.all([
           reqProductos,
           reqServiciosGenerales,
-          reqServiciosLaser,
+          reqZonasLaser,
+          reqPromosLaser,
         ]);
 
         if (resProd.data) {
@@ -128,19 +135,33 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           });
         }
 
-        if (resServLaser.data) {
-          resServLaser.data.forEach((item) => {
+        if (resZonasLaser.data) {
+          resZonasLaser.data.forEach((item) => {
             serviciosUnificados.push({
               id: item.id,
-              nombre: `Depilación ${item.nombre_zona}`,
-              tipo: 'laser',
+              nombre: `Láser: ${item.nombre_zona} (${item.genero || 'femenino'})`,
+              tipo: 'laser_zona',
               precio: item.precio_lista,
               nombreZonaOriginal: item.nombre_zona,
+              generoOriginal: item.genero || 'femenino',
             });
           });
         }
 
-        setServicios(serviciosUnificados.slice(0, 4));
+        if (resPromosLaser.data) {
+          resPromosLaser.data.forEach((item) => {
+            serviciosUnificados.push({
+              id: item.id,
+              nombre: `Promo Láser: ${item.nombre_promo} (${item.genero || 'femenino'})`,
+              tipo: 'laser_promo',
+              precio: item.precio_promo,
+              nombrePromoOriginal: item.nombre_promo,
+              generoOriginal: item.genero || 'femenino',
+            });
+          });
+        }
+
+        setServicios(serviciosUnificados.slice(0, 5));
       } catch (err) {
         console.error('Error buscando en Supabase:', err);
       } finally {
@@ -151,32 +172,31 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
     return () => clearTimeout(timer);
   }, [query]);
 
-  // Manejar el submit con Enter
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
 
     setFocused(false);
-    // Redirige al catálogo de la tienda buscando por palabra clave
     router.push(`/tienda?busqueda=${encodeURIComponent(query.trim())}`);
   };
 
-  // Redirección corregida para productos (?producto=ID)
   const seleccionarProducto = (id: number) => {
     setFocused(false);
     router.push(`/tienda?producto=${id}`);
   };
 
-  // Redirección inteligente para servicios y láser
   const seleccionarServicio = (s: ServicioResultado) => {
     setFocused(false);
 
-    if (s.tipo === 'laser') {
-      // Lleva a /laser seleccionando la zona de depilación
+    if (s.tipo === 'laser_zona') {
       const zona = encodeURIComponent(s.nombreZonaOriginal || '');
-      router.push(`/laser?zona=${zona}`);
+      const genero = s.generoOriginal || 'femenino';
+      router.push(`/laser?genero=${genero}&zona=${zona}`);
+    } else if (s.tipo === 'laser_promo') {
+      const promo = encodeURIComponent(s.nombrePromoOriginal || '');
+      const genero = s.generoOriginal || 'femenino';
+      router.push(`/laser?genero=${genero}&promo=${promo}`);
     } else {
-      // Lleva a /servicios seleccionando la categoría o el servicio puntual
       if (s.subtipoOriginal) {
         router.push(`/servicios?servicio=${encodeURIComponent(s.subtipoOriginal)}`);
       } else if (s.categoriaOriginal) {
@@ -193,7 +213,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
 
   return (
     <div className="space-y-3 relative z-30">
-      {/* Saludo */}
       <div className="flex items-center justify-between px-1">
         <div>
           <p className="text-xs font-medium text-stone-500 dark:text-zinc-400">
@@ -205,7 +224,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
         </div>
       </div>
 
-   {/* Input de Búsqueda */}
       <form onSubmit={handleSearchSubmit} className="relative">
         <div className="relative flex items-center">
           <Search className="absolute left-3.5 h-4 w-4 text-stone-400 pointer-events-none" />
@@ -214,7 +232,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setFocused(true)}
-            placeholder="¿Qué servicio o producto buscás hoy?"
+            placeholder="¿Qué servicio, promo o producto buscás hoy?"
             className="w-full rounded-2xl border border-stone-200/80 bg-white dark:bg-zinc-900 dark:border-zinc-800 py-3 pl-10 pr-9 text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 placeholder:text-stone-400 focus:border-[#0E6E55] focus:outline-none focus:ring-2 focus:ring-[#0E6E55]/20 shadow-xs transition-all"
           />
           {loading ? (
@@ -234,10 +252,8 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           ) : null}
         </div>
 
-        {/* Desplegable Flotante */}
         {focused && (
           <>
-            {/* Overlay para cerrar al hacer clic afuera */}
             <div
               className="fixed inset-0 z-10"
               onClick={() => setFocused(false)}
@@ -247,7 +263,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
               ref={dropdownRef}
               className="absolute left-0 right-0 top-full mt-2 z-20 rounded-2xl border border-stone-200 bg-white dark:bg-zinc-900 dark:border-zinc-800 p-3 shadow-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-150 max-h-[380px] overflow-y-auto"
             >
-              {/* CASO 1: Búsqueda Vacía -> Muestra Tags de la BD */}
               {!query.trim() && (
                 <div className="space-y-2">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1">
@@ -274,11 +289,10 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
                 </div>
               )}
 
-              {/* CASO 2: Escribiendo -> Muestra Resultados de Servicios */}
               {servicios.length > 0 && (
                 <div className="space-y-1.5">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1 flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-[#0E6E55]" /> Servicios & Turnos
+                    <Calendar className="h-3 w-3 text-[#0E6E55]" /> Servicios, Zonas & Promos Láser
                   </p>
                   {servicios.map((s) => (
                     <button
@@ -288,7 +302,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
                       className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors text-left cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
-                        {s.tipo === 'laser' ? (
+                        {s.tipo.includes('laser') ? (
                           <Zap className="h-3.5 w-3.5 text-rose-500 fill-rose-500" />
                         ) : (
                           <Sparkles className="h-3.5 w-3.5 text-[#0E6E55]" />
@@ -297,15 +311,16 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
                           {s.nombre}
                         </span>
                       </div>
-                      <span className="text-xs font-bold text-[#0E6E55]">
-                        ${s.precio}
-                      </span>
+                      {s.precio !== undefined && (
+                        <span className="text-xs font-bold text-[#0E6E55]">
+                          ${s.precio.toLocaleString('es-AR')}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
               )}
 
-              {/* CASO 3: Escribiendo -> Muestra Resultados de Productos */}
               {productos.length > 0 && (
                 <div className="space-y-1.5">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1 flex items-center gap-1">
@@ -335,14 +350,13 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
                         </span>
                       </div>
                       <span className="text-xs font-bold text-[#0E6E55]">
-                        ${p.precio}
+                        ${p.precio.toLocaleString('es-AR')}
                       </span>
                     </button>
                   ))}
                 </div>
               )}
 
-              {/* Sin resultados */}
               {query.trim().length >= 2 &&
                 !loading &&
                 productos.length === 0 &&

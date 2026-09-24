@@ -30,25 +30,31 @@ interface Props {
   volverHref?: string;
   onVolver?: () => void;
   volverLabel?: string;
-  colorAccent?: 'violet' | 'indigo' | 'rose';
+  colorAccent?: 'violet' | 'indigo' | 'rose' | 'emerald';
   titulo?: string;
 }
 
 const COLOR_ACCENTS = {
+  emerald: {
+    stepActive: 'bg-[#1c352a] text-white shadow-xs',
+    button: 'bg-[#1c352a] hover:bg-[#183024] text-white',
+    link: 'text-[#1c352a] dark:text-emerald-400 hover:underline',
+    summaryBg: 'bg-[#edf0ec]/60 dark:bg-zinc-800/50 border-stone-200/80 dark:border-zinc-800',
+  },
   violet: {
-    stepActive: 'bg-violet-600 text-white shadow-sm',
+    stepActive: 'bg-violet-600 text-white shadow-xs',
     button: 'bg-violet-600 hover:bg-violet-500 text-white',
     link: 'text-violet-600 hover:text-violet-700',
     summaryBg: 'bg-violet-50/50 border-violet-100',
   },
   indigo: {
-    stepActive: 'bg-indigo-600 text-white shadow-sm',
+    stepActive: 'bg-indigo-600 text-white shadow-xs',
     button: 'bg-indigo-600 hover:bg-indigo-500 text-white',
     link: 'text-indigo-600 hover:text-indigo-700',
     summaryBg: 'bg-indigo-50/50 border-indigo-100',
   },
   rose: {
-    stepActive: 'bg-rose-500 text-white shadow-sm',
+    stepActive: 'bg-rose-500 text-white shadow-xs',
     button: 'bg-rose-500 hover:bg-rose-400 text-white',
     link: 'text-rose-600 hover:text-rose-700',
     summaryBg: 'bg-rose-50/50 border-rose-100',
@@ -64,7 +70,7 @@ export default function FlujoAgendaConfirmacion({
   volverHref,
   onVolver,
   volverLabel = 'Modificar selección',
-  colorAccent = 'violet',
+  colorAccent = 'emerald',
   titulo = 'Agenda tu turno',
 }: Props) {
   const { config } = useConfig();
@@ -98,7 +104,7 @@ export default function FlujoAgendaConfirmacion({
     return null;
   });
 
-  const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.violet;
+  const styles = COLOR_ACCENTS[colorAccent] || COLOR_ACCENTS.emerald;
 
   useEffect(() => {
     async function cargar() {
@@ -146,7 +152,6 @@ export default function FlujoAgendaConfirmacion({
     const nombreLimpio = nombre.trim();
     let codigoReferidoPropio = '';
 
-    // 1. Manejo seguro de cliente
     const { data: clienteExistente } = await supabase
       .from('clientes')
       .select('codigo_referido')
@@ -183,7 +188,6 @@ export default function FlujoAgendaConfirmacion({
       }
     }
 
-    // 2. Validación con la variable correcta de Supabase: referidos_activo
     const sistemaReferidosActivo = configSistema.referidos_activo ?? false;
     const codigoUsadoLimpio = codigoReferidoUsado.trim().toUpperCase();
 
@@ -205,7 +209,6 @@ export default function FlujoAgendaConfirmacion({
     const montoDescuentoAplicar = sistemaReferidosActivo ? descuentoMonto : 0;
     const precioFinal = Math.max(0, precioTotal - montoDescuentoAplicar);
 
-    // Ajuste de creación de fecha local pura
     const [year, month, day] = fecha.split('-').map(Number);
     const [hours, minutes] = hora.split(':').map(Number);
     const fechaHoraInicio = new Date(year, month - 1, day, hours, minutes, 0).toISOString();
@@ -311,18 +314,18 @@ export default function FlujoAgendaConfirmacion({
 
   if (cargandoConfig) {
     return (
-      <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-800" />
-        <p className="text-slate-500 text-xs font-medium">Cargando disponibilidad...</p>
+      <main className="min-h-screen bg-[#edf0ec] dark:bg-zinc-950 flex flex-col items-center justify-center p-4 sm:p-6 gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#1c352a] dark:text-emerald-400" />
+        <p className="text-stone-500 dark:text-zinc-400 text-xs font-medium">Cargando disponibilidad...</p>
       </main>
     );
   }
 
   if (!configCalendario || !configSistema) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-sm max-w-sm w-full text-center">
-          <p className="text-slate-700 text-sm font-medium mb-4">No se pudo cargar la configuración del calendario.</p>
+      <main className="min-h-screen bg-[#edf0ec] dark:bg-zinc-950 flex items-center justify-center p-4 sm:p-6">
+        <div className="bg-white/90 dark:bg-zinc-900 border border-stone-200/80 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs max-w-sm w-full text-center">
+          <p className="text-stone-700 dark:text-zinc-300 text-sm font-medium mb-4">No se pudo cargar la configuración del calendario.</p>
           {volverHref ? (
             <Link href={volverHref} className={`text-xs font-bold ${styles.link}`}>Volver al inicio</Link>
           ) : onVolver ? (
@@ -363,37 +366,39 @@ export default function FlujoAgendaConfirmacion({
   })();
 
   return (
-    <main className="min-h-screen bg-slate-50 px-3 py-4 sm:p-6 md:p-12 pb-20 sm:pb-24 relative">
+    <main className="min-h-screen bg-[#edf0ec] dark:bg-zinc-950 px-3 py-4 sm:p-6 md:p-12 pb-20 sm:pb-24 relative font-sans">
       <div className="max-w-lg mx-auto">
         <div className="mb-3 sm:mb-4">
           {volverHref ? (
-            <Link href={volverHref} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors p-1 -ml-1">
+            <Link href={volverHref} className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-stone-200/80 dark:border-zinc-800 px-3.5 py-2 rounded-2xl shadow-xs hover:text-stone-900 dark:hover:text-white transition-all">
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>{volverLabel}</span>
             </Link>
           ) : onVolver ? (
-            <button type="button" onClick={onVolver} className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors p-1 -ml-1">
+            <button type="button" onClick={onVolver} className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-stone-200/80 dark:border-zinc-800 px-3.5 py-2 rounded-2xl shadow-xs hover:text-stone-900 dark:hover:text-white transition-all">
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>{volverLabel}</span>
             </button>
           ) : null}
         </div>
 
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-7 shadow-xs">
+        <div className="bg-white/90 dark:bg-zinc-900 backdrop-blur-sm border border-stone-200/80 dark:border-zinc-800 rounded-[28px] p-4 sm:p-7 shadow-xs">
           <div className="flex items-center gap-1.5 sm:gap-2 mb-5 sm:mb-6 overflow-x-auto pb-1 no-scrollbar">
-            <span className={`text-[11px] sm:text-xs font-bold px-2.5 py-1 sm:px-3 rounded-full transition-all flex items-center gap-1 sm:gap-1.5 shrink-0 ${paso === 'agenda' ? styles.stepActive : 'bg-slate-100 text-slate-500'}`}>
-              <Calendar className="w-3 h-3" /> 1. Fecha y hora
+            <span className={`text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 shrink-0 ${paso === 'agenda' ? styles.stepActive : 'bg-stone-100 dark:bg-zinc-800 text-stone-500 dark:text-zinc-400'}`}>
+              <Calendar className="w-3.5 h-3.5" /> 1. Fecha y hora
             </span>
-            <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
-            <span className={`text-[11px] sm:text-xs font-bold px-2.5 py-1 sm:px-3 rounded-full transition-all flex items-center gap-1 sm:gap-1.5 shrink-0 ${paso === 'confirmacion' ? styles.stepActive : 'bg-slate-100 text-slate-500'}`}>
-              <CheckCircle2 className="w-3 h-3" /> 2. Confirmación
+            <ChevronRight className="w-3.5 h-3.5 text-stone-300 dark:text-zinc-600 shrink-0" />
+            <span className={`text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 shrink-0 ${paso === 'confirmacion' ? styles.stepActive : 'bg-stone-100 dark:bg-zinc-800 text-stone-500 dark:text-zinc-400'}`}>
+              <CheckCircle2 className="w-3.5 h-3.5" /> 2. Confirmación
             </span>
           </div>
 
-          <div className="mb-5 sm:mb-6">
-            <h1 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">{titulo}</h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium leading-normal line-clamp-2 sm:line-clamp-none">{detalleTexto}</p>
-          </div>
+          {titulo && (
+            <div className="mb-5 sm:mb-6">
+              <h1 className="text-lg sm:text-2xl font-black text-stone-900 dark:text-white tracking-tight leading-tight">{titulo}</h1>
+              <p className="text-xs sm:text-sm text-stone-500 dark:text-zinc-400 mt-1 font-medium leading-normal line-clamp-2 sm:line-clamp-none">{detalleTexto}</p>
+            </div>
+          )}
 
           {paso === 'agenda' && (
             <PasoSeleccionFechaHora
@@ -419,7 +424,7 @@ export default function FlujoAgendaConfirmacion({
               <button
                 type="button"
                 onClick={() => setPaso('agenda')}
-                className={`inline-flex items-center gap-1 text-xs font-semibold mb-4 transition-colors p-1 -ml-1 ${styles.link}`}
+                className={`inline-flex items-center gap-1.5 text-xs font-bold mb-4 transition-colors ${styles.link}`}
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Cambiar fecha u hora</span>
