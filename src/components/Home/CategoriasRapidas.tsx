@@ -32,8 +32,8 @@ export default function CategoriasRapidas() {
               href={cat.href}
               className="flex flex-col items-center gap-2 p-2.5 rounded-2xl bg-[#f7f5f0]/80 dark:bg-zinc-900/60 border border-[#e8e4d9] dark:border-zinc-800 hover:scale-[1.02] active:scale-[0.98] transition-all text-center group"
             >
-              {/* Contenedor del ícono en Verde Salvia elegante */}
-              <div className="p-2.5 rounded-xl bg-[#1e2e28]/10 dark:bg-[#a3c9b8]/10 text-[#1e2e28] dark:text-[#a3c9b8] group-hover:bg-[#1e2e28] group-hover:text-white transition-colors">
+              {/* Contenedor con fondo suave e ícono en Verde Menta Bonito (#2d5747 / #a3c9b8) */}
+              <div className="p-2.5 rounded-xl bg-[#a3c9b8]/20 text-[#2d5747] dark:text-[#a3c9b8] group-hover:bg-[#1e2e28] group-hover:text-white transition-colors">
                 <Icon className="w-5 h-5" />
               </div>
               <span className="text-[11px] font-bold text-stone-700 dark:text-zinc-300 leading-tight">
