@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-import HeaderBusqueda from '@/components/Home/HeaderBusqueda';
-import AccionesRapidas from '@/components/Home/AccionesRapidas';
-import CategoriasRapidas from '@/components/Home/CategoriasRapidas';
-import BannersCarousel from '@/components/Home/BannersCarousel';
-import GuiaReservaCard from '@/components/Home/GuiaReservaCard';
+import HeaderBusqueda from '@/components/home/HeaderBusqueda';
+import AccionesRapidas from '@/components/home/AccionesRapidas';
+import CategoriasRapidas from '@/components/home/CategoriasRapidas';
+import BannersCarousel from '@/components/home/BannersCarousel';
+import GuiaReservaCard from '@/components/home/GuiaReservaCard';
 
 interface Banner {
   id: string;
@@ -49,37 +49,44 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#e8eee9] dark:bg-zinc-950 transition-colors">
-      <main className="max-w-md mx-auto min-h-screen pb-28 pt-3 px-4 space-y-6 text-stone-800 dark:text-zinc-100">
+      <main className="max-w-md md:max-w-3xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-3 md:pt-8 px-4 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300">
         
-        {/* 1. Saludo y Búsqueda */}
-        <section className="space-y-1">
+        {/* 1. Header y Búsqueda (Ancho completo) */}
+        <section className="mb-6 md:mb-8">
           <HeaderBusqueda nombreEmpresa="Luminares Estética" />
         </section>
 
-        {/* 2. Botón Principal (Agendar Turno) */}
-        <section className="relative">
-          <AccionesRapidas />
-        </section>
+        {/* Layout en Escritorio: 2 Columnas (lg) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          
+          {/* Columna Izquierda (Acciones principales + Categorías) */}
+          <div className="lg:col-span-7 space-y-6">
+            <section className="relative">
+              <AccionesRapidas />
+            </section>
 
-        {/* 3. Categorías Rápidas */}
-        <section className="space-y-2">
-          <CategoriasRapidas />
-        </section>
-
-        {/* 4. Banners Promocionales */}
-        <section className="space-y-2">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-xs font-black tracking-wider text-stone-600 uppercase dark:text-zinc-400">
-              Novedades & Ofertas
-            </h2>
+            <section className="space-y-2">
+              <CategoriasRapidas />
+            </section>
           </div>
-          <BannersCarousel banners={banners} isLoading={loadingBanners} />
-        </section>
 
-        {/* 5. Guías de Reserva y Consulta */}
-        <section className="space-y-2">
-          <GuiaReservaCard />
-        </section>
+          {/* Columna Derecha (Promociones + Guías) */}
+          <div className="lg:col-span-5 space-y-6">
+            <section className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-xs font-black tracking-wider text-stone-600 uppercase dark:text-zinc-400">
+                  Novedades & Ofertas
+                </h2>
+              </div>
+              <BannersCarousel banners={banners} isLoading={loadingBanners} />
+            </section>
+
+            <section className="space-y-2">
+              <GuiaReservaCard />
+            </section>
+          </div>
+
+        </div>
 
       </main>
     </div>
