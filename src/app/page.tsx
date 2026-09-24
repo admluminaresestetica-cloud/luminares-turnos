@@ -3,11 +3,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
-// Componentes modulares de la Etapa 2
 import HeaderBusqueda from '@/components/Home/HeaderBusqueda';
-import BannersCarousel from '@/components/Home/BannersCarousel';
 import AccionesRapidas from '@/components/Home/AccionesRapidas';
 import CategoriasRapidas from '@/components/Home/CategoriasRapidas';
+import BannersCarousel from '@/components/Home/BannersCarousel';
 import GuiaReservaCard from '@/components/Home/GuiaReservaCard';
 
 interface Banner {
@@ -23,9 +22,7 @@ interface Banner {
 export default function HomePage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
 
-  // Consulta dinámica a Supabase para cargar Banners activos
   useEffect(() => {
     async function fetchBanners() {
       try {
@@ -52,20 +49,20 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-white dark:bg-zinc-950 text-stone-800 dark:text-zinc-100 pb-24 pt-2 px-4 max-w-md mx-auto space-y-5">
-      {/* 1. Header de Búsqueda y Saludo */}
+      {/* 1. Saludo y Búsqueda */}
       <HeaderBusqueda
         nombreEmpresa="Luminares Estética"
-        onSearchChange={(term) => setSearchTerm(term)}
+        onSearchChange={() => {}}
       />
 
-      {/* 2. Banners Dinámicos de Supabase */}
-      <BannersCarousel banners={banners} isLoading={loadingBanners} />
-
-      {/* 3. Acción Principal (Agendar Turno) */}
+      {/* 2. Botón Principal (Agendar Turno) */}
       <AccionesRapidas />
 
-      {/* 4. Categorías Rápidas */}
+      {/* 3. Categorías Rápidas */}
       <CategoriasRapidas />
+
+      {/* 4. Banners Promocionales (Ubicados abajo) */}
+      <BannersCarousel banners={banners} isLoading={loadingBanners} />
 
       {/* 5. Guías de Reserva y Consulta */}
       <GuiaReservaCard />
