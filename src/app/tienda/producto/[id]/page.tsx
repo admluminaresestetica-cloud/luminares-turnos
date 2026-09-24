@@ -7,12 +7,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
-// 1. Metadatos dinámicos que lee el bot de WhatsApp (Servidor)
+// 1. Metadatos dinámicos para redes sociales / WhatsApp
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = params;
+  const { id } = await params;
 
   const { data: producto } = await supabase
     .from("productos")
@@ -59,7 +59,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// 2. Componente de servidor que renderiza las etiquetas y delega la redirección al cliente
-export default function ProductoPage({ params }: Props) {
-  return <RedireccionarTienda productoId={params.id} />;
+// 2. Componente de servidor que resuelve la promesa y pasa el ID al cliente
+export default async function ProductoPage({ params }: Props) {
+  const { id } = await params;
+  return <RedireccionarTienda productoId={id} />;
 }
