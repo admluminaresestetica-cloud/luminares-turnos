@@ -14,7 +14,7 @@ const CATEGORIAS: Categoria[] = [
   { id: 'laser', titulo: 'Depilación Láser', href: '/laser', icon: Zap },
   { id: 'estetica', titulo: 'Estética', href: '/servicios', icon: Flower2 },
   { id: 'tienda', titulo: 'Tienda', href: '/tienda', icon: ShoppingBag },
-  { id: 'promos', titulo: 'Ofertas & Combos', href: '/promos', icon: Tag },
+  { id: 'promos', titulo: 'Ofertas & Combos', href: '/servicios?categoria=promos', icon: Tag },
 ];
 
 export default function CategoriasRapidas() {
