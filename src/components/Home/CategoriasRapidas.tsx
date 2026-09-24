@@ -20,7 +20,7 @@ const CATEGORIAS: Categoria[] = [
 export default function CategoriasRapidas() {
   return (
     <div className="space-y-2">
-      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+      <h3 className="text-xs font-bold uppercase tracking-wider text-stone-400 dark:text-zinc-500">
         Categorías
       </h3>
       <div className="grid grid-cols-4 gap-2">
@@ -30,13 +30,13 @@ export default function CategoriasRapidas() {
             <Link
               key={cat.id}
               href={cat.href}
-              className="flex flex-col items-center gap-2 p-2.5 rounded-2xl bg-slate-50/80 dark:bg-zinc-900/60 border border-slate-100 dark:border-zinc-800/80 hover:scale-[1.02] active:scale-[0.98] transition-all text-center group"
+              className="flex flex-col items-center gap-2 p-2.5 rounded-2xl bg-[#f7f5f0]/80 dark:bg-zinc-900/60 border border-[#e8e4d9] dark:border-zinc-800 hover:scale-[1.02] active:scale-[0.98] transition-all text-center group"
             >
-              {/* Contenedor del ícono unificado en tono Azul Elegante */}
-              <div className="p-2.5 rounded-xl bg-slate-900/5 dark:bg-blue-500/10 text-slate-800 dark:text-blue-400 group-hover:bg-slate-900 group-hover:text-white dark:group-hover:bg-blue-600 dark:group-hover:text-white transition-colors">
+              {/* Contenedor del ícono en Verde Salvia elegante */}
+              <div className="p-2.5 rounded-xl bg-[#1e2e28]/10 dark:bg-[#a3c9b8]/10 text-[#1e2e28] dark:text-[#a3c9b8] group-hover:bg-[#1e2e28] group-hover:text-white transition-colors">
                 <Icon className="w-5 h-5" />
               </div>
-              <span className="text-[11px] font-bold text-slate-700 dark:text-zinc-300 leading-tight">
+              <span className="text-[11px] font-bold text-stone-700 dark:text-zinc-300 leading-tight">
                 {cat.titulo}
               </span>
             </Link>
