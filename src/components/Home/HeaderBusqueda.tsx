@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2 } from 'lucide-react';
+import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface HeaderBusquedaProps {
@@ -21,6 +21,10 @@ interface ServicioResultado {
   nombre: string;
   tipo: 'general' | 'laser';
   precio: number;
+  // Campos auxiliares para armar la URL exacta
+  categoriaOriginal?: string;
+  subtipoOriginal?: string;
+  nombreZonaOriginal?: string;
 }
 
 interface TagBusqueda {
@@ -105,12 +109,10 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           reqServiciosLaser,
         ]);
 
-        // Mapear productos
         if (resProd.data) {
           setProductos(resProd.data);
         }
 
-        // Mapear y unificar servicios
         const serviciosUnificados: ServicioResultado[] = [];
 
         if (resServGen.data) {
@@ -120,6 +122,8 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
               nombre: item.subtipo || item.categoria,
               tipo: 'general',
               precio: item.precio,
+              categoriaOriginal: item.categoria,
+              subtipoOriginal: item.subtipo,
             });
           });
         }
@@ -131,6 +135,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
               nombre: `Depilación ${item.nombre_zona}`,
               tipo: 'laser',
               precio: item.precio_lista,
+              nombreZonaOriginal: item.nombre_zona,
             });
           });
         }
@@ -141,7 +146,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
       } finally {
         setLoading(false);
       }
-    }, 250); // Debounce de 250ms para optimizar peticiones
+    }, 250);
 
     return () => clearTimeout(timer);
   }, [query]);
@@ -152,18 +157,34 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
     if (!query.trim()) return;
 
     setFocused(false);
+    // Redirige al catálogo de la tienda buscando por palabra clave
     router.push(`/tienda?busqueda=${encodeURIComponent(query.trim())}`);
   };
 
+  // Redirección corregida para productos (?producto=ID)
   const seleccionarProducto = (id: number) => {
     setFocused(false);
-    router.push(`/tienda?id=${id}`);
+    router.push(`/tienda?producto=${id}`);
   };
 
-  const seleccionarServicio = () => {
+  // Redirección inteligente para servicios y láser
+  const seleccionarServicio = (s: ServicioResultado) => {
     setFocused(false);
-    // Redirige al flujo de reserva o ancla de turnos
-    router.push('/#agendar');
+
+    if (s.tipo === 'laser') {
+      // Lleva a /laser seleccionando la zona de depilación
+      const zona = encodeURIComponent(s.nombreZonaOriginal || '');
+      router.push(`/laser?zona=${zona}`);
+    } else {
+      // Lleva a /servicios seleccionando la categoría o el servicio puntual
+      if (s.subtipoOriginal) {
+        router.push(`/servicios?servicio=${encodeURIComponent(s.subtipoOriginal)}`);
+      } else if (s.categoriaOriginal) {
+        router.push(`/servicios?categoria=${encodeURIComponent(s.categoriaOriginal)}`);
+      } else {
+        router.push('/servicios');
+      }
+    }
   };
 
   const seleccionarTag = (tag: TagBusqueda) => {
@@ -184,7 +205,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
         </div>
       </div>
 
-      {/* Input de Búsqueda */}
+   {/* Input de Búsqueda */}
       <form onSubmit={handleSearchSubmit} className="relative">
         <div className="relative flex items-center">
           <Search className="absolute left-3.5 h-4 w-4 text-stone-400 pointer-events-none" />
@@ -206,7 +227,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
                 setProductos([]);
                 setServicios([]);
               }}
-              className="absolute right-3 text-stone-400 hover:text-stone-600 p-1"
+              className="absolute right-3 text-stone-400 hover:text-stone-600 p-1 cursor-pointer"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -239,7 +260,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
                           key={tag.id}
                           type="button"
                           onClick={() => seleccionarTag(tag)}
-                          className="px-3 py-1.5 rounded-xl bg-stone-100 dark:bg-zinc-800 hover:bg-[#0E6E55]/10 hover:text-[#0E6E55] text-xs font-semibold text-stone-700 dark:text-zinc-300 transition-colors"
+                          className="px-3 py-1.5 rounded-xl bg-stone-100 dark:bg-zinc-800 hover:bg-[#0E6E55]/10 hover:text-[#0E6E55] text-xs font-semibold text-stone-700 dark:text-zinc-300 transition-colors cursor-pointer"
                         >
                           {tag.nombre}
                         </button>
@@ -263,11 +284,15 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
                     <button
                       key={s.id}
                       type="button"
-                      onClick={seleccionarServicio}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors text-left"
+                      onClick={() => seleccionarServicio(s)}
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors text-left cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
-                        <Sparkles className="h-3.5 w-3.5 text-[#0E6E55]" />
+                        {s.tipo === 'laser' ? (
+                          <Zap className="h-3.5 w-3.5 text-rose-500 fill-rose-500" />
+                        ) : (
+                          <Sparkles className="h-3.5 w-3.5 text-[#0E6E55]" />
+                        )}
                         <span className="text-xs font-semibold text-stone-800 dark:text-zinc-200">
                           {s.nombre}
                         </span>
@@ -291,7 +316,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
                       key={p.id}
                       type="button"
                       onClick={() => seleccionarProducto(p.id)}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors text-left"
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors text-left cursor-pointer"
                     >
                       <div className="flex items-center gap-2.5">
                         {p.imagen_url ? (
@@ -327,7 +352,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
                     <button
                       type="button"
                       onClick={handleSearchSubmit}
-                      className="block mx-auto mt-1 font-bold text-[#0E6E55] hover:underline"
+                      className="block mx-auto mt-1 font-bold text-[#0E6E55] hover:underline cursor-pointer"
                     >
                       Buscar &quot;{query}&quot; en la tienda →
                     </button>
