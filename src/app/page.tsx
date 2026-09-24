@@ -3,6 +3,7 @@
 import HeaderBusqueda from '@/components/Home/HeaderBusqueda';
 import AccionesRapidas from '@/components/Home/AccionesRapidas';
 import CategoriasRapidas from '@/components/Home/CategoriasRapidas';
+import GuiaReservaCard from '@/components/Home/GuiaReservaCard'; // ✨ Importamos la tarjeta de Guías
 import BannersCarousel from '@/components/Home/BannersCarousel';
 import BottomNav from '@/components/Home/BottomNav';
 
@@ -16,8 +17,11 @@ export default function LandingPage() {
         {/* Fila de Accesos Redondos */}
         <AccionesRapidas />
 
-        {/* Tarjetas de Guía e Información */}
+        {/* Categorías Principales */}
         <CategoriasRapidas />
+
+        {/* Tarjetas de Guía e Información Interactivas */}
+        <GuiaReservaCard />
 
         {/* Carrusel de Banners Dinámicos */}
         <BannersCarousel />
