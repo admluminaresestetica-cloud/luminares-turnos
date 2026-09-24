@@ -46,7 +46,6 @@ export default function GuiaReservaCard() {
 
   return (
     <div className="space-y-4">
-      {/* Tarjetas Superiores en tono Arena / Marfil */}
       <div className="grid grid-cols-2 gap-3">
         {/* Guía de Reserva */}
         <button
@@ -59,7 +58,8 @@ export default function GuiaReservaCard() {
           }}
           className="text-left p-3.5 rounded-2xl bg-[#f7f5f0]/80 dark:bg-zinc-900/60 border border-[#e8e4d9] dark:border-zinc-800 flex flex-col justify-between space-y-2 active:scale-[0.98] hover:scale-[1.01] transition-all shadow-2xs w-full group"
         >
-          <div className="w-full h-16 rounded-xl bg-[#1e2e28]/10 dark:bg-[#a3c9b8]/10 flex items-center justify-center text-[#1e2e28] dark:text-[#a3c9b8] group-hover:bg-[#1e2e28] group-hover:text-white transition-colors">
+          {/* Fondo Verde Menta Transparente */}
+          <div className="w-full h-16 rounded-xl bg-[#a3c9b8]/20 flex items-center justify-center text-[#2d5747] dark:text-[#a3c9b8] group-hover:bg-[#1e2e28] group-hover:text-white transition-colors">
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
@@ -69,7 +69,7 @@ export default function GuiaReservaCard() {
             <p className="text-[10px] text-stone-500 dark:text-zinc-400 font-medium leading-tight mt-0.5">
               {guiaPrincipal.subtitulo}
             </p>
-            <span className="text-[10px] font-bold text-[#1e2e28] dark:text-[#a3c9b8] block mt-1 underline">
+            <span className="text-[10px] font-bold text-[#2d5747] dark:text-[#a3c9b8] block mt-1 underline">
               (Ver guía)
             </span>
           </div>
@@ -80,7 +80,8 @@ export default function GuiaReservaCard() {
           href="/mis-turnos"
           className="p-3.5 rounded-2xl bg-[#f7f5f0]/80 dark:bg-zinc-900/60 border border-[#e8e4d9] dark:border-zinc-800 flex flex-col justify-between space-y-2 active:scale-[0.98] hover:scale-[1.01] transition-all shadow-2xs group"
         >
-          <div className="w-full h-16 rounded-xl bg-[#1e2e28]/10 dark:bg-[#a3c9b8]/10 flex items-center justify-center text-[#1e2e28] dark:text-[#a3c9b8] group-hover:bg-[#1e2e28] group-hover:text-white transition-colors">
+          {/* Fondo Verde Menta Transparente */}
+          <div className="w-full h-16 rounded-xl bg-[#a3c9b8]/20 flex items-center justify-center text-[#2d5747] dark:text-[#a3c9b8] group-hover:bg-[#1e2e28] group-hover:text-white transition-colors">
             <Lock className="w-6 h-6" />
           </div>
           <div>
@@ -90,7 +91,7 @@ export default function GuiaReservaCard() {
             <p className="text-[10px] text-stone-500 dark:text-zinc-400 font-medium leading-tight mt-0.5">
               Ingresá Celular + Código
             </p>
-            <span className="text-[10px] font-bold text-[#1e2e28] dark:text-[#a3c9b8] block mt-1 underline">
+            <span className="text-[10px] font-bold text-[#2d5747] dark:text-[#a3c9b8] block mt-1 underline">
               (Consultar aquí)
             </span>
           </div>
