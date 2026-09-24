@@ -5,7 +5,7 @@ import { Clock, ArrowRight } from 'lucide-react';
 interface Props {
   precio: number;
   duracion: number;
-  puedeContinuار: boolean;
+  puedeContinuar: boolean; // ✅ CORREGIDO
   onContinuar: () => void;
   detalle?: string;
 }

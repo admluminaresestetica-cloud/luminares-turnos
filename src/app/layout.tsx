@@ -1,6 +1,5 @@
 'use client';
 
-import type { Viewport } from "next";
 import localFont from "next/font/local";
 import { usePathname } from "next/navigation";
 import "./globals.css";
@@ -33,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="bg-white" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-white text-slate-900 min-h-screen pb-16 md:pb-0`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-white text-slate-900 min-h-screen flex flex-col pb-16 md:pb-0`}
       >
         <ThemeProvider
           attribute="class"
@@ -43,13 +42,17 @@ export default function RootLayout({
         >
           <ConfigProvider>
             <CarritoProvider>
-              {children}
+              <div className="flex-1 w-full">
+                {children}
+              </div>
               
               {/* Elementos públicos que se ocultan en el panel /admin */}
               {!isAdmin && (
                 <>
                   <Footer />
-                  <BottomNav />
+                  <div className="md:hidden">
+                    <BottomNav />
+                  </div>
                 </>
               )}
             </CarritoProvider>
