@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
@@ -24,7 +24,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export default function TiendaPage() {
+function TiendaContenido() {
   const { config } = useConfig();
   const [mounted, setMounted] = useState(false);
   const [cargando, setCargando] = useState(true);
@@ -49,14 +49,27 @@ export default function TiendaPage() {
     ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 1), 0)
     : 0;
 
-  // Listener para detectar cuando Mercado Pago retorna con éxito (?status=success)
+  // 1. Lectura de parámetros de la URL (Mercado Pago, Categoría, Etiqueta)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Si regresa de Mercado Pago con éxito
     const status = urlParams.get("status");
-
     if (status === "success" && typeof vaciarCarrito === "function") {
       vaciarCarrito();
       window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // Si viene desde un Banner con filtro de categoría
+    const catParam = urlParams.get("categoria");
+    if (catParam) {
+      setCategoriaFiltro(catParam);
+    }
+
+    // Si viene desde un Banner con filtro de etiqueta
+    const tagParam = urlParams.get("etiqueta") || urlParams.get("tag") || urlParams.get("promo");
+    if (tagParam) {
+      setTagSeleccionado(tagParam);
     }
   }, [vaciarCarrito]);
 
@@ -123,6 +136,7 @@ export default function TiendaPage() {
     fetchTags();
   }, []);
 
+  // Abrir modal de un producto puntual si viene en la URL (?producto=ID)
   useEffect(() => {
     if (productos.length > 0) {
       const params = new URLSearchParams(window.location.search);
@@ -176,7 +190,7 @@ export default function TiendaPage() {
         return precioBase > p.precio;
       });
     } else if (categoriaFiltro !== "Todos") {
-      resultado = resultado.filter((p) => p.categoria === categoriaFiltro);
+      resultado = resultado.filter((p) => p.categoria.toLowerCase() === categoriaFiltro.toLowerCase());
     }
 
     return resultado;
@@ -260,8 +274,7 @@ export default function TiendaPage() {
               </div>
             </Link>
           </div>
-
-          <button
+         <button
             onClick={() => setModalAbierto(true)}
             className="relative flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-800 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 active:scale-95 cursor-pointer shadow-xs"
           >
@@ -345,5 +358,19 @@ export default function TiendaPage() {
 
       <FooterTienda />
     </div>
+  );
+}
+
+export default function TiendaPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center font-sans">
+          <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#0E6E55] border-t-transparent" />
+        </div>
+      }
+    >
+      <TiendaContenido />
+    </Suspense>
   );
 }

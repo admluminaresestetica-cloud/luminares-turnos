@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
-import { ImagePlus, Trash2, Check, X, Tag, Link as LinkIcon, MoveUp, MoveDown, Loader2 } from 'lucide-react';
+import { ImagePlus, Trash2, Check, X, Tag, Link as LinkIcon, Loader2 } from 'lucide-react';
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,7 +29,7 @@ export default function BannersHomeTab() {
   const [titulo, setTitulo] = useState('');
   const [subtitulo, setSubtitulo] = useState('');
   const [cupon, setCupon] = useState('');
-  const [linkDestino, setLinkDestino] = useState('/laser');
+  const [linkDestino, setLinkDestino] = useState('/tienda');
   const [archivoImagen, setArchivoImagen] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -89,7 +89,7 @@ export default function BannersHomeTab() {
           subtitulo,
           imagen_url,
           cupon_codigo: cupon.toUpperCase().trim() || null,
-          link_destino: linkDestino,
+          link_destino: linkDestino.trim() || null,
           orden: banners.length + 1,
           activo: true,
         },
@@ -101,7 +101,7 @@ export default function BannersHomeTab() {
       setTitulo('');
       setSubtitulo('');
       setCupon('');
-      setLinkDestino('/laser');
+      setLinkDestino('/tienda');
       setArchivoImagen(null);
       setPreviewUrl(null);
       await cargarBanners();
@@ -188,21 +188,45 @@ export default function BannersHomeTab() {
             </div>
           </div>
 
+          {/* Campo de URL / Ruta personalizada */}
           <div>
             <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 mb-1">
-              Ruta de Destino
+              Ruta / URL de Destino
             </label>
             <div className="relative">
               <LinkIcon className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-              <select
+              <input
+                type="text"
                 value={linkDestino}
                 onChange={(e) => setLinkDestino(e.target.value)}
+                placeholder="Ej: /tienda?categoria=combos"
                 className="w-full pl-9 rounded-xl border border-slate-200 p-2.5 text-sm font-medium dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              />
+            </div>
+            {/* Atajos / Sugerencias rápidas */}
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              <span className="text-[10px] text-slate-400 font-medium self-center">Rápidos:</span>
+              <button
+                type="button"
+                onClick={() => setLinkDestino('/tienda')}
+                className="text-[10px] bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 text-slate-600 dark:text-zinc-300 px-2 py-0.5 rounded-md font-semibold"
               >
-                <option value="/laser">Sección Láser</option>
-                <option value="/tienda">Tienda Online</option>
-                <option value="/servicios">Servicios Generales</option>
-              </select>
+                /tienda
+              </button>
+              <button
+                type="button"
+                onClick={() => setLinkDestino('/servicios?categoria=promos')}
+                className="text-[10px] bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 text-slate-600 dark:text-zinc-300 px-2 py-0.5 rounded-md font-semibold"
+              >
+                /servicios?categoria=promos
+              </button>
+              <button
+                type="button"
+                onClick={() => setLinkDestino('/laser')}
+                className="text-[10px] bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 text-slate-600 dark:text-zinc-300 px-2 py-0.5 rounded-md font-semibold"
+              >
+                /laser
+              </button>
             </div>
           </div>
         </div>

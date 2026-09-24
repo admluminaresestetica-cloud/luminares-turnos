@@ -19,9 +19,11 @@ import HorariosTab from './components/HorariosTab'
 import PreciosTab from './components/PreciosTab'
 import GeneralesTab from './components/GeneralesTab'
 import BannersAjustesTab from './components/BannersAjustesTab'
+import BannersHomeTab from './components/BannersHomeTab'
+import GuiasAjustesTab from './components/GuiasAjustesTab' // ✨ 1. IMPORTAMOS LA PESTAÑA DE GUÍAS E INSTRUCTIVOS
 import ReferidosTab from './components/ReferidosTab'
 import ConfiguracionAnamnesisTab from './components/ConfiguracionAnamnesis'
-import ConfiguracionPinTab from './components/ConfiguracionPinTab' // 1. IMPORTAMOS LA PESTAÑA DE PIN
+import ConfiguracionPinTab from './components/ConfiguracionPinTab'
 
 import ModalServicioLaser from '@/app/admin/turnos/components/modals/ModalServicioLaser'
 import ModalPromo from '@/app/admin/turnos/components/modals/ModalPromo'
@@ -37,10 +39,20 @@ export default function AjustesAdminPage() {
   const [cargandoSesion, setCargandoSesion] = useState(true)
   const [autenticado, setAutenticado] = useState(false)
 
-  // 2. SUMAMOS 'seguridad' AL TIPO DE activeTab
+  // ✨ 2. AGREGAMOS 'guias_app' AL TIPO Y ESTADO INICIAL
   const [activeTab, setActiveTab] = useState<
-    'empresa' | 'agenda' | 'precios' | 'generales' | 'banners' | 'referidos' | 'anamnesis' | 'faqs' | 'seguridad'
-  >('empresa')
+    | 'empresa'
+    | 'banners_home'
+    | 'guias_app'
+    | 'agenda'
+    | 'precios'
+    | 'generales'
+    | 'banners'
+    | 'referidos'
+    | 'anamnesis'
+    | 'faqs'
+    | 'seguridad'
+  >('banners_home')
 
   const configAgendaProps = useConfigCalendario()
   const precios = usePreciosLaser()
@@ -50,7 +62,9 @@ export default function AjustesAdminPage() {
   // Validación de Sesión de Admin
   useEffect(() => {
     const verificarSesion = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
       if (!session) {
         router.push('/admin/login?redirect=/admin/ajustes')
@@ -66,7 +80,9 @@ export default function AjustesAdminPage() {
   if (cargandoSesion) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-zinc-950">
-        <p className="text-xs font-semibold text-slate-500 dark:text-zinc-400">Verificando permisos...</p>
+        <p className="text-xs font-semibold text-slate-500 dark:text-zinc-400">
+          Verificando permisos...
+        </p>
       </div>
     )
   }
@@ -78,9 +94,11 @@ export default function AjustesAdminPage() {
       {/* Encabezado con Botón de Volver */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100">Ajustes del Negocio</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100">
+            Ajustes del Negocio
+          </h1>
           <p className="text-sm text-slate-500 dark:text-zinc-400">
-            Administrá la información dinámica de tu marca, datos de contacto, horarios, servicios, tarifas, banners, referidos, ficha médica y claves de acceso.
+            Administrá la información dinámica de tu marca, datos de contacto, horarios, servicios, tarifas, banners, guías e instructivos, referidos, ficha médica y claves de acceso.
           </p>
         </div>
 
@@ -104,6 +122,29 @@ export default function AjustesAdminPage() {
           }`}
         >
           Empresa y Configuración
+        </button>
+
+        <button
+          onClick={() => setActiveTab('banners_home')}
+          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === 'banners_home'
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
+          }`}
+        >
+          Banners Inicio App
+        </button>
+
+        {/* ✨ 3. PESTAÑA NUEVA: GUÍAS E INSTRUCTIVOS */}
+        <button
+          onClick={() => setActiveTab('guias_app')}
+          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === 'guias_app'
+              ? 'bg-teal-600 text-white shadow-sm'
+              : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
+          }`}
+        >
+          Guías e Instructivos
         </button>
 
         <button
@@ -147,7 +188,7 @@ export default function AjustesAdminPage() {
               : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
           }`}
         >
-          Banners y Visuales
+          Banners Secundarios
         </button>
 
         <button
@@ -183,7 +224,6 @@ export default function AjustesAdminPage() {
           Preguntas Frecuentes (FAQ)
         </button>
 
-        {/* 3. BOTÓN DE LA PESTAÑA SEGURIDAD */}
         <button
           onClick={() => setActiveTab('seguridad')}
           className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
@@ -198,6 +238,11 @@ export default function AjustesAdminPage() {
 
       {/* Contenido según la pestaña activa */}
       {activeTab === 'empresa' && <FormularioEmpresaTab />}
+
+      {activeTab === 'banners_home' && <BannersHomeTab />}
+
+      {/* ✨ 4. RENDERIZADO DE LA PESTAÑA GUÍAS */}
+      {activeTab === 'guias_app' && <GuiasAjustesTab />}
 
       {activeTab === 'agenda' && <HorariosTab {...configAgendaProps} />}
 
@@ -251,7 +296,6 @@ export default function AjustesAdminPage() {
         </div>
       )}
 
-      {/* 4. CONTENIDO DE LA PESTAÑA SEGURIDAD */}
       {activeTab === 'seguridad' && <ConfiguracionPinTab />}
 
       {/* MODALES DE EDICIÓN Y ALTA DE SERVICIOS */}
@@ -262,37 +306,32 @@ export default function AjustesAdminPage() {
           onClose={precios.cerrarModalServicio}
           onSaveSuccess={() => {
             precios.cerrarModalServicio()
-            // Aquí puedes llamar a la función que recarga tus datos de precios/servicios láser, por ejemplo:
-            // precios.recargarDatos() o equivalente que tengas en tu hook
           }}
         />
       )}
       {precios.modalPromo && precios.promoEdit && (
-  <ModalPromo
-    promoEdit={precios.promoEdit}
-    setPromoEdit={precios.setPromoEdit}
-    servicios={precios.servicios}
-    onToggleZona={precios.toggleZonaEnPromo}
-    onClose={precios.cerrarModalPromo}
-    onSaveSuccess={() => {
-      precios.cerrarModalPromo()
-      // precios.recargarPromos?.() // Si tienes una función para refrescar la tabla de promociones
-    }}
-  />
-)}
+        <ModalPromo
+          promoEdit={precios.promoEdit}
+          setPromoEdit={precios.setPromoEdit}
+          servicios={precios.servicios}
+          onToggleZona={precios.toggleZonaEnPromo}
+          onClose={precios.cerrarModalPromo}
+          onSaveSuccess={() => {
+            precios.cerrarModalPromo()
+          }}
+        />
+      )}
 
       {generales.modalGeneral && generales.servicioGeneralEdit && (
-  <ModalServicioGeneral
-    servicioGeneralEdit={generales.servicioGeneralEdit}
-    setServicioGeneralEdit={generales.setServicioGeneralEdit}
-    onClose={generales.cerrarModalGeneral}
-    onSaveSuccess={() => {
-      generales.cerrarModalGeneral()
-      // Si tienes alguna función para recargar la lista de servicios generales en tu hook, la puedes invocar aquí, por ejemplo:
-      // generales.recargarServicios?.()
-    }}
-  />
-)}
+        <ModalServicioGeneral
+          servicioGeneralEdit={generales.servicioGeneralEdit}
+          setServicioGeneralEdit={generales.setServicioGeneralEdit}
+          onClose={generales.cerrarModalGeneral}
+          onSaveSuccess={() => {
+            generales.cerrarModalGeneral()
+          }}
+        />
+      )}
     </div>
   )
 }

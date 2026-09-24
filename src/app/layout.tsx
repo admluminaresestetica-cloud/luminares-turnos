@@ -5,6 +5,7 @@ import localFont from "next/font/local";
 import { usePathname } from "next/navigation";
 import "./globals.css";
 import Footer from "@/components/footer";
+import BottomNav from "@/components/Home/BottomNav";
 import { CarritoProvider } from "@/context/CarritoContext";
 import { ConfigProvider } from "@/context/ConfigContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -32,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="bg-white" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-white text-slate-900 min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-white text-slate-900 min-h-screen pb-16 md:pb-0`}
       >
         <ThemeProvider
           attribute="class"
@@ -43,8 +44,14 @@ export default function RootLayout({
           <ConfigProvider>
             <CarritoProvider>
               {children}
-              {/* El footer se muestra en la web pública, pero se oculta en todo el panel /admin */}
-              {!isAdmin && <Footer />}
+              
+              {/* Elementos públicos que se ocultan en el panel /admin */}
+              {!isAdmin && (
+                <>
+                  <Footer />
+                  <BottomNav />
+                </>
+              )}
             </CarritoProvider>
           </ConfigProvider>
         </ThemeProvider>
