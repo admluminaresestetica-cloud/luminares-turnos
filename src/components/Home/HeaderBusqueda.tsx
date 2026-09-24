@@ -1,69 +1,342 @@
 'use client';
 
-import { Search, CalendarDays, ShoppingBag } from 'lucide-react';
-import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 interface HeaderBusquedaProps {
-  nombreEmpresa?: string;
-  onSearchChange?: (term: string) => void;
-  cantidadCarrito?: number;
+  nombreEmpresa: string;
 }
 
-export default function HeaderBusqueda({
-  nombreEmpresa = 'Luminares Estética',
-  onSearchChange,
-  cantidadCarrito = 0,
-}: HeaderBusquedaProps) {
+interface ProductoResultado {
+  id: number;
+  nombre: string;
+  precio: number;
+  imagen_url?: string;
+}
+
+interface ServicioResultado {
+  id: string;
+  nombre: string;
+  tipo: 'general' | 'laser';
+  precio: number;
+}
+
+interface TagBusqueda {
+  id: string;
+  nombre: string;
+  slug: string;
+}
+
+export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
+  const router = useRouter();
+  const [query, setQuery] = useState('');
+  const [focused, setFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Resultados dinámicos
+  const [productos, setProductos] = useState<ProductoResultado[]>([]);
+  const [servicios, setServicios] = useState<ServicioResultado[]>([]);
+  const [tags, setTags] = useState<TagBusqueda[]>([]);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // 1. Cargar Tags Rápidos de la tabla `tags_busqueda` al presionar la barra
+  useEffect(() => {
+    async function fetchTags() {
+      try {
+        const { data } = await supabase
+          .from('tags_busqueda')
+          .select('id, nombre, slug')
+          .eq('activo', true)
+          .order('orden', { ascending: true })
+          .limit(6);
+
+        if (data) setTags(data);
+      } catch (err) {
+        console.error('Error al obtener tags_busqueda:', err);
+      }
+    }
+    fetchTags();
+  }, []);
+
+  // 2. Búsqueda dinámica multitabla cuando cambia el término
+  useEffect(() => {
+    if (!query.trim() || query.length < 2) {
+      setProductos([]);
+      setServicios([]);
+      setLoading(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      const searchTerm = `%${query.trim()}%`;
+
+      try {
+        // A) Buscar en Productos
+        const reqProductos = supabase
+          .from('productos')
+          .select('id, nombre, precio, imagen_url')
+          .eq('activo', true)
+          .or(`nombre.ilike.${searchTerm},categoria.ilike.${searchTerm}`)
+          .limit(3);
+
+        // B) Buscar en Servicios Generales
+        const reqServiciosGenerales = supabase
+          .from('servicios_generales')
+          .select('id, subtipo, categoria, precio')
+          .eq('activo', true)
+          .or(`subtipo.ilike.${searchTerm},categoria.ilike.${searchTerm}`)
+          .limit(3);
+
+        // C) Buscar en Servicios Láser
+        const reqServiciosLaser = supabase
+          .from('servicios_laser')
+          .select('id, nombre_zona, categoria_zona, precio_lista')
+          .eq('activo', true)
+          .or(`nombre_zona.ilike.${searchTerm},categoria_zona.ilike.${searchTerm}`)
+          .limit(3);
+
+        const [resProd, resServGen, resServLaser] = await Promise.all([
+          reqProductos,
+          reqServiciosGenerales,
+          reqServiciosLaser,
+        ]);
+
+        // Mapear productos
+        if (resProd.data) {
+          setProductos(resProd.data);
+        }
+
+        // Mapear y unificar servicios
+        const serviciosUnificados: ServicioResultado[] = [];
+
+        if (resServGen.data) {
+          resServGen.data.forEach((item) => {
+            serviciosUnificados.push({
+              id: item.id,
+              nombre: item.subtipo || item.categoria,
+              tipo: 'general',
+              precio: item.precio,
+            });
+          });
+        }
+
+        if (resServLaser.data) {
+          resServLaser.data.forEach((item) => {
+            serviciosUnificados.push({
+              id: item.id,
+              nombre: `Depilación ${item.nombre_zona}`,
+              tipo: 'laser',
+              precio: item.precio_lista,
+            });
+          });
+        }
+
+        setServicios(serviciosUnificados.slice(0, 4));
+      } catch (err) {
+        console.error('Error buscando en Supabase:', err);
+      } finally {
+        setLoading(false);
+      }
+    }, 250); // Debounce de 250ms para optimizar peticiones
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  // Manejar el submit con Enter
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+
+    setFocused(false);
+    router.push(`/tienda?busqueda=${encodeURIComponent(query.trim())}`);
+  };
+
+  const seleccionarProducto = (id: number) => {
+    setFocused(false);
+    router.push(`/tienda?id=${id}`);
+  };
+
+  const seleccionarServicio = () => {
+    setFocused(false);
+    // Redirige al flujo de reserva o ancla de turnos
+    router.push('/#agendar');
+  };
+
+  const seleccionarTag = (tag: TagBusqueda) => {
+    setQuery(tag.nombre);
+  };
+
   return (
-    <header className="space-y-4 pt-2 pb-1">
-      {/* Saludo + Botón Consultar Mis Turnos */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-3 relative z-30">
+      {/* Saludo */}
+      <div className="flex items-center justify-between px-1">
         <div>
-          <p className="text-xs text-stone-500 dark:text-zinc-400 font-medium">
+          <p className="text-xs font-medium text-stone-500 dark:text-zinc-400">
             ¡Hola! Te damos la bienvenida a
           </p>
-          <h2 className="text-lg font-black text-stone-900 dark:text-zinc-100 leading-tight">
+          <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             {nombreEmpresa}
-          </h2>
-        </div>
-
-        {/* Acciones directas (Mis Turnos / Carrito) */}
-        <div className="flex items-center gap-2">
-          {/* Acceso rápido a Consultar Turnos */}
-          <Link
-            href="/mis-turnos"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#a3c9b8]/20 dark:bg-[#a3c9b8]/15 text-[#2d5747] dark:text-[#a3c9b8] hover:bg-[#a3c9b8]/30 transition-colors text-xs font-bold"
-          >
-            <CalendarDays className="w-4 h-4 text-[#2d5747] dark:text-[#a3c9b8]" />
-            <span>Mis Turnos</span>
-          </Link>
-
-          {/* Carrito de Compras */}
-          <Link
-            href="/carrito"
-            className="relative p-2.5 rounded-full bg-[#f7f5f0] dark:bg-zinc-800 border border-[#e8e4d9] dark:border-zinc-700/60 text-stone-700 dark:text-zinc-300 hover:bg-[#eae6db] dark:hover:bg-zinc-700 transition-colors"
-            aria-label="Carrito"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            {cantidadCarrito > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#1e2e28] dark:bg-[#a3c9b8] text-white dark:text-[#1e2e28] text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-zinc-900">
-                {cantidadCarrito}
-              </span>
-            )}
-          </Link>
+          </h1>
         </div>
       </div>
 
-      {/* Input de Búsqueda Estilo App Móvil */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 dark:text-zinc-500" />
-        <input
-          type="text"
-          placeholder="¿Qué servicio o producto buscas hoy?"
-          onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 bg-[#f7f5f0]/90 dark:bg-zinc-800/80 border border-[#e8e4d9] dark:border-zinc-700/60 focus:border-[#a3c9b8] dark:focus:border-[#a3c9b8] rounded-2xl text-xs font-medium text-stone-900 dark:text-zinc-100 placeholder:text-stone-400 dark:placeholder:text-zinc-500 outline-none transition-all shadow-inner"
-        />
-      </div>
-    </header>
+      {/* Input de Búsqueda */}
+      <form onSubmit={handleSearchSubmit} className="relative">
+        <div className="relative flex items-center">
+          <Search className="absolute left-3.5 h-4 w-4 text-stone-400 pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => setFocused(true)}
+            placeholder="¿Qué servicio o producto buscás hoy?"
+            className="w-full rounded-2xl border border-stone-200/80 bg-white dark:bg-zinc-900 dark:border-zinc-800 py-3 pl-10 pr-9 text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 placeholder:text-stone-400 focus:border-[#0E6E55] focus:outline-none focus:ring-2 focus:ring-[#0E6E55]/20 shadow-xs transition-all"
+          />
+          {loading ? (
+            <Loader2 className="absolute right-3 h-4 w-4 text-[#0E6E55] animate-spin" />
+          ) : query ? (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery('');
+                setProductos([]);
+                setServicios([]);
+              }}
+              className="absolute right-3 text-stone-400 hover:text-stone-600 p-1"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
+        </div>
+
+        {/* Desplegable Flotante */}
+        {focused && (
+          <>
+            {/* Overlay para cerrar al hacer clic afuera */}
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setFocused(false)}
+            />
+
+            <div
+              ref={dropdownRef}
+              className="absolute left-0 right-0 top-full mt-2 z-20 rounded-2xl border border-stone-200 bg-white dark:bg-zinc-900 dark:border-zinc-800 p-3 shadow-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-150 max-h-[380px] overflow-y-auto"
+            >
+              {/* CASO 1: Búsqueda Vacía -> Muestra Tags de la BD */}
+              {!query.trim() && (
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1">
+                    Búsquedas populares
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {tags.length > 0 ? (
+                      tags.map((tag) => (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => seleccionarTag(tag)}
+                          className="px-3 py-1.5 rounded-xl bg-stone-100 dark:bg-zinc-800 hover:bg-[#0E6E55]/10 hover:text-[#0E6E55] text-xs font-semibold text-stone-700 dark:text-zinc-300 transition-colors"
+                        >
+                          {tag.nombre}
+                        </button>
+                      ))
+                    ) : (
+                      <span className="text-xs text-stone-400 px-1">
+                        Escribí para buscar en el catálogo...
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* CASO 2: Escribiendo -> Muestra Resultados de Servicios */}
+              {servicios.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1 flex items-center gap-1">
+                    <Calendar className="h-3 w-3 text-[#0E6E55]" /> Servicios & Turnos
+                  </p>
+                  {servicios.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={seleccionarServicio}
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-3.5 w-3.5 text-[#0E6E55]" />
+                        <span className="text-xs font-semibold text-stone-800 dark:text-zinc-200">
+                          {s.nombre}
+                        </span>
+                      </div>
+                      <span className="text-xs font-bold text-[#0E6E55]">
+                        ${s.precio}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* CASO 3: Escribiendo -> Muestra Resultados de Productos */}
+              {productos.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1 flex items-center gap-1">
+                    <ShoppingBag className="h-3 w-3 text-[#0E6E55]" /> Productos en Tienda
+                  </p>
+                  {productos.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => seleccionarProducto(p.id)}
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        {p.imagen_url ? (
+                          <img
+                            src={p.imagen_url}
+                            alt={p.nombre}
+                            className="h-7 w-7 rounded-lg object-cover"
+                          />
+                        ) : (
+                          <div className="h-7 w-7 rounded-lg bg-stone-100 dark:bg-zinc-800 flex items-center justify-center">
+                            <ShoppingBag className="h-3.5 w-3.5 text-stone-400" />
+                          </div>
+                        )}
+                        <span className="text-xs font-semibold text-stone-800 dark:text-zinc-200 line-clamp-1">
+                          {p.nombre}
+                        </span>
+                      </div>
+                      <span className="text-xs font-bold text-[#0E6E55]">
+                        ${p.precio}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Sin resultados */}
+              {query.trim().length >= 2 &&
+                !loading &&
+                productos.length === 0 &&
+                servicios.length === 0 && (
+                  <div className="p-3 text-center text-xs text-stone-500 dark:text-zinc-400">
+                    No encontramos coincidencias exactas.
+                    <button
+                      type="button"
+                      onClick={handleSearchSubmit}
+                      className="block mx-auto mt-1 font-bold text-[#0E6E55] hover:underline"
+                    >
+                      Buscar &quot;{query}&quot; en la tienda →
+                    </button>
+                  </div>
+                )}
+            </div>
+          </>
+        )}
+      </form>
+    </div>
   );
 }
