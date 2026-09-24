@@ -41,6 +41,7 @@ function esPromocionOCombo(texto?: string): boolean {
 function ServiciosContent() {
   const searchParams = useSearchParams();
   const categoriaQuery = searchParams.get('categoria');
+  const servicioQuery = searchParams.get('servicio');
 
   const [servicios, setServicios] = useState<ServicioGeneral[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -59,23 +60,51 @@ function ServiciosContent() {
     cargar();
   }, []);
 
-  // Selecciona automáticamente la categoría si viene indicada por la URL (?categoria=promos o similar)
+  // 🎯 Procesa la URL dinámicamente para Categoría y Servicio puntual
   useEffect(() => {
-    if (!cargando && servicios.length > 0 && categoriaQuery) {
-      const q = categoriaQuery.toLowerCase();
-      
-      // Buscar coincidencia exacta o por coincidencia de palabras (ej: promos, combo)
-      const categoriaEncontrada = servicios.find((s) => {
-        const cat = s.categoria.toLowerCase();
-        return cat === q || (q === 'promos' && esPromocionOCombo(cat));
-      })?.categoria;
+    if (!cargando && servicios.length > 0) {
+      let catObjetivo: CategoriaGeneral | null = null;
+      let servicioEncontradoId: string | null = null;
 
-      if (categoriaEncontrada) {
-        setCategoria(categoriaEncontrada as CategoriaGeneral);
+      // 1. Si viene un SERVICIO específico en la URL (?servicio=Dermaplaning)
+      if (servicioQuery) {
+        const sq = servicioQuery.toLowerCase().trim();
+        const coincidencia = servicios.find(
+          (s) =>
+            s.subtipo.toLowerCase().trim() === sq ||
+            s.subtipo.toLowerCase().includes(sq)
+        );
+
+        if (coincidencia) {
+          catObjetivo = coincidencia.categoria as CategoriaGeneral;
+          servicioEncontradoId = coincidencia.id;
+        }
+      }
+
+      // 2. Si viene una CATEGORÍA específica en la URL (?categoria=Faciales)
+      if (!catObjetivo && categoriaQuery) {
+        const cq = categoriaQuery.toLowerCase().trim();
+        const coincidenciaCat = servicios.find((s) => {
+          const cat = s.categoria.toLowerCase().trim();
+          return cat === cq || (cq === 'promos' && esPromocionOCombo(cat));
+        })?.categoria;
+
+        if (coincidenciaCat) {
+          catObjetivo = coincidenciaCat as CategoriaGeneral;
+        }
+      }
+
+      // 3. Aplicar estado según lo encontrado
+      if (catObjetivo) {
+        setCategoria(catObjetivo);
         setPaso('servicios');
+
+        if (servicioEncontradoId) {
+          setSeleccionados([servicioEncontradoId]);
+        }
       }
     }
-  }, [cargando, servicios, categoriaQuery]);
+  }, [cargando, servicios, categoriaQuery, servicioQuery]);
 
   // Cierra el lightbox con la tecla Escape
   useEffect(() => {
@@ -88,7 +117,6 @@ function ServiciosContent() {
 
   const categorias = useMemo(() => {
     const cats = new Set(servicios.map((s) => s.categoria));
-    // Ordenar para que las categorías que sean Promos/Combos aparezcan primero
     return Array.from(cats).sort((a, b) => {
       const esA = esPromocionOCombo(a);
       const esB = esPromocionOCombo(b);
@@ -247,7 +275,6 @@ function ServiciosContent() {
                       : 'bg-white dark:bg-zinc-900 border-stone-200/80 dark:border-zinc-800 hover:border-stone-300'
                   }`}
                 >
-                  {/* Badge flotante de Promo para la categoría */}
                   {esPromoCat && (
                     <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-[#1e2e28] text-[#a3c9b8] text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
                       <Tag className="w-2.5 h-2.5" /> PROMO
@@ -308,7 +335,6 @@ function ServiciosContent() {
                     }
                   `}
                 >
-                  {/* Badge en la tarjeta individual del servicio si es Promo */}
                   {esPromoItem && !activo && (
                     <div className="px-3 py-0.5 bg-[#1e2e28] text-[#a3c9b8] text-[9px] font-bold tracking-wider uppercase inline-flex items-center gap-1 rounded-br-xl">
                       <Tag className="w-2.5 h-2.5" /> COMBO DESTACADO
@@ -343,7 +369,8 @@ function ServiciosContent() {
                       ${Number(servicio.precio).toLocaleString('es-AR')}
                     </p>
                   </button>
-               <div
+
+                  <div
                     className={`grid transition-all duration-300 ease-out ${
                       activo && tieneDespliegue
                         ? 'grid-rows-[1fr] opacity-100'
