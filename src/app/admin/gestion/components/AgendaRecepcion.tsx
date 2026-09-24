@@ -156,10 +156,14 @@ export default function AgendaRecepcion({
           ) : (
             turnosFiltrados.map((turno) => {
               const seleccionado = turnoSeleccionadoId === turno.id;
+              
+              // Formato 24 hs sin a.m./p.m. para evitar desbordes visuales
               const horaTurno = new Date(turno.fecha_hora_inicio).toLocaleTimeString('es-AR', {
                 hour: '2-digit',
                 minute: '2-digit',
+                hour12: false
               });
+
               const badge = obtenerBadgeEstado(turno.estado);
               const estaEnGabinete = turno.estado === 'en_gabinete';
               const modificado = verificarSiFueModificado(turno);
@@ -177,10 +181,12 @@ export default function AgendaRecepcion({
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    {/* Badge visual de hora */}
-                    <div className="flex h-11 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-2xs">
+                    {/* Badge visual de hora limpio y amplio */}
+                    <div className="flex h-11 min-w-[64px] px-2 shrink-0 flex-col items-center justify-center rounded-xl bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-2xs">
                       <Clock className="h-3 w-3 opacity-70 mb-0.5" />
-                      <span className="text-xs font-black tracking-tighter">{horaTurno}</span>
+                      <span className="text-xs font-black tracking-tight whitespace-nowrap">
+                        {horaTurno} hs
+                      </span>
                     </div>
 
                     <div className="space-y-0.5 min-w-0">
