@@ -15,34 +15,48 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#f7f5f0]/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-[#e8e4d9] dark:border-zinc-800 z-50 px-6 py-2.5">
-      <div className="max-w-md mx-auto flex justify-around items-center">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const esActivo = pathname === item.href;
+    <div className="fixed bottom-3 left-4 right-4 z-50 max-w-md mx-auto sm:hidden">
+      <nav className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border border-emerald-950/10 dark:border-zinc-800 rounded-3xl shadow-2xl shadow-emerald-950/15 px-3 py-2">
+        <div className="flex justify-around items-center">
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const esActivo = pathname === item.href;
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center gap-1 text-[10px] font-bold transition-all cursor-pointer ${
-                esActivo
-                  ? 'text-[#1e2e28] dark:text-[#a3c9b8] scale-105'
-                  : 'text-stone-400 dark:text-zinc-500 hover:text-stone-600 dark:hover:text-zinc-300'
-              }`}
-            >
-              <div
-                className={`p-1 rounded-xl transition-colors ${
-                  esActivo ? 'bg-[#a3c9b8]/25 dark:bg-[#a3c9b8]/15' : 'bg-transparent'
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all duration-300 active:scale-90 cursor-pointer ${
+                  esActivo
+                    ? 'text-[#0E6E55] dark:text-emerald-400 font-black'
+                    : 'text-stone-400 dark:text-zinc-500 hover:text-stone-600 dark:hover:text-zinc-300 font-semibold'
                 }`}
               >
-                <Icon className="w-5 h-5" />
-              </div>
-              <span className="leading-none">{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
+                {/* Contenedor del ícono con píldora suave cuando está activo */}
+                <div
+                  className={`relative p-1.5 rounded-xl transition-all duration-300 ${
+                    esActivo
+                      ? 'bg-[#0E6E55]/12 dark:bg-emerald-500/20 scale-110'
+                      : 'bg-transparent'
+                  }`}
+                >
+                  <Icon className="w-5 h-5 stroke-[2.2]" />
+                </div>
+
+                {/* Texto */}
+                <span className="text-[10px] tracking-tight leading-none mt-1">
+                  {item.label}
+                </span>
+
+                {/* Puntito indicador inferior activo */}
+                {esActivo && (
+                  <span className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-[#0E6E55] dark:bg-emerald-400 animate-in fade-in zoom-in duration-200" />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }
