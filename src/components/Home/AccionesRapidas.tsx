@@ -16,7 +16,7 @@ export default function AccionesRapidas() {
         className="group relative overflow-hidden p-5 rounded-3xl bg-[#1e2e28] dark:bg-zinc-900 text-white shadow-sm hover:shadow-md transition-all active:scale-[0.99] flex justify-between items-center border border-[#2d4239]"
       >
         <div className="space-y-1 z-10">
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#a3c9b8] bg-[#a3c9b8]/15 px-2.5 py-0.5 rounded-full border border-[#a3c9b8]/20">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white bg-white/20 px-2.5 py-0.5 rounded-full border border-white/25">
             Reserva Online
           </span>
           <h4 className="text-base font-black tracking-tight">Agendar un Turno</h4>
@@ -25,12 +25,12 @@ export default function AccionesRapidas() {
           </p>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-[#a3c9b8]/15 group-hover:bg-[#a3c9b8]/25 transition-colors shrink-0 z-10 text-[#a3c9b8]">
+        <div className="p-3.5 rounded-2xl bg-white/15 group-hover:bg-white/25 transition-colors shrink-0 z-10 text-white">
           <CalendarCheck className="w-6 h-6" />
         </div>
 
-        {/* Luz ambiental sutil */}
-        <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-[#a3c9b8]/10 rounded-full blur-xl pointer-events-none" />
+        {/* Luz ambiental sutil blanca */}
+        <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none" />
       </Link>
     </div>
   );
