@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Flame, Clock, ArrowRight } from 'lucide-react';
@@ -20,10 +20,58 @@ export default function ServiciosDestacados() {
   const router = useRouter();
   const [destacados, setDestacados] = useState<ItemDestacado[]>([]);
   const [loading, setLoading] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchDestacados();
   }, []);
+
+  // Efecto para el desplazamiento automático (autoplay) hacia la derecha
+  useEffect(() => {
+    if (loading || destacados.length === 0) return;
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    let intervalId: NodeJS.Timeout;
+
+    const startAutoplay = () => {
+      intervalId = setInterval(() => {
+        if (!container) return;
+        const scrollAmount = 220; // Ancho aproximado de la tarjeta + gap
+        const maxScrollLeft = container.scrollWidth - container.clientWidth;
+
+        if (container.scrollLeft >= maxScrollLeft - 10) {
+          // Si llega al final, vuelve al principio de forma suave
+          container.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          // Sino, avanza hacia la derecha
+          container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        }
+      }, 3500); // Cambia de tarjeta cada 3.5 segundos
+    };
+
+    startAutoplay();
+
+    // Pausar autoplay cuando el usuario pone el mouse o toca encima
+    const handleMouseEnter = () => clearInterval(intervalId);
+    const handleMouseLeave = () => startAutoplay();
+
+    container.addEventListener('mouseenter', handleMouseEnter);
+    container.addEventListener('mouseleave', handleMouseLeave);
+    container.addEventListener('touchstart', handleMouseEnter);
+    container.addEventListener('touchend', handleMouseLeave);
+
+    return () => {
+      clearInterval(intervalId);
+      if (container) {
+        container.removeEventListener('mouseenter', handleMouseEnter);
+        container.removeEventListener('mouseleave', handleMouseLeave);
+        container.removeEventListener('touchstart', handleMouseEnter);
+        container.removeEventListener('touchend', handleMouseLeave);
+      }
+    };
+  }, [loading, destacados]);
 
   async function fetchDestacados() {
     setLoading(true);
@@ -124,28 +172,31 @@ export default function ServiciosDestacados() {
         </div>
       </div>
 
-      {/* Lista / Carrusel deslizable */}
+      {/* Lista / Carrusel deslizable con Autoplay */}
       {loading ? (
         <div className="flex gap-3 overflow-x-auto scrollbar-none py-1">
           {[1, 2, 3].map((n) => (
             <div
               key={n}
-              className="min-w-[240px] h-[140px] rounded-[22px] bg-stone-100 dark:bg-zinc-800 animate-pulse"
+              className="min-w-[200px] h-[130px] rounded-[20px] bg-stone-100 dark:bg-zinc-800 animate-pulse"
             />
           ))}
         </div>
       ) : (
-        <div className="flex gap-3.5 overflow-x-auto scrollbar-none py-1 px-0.5 touch-pan-x">
+        <div
+          ref={scrollContainerRef}
+          className="flex gap-3 overflow-x-auto scrollbar-none py-1 px-0.5 touch-pan-x snap-x snap-mandatory scroll-smooth"
+        >
           {destacados.map((item) => (
             <div
               key={`${item.tabla}-${item.id}`}
               onClick={() => handleReservar(item)}
-              className="min-w-[240px] max-w-[240px] bg-white dark:bg-zinc-900 border border-rose-950/10 dark:border-zinc-800 rounded-[22px] p-4 flex flex-col justify-between shadow-md shadow-rose-950/5 hover:shadow-lg hover:border-rose-500/40 dark:hover:border-rose-500/30 transition-all cursor-pointer group"
+              className="snap-start min-w-[205px] max-w-[205px] bg-white dark:bg-zinc-900 border border-rose-950/10 dark:border-zinc-800 rounded-[20px] p-3.5 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-rose-500/40 dark:hover:border-rose-500/30 transition-all cursor-pointer group shrink-0"
             >
-              {/* Encabezado y Opcionalmente Imagen si el servicio general la tiene */}
-              <div className="space-y-2">
+              {/* Encabezado e Imagen opcional más compacta */}
+              <div className="space-y-1.5">
                 {item.imagen && (
-                  <div className="w-full h-20 rounded-xl overflow-hidden mb-2 bg-stone-100 dark:bg-zinc-800 relative">
+                  <div className="w-full h-16 rounded-xl overflow-hidden mb-1.5 bg-stone-100 dark:bg-zinc-800 relative">
                     <img
                       src={item.imagen}
                       alt={item.nombre}
@@ -155,7 +206,7 @@ export default function ServiciosDestacados() {
                 )}
 
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
+                  <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
                     {item.tabla === 'promos_laser'
                       ? 'Promo'
                       : item.tabla === 'servicios_laser'
@@ -164,22 +215,22 @@ export default function ServiciosDestacados() {
                   </span>
                   {item.duracion && (
                     <span className="text-[10px] font-medium text-stone-400 dark:text-zinc-500 flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-stone-400 dark:text-zinc-500" />
-                      {item.duracion} min
+                      <Clock className="w-2.5 h-2.5 text-stone-400 dark:text-zinc-500" />
+                      {item.duracion}m
                     </span>
                   )}
                 </div>
 
-                <h3 className="font-bold text-stone-800 dark:text-zinc-100 text-sm leading-snug line-clamp-2 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                <h3 className="font-bold text-stone-800 dark:text-zinc-100 text-xs leading-snug line-clamp-2 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
                   {item.nombre}
                 </h3>
               </div>
 
               {/* Pie de la Tarjeta */}
-              <div className="pt-3 flex items-end justify-between border-t border-stone-100 dark:border-zinc-800/80 mt-3">
+              <div className="pt-2.5 flex items-end justify-between border-t border-stone-100 dark:border-zinc-800/80 mt-2">
                 <div>
-                  <span className="text-[10px] text-stone-400 dark:text-zinc-500 font-semibold block">Precio</span>
-                  <p className="text-sm font-black text-stone-900 dark:text-zinc-100">
+                  <span className="text-[9px] text-stone-400 dark:text-zinc-500 font-semibold block">Precio</span>
+                  <p className="text-xs font-black text-stone-900 dark:text-zinc-100">
                     ${item.precio?.toLocaleString('es-AR')}
                   </p>
                 </div>
@@ -190,11 +241,11 @@ export default function ServiciosDestacados() {
                     e.stopPropagation();
                     handleReservar(item);
                   }}
-                  className="bg-stone-900 dark:bg-zinc-800 hover:bg-rose-600 dark:hover:bg-rose-600 active:scale-95 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="bg-stone-900 dark:bg-zinc-800 hover:bg-rose-600 dark:hover:bg-rose-600 active:scale-95 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-xl shadow-xs transition-all flex items-center gap-1 cursor-pointer"
                   aria-label="Reservar"
                 >
                   <span>Reservar</span>
-                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  <ArrowRight className="w-2.5 h-2.5 group-hover:translate-x-0.5 transition-transform" />
                 </button>
               </div>
             </div>
