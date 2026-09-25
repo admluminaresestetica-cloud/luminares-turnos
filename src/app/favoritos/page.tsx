@@ -3,11 +3,11 @@
 import React from "react";
 import Link from "next/link";
 import { Heart, ShoppingBag, Trash2, ArrowLeft } from "lucide-react";
-import { useFavoritos } from "@/context/FavoritosContext";
+import { useFavoritos } from "@/context/FavoritoContext";
 import { useCarrito } from "@/context/CarritoContext";
 
 export default function FavoritosPage() {
-  const { favoritos, toggleFavorito, limpiarFavoritos } = useFavoritos();
+  const { favoritos, quitarFavorito, limpiarFavoritos } = useFavoritos();
   const { agregarAlCarrito } = useCarrito();
 
   return (
@@ -69,10 +69,10 @@ export default function FavoritosPage() {
               key={producto.id}
               className="bg-white rounded-2xl border border-gray-200 p-3 shadow-sm flex flex-col justify-between relative group"
             >
-              {/* Botón Quitar Favorito */}
+              {/* Botón Quitar Favorito Individual */}
               <button
-                onClick={() => toggleFavorito(producto)}
-                className="absolute top-5 right-5 z-10 p-2 bg-white/80 backdrop-blur-md rounded-full text-red-500 shadow-sm hover:scale-110 transition-transform"
+                onClick={() => quitarFavorito(producto.id)}
+                className="absolute top-5 right-5 z-10 p-2 bg-white/80 backdrop-blur-md rounded-full text-red-500 shadow-sm hover:scale-110 active:scale-95 transition-transform"
                 title="Quitar de favoritos"
               >
                 <Heart className="w-4 h-4 fill-red-500" />
