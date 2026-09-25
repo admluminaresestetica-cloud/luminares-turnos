@@ -5,7 +5,7 @@ import { Clock, ArrowRight } from 'lucide-react';
 interface Props {
   precio: number;
   duracion: number;
-  puedeContinuar: boolean; // ✅ CORREGIDO
+  puedeContinuar: boolean;
   onContinuar: () => void;
   detalle?: string;
 }
@@ -21,9 +21,9 @@ export default function BarraFlotanteLaser({
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-16 sm:bottom-20 left-0 right-0 z-40 p-3 sm:p-4 pointer-events-none">
+    <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 z-40 p-3 sm:p-0 sm:pb-3 pointer-events-none">
       <div className="max-w-3xl mx-auto pointer-events-auto">
-        <div className="bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-slate-800 p-3.5 sm:px-5 sm:py-4 flex items-center justify-between gap-3">
+        <div className="bg-slate-900/95 backdrop-blur-md text-white rounded-2xl sm:rounded-b-none shadow-2xl border border-slate-800 sm:border-b-0 p-3.5 sm:px-6 sm:py-4 flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline gap-2">
               <p className="text-xl sm:text-2xl font-extrabold tracking-tight">

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShoppingBag, Heart } from 'lucide-react';
+import { Home, ShoppingBag, Heart, HelpCircle } from 'lucide-react';
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -11,6 +11,7 @@ export default function BottomNav() {
     { label: 'Inicio', href: '/', icon: Home },
     { label: 'Tienda', href: '/tienda', icon: ShoppingBag },
     { label: 'Favoritos', href: '/favoritos', icon: Heart },
+    { label: 'FAQ', href: '/faq', icon: HelpCircle },
   ];
 
   return (
@@ -19,11 +20,12 @@ export default function BottomNav() {
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const esActivo = pathname === item.href;
+
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 text-[10px] font-bold transition-all ${
+              className={`flex flex-col items-center gap-1 text-[10px] font-bold transition-all cursor-pointer ${
                 esActivo
                   ? 'text-[#1e2e28] dark:text-[#a3c9b8] scale-105'
                   : 'text-stone-400 dark:text-zinc-500 hover:text-stone-600 dark:hover:text-zinc-300'
