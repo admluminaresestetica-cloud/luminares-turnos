@@ -4,9 +4,10 @@ import localFont from "next/font/local";
 import { usePathname } from "next/navigation";
 import "./globals.css";
 import Footer from "@/components/footer";
-import BottomNav from "@/components/Home/BottomNav";
+import BottomNav from "@/components/home/BottomNav";
 import { CarritoProvider } from "@/context/CarritoContext";
 import { ConfigProvider } from "@/context/ConfigContext";
+import { FavoritosProvider } from "@/context/FavoritosContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 const geistSans = localFont({
@@ -41,21 +42,23 @@ export default function RootLayout({
           enableSystem={false}
         >
           <ConfigProvider>
-            <CarritoProvider>
-              <div className="flex-1 w-full">
-                {children}
-              </div>
-              
-              {/* Elementos públicos que se ocultan en el panel /admin */}
-              {!isAdmin && (
-                <>
-                  <Footer />
-                  <div className="md:hidden">
-                    <BottomNav />
-                  </div>
-                </>
-              )}
-            </CarritoProvider>
+            <FavoritosProvider>
+              <CarritoProvider>
+                <div className="flex-1 w-full">
+                  {children}
+                </div>
+                
+                {/* Elementos públicos que se ocultan en el panel /admin */}
+                {!isAdmin && (
+                  <>
+                    <Footer />
+                    <div className="md:hidden">
+                      <BottomNav />
+                    </div>
+                  </>
+                )}
+              </CarritoProvider>
+            </FavoritosProvider>
           </ConfigProvider>
         </ThemeProvider>
       </body>

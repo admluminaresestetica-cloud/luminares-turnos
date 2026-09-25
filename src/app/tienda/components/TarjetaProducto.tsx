@@ -3,7 +3,8 @@
 import React from "react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
-import { Plus, Minus, Flame, ShoppingCart, Truck } from "lucide-react";
+import { useFavoritos } from "@/context/FavoritosContext";
+import { Plus, Minus, Flame, ShoppingCart, Truck, Heart } from "lucide-react";
 
 interface TarjetaProductoProps {
   producto: Producto & {
@@ -20,6 +21,10 @@ export default function TarjetaProducto({
   onVerDetalle,
 }: TarjetaProductoProps) {
   const context = useCarrito();
+  const { toggleFavorito, esFavorito } = useFavoritos();
+
+  const esFav = esFavorito(producto.id);
+
   const agregarAlCarrito = context?.agregarAlCarrito;
   const actualizarCantidad = (context as any)?.actualizarCantidad;
   const eliminarDelCarrito = (context as any)?.eliminarDelCarrito;
@@ -88,12 +93,31 @@ export default function TarjetaProducto({
     }
   };
 
+  const handleToggleFavorito = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleFavorito(producto as any);
+  };
+
   return (
     <div
       onClick={() => onVerDetalle && onVerDetalle(producto)}
       className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white p-2.5 sm:p-3.5 shadow-sm transition-transform duration-150 active:scale-[0.97] hover:shadow-md cursor-pointer select-none"
     >
-      {/* Badges superiores */}
+      {/* Botón Flotante de Favoritos (Esquina Superior Izquierda) */}
+      <button
+        type="button"
+        onClick={handleToggleFavorito}
+        className="absolute top-3 left-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-md shadow-sm transition-transform active:scale-90 hover:bg-white"
+        title={esFav ? "Quitar de favoritos" : "Guardar en favoritos"}
+      >
+        <Heart
+          className={`h-4 w-4 transition-colors ${
+            esFav ? "fill-red-500 text-red-500" : "text-slate-400 hover:text-slate-600"
+          }`}
+        />
+      </button>
+
+      {/* Badges superiores derechos (% OFF / Últimas Unidades) */}
       <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1 pointer-events-none">
         {tieneOferta && !sinStock && (
           <span className="rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
@@ -107,8 +131,9 @@ export default function TarjetaProducto({
         )}
       </div>
 
+      {/* Badge de Envío Gratis (Alineado debajo del botón favorito) */}
       {esEnvioGratis && !sinStock && (
-        <span className="absolute top-3 left-3 z-10 flex items-center gap-1 rounded-md bg-[#12151B] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-white shadow-sm">
+        <span className="absolute top-12 left-3 z-10 flex items-center gap-1 rounded-md bg-[#12151B] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-white shadow-sm">
           <Truck className="h-3 w-3" /> Envío gratis
         </span>
       )}
