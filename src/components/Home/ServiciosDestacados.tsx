@@ -10,6 +10,7 @@ interface ItemDestacado {
   nombre: string;
   precio: number;
   duracion?: number;
+  imagen?: string | null;
   tabla: 'promos_laser' | 'servicios_generales' | 'servicios_laser';
   generoOriginal?: string;
   subtipoOriginal?: string;
@@ -35,7 +36,7 @@ export default function ServiciosDestacados() {
           .eq('activo', true),
         supabase
           .from('servicios_generales')
-          .select('id, subtipo, categoria, precio, duracion_minutos')
+          .select('id, subtipo, categoria, precio, duracion_minutos, imagen_url')
           .eq('es_destacado', true)
           .eq('activo', true),
         supabase
@@ -50,15 +51,17 @@ export default function ServiciosDestacados() {
         nombre: item.nombre_promo || 'Promo Láser',
         precio: item.precio_promo || 0,
         duracion: item.duracion_total_min,
+        imagen: null,
         tabla: 'promos_laser',
         generoOriginal: item.genero || 'femenino',
       }));
 
-      const generalesFormatted: ItemDestacado[] = (resGenerales.data || []).map((item) => ({
+      const generalesFormatted: ItemDestacado[] = (resGenerales.data || []).map((item: any) => ({
         id: item.id,
         nombre: item.subtipo || item.categoria || 'Servicio de Estética',
         precio: item.precio || 0,
         duracion: item.duracion_minutos,
+        imagen: item.imagen_url || null,
         tabla: 'servicios_generales',
         subtipoOriginal: item.subtipo || item.categoria,
       }));
@@ -68,6 +71,7 @@ export default function ServiciosDestacados() {
         nombre: item.nombre_zona || 'Depilación Láser',
         precio: item.precio_lista || 0,
         duracion: item.duracion_minutos,
+        imagen: null,
         tabla: 'servicios_laser',
         generoOriginal: item.genero || 'femenino',
       }));
@@ -103,7 +107,7 @@ export default function ServiciosDestacados() {
 
   return (
     <section className="space-y-3.5 my-6">
-      {/* Título de la sección con acento Rojo/Coral elegante */}
+      {/* Título de la sección */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2.5">
           <div className="relative p-2 bg-rose-500/10 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 rounded-xl border border-rose-500/20 flex items-center justify-center">
@@ -120,7 +124,7 @@ export default function ServiciosDestacados() {
         </div>
       </div>
 
-      {/* Lista / Carrusel de Tarjetas */}
+      {/* Lista / Carrusel deslizable */}
       {loading ? (
         <div className="flex gap-3 overflow-x-auto scrollbar-none py-1">
           {[1, 2, 3].map((n) => (
@@ -131,17 +135,26 @@ export default function ServiciosDestacados() {
           ))}
         </div>
       ) : (
-        <div className="flex gap-3.5 overflow-x-auto scrollbar-none py-1 px-0.5">
+        <div className="flex gap-3.5 overflow-x-auto scrollbar-none py-1 px-0.5 touch-pan-x">
           {destacados.map((item) => (
             <div
               key={`${item.tabla}-${item.id}`}
               onClick={() => handleReservar(item)}
               className="min-w-[240px] max-w-[240px] bg-white dark:bg-zinc-900 border border-rose-950/10 dark:border-zinc-800 rounded-[22px] p-4 flex flex-col justify-between shadow-md shadow-rose-950/5 hover:shadow-lg hover:border-rose-500/40 dark:hover:border-rose-500/30 transition-all cursor-pointer group"
             >
-              {/* Encabezado de la Tarjeta */}
+              {/* Encabezado y Opcionalmente Imagen si el servicio general la tiene */}
               <div className="space-y-2">
+                {item.imagen && (
+                  <div className="w-full h-20 rounded-xl overflow-hidden mb-2 bg-stone-100 dark:bg-zinc-800 relative">
+                    <img
+                      src={item.imagen}
+                      alt={item.nombre}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between">
-                  {/* Badge en tonos rojo/coral sobrios */}
                   <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
                     {item.tabla === 'promos_laser'
                       ? 'Promo'
@@ -171,7 +184,6 @@ export default function ServiciosDestacados() {
                   </p>
                 </div>
 
-                {/* Botón de acción con toque rojo al hover */}
                 <button
                   type="button"
                   onClick={(e) => {
