@@ -103,11 +103,11 @@ export default function ServiciosDestacados() {
 
   return (
     <section className="space-y-3.5 my-6">
-      {/* Título de la sección con acento Ámbar/Dorado elegante */}
+      {/* Título de la sección con acento Rojo/Coral elegante */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2.5">
-          <div className="relative p-2 bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-500/20 flex items-center justify-center">
-            <Flame className="w-4.5 h-4.5 fill-amber-500/20 text-amber-600 dark:text-amber-400 animate-pulse" />
+          <div className="relative p-2 bg-rose-500/10 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 rounded-xl border border-rose-500/20 flex items-center justify-center">
+            <Flame className="w-4.5 h-4.5 fill-rose-500/20 text-rose-600 dark:text-rose-400 animate-pulse" />
           </div>
           <div>
             <h2 className="text-sm font-black uppercase tracking-wider text-stone-900 dark:text-zinc-100">
@@ -136,13 +136,13 @@ export default function ServiciosDestacados() {
             <div
               key={`${item.tabla}-${item.id}`}
               onClick={() => handleReservar(item)}
-              className="min-w-[240px] max-w-[240px] bg-white dark:bg-zinc-900 border border-amber-950/10 dark:border-zinc-800 rounded-[22px] p-4 flex flex-col justify-between shadow-md shadow-amber-950/5 hover:shadow-lg hover:border-amber-500/40 dark:hover:border-amber-500/30 transition-all cursor-pointer group"
+              className="min-w-[240px] max-w-[240px] bg-white dark:bg-zinc-900 border border-rose-950/10 dark:border-zinc-800 rounded-[22px] p-4 flex flex-col justify-between shadow-md shadow-rose-950/5 hover:shadow-lg hover:border-rose-500/40 dark:hover:border-rose-500/30 transition-all cursor-pointer group"
             >
               {/* Encabezado de la Tarjeta */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  {/* Badge en tonos ámbar sobrios */}
-                  <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-500/20">
+                  {/* Badge en tonos rojo/coral sobrios */}
+                  <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
                     {item.tabla === 'promos_laser'
                       ? 'Promo'
                       : item.tabla === 'servicios_laser'
@@ -157,7 +157,7 @@ export default function ServiciosDestacados() {
                   )}
                 </div>
 
-                <h3 className="font-bold text-stone-800 dark:text-zinc-100 text-sm leading-snug line-clamp-2 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                <h3 className="font-bold text-stone-800 dark:text-zinc-100 text-sm leading-snug line-clamp-2 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
                   {item.nombre}
                 </h3>
               </div>
@@ -171,14 +171,14 @@ export default function ServiciosDestacados() {
                   </p>
                 </div>
 
-                {/* Botón de acción con toque ámbar sutil al hover */}
+                {/* Botón de acción con toque rojo al hover */}
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleReservar(item);
                   }}
-                  className="bg-stone-900 dark:bg-zinc-800 hover:bg-amber-600 dark:hover:bg-amber-600 active:scale-95 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="bg-stone-900 dark:bg-zinc-800 hover:bg-rose-600 dark:hover:bg-rose-600 active:scale-95 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   aria-label="Reservar"
                 >
                   <span>Reservar</span>
