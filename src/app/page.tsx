@@ -56,9 +56,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-zinc-950 transition-colors relative overflow-hidden">
-      {/* Luz Ambiental de fondo (Destellos suaves de luz verde) */}
+      {/* Luz Ambiental de fondo (Mezcla de destellos verdes con toques sutiles rojos/coral translúcidos) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-300/25 blur-[120px] pointer-events-none rounded-full" />
-      <div className="absolute top-[400px] -right-20 w-[400px] h-[400px] bg-teal-200/20 blur-[100px] pointer-events-none rounded-full" />
+      <div className="absolute top-[350px] -right-20 w-[450px] h-[450px] bg-rose-500/15 blur-[130px] pointer-events-none rounded-full" />
+      <div className="absolute bottom-10 left-[-100px] w-[400px] h-[400px] bg-teal-200/20 blur-[100px] pointer-events-none rounded-full" />
 
       <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-3 md:pt-8 px-4 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
 
