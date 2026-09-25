@@ -14,6 +14,7 @@ export interface ProductoFavorito {
 interface FavoritosContextType {
   favoritos: ProductoFavorito[];
   toggleFavorito: (producto: ProductoFavorito) => void;
+  quitarFavorito: (id: string | number) => void;
   esFavorito: (id: string | number) => boolean;
   limpiarFavoritos: () => void;
 }
@@ -60,6 +61,10 @@ export function FavoritosProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const quitarFavorito = (id: string | number) => {
+    setFavoritos((prev) => prev.filter((item) => item.id !== id));
+  };
+
   const esFavorito = (id: string | number) => {
     return favoritos.some((item) => item.id === id);
   };
@@ -70,7 +75,7 @@ export function FavoritosProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <FavoritosContext.Provider
-      value={{ favoritos, toggleFavorito, esFavorito, limpiarFavoritos }}
+      value={{ favoritos, toggleFavorito, quitarFavorito, esFavorito, limpiarFavoritos }}
     >
       {children}
     </FavoritosContext.Provider>
