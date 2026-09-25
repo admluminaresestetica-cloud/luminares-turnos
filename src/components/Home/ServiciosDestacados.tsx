@@ -103,15 +103,14 @@ export default function ServiciosDestacados() {
 
   return (
     <section className="space-y-3.5 my-6">
-      {/* Título de la sección con fueguito rojo animado */}
+      {/* Título de la sección con acento Ámbar/Dorado elegante */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2.5">
-          <div className="relative p-2 bg-gradient-to-tr from-rose-500/15 via-red-500/10 to-orange-500/20 text-red-500 rounded-xl shadow-2xs border border-rose-200/60 dark:border-rose-900/40 flex items-center justify-center">
-            <Flame className="w-4.5 h-4.5 fill-red-500/20 text-rose-600 animate-pulse transition-transform transform group-hover:scale-110" />
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full animate-ping opacity-75" />
+          <div className="relative p-2 bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-500/20 flex items-center justify-center">
+            <Flame className="w-4.5 h-4.5 fill-amber-500/20 text-amber-600 dark:text-amber-400 animate-pulse" />
           </div>
           <div>
-            <h2 className="text-sm font-black uppercase tracking-wider text-[#1c352a] dark:text-[#a3c9b8]">
+            <h2 className="text-sm font-black uppercase tracking-wider text-stone-900 dark:text-zinc-100">
               Lo más buscado
             </h2>
             <p className="text-[11px] text-stone-500 dark:text-zinc-400 font-semibold">
@@ -137,12 +136,13 @@ export default function ServiciosDestacados() {
             <div
               key={`${item.tabla}-${item.id}`}
               onClick={() => handleReservar(item)}
-              className="min-w-[240px] max-w-[240px] bg-white dark:bg-zinc-900 border border-stone-200/90 dark:border-zinc-800 rounded-[22px] p-4 flex flex-col justify-between shadow-2xs hover:shadow-md hover:border-[#a3c9b8] dark:hover:border-[#a3c9b8]/50 transition-all cursor-pointer group"
+              className="min-w-[240px] max-w-[240px] bg-white dark:bg-zinc-900 border border-amber-950/10 dark:border-zinc-800 rounded-[22px] p-4 flex flex-col justify-between shadow-md shadow-amber-950/5 hover:shadow-lg hover:border-amber-500/40 dark:hover:border-amber-500/30 transition-all cursor-pointer group"
             >
               {/* Encabezado de la Tarjeta */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#a3c9b8]/20 text-[#2d5747] dark:text-[#a3c9b8] border border-[#a3c9b8]/30">
+                  {/* Badge en tonos ámbar sobrios */}
+                  <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-400 border border-amber-500/20">
                     {item.tabla === 'promos_laser'
                       ? 'Promo'
                       : item.tabla === 'servicios_laser'
@@ -150,14 +150,14 @@ export default function ServiciosDestacados() {
                       : 'Estética'}
                   </span>
                   {item.duracion && (
-                    <span className="text-[10px] font-medium text-stone-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-stone-400" />
+                    <span className="text-[10px] font-medium text-stone-400 dark:text-zinc-500 flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-stone-400 dark:text-zinc-500" />
                       {item.duracion} min
                     </span>
                   )}
                 </div>
 
-                <h3 className="font-bold text-stone-800 dark:text-zinc-100 text-sm leading-snug line-clamp-2 group-hover:text-[#2d5747] dark:group-hover:text-[#a3c9b8] transition-colors">
+                <h3 className="font-bold text-stone-800 dark:text-zinc-100 text-sm leading-snug line-clamp-2 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
                   {item.nombre}
                 </h3>
               </div>
@@ -165,20 +165,20 @@ export default function ServiciosDestacados() {
               {/* Pie de la Tarjeta */}
               <div className="pt-3 flex items-end justify-between border-t border-stone-100 dark:border-zinc-800/80 mt-3">
                 <div>
-                  <span className="text-[10px] text-stone-400 font-semibold block">Precio</span>
+                  <span className="text-[10px] text-stone-400 dark:text-zinc-500 font-semibold block">Precio</span>
                   <p className="text-sm font-black text-stone-900 dark:text-zinc-100">
                     ${item.precio?.toLocaleString('es-AR')}
                   </p>
                 </div>
 
-                {/* Botón de acción */}
+                {/* Botón de acción con toque ámbar sutil al hover */}
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleReservar(item);
                   }}
-                  className="bg-[#1c352a] hover:bg-[#28493b] active:scale-95 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer group-hover:bg-[#2d5747]"
+                  className="bg-stone-900 dark:bg-zinc-800 hover:bg-amber-600 dark:hover:bg-amber-600 active:scale-95 text-white text-[11px] font-extrabold px-3 py-1.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   aria-label="Reservar"
                 >
                   <span>Reservar</span>
