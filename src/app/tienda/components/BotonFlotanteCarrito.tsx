@@ -74,8 +74,7 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
   const productosRestantes = items.length - itemsAbanico.length;
 
   return (
-    // CAMBIO AQUÍ: Se cambió bottom-4 por bottom-20 para despegar el botón del BottomNav
-    <div className="fixed bottom-20 left-4 right-4 z-40 sm:hidden animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-20 sm:bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-40 animate-in slide-in-from-bottom-4 duration-300">
       <button
         type="button"
         onClick={onOpenCarrito}

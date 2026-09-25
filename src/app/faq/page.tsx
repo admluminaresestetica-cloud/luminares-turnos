@@ -1,23 +1,39 @@
+'use client';
+
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, HelpCircle } from 'lucide-react';
 import SeccionFAQ from '@/components/Home/SeccionFAQ';
 
 export default function FAQPage() {
   return (
-    <main className="min-h-screen bg-white p-4 sm:p-6 md:p-12 font-sans selection:bg-rose-100 selection:text-rose-900">
-      <div className="max-w-2xl mx-auto">
-        {/* Botón de volver */}
-        <Link
-          href="/turnos"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-700 bg-white hover:text-slate-900 px-3.5 py-2 rounded-xl border border-slate-200/80 shadow-xs mb-6 transition-all active:scale-95"
-        >
-          <ArrowLeft className="w-4 h-4 stroke-[2.2]" />
-          <span>Volver al inicio</span>
-        </Link>
+    <div className="min-h-screen bg-[#e8eee9] dark:bg-zinc-950 transition-colors pb-24 pt-6 px-4 sm:px-6">
+      <div className="max-w-2xl mx-auto space-y-6">
+        
+        {/* Cabecera con botón de regresar */}
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="p-2.5 rounded-2xl bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 text-stone-700 dark:text-zinc-300 hover:bg-stone-50 dark:hover:bg-zinc-800 transition-colors shadow-2xs"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="text-xl font-black text-stone-800 dark:text-zinc-100 flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              Centro de Ayuda
+            </h1>
+            <p className="text-xs text-stone-500 dark:text-zinc-400">
+              Respuesta a tus dudas e inquietudes habituales
+            </p>
+          </div>
+        </div>
 
-        {/* Componente de las preguntas */}
-        <SeccionFAQ />
+        {/* Componente de Preguntas Frecuentes */}
+        <div className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border border-stone-200/80 dark:border-zinc-800 rounded-3xl p-4 sm:p-6 shadow-2xs">
+          <SeccionFAQ />
+        </div>
+
       </div>
-    </main>
+    </div>
   );
 }

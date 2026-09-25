@@ -443,7 +443,7 @@ function ServiciosContent() {
 
       {/* Barra flotante inferior de confirmación */}
       {paso === 'servicios' && seleccionados.length > 0 && (
-        <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 z-40 p-3 sm:p-4 pointer-events-none">
+        <div className="fixed bottom-16 sm:bottom-0 left-0 right-0 z-40 p-3 sm:px-4 sm:py-0 pointer-events-none">
           <div className="max-w-2xl mx-auto pointer-events-auto">
             <div className="bg-[#1e2e28] text-white rounded-2xl sm:rounded-3xl shadow-xl px-5 py-3.5 flex items-center justify-between gap-4 border border-[#2d4239]">
               <div className="flex-1 min-w-0">
