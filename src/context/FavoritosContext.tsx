@@ -15,7 +15,7 @@ export interface ProductoFavorito {
 interface FavoritosContextType {
   favoritos: ProductoFavorito[];
   toggleFavorito: (producto: ProductoFavorito) => void;
-  quitarFavorito: (id: string | number) => void;
+  quitarFavorito: (id: string | number) => void; // <-- AÑADIR ESTA LÍNEA
   esFavorito: (id: string | number) => boolean;
   limpiarFavoritos: () => void;
 }
@@ -60,6 +60,7 @@ export function FavoritosProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  // 2. Definir la función de eliminación por ID
   const quitarFavorito = (id: string | number) => {
     setFavoritos((prev) => prev.filter((item) => item.id !== id));
   };
