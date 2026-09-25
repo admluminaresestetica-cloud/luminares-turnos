@@ -11,9 +11,11 @@ export interface ProductoFavorito {
   permite_cuotas?: boolean;
 }
 
+// 1. Agregar quitarFavorito a la interfaz
 interface FavoritosContextType {
   favoritos: ProductoFavorito[];
   toggleFavorito: (producto: ProductoFavorito) => void;
+  quitarFavorito: (id: string | number) => void; // <-- AÑADIR ESTA LÍNEA
   esFavorito: (id: string | number) => boolean;
   limpiarFavoritos: () => void;
 }
@@ -24,7 +26,6 @@ export function FavoritosProvider({ children }: { children: React.ReactNode }) {
   const [favoritos, setFavoritos] = useState<ProductoFavorito[]>([]);
   const [cargado, setCargado] = useState(false);
 
-  // Cargar desde localStorage al iniciar
   useEffect(() => {
     try {
       const guardados = localStorage.getItem("tienda_favoritos");
@@ -38,7 +39,6 @@ export function FavoritosProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Guardar en localStorage ante cada cambio
   useEffect(() => {
     if (cargado) {
       try {
@@ -60,6 +60,11 @@ export function FavoritosProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  // 2. Definir la función de eliminación por ID
+  const quitarFavorito = (id: string | number) => {
+    setFavoritos((prev) => prev.filter((item) => item.id !== id));
+  };
+
   const esFavorito = (id: string | number) => {
     return favoritos.some((item) => item.id === id);
   };
@@ -69,8 +74,9 @@ export function FavoritosProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
+    // 3. Exportar quitarFavorito en el value
     <FavoritosContext.Provider
-      value={{ favoritos, toggleFavorito, esFavorito, limpiarFavoritos }}
+      value={{ favoritos, toggleFavorito, quitarFavorito, esFavorito, limpiarFavoritos }}
     >
       {children}
     </FavoritosContext.Provider>
