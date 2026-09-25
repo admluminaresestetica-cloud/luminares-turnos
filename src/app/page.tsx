@@ -55,7 +55,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50/40 via-rose-50/20 to-slate-50/60 dark:from-zinc-950 dark:via-zinc-900/40 dark:to-zinc-950 transition-colors relative">
+    <div className="min-h-screen bg-gradient-to-b from-rose-100/60 via-rose-50/20 to-slate-50/80 dark:from-zinc-950 dark:via-rose-950/20 dark:to-zinc-950 transition-colors relative">
       <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-3 md:pt-8 px-4 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
 
         {/* 1. Header y Búsqueda */}
@@ -97,13 +97,13 @@ export default function HomePage() {
             </section>
 
             {/* Bloque de Beneficios */}
-            <section className="bg-white/80 dark:bg-zinc-900/60 backdrop-blur-md border border-emerald-900/5 dark:border-zinc-800 rounded-3xl p-4 space-y-3 shadow-xl shadow-emerald-900/5">
+            <section className="bg-white/80 dark:bg-zinc-900/60 backdrop-blur-md border border-rose-900/5 dark:border-zinc-800 rounded-3xl p-4 space-y-3 shadow-xl shadow-rose-900/5">
               <h3 className="text-[11px] font-black text-stone-400 dark:text-zinc-400 uppercase tracking-wider px-1">
                 ¿Por qué elegirnos?
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2.5 text-xs text-stone-600 dark:text-zinc-400">
-                <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-emerald-900/5 dark:border-zinc-700/50 hover:bg-white transition-colors">
-                  <div className="p-2.5 rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] dark:text-emerald-400 shrink-0">
+                <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-rose-900/5 dark:border-zinc-700/50 hover:bg-white transition-colors">
+                  <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div>
@@ -112,8 +112,8 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-emerald-900/5 dark:border-zinc-700/50 hover:bg-white transition-colors">
-                  <div className="p-2.5 rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] dark:text-emerald-400 shrink-0">
+                <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-rose-900/5 dark:border-zinc-700/50 hover:bg-white transition-colors">
+                  <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
@@ -122,8 +122,8 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-emerald-900/5 dark:border-zinc-700/50 hover:bg-white transition-colors">
-                  <div className="p-2.5 rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] dark:text-emerald-400 shrink-0">
+                <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-rose-900/5 dark:border-zinc-700/50 hover:bg-white transition-colors">
+                  <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div>
@@ -138,10 +138,10 @@ export default function HomePage() {
             <section className="pt-1">
               <Link
                 href="/faq"
-                className="w-full bg-white/90 dark:bg-zinc-900/80 border border-emerald-900/10 dark:border-zinc-800 rounded-2xl p-4 flex items-center justify-between hover:bg-white dark:hover:bg-zinc-900 transition-all text-left shadow-lg shadow-emerald-900/5 active:scale-[0.99] group cursor-pointer"
+                className="w-full bg-white/90 dark:bg-zinc-900/80 border border-rose-900/10 dark:border-zinc-800 rounded-2xl p-4 flex items-center justify-between hover:bg-white dark:hover:bg-zinc-900 transition-all text-left shadow-lg shadow-rose-900/5 active:scale-[0.99] group cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] dark:text-emerald-400">
+                  <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
                     <HelpCircle className="w-4 h-4" />
                   </div>
                   <div>
