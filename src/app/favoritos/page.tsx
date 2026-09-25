@@ -158,10 +158,49 @@ export default function FavoritosPage() {
           {favoritos.map((producto) => (
             <TarjetaFavorito
               key={producto.id}
-              producto={producto}
-              onRemove={quitarFavorito}
-              onAddToCart={agregarAlCarrito}
-            />
+              className="bg-white rounded-2xl border border-gray-200 p-3 shadow-sm flex flex-col justify-between relative group"
+            >
+              {/* Botón Quitar Favorito Individual */}
+              <button
+                onClick={() => quitarFavorito(producto.id)}
+                className="absolute top-5 right-5 z-10 p-2 bg-white/80 backdrop-blur-md rounded-full text-red-500 shadow-sm hover:scale-110 active:scale-95 transition-transform"
+                title="Quitar de favoritos"
+              >
+                <Heart className="w-4 h-4 fill-red-500" />
+              </button>
+
+              <div>
+                {/* Imagen */}
+                <div className="relative h-40 w-full overflow-hidden rounded-xl bg-gray-50 mb-3 border border-gray-100 flex items-center justify-center">
+                  {producto.imagen_url ? (
+                    <img
+                      src={producto.imagen_url}
+                      alt={producto.nombre}
+                      className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <span className="text-3xl">🛍️</span>
+                  )}
+                </div>
+
+                {/* Info */}
+                <h3 className="font-bold text-sm text-gray-800 line-clamp-2 mb-1">
+                  {producto.nombre}
+                </h3>
+                <p className="text-base font-extrabold text-[#0E6E55] mb-3">
+                  ${Number(producto.precio || 0).toLocaleString("es-AR")}
+                </p>
+              </div>
+
+              {/* Acciones */}
+              <button
+                onClick={() => agregarAlCarrito(producto)}
+                className="w-full bg-[#0E6E55] hover:bg-[#0b5643] text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors active:scale-95 shadow-sm"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Agregar al Carrito
+              </button>
+            </div>
           ))}
         </div>
       )}
