@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Heart, ShoppingBag, Trash2, ArrowLeft } from "lucide-react";
-import { useFavoritos } from "@/context/FavoritoContext";
+import { useFavoritos } from "@/context/FavoritosContext";
 import { useCarrito } from "@/context/CarritoContext";
 
 export default function FavoritosPage() {
