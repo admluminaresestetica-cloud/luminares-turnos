@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import SeccionFAQ from '@/components/home/SeccionFAQ';
+import SeccionFAQ from '@/components/Home/SeccionFAQ';
 
 export default function FAQPage() {
   return (
