@@ -190,8 +190,8 @@ function TiendaContenido() {
         return precioBase > p.precio;
       });
     } else if (categoriaFiltro !== "Todos") {
-      resultado = resultado.filter((p) => p.categoria.toLowerCase() === categoriaFiltro.toLowerCase());
-    }
+  resultado = resultado.filter((p) => p.categoria?.toLowerCase() === categoriaFiltro.toLowerCase());
+}
 
     return resultado;
   }, [productos, busqueda, categoriaFiltro, tagSeleccionado]);

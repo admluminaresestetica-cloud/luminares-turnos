@@ -1,6 +1,10 @@
 "use client";
 
 import React from "react";
+// ──> CAMBIO 1: Importar ícono y hook de favoritos
+import { Heart } from "lucide-react";
+import { useFavoritos } from "@/context/FavoritosContext";
+// <── FIN CAMBIO 1
 import { useCarrito } from "@/context/CarritoContext";
 
 interface Producto {
@@ -14,11 +18,14 @@ interface Producto {
   stock?: number;
   disponible?: boolean;
   activo?: boolean;
-  permite_cuotas?: boolean; // Se agrega la propiedad
+  permite_cuotas?: boolean;
 }
 
 export default function ProductoCard({ producto }: { producto: Producto }) {
   const { carrito, agregarAlCarrito, restarUnidad } = useCarrito();
+  // ──> CAMBIO 2: Usar el hook de favoritos
+  const { toggleFavorito, esFavorito } = useFavoritos();
+  // <── FIN CAMBIO 2
 
   const itemEnCarrito = carrito.find((item) => item.id === producto.id);
   const cantidad = itemEnCarrito ? itemEnCarrito.cantidad : 0;
@@ -29,6 +36,10 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
   const sinStock = stockDisponible <= 0;
   const estaAgotado = sinStock || estaPausado;
   const permiteCuotas = producto.permite_cuotas ?? true;
+
+  // ──> CAMBIO 3: Verificar si es favorito
+  const estaEnFavoritos = esFavorito(producto.id);
+  // <── FIN CAMBIO 3
 
   // Límite alcanzado en el contador
   const alcanzoLimiteStock = cantidad >= stockDisponible;
@@ -49,7 +60,7 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
   const handleAgregar = () => {
     agregarAlCarrito({
       ...producto,
-      permite_cuotas: permiteCuotas, // Nos aseguramos de enviar permite_cuotas
+      permite_cuotas: permiteCuotas,
     } as any);
   };
 
@@ -65,11 +76,50 @@ export default function ProductoCard({ producto }: { producto: Producto }) {
         justifyContent: "space-between",
         boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
         opacity: estaAgotado ? 0.75 : 1,
-        position: "relative",
+        position: "relative", // Necesario para los botones absolutos
       }}
     >
       <div>
-        {/* Badges superiores */}
+        {/* ──> CAMBIO 4: Insertar Botón de Corazón (Favoritos) */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation(); // Por seguridad, si la card tuviera click
+            toggleFavorito(producto as any);
+          }}
+          style={{
+            position: "absolute",
+            top: "12px",
+            left: "12px", // Lo ponemos a la izquierda para no tapar los badges de la derecha
+            zIndex: 10,
+            background: "rgba(255, 255, 255, 0.8)",
+            backdropFilter: "blur(4px)",
+            border: "none",
+            borderRadius: "50%",
+            padding: "8px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            transition: "transform 0.2s ease, background 0.2s ease",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255, 255, 255, 1)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255, 255, 255, 0.8)")}
+          title={estaEnFavoritos ? "Quitar de favoritos" : "Guardar en favoritos"}
+        >
+          <Heart
+            size={18}
+            style={{
+              transition: "fill 0.2s ease, color 0.2s ease",
+              color: estaEnFavoritos ? "#ef4444" : "#9ca3af",
+              fill: estaEnFavoritos ? "#ef4444" : "none",
+            }}
+          />
+        </button>
+        {/* <── FIN CAMBIO 4 */}
+
+        {/* Badges superiores (Derecha) */}
         <div style={{ position: "absolute", top: "12px", right: "12px", display: "flex", gap: "4px", zIndex: 1 }}>
           {!permiteCuotas && !estaAgotado && (
             <span

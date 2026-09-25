@@ -72,15 +72,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     cargarConfiguracion();
   }, []);
 
-  // ──> NUEVO: EFECTO DE SEGURIDAD PARA MÉTODO DE ENVÍO <──
-  // Si se desactiva el envío a domicilio y el usuario lo tenía seleccionado, lo forzamos a "retiro"
-  useEffect(() => {
-    if (!envioDomicilioActivo && datosEnvio?.metodoEnvio === "envio") {
-      setDatosEnvio((prev) => ({ ...prev, metodoEnvio: "retiro" }));
-    }
-  }, [envioDomicilioActivo, datosEnvio?.metodoEnvio, setDatosEnvio]);
-
-  const carritoSeguro = Array.isArray(carrito) ? carrito : [];
+const carritoSeguro = Array.isArray(carrito) ? carrito : [];
   const subtotalProductos = carritoSeguro.reduce(
     (acc, item) => acc + (Number(item.precio) || 0) * (item.cantidad || 1),
     0
@@ -103,9 +95,15 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const aptoParaCuotas =
     cuotasHabilitadas && !productoNoAptoCuotas && alcanzaMontoMinimoCuotas;
 
+  // ──> NUEVO: EFECTO DE SEGURIDAD PARA CUOTAS <──
+  useEffect(() => {
+    if (!aptoParaCuotas && metodoPago === "mercadopago_cuotas") {
+      setMetodoPago("whatsapp");
+    }
+  }, [aptoParaCuotas, metodoPago]);  
+
   const PORCENTAJE_DEBITO = 0.10;
   const PORCENTAJE_CUOTAS = 0.25;
-
   // Base real para calcular recargos (Productos + Envío)
   const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
 
@@ -309,7 +307,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/50 backdrop-blur-sm transition-opacity">
+    <div className="fixed inset-0 z-[60] overflow-hidden bg-black/50 backdrop-blur-sm transition-opacity">
       <div className="absolute inset-y-0 right-0 flex max-w-full pl-4 sm:pl-10">
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
           {/* Header */}
@@ -327,7 +325,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           </div>
 
           {/* Contenido */}
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-6 pb-20 sm:pb-6 space-y-6">
             {carritoSeguro.length === 0 ? (
               <div className="text-center py-12 space-y-4">
                 <ShoppingBag className="w-16 h-16 mx-auto text-gray-300" />
@@ -543,7 +541,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
           {/* Footer */}
           {carritoSeguro.length > 0 && (
-            <div className="p-4 sm:p-6 border-t border-[#E7E5E0] bg-gray-50 space-y-4">
+            <div className="p-4 sm:p-6 pb-20 sm:pb-6 border-t border-[#E7E5E0] bg-gray-50 space-y-4">
               <div className="space-y-1.5 text-xs text-gray-600">
                 <div className="flex justify-between">
                   <span>Subtotal productos:</span>
