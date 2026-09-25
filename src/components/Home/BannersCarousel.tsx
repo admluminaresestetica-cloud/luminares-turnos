@@ -1,8 +1,6 @@
-
 'use client';
 
 import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
 
 interface Banner {
   id: string;
@@ -40,19 +38,18 @@ export default function BannersCarousel({ banners, isLoading }: BannersCarouselP
                 className="w-full h-full object-cover"
               />
 
-              {/* Elementos flotantes sin opacar la foto */}
+              {/* Elementos flotantes con acento ámbar/dorado limpio */}
               <div className="absolute inset-0 p-3.5 flex flex-col justify-between pointer-events-none">
                 {banner.titulo && (
                   <div className="self-start">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-900/80 backdrop-blur-md text-[#a3c9b8] text-[10px] font-extrabold tracking-wider uppercase shadow-xs">
-                      <Sparkles className="w-3 h-3 text-[#a3c9b8]" />
+                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-stone-900/85 backdrop-blur-md text-amber-400 text-[10px] font-black tracking-wider uppercase shadow-md border border-amber-500/20">
                       {banner.titulo}
                     </span>
                   </div>
                 )}
 
                 <div className="self-start mt-auto">
-                  <span className="inline-block text-[11px] font-extrabold text-white bg-stone-900/80 backdrop-blur-md px-3 py-1 rounded-xl shadow-xs">
+                  <span className="inline-block text-[11px] font-extrabold text-stone-900 bg-amber-400 backdrop-blur-md px-3.5 py-1 rounded-xl shadow-md">
                     {banner.subtitulo || 'Ver promo'}
                   </span>
                 </div>
@@ -65,14 +62,14 @@ export default function BannersCarousel({ banners, isLoading }: BannersCarouselP
             <Link
               key={banner.id}
               href={banner.link_destino}
-              className="snap-center shrink-0 w-[88%] first:ml-0 rounded-3xl overflow-hidden relative shadow-xs border border-stone-200/80 dark:border-zinc-800 aspect-[21/9] block active:scale-[0.98] transition-transform"
+              className="snap-center shrink-0 w-[88%] first:ml-0 rounded-3xl overflow-hidden relative shadow-md shadow-amber-950/5 border border-stone-200/80 dark:border-zinc-800 aspect-[21/9] block active:scale-[0.98] transition-transform"
             >
               {Content}
             </Link>
           ) : (
             <div
               key={banner.id}
-              className="snap-center shrink-0 w-[88%] first:ml-0 rounded-3xl overflow-hidden relative shadow-xs border border-stone-200/80 dark:border-zinc-800 aspect-[21/9]"
+              className="snap-center shrink-0 w-[88%] first:ml-0 rounded-3xl overflow-hidden relative shadow-md shadow-amber-950/5 border border-stone-200/80 dark:border-zinc-800 aspect-[21/9]"
             >
               {Content}
             </div>
