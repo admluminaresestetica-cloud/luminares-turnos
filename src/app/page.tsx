@@ -55,9 +55,13 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#e8eee9] dark:bg-zinc-950 transition-colors">
-      <main className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-3 md:pt-8 px-4 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
-        
+    <div className="min-h-screen bg-slate-50/50 dark:bg-zinc-950 transition-colors relative overflow-hidden">
+      {/* Luz Ambiental de fondo (Destellos suaves de luz verde) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-300/25 blur-[120px] pointer-events-none rounded-full" />
+      <div className="absolute top-[400px] -right-20 w-[400px] h-[400px] bg-teal-200/20 blur-[100px] pointer-events-none rounded-full" />
+
+      <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-3 md:pt-8 px-4 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
+
         {/* 1. Header y Búsqueda */}
         <section>
           <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
@@ -65,7 +69,7 @@ export default function HomePage() {
 
         {/* 2. Grilla Principal Responsiva */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          
+
           {/* Columna Izquierda */}
           <div className="lg:col-span-7 space-y-6">
             <section className="relative">
@@ -78,10 +82,10 @@ export default function HomePage() {
 
             <ServiciosDestacados />
 
-            {/* Banners Promocionales (sin enlace redundante arriba) */}
+            {/* Banners Promocionales */}
             <section className="space-y-2">
               <div className="flex items-center justify-between px-1">
-                <h2 className="text-xs font-black tracking-wider text-stone-600 uppercase dark:text-zinc-400">
+                <h2 className="text-xs font-black tracking-wider text-stone-500 uppercase dark:text-zinc-400">
                   Novedades & Ofertas
                 </h2>
               </div>
@@ -97,13 +101,13 @@ export default function HomePage() {
             </section>
 
             {/* Bloque de Beneficios */}
-            <section className="bg-white/60 dark:bg-zinc-900/60 backdrop-blur-sm border border-stone-200/80 dark:border-zinc-800 rounded-3xl p-4 space-y-3 shadow-2xs">
-              <h3 className="text-[11px] font-black text-stone-500 dark:text-zinc-400 uppercase tracking-wider px-1">
+            <section className="bg-white/80 dark:bg-zinc-900/60 backdrop-blur-md border border-emerald-900/5 dark:border-zinc-800 rounded-3xl p-4 space-y-3 shadow-xl shadow-emerald-900/5">
+              <h3 className="text-[11px] font-black text-stone-400 dark:text-zinc-400 uppercase tracking-wider px-1">
                 ¿Por qué elegirnos?
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2.5 text-xs text-stone-600 dark:text-zinc-400">
-                <div className="flex items-center gap-3 bg-white/80 dark:bg-zinc-800/80 p-2.5 rounded-2xl border border-stone-100 dark:border-zinc-700/50">
-                  <div className="p-2 rounded-xl bg-[#a3c9b8]/20 text-[#2d5747] dark:text-[#a3c9b8] shrink-0">
+                <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-emerald-900/5 dark:border-zinc-700/50 hover:bg-white transition-colors">
+                  <div className="p-2.5 rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] dark:text-emerald-400 shrink-0">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div>
@@ -112,8 +116,8 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white/80 dark:bg-zinc-800/80 p-2.5 rounded-2xl border border-stone-100 dark:border-zinc-700/50">
-                  <div className="p-2 rounded-xl bg-[#a3c9b8]/20 text-[#2d5747] dark:text-[#a3c9b8] shrink-0">
+                <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-emerald-900/5 dark:border-zinc-700/50 hover:bg-white transition-colors">
+                  <div className="p-2.5 rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] dark:text-emerald-400 shrink-0">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
@@ -122,8 +126,8 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white/80 dark:bg-zinc-800/80 p-2.5 rounded-2xl border border-stone-100 dark:border-zinc-700/50">
-                  <div className="p-2 rounded-xl bg-[#a3c9b8]/20 text-[#2d5747] dark:text-[#a3c9b8] shrink-0">
+                <div className="flex items-center gap-3 bg-slate-50/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-emerald-900/5 dark:border-zinc-700/50 hover:bg-white transition-colors">
+                  <div className="p-2.5 rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] dark:text-emerald-400 shrink-0">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div>
@@ -134,14 +138,14 @@ export default function HomePage() {
               </div>
             </section>
 
-            {/* Tarjeta única de acceso a FAQ (Visible en Celular y PC) */}
+            {/* Tarjeta de acceso a FAQ */}
             <section className="pt-1">
               <Link
                 href="/faq"
-                className="w-full bg-white/80 dark:bg-zinc-900/80 border border-stone-200/90 dark:border-zinc-800 rounded-2xl p-3.5 flex items-center justify-between hover:bg-white dark:hover:bg-zinc-900 transition-all text-left shadow-2xs group cursor-pointer"
+                className="w-full bg-white/90 dark:bg-zinc-900/80 border border-emerald-900/10 dark:border-zinc-800 rounded-2xl p-4 flex items-center justify-between hover:bg-white dark:hover:bg-zinc-900 transition-all text-left shadow-lg shadow-emerald-900/5 active:scale-[0.99] group cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <div className="p-2.5 rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] dark:text-emerald-400">
                     <HelpCircle className="w-4 h-4" />
                   </div>
                   <div>
@@ -149,7 +153,7 @@ export default function HomePage() {
                     <p className="text-[10px] text-stone-500 dark:text-zinc-400">Consultá las preguntas frecuentes</p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="w-4 h-4 text-stone-400 group-hover:translate-x-1 transition-transform" />
               </Link>
             </section>
 
