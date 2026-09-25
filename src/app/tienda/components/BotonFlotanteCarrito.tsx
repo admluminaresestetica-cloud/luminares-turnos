@@ -74,7 +74,8 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
   const productosRestantes = items.length - itemsAbanico.length;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-40 sm:hidden animate-in slide-in-from-bottom-4 duration-300">
+    // CAMBIO AQUÍ: Se cambió bottom-4 por bottom-20 para despegar el botón del BottomNav
+    <div className="fixed bottom-20 left-4 right-4 z-40 sm:hidden animate-in slide-in-from-bottom-4 duration-300">
       <button
         type="button"
         onClick={onOpenCarrito}
@@ -83,7 +84,7 @@ export default function BotonFlotanteCarrito({ onOpenCarrito }: BotonFlotanteCar
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0">
-          
+
           {/* Abanico de miniaturas */}
           <div className="flex items-center -space-x-3.5 shrink-0 pl-0.5">
             {itemsAbanico.map((item, index) => {
