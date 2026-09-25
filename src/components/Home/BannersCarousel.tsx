@@ -27,7 +27,8 @@ export default function BannersCarousel({ banners, isLoading }: BannersCarouselP
 
   return (
     <div className="w-full space-y-2">
-      <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-3 -mx-4 px-4 pb-1">
+      {/* Contenedor con desplazamiento horizontal fluido hacia la derecha y soporte táctil */}
+      <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none gap-3 -mx-4 px-4 pb-2 pt-1 touch-pan-x">
         {banners.map((banner) => {
           const Content = (
             <div className="w-full h-full relative group">
@@ -61,7 +62,7 @@ export default function BannersCarousel({ banners, isLoading }: BannersCarouselP
             <Link
               key={banner.id}
               href={banner.link_destino}
-              className="snap-center shrink-0 w-[88%] first:ml-0 rounded-3xl overflow-hidden relative shadow-md shadow-rose-950/5 border border-stone-200/80 dark:border-zinc-800 aspect-[21/9] block active:scale-[0.98] transition-transform"
+              className="snap-center shrink-0 w-[88%] first:ml-0 rounded-3xl overflow-hidden relative shadow-md shadow-rose-950/5 border border-stone-200/80 dark:border-zinc-800 aspect-[21/9] block active:scale-[0.98] transition-transform cursor-pointer"
             >
               {Content}
             </Link>
