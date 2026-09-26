@@ -1,5 +1,6 @@
 'use client';
 
+import InstallPrompt from '@/components/Home/InstallPrompt';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -160,6 +161,10 @@ export default function HomePage() {
         </div>
 
       </main>
+
+      {/* Componente flotante para instalar la App (PWA) */}
+      <InstallPrompt />
+
     </div>
   );
 }
