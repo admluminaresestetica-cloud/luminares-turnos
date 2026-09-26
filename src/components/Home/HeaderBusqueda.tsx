@@ -77,7 +77,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
       const searchTerm = `%${query.trim()}%`;
 
       try {
-        // A) Buscar en Productos
         const reqProductos = supabase
           .from('productos')
           .select('id, nombre, precio, imagen_url')
@@ -85,7 +84,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           .or(`nombre.ilike.${searchTerm},categoria.ilike.${searchTerm}`)
           .limit(3);
 
-        // B) Buscar en Servicios Generales
         const reqServiciosGenerales = supabase
           .from('servicios_generales')
           .select('id, subtipo, categoria, precio')
@@ -93,7 +91,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           .or(`subtipo.ilike.${searchTerm},categoria.ilike.${searchTerm}`)
           .limit(3);
 
-        // C) Buscar en Zonas Láser (Femenino/Masculino)
         const reqZonasLaser = supabase
           .from('servicios_laser')
           .select('id, nombre_zona, genero, precio_lista')
@@ -101,7 +98,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           .ilike('nombre_zona', searchTerm)
           .limit(3);
 
-        // D) Buscar en Promos Láser (Femenino/Masculino)
         const reqPromosLaser = supabase
           .from('promos_laser')
           .select('id, nombre_promo, genero, precio_promo')
@@ -213,12 +209,13 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
 
   return (
     <div className="space-y-3 relative z-30">
+      {/* Saludo adaptado con colores claros para destacar sobre el fondo verde oscuro */}
       <div className="flex items-center justify-between px-1">
         <div>
-          <p className="text-xs font-medium text-stone-500 dark:text-zinc-400">
+          <p className="text-xs font-medium text-emerald-200/80">
             ¡Hola! Te damos la bienvenida a
           </p>
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-xl font-extrabold tracking-tight text-white">
             {nombreEmpresa}
           </h1>
         </div>
