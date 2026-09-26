@@ -1,96 +1,87 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Calendar, ShoppingBag, MessageCircle } from 'lucide-react';
-import { useConfig } from '@/context/ConfigContext';
+import { useState, useEffect } from 'react';
+import { Download, X } from 'lucide-react';
 
-export default function LandingPage() {
-  const { config } = useConfig();
+export default function InstallPrompt() {
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [visible, setVisible] = useState(false);
 
-  // Nombre y logo dinámicos
-  const nombreEmpresa = config?.nombre_empresa || 'LUMINARES ESTÉTICA';
-  const logoUrl = config?.logo_url || '/logodoradoo.svg';
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Previene que el navegador muestre su banner predeterminado por defecto
+      e.preventDefault();
+      // Guarda el evento para dispararlo cuando el usuario presione el botón
+      setDeferredPrompt(e);
+      // Muestra nuestro banner personalizado
+      setVisible(true);
+    };
 
-  // WhatsApp dinámico
-  const rawNumber = config?.whatsapp_numero || '5493413954355';
-  const numeroLimpio = rawNumber.replace(/[^0-9]/g, '');
-  const whatsappUrl = `https://wa.me/${numeroLimpio}?text=Hola!%20Tengo%20una%20consulta.`;
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    // Muestra el aviso nativo de instalación del sistema
+    deferredPrompt.prompt();
+
+    // Espera a la respuesta del usuario
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      console.log('El usuario aceptó instalar la PWA');
+    }
+
+    // Limpia el prompt porque ya no se puede reutilizar
+    setDeferredPrompt(null);
+    setVisible(false);
+  };
+
+  if (!visible) return null;
 
   return (
-    <main className="min-h-screen bg-[#F2F4F7] flex flex-col items-center justify-center p-6 md:p-12">
-      <div className="max-w-md w-full flex flex-col items-center">
+    <div className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-md animate-in fade-in slide-in-from-bottom-5 duration-300">
+      <div className="bg-[#1b2e25] dark:bg-zinc-900 border border-[#2d4d3d] dark:border-zinc-800 text-white p-4 rounded-3xl shadow-2xl flex items-center justify-between gap-3 backdrop-blur-md">
         
-        {/* Encabezado / Logo */}
-        <header className="text-center mb-8 flex flex-col items-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-white shadow-[0_8px_20px_rgba(0,0,0,0.06)] border border-slate-100 mb-4 overflow-hidden p-3">
-            <Image 
-              src={logoUrl} 
-              alt={`Logo ${nombreEmpresa}`} 
-              width={40} 
-              height={40} 
-              className="object-contain w-auto h-auto max-h-10"
-              priority
-            />
+        {/* Icono e Información */}
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-emerald-400 text-[#1b2e25] shrink-0 shadow-sm">
+            <Download className="w-5 h-5 stroke-[2.5]" />
           </div>
-          <p className="text-xs font-black tracking-[0.25em] uppercase text-emerald-800 mb-1">
-            {nombreEmpresa}
-          </p>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-            ¿Qué te gustaría hacer hoy?
-          </h1>
-        </header>
+          <div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-white">Instalar Aplicación</h4>
+            <p className="text-[11px] text-stone-300">
+              Instalá Luminares para un acceso más rápido.
+            </p>
+          </div>
+        </div>
 
-        {/* Grilla / Tarjetas Verticales Estilo App */}
-        <div className="w-full grid grid-cols-2 gap-4">
+        {/* Botones de acción */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={handleInstallClick}
+            className="bg-emerald-400 hover:bg-emerald-300 text-[#1b2e25] font-extrabold text-xs px-3.5 py-2 rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+          >
+            Instalar
+          </button>
           
-          {/* Botón 1: Reservar Turnos */}
-          <Link
-            href="/turnos"
-            className="group relative bg-white border border-slate-200/90 rounded-[28px] p-6 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.08),0_8px_10px_-6px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_30px_-5px_rgba(14,110,85,0.15)] hover:border-emerald-300 transition-all duration-200 active:scale-[0.97] active:translate-y-0.5 flex flex-col items-center text-center justify-center aspect-square"
+          <button
+            type="button"
+            onClick={() => setVisible(false)}
+            className="text-stone-400 hover:text-white p-1 transition-colors cursor-pointer"
+            aria-label="Cerrar"
           >
-            <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-[#0E6E55] flex items-center justify-center shadow-inner mb-4 group-hover:scale-110 transition-transform duration-200">
-              <Calendar className="w-8 h-8 stroke-[2]" />
-            </div>
-            <span className="text-sm font-bold text-slate-900 group-hover:text-[#0E6E55] transition-colors leading-snug">
-              Reservar Turnos
-            </span>
-          </Link>
-
-          {/* Botón 2: Tienda Online */}
-          <Link
-            href="/tienda"
-            className="group relative bg-white border border-slate-200/90 rounded-[28px] p-6 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.08),0_8px_10px_-6px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_30px_-5px_rgba(18,21,27,0.15)] hover:border-slate-400 transition-all duration-200 active:scale-[0.97] active:translate-y-0.5 flex flex-col items-center text-center justify-center aspect-square"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-800 flex items-center justify-center shadow-inner mb-4 group-hover:scale-110 transition-transform duration-200">
-              <ShoppingBag className="w-8 h-8 stroke-[2]" />
-            </div>
-            <span className="text-sm font-bold text-slate-900 group-hover:text-slate-950 transition-colors leading-snug">
-              Tienda Online
-            </span>
-          </Link>
-
+            <X className="w-4 h-4" />
+          </button>
         </div>
-
-        {/* Asistencia WhatsApp */}
-        <div className="mt-8 text-center">
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-emerald-700 transition-colors py-2 px-4 rounded-xl hover:bg-white/60"
-          >
-            <MessageCircle className="w-4 h-4 text-[#25D366]" />
-            <span>¿Necesitás asistencia? Escribinos</span>
-          </a>
-        </div>
-
-        <footer className="text-center text-[11px] text-slate-400 mt-6 tracking-wide">
-          {nombreEmpresa}
-        </footer>
 
       </div>
-    </main>
+    </div>
   );
 }
