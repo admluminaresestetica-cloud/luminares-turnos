@@ -12,6 +12,7 @@ import CategoriasRapidas from '@/components/Home/CategoriasRapidas';
 import BannersCarousel from '@/components/Home/BannersCarousel';
 import GuiaReservaCard from '@/components/Home/GuiaReservaCard';
 import ServiciosDestacados from '@/components/Home/ServiciosDestacados';
+import InstallPrompt from '@/components/Home/InstallPrompt';
 
 interface Banner {
   id: string;
@@ -160,6 +161,9 @@ export default function HomePage() {
         </div>
 
       </main>
+
+      {/* Banner flotante de instalación PWA */}
+      <InstallPrompt />
     </div>
   );
 }
