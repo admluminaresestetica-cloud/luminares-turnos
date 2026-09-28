@@ -39,10 +39,10 @@ export default function SeccionFAQ() {
   if (loading) {
     return (
       <div className="space-y-3 pt-2">
-        <div className="h-4 w-40 bg-stone-200 dark:bg-zinc-800 rounded-md animate-pulse" />
+        <div className="h-4 w-40 bg-rose-100/50 dark:bg-zinc-800 rounded-md animate-pulse" />
         <div className="space-y-2">
-          <div className="h-12 bg-stone-200 dark:bg-zinc-800 rounded-2xl animate-pulse" />
-          <div className="h-12 bg-stone-200 dark:bg-zinc-800 rounded-2xl animate-pulse" />
+          <div className="h-12 bg-rose-100/30 dark:bg-zinc-800 rounded-2xl animate-pulse" />
+          <div className="h-12 bg-rose-100/30 dark:bg-zinc-800 rounded-2xl animate-pulse" />
         </div>
       </div>
     );
@@ -53,7 +53,7 @@ export default function SeccionFAQ() {
   return (
     <section className="space-y-3 pt-2">
       <div className="flex items-center gap-1.5 px-1">
-        <HelpCircle className="w-3.5 h-3.5 text-[#2d5747] dark:text-[#a3c9b8]" />
+        <HelpCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
         <h2 className="text-xs font-black tracking-wider text-stone-600 uppercase dark:text-zinc-400">
           Preguntas Frecuentes
         </h2>
@@ -68,8 +68,8 @@ export default function SeccionFAQ() {
               key={faq.id}
               className={`border rounded-2xl transition-all duration-200 overflow-hidden bg-white/70 dark:bg-zinc-900/70 ${
                 estaAbierto
-                  ? 'border-[#a3c9b8] shadow-2xs'
-                  : 'border-stone-200/80 dark:border-zinc-800 hover:border-stone-300'
+                  ? 'border-rose-300 dark:border-rose-900/60 shadow-sm shadow-rose-950/5'
+                  : 'border-stone-200/80 dark:border-zinc-800 hover:border-rose-200 dark:hover:border-zinc-700'
               }`}
             >
               <button
@@ -83,7 +83,7 @@ export default function SeccionFAQ() {
                 <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 ${
                     estaAbierto
-                      ? 'bg-[#a3c9b8]/20 text-[#2d5747] dark:text-[#a3c9b8] rotate-180'
+                      ? 'bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 rotate-180'
                       : 'bg-stone-100 dark:bg-zinc-800 text-stone-500'
                   }`}
                 >

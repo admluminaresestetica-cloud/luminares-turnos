@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap } from 'lucide-react';
+import Link from 'next/link';
+import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface HeaderBusquedaProps {
@@ -209,17 +210,26 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
 
   return (
     <div className="space-y-3 relative z-30">
-      {/* Saludo adaptado con colores claros para destacar sobre el fondo verde oscuro */}
-      <div className="flex items-center justify-between px-1">
-        <div>
-          <p className="text-xs font-medium text-emerald-200/80">
-            ¡Hola! Te damos la bienvenida a
-          </p>
-          <h1 className="text-xl font-extrabold tracking-tight text-white">
-            {nombreEmpresa}
-          </h1>
-        </div>
-      </div>
+      {/* Saludo + Botón Mis Turnos arriba a la derecha */}
+<div className="flex items-center justify-between px-1">
+  <div>
+    <p className="text-xs font-medium text-white/80">
+      ¡Hola! Te damos la bienvenida a
+    </p>
+    <h1 className="text-xl font-extrabold tracking-tight text-white">
+      {nombreEmpresa}
+    </h1>
+  </div>
+
+  {/* Botón Mis Turnos */}
+  <Link
+    href="/mis-turnos"
+    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
+  >
+    <Calendar className="h-3.5 w-3.5 text-white" />
+    <span>Mis Turnos</span>
+  </Link>
+</div>
 
       <form onSubmit={handleSearchSubmit} className="relative">
         <div className="relative flex items-center">
