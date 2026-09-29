@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useConfig } from '@/context/ConfigContext';
@@ -33,9 +33,6 @@ export default function HomePage() {
 
   // Estado para visibilidad
   const [showSubHeader, setShowSubHeader] = useState(true);
-  
-  // Ref para ignorar el scroll fantasma causado por el cambio de tamaño del DOM
-  const isAnimatingRef = useRef(false);
 
   useEffect(() => {
     async function fetchBanners() {
@@ -61,48 +58,23 @@ export default function HomePage() {
     fetchBanners();
   }, []);
 
-  // Lógica de Scroll protegida contra rebote de layout
+  // Lógica de Scroll Simplificada:
+  // - Si bajás más de 30px -> Oculta las acciones rápidas.
+  // - Solo cuando volvés exactamente arriba de todo (scrollY <= 10) -> Se vuelve a desplegar.
   useEffect(() => {
-    let lastScrollY = window.scrollY;
-
     const handleScroll = () => {
-      // Ignorar eventos mientras el header se está colapsando/expandiendo
-      if (isAnimatingRef.current) return;
-
       const currentScrollY = window.scrollY;
-      const diff = currentScrollY - lastScrollY;
 
-      // Si estamos en el tope superior
-      if (currentScrollY <= 20) {
-        if (!showSubHeader) {
-          setShowSubHeader(true);
-          isAnimatingRef.current = true;
-          setTimeout(() => { isAnimatingRef.current = false; }, 320);
-        }
-      } 
-      // Scroll hacia abajo con margen claro (> 25px)
-      else if (diff > 25 && currentScrollY > 100) {
-        if (showSubHeader) {
-          setShowSubHeader(false);
-          isAnimatingRef.current = true;
-          setTimeout(() => { isAnimatingRef.current = false; }, 320);
-        }
-      } 
-      // Scroll hacia arriba con margen claro (< -25px)
-      else if (diff < -25) {
-        if (!showSubHeader) {
-          setShowSubHeader(true);
-          isAnimatingRef.current = true;
-          setTimeout(() => { isAnimatingRef.current = false; }, 320);
-        }
+      if (currentScrollY <= 10) {
+        setShowSubHeader(true);
+      } else if (currentScrollY > 30) {
+        setShowSubHeader(false);
       }
-
-      lastScrollY = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [showSubHeader]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--primary))]/5 via-stone-50 to-stone-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 transition-colors relative">
