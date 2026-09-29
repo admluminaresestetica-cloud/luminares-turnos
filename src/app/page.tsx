@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useConfig } from '@/context/ConfigContext';
@@ -31,8 +31,9 @@ export default function HomePage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
 
-  // Estado para visibilidad
-  const [showSubHeader, setShowSubHeader] = useState(true);
+  // Estados para controlar el scroll desplegable
+  const [showHeader, setShowHeader] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     async function fetchBanners() {
@@ -58,67 +59,49 @@ export default function HomePage() {
     fetchBanners();
   }, []);
 
-  // Lógica de Scroll Suave y Natural (sin saltos forzados)
+  // Lógica para detectar dirección del scroll en móviles y desktop
   useEffect(() => {
-    let lastScrollY = window.scrollY;
-
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      const diff = currentScrollY - lastScrollY;
 
-      // 1. Si está en el tope absoluto, siempre mostrar
-      if (currentScrollY <= 15) {
-        setShowSubHeader(true);
-      } 
-      // 2. Si baja mas de 100px y scrollea hacia abajo -> Ocultar
-      else if (diff > 10 && currentScrollY > 100) {
-        setShowSubHeader(false);
-      } 
-      // 3. Si scrollea hacia arriba claramente -> Mostrar
-      else if (diff < -15) {
-        setShowSubHeader(true);
+      if (currentScrollY < 10) {
+        // En la cima siempre se muestra desplegado
+        setShowHeader(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        // Scrolleando hacia abajo: oculta/pliega el bloque
+        setShowHeader(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolleando hacia arriba: despliega de nuevo
+        setShowHeader(true);
       }
 
-      lastScrollY = currentScrollY;
+      setLastScrollY(currentScrollY);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--primary))]/5 via-stone-50 to-stone-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 transition-colors relative">
-      <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 space-y-6">
+      <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
 
-        {/* ENCABEZADO FIJO */}
-        <div className="sticky top-0 z-30 bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-md pt-2 pb-1 transition-all">
-          <div className="shadow-xl shadow-stone-900/10 rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900 transition-all duration-300">
-            
-            {/* 1. Buscador Fijo Superior */}
-            <div className="px-4 pt-4 pb-3">
-              <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
-            </div>
+        {/* 1. Bloque Superior Unificado (Sticky con animación de despliegue) */}
+        <section
+          className={`sticky top-0 z-30 transition-all duration-300 ease-in-out bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900 px-4 pt-4 pb-6 rounded-b-[2.5rem] md:rounded-3xl shadow-xl shadow-stone-900/10 space-y-4 ${
+            showHeader
+              ? 'translate-y-0 opacity-100'
+              : '-translate-y-full opacity-0 pointer-events-none'
+          }`}
+        >
+          <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
+          <AccionesRapidas />
+        </section>
 
-            {/* 2. Acciones Rápidas con animación limpia */}
-            <div
-              className={`grid transition-all duration-300 ease-in-out px-4 ${
-                showSubHeader
-                  ? 'grid-rows-[1fr] opacity-100 pb-5 pointer-events-auto'
-                  : 'grid-rows-[0fr] opacity-0 pb-0 pointer-events-none'
-              }`}
-            >
-              <div className="overflow-hidden">
-                <AccionesRapidas />
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* CONTENIDO PRINCIPAL */}
+        {/* Contenedor con padding lateral para el resto del contenido */}
         <div className="px-4 sm:px-0 space-y-6">
 
-          {/* Grilla Principal */}
+          {/* 2. Grilla Principal Responsiva */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 
             {/* Columna Izquierda */}
@@ -185,7 +168,7 @@ export default function HomePage() {
                 </div>
               </section>
 
-              {/* FAQ */}
+              {/* Tarjeta de acceso a FAQ */}
               <section className="pt-1">
                 <Link
                   href="/faq"
@@ -212,6 +195,7 @@ export default function HomePage() {
 
       </main>
 
+      {/* Banner flotante de instalación PWA */}
       <InstallPrompt />
     </div>
   );
