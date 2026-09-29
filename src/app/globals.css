@@ -10,12 +10,12 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    
-    /* VIOLETA / MORA PREMIUM */
-    --primary: 270 76% 53%;         /* Tono vibrante principal */
-    --primary-dark: 275 80% 28%;    /* Tono profundo para degradados y sombras */
-    --primary-foreground: 210 40% 98%;
-    
+
+    /* BASE NEUTRA (Evita el destello violeta al recargar) */
+    --primary: 0 0% 100%;           /* Blanco neutro inicial */
+    --primary-dark: 0 0% 90%;      /* Gris claro neutro inicial */
+    --primary-foreground: 222.2 84% 4.9%;
+
     --secondary: 214.3 31.8% 91.4%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
@@ -26,7 +26,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 270 76% 53%;
+    --ring: 0 0% 80%;
     --radius: 0.5rem;
   }
 
@@ -37,11 +37,12 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    
-    --primary: 270 70% 65%;
-    --primary-dark: 275 80% 20%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    
+
+    /* BASE NEUTRA MODO OSCURO */
+    --primary: 222.2 84% 4.9%;
+    --primary-dark: 0 0% 0%;
+    --primary-foreground: 210 40% 98%;
+
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
@@ -52,11 +53,11 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 270 70% 65%;
+    --ring: 217.2 32.6% 17.5%;
   }
 
   html, body {
-    touch-action: pan-y; /* Aplica el control de scroll solo a nivel de página */
+    touch-action: pan-y;
   }
 
   * {
@@ -78,7 +79,6 @@
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Regla para elementos con scroll horizontal (carruseles / tarjetas) */
 .touch-pan-x {
   touch-action: pan-x pan-y !important;
 }
