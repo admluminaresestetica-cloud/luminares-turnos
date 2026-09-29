@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap, ArrowRight } from 'lucide-react';
+import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface HeaderBusquedaProps {
@@ -78,7 +78,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
     fetchTags();
   }, []);
 
-  // Búsqueda reactiva con debounce (Límite ampliado a 10 resultados por tabla)
+  // Búsqueda reactiva con debounce
   useEffect(() => {
     if (!query.trim() || query.length < 2) {
       setProductos([]);
@@ -97,7 +97,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           .select('id, nombre, precio, imagen_url')
           .eq('activo', true)
           .or(`nombre.ilike.${searchTerm},categoria.ilike.${searchTerm}`)
-          .limit(10); // Aumentado para traer todas las variantes de Huggies/marcas
+          .limit(10);
 
         const reqServiciosGenerales = supabase
           .from('servicios_generales')
@@ -181,15 +181,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
     return () => clearTimeout(timer);
   }, [query]);
 
-  const handleSearchSubmit = (e?: React.FormEvent, busquedaDirecta?: string) => {
-    if (e) e.preventDefault();
-    const termino = busquedaDirecta || query.trim();
-    if (!termino) return;
-
-    setFocused(false);
-    router.push(`/tienda?busqueda=${encodeURIComponent(termino)}`);
-  };
-
   const seleccionarProducto = (id: number) => {
     setFocused(false);
     router.push(`/tienda?producto=${id}`);
@@ -219,7 +210,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
 
   const seleccionarTag = (tag: TagBusqueda) => {
     setQuery(tag.nombre);
-    handleSearchSubmit(undefined, tag.nombre);
   };
 
   return (
@@ -245,7 +235,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
       </div>
 
       {/* Input de Búsqueda */}
-      <form onSubmit={(e) => handleSearchSubmit(e)} className="relative">
+      <div className="relative">
         <div className="relative flex items-center">
           <Search className="absolute left-3.5 h-4 w-4 text-stone-400 pointer-events-none" />
           <input
@@ -391,37 +381,18 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
               </div>
             )}
 
-            {/* BOTÓN "VER TODOS LOS RESULTADOS" */}
-            {query.trim().length >= 2 && (productos.length > 0 || servicios.length > 0) && (
-              <button
-                type="button"
-                onClick={() => handleSearchSubmit()}
-                className="w-full mt-2 py-2.5 px-3 bg-stone-100 dark:bg-zinc-800 hover:bg-[hsl(var(--primary))]/10 hover:text-[hsl(var(--primary))] rounded-xl text-xs font-bold text-stone-700 dark:text-zinc-200 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <span>Ver todos los resultados para &quot;{query}&quot;</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            )}
-
             {/* SIN RESULTADOS */}
             {query.trim().length >= 2 &&
               !loading &&
               productos.length === 0 &&
               servicios.length === 0 && (
                 <div className="p-4 text-center text-xs text-stone-500 dark:text-zinc-400">
-                  No encontramos coincidencias para &quot;{query}&quot;.
-                  <button
-                    type="button"
-                    onClick={() => handleSearchSubmit()}
-                    className="block mx-auto mt-2 font-bold text-[hsl(var(--primary))] hover:underline cursor-pointer"
-                  >
-                    Buscar en el catálogo general →
-                  </button>
+                  No encontramos coincidencias directas para &quot;{query}&quot;.
                 </div>
               )}
           </div>
         )}
-      </form>
+      </div>
     </div>
   );
 }
