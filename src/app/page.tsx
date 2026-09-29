@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useConfig } from '@/context/ConfigContext';
@@ -58,25 +58,59 @@ export default function HomePage() {
     fetchBanners();
   }, []);
 
-  // Lógica de Scroll Suave y Natural (sin saltos forzados)
+  // Lógica con Detector Anti-Bucle (Anti-Jitter / Freno de Mano Automático)
   useEffect(() => {
     let lastScrollY = window.scrollY;
+    const toggleTimestamps: number[] = [];
+    let isLocked = false;
 
     const handleScroll = () => {
+      // Si está bloqueado por pánico anti-bucle, ignorar eventos temporales
+      if (isLocked) return;
+
       const currentScrollY = window.scrollY;
       const diff = currentScrollY - lastScrollY;
+      const now = Date.now();
 
-      // 1. Si está en el tope absoluto, siempre mostrar
-      if (currentScrollY <= 15) {
+      // Función helper para cambiar estado y registrar el timestap
+      const updateState = (newState: boolean) => {
+        setShowSubHeader((prev) => {
+          if (prev !== newState) {
+            toggleTimestamps.push(now);
+            return newState;
+          }
+          return prev;
+        });
+      };
+
+      // 1. DETECTOR DE BUCLE INFINITO
+      // Filtrar cambios ocurridos únicamente en el último segundo y medio (1500ms)
+      const recentToggles = toggleTimestamps.filter((t) => now - t < 1500);
+
+      // Si mutó 3 o más veces rápido -> DETECTADO BUCLE / REBOTE
+      if (recentToggles.length >= 3) {
+        isLocked = true;
+        // Mandar la pantalla arriba de todo instantáneamente
+        window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
         setShowSubHeader(true);
-      } 
-      // 2. Si baja mas de 100px y scrollea hacia abajo -> Ocultar
-      else if (diff > 10 && currentScrollY > 100) {
-        setShowSubHeader(false);
-      } 
-      // 3. Si scrollea hacia arriba claramente -> Mostrar
-      else if (diff < -15) {
-        setShowSubHeader(true);
+
+        // Resetear historial y liberar bloqueo tras 500ms
+        toggleTimestamps.length = 0;
+        setTimeout(() => {
+          isLocked = false;
+        }, 500);
+        return;
+      }
+
+      // 2. LÓGICA DE SCROLL NORMAL
+      if (currentScrollY <= 10) {
+        updateState(true);
+      } else if (diff > 15 && currentScrollY > 80) {
+        // Scroll hacia abajo -> Ocultar
+        updateState(false);
+      } else if (diff < -15) {
+        // Scroll hacia arriba -> Mostrar
+        updateState(true);
       }
 
       lastScrollY = currentScrollY;
@@ -88,7 +122,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--primary))]/5 via-stone-50 to-stone-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 transition-colors relative">
-      <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 space-y-6">
+      {/* min-h-[120vh] evita que la pantalla pierda altura total al colapsar el menú */}
+      <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-[120vh] pb-32 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
 
         {/* ENCABEZADO FIJO */}
         <div className="sticky top-0 z-30 bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-md pt-2 pb-1 transition-all">
@@ -99,17 +134,15 @@ export default function HomePage() {
               <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
             </div>
 
-            {/* 2. Acciones Rápidas con animación limpia */}
+            {/* 2. Acciones Rápidas con animación de altura */}
             <div
-              className={`grid transition-all duration-300 ease-in-out px-4 ${
+              className={`transition-all duration-300 ease-in-out px-4 overflow-hidden origin-top ${
                 showSubHeader
-                  ? 'grid-rows-[1fr] opacity-100 pb-5 pointer-events-auto'
-                  : 'grid-rows-[0fr] opacity-0 pb-0 pointer-events-none'
+                  ? 'max-h-48 opacity-100 pb-5 pointer-events-auto'
+                  : 'max-h-0 opacity-0 pb-0 pointer-events-none'
               }`}
             >
-              <div className="overflow-hidden">
-                <AccionesRapidas />
-              </div>
+              <AccionesRapidas />
             </div>
 
           </div>
