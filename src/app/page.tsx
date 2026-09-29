@@ -58,59 +58,25 @@ export default function HomePage() {
     fetchBanners();
   }, []);
 
-  // Lógica con Detector Anti-Bucle (Anti-Jitter / Freno de Mano Automático)
+  // Lógica de Scroll fluida (sin saltos ni tirones repentinos)
   useEffect(() => {
     let lastScrollY = window.scrollY;
-    const toggleTimestamps: number[] = [];
-    let isLocked = false;
 
     const handleScroll = () => {
-      // Si está bloqueado por pánico anti-bucle, ignorar eventos temporales
-      if (isLocked) return;
-
       const currentScrollY = window.scrollY;
       const diff = currentScrollY - lastScrollY;
-      const now = Date.now();
 
-      // Función helper para cambiar estado y registrar el timestap
-      const updateState = (newState: boolean) => {
-        setShowSubHeader((prev) => {
-          if (prev !== newState) {
-            toggleTimestamps.push(now);
-            return newState;
-          }
-          return prev;
-        });
-      };
-
-      // 1. DETECTOR DE BUCLE INFINITO
-      // Filtrar cambios ocurridos únicamente en el último segundo y medio (1500ms)
-      const recentToggles = toggleTimestamps.filter((t) => now - t < 1500);
-
-      // Si mutó 3 o más veces rápido -> DETECTADO BUCLE / REBOTE
-      if (recentToggles.length >= 3) {
-        isLocked = true;
-        // Mandar la pantalla arriba de todo instantáneamente
-        window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+      // Si estamos en la parte superior (0 a 20px), mantener visible
+      if (currentScrollY <= 20) {
         setShowSubHeader(true);
-
-        // Resetear historial y liberar bloqueo tras 500ms
-        toggleTimestamps.length = 0;
-        setTimeout(() => {
-          isLocked = false;
-        }, 500);
-        return;
-      }
-
-      // 2. LÓGICA DE SCROLL NORMAL
-      if (currentScrollY <= 10) {
-        updateState(true);
-      } else if (diff > 15 && currentScrollY > 80) {
-        // Scroll hacia abajo -> Ocultar
-        updateState(false);
-      } else if (diff < -15) {
-        // Scroll hacia arriba -> Mostrar
-        updateState(true);
+      } 
+      // Si desliza hacia abajo claramente y superó los 60px -> Ocultar menú secundario
+      else if (diff > 10 && currentScrollY > 60) {
+        setShowSubHeader(false);
+      } 
+      // Si desliza hacia arriba -> Volver a mostrar
+      else if (diff < -10) {
+        setShowSubHeader(true);
       }
 
       lastScrollY = currentScrollY;
@@ -122,19 +88,18 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--primary))]/5 via-stone-50 to-stone-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 transition-colors relative">
-      {/* min-h-[120vh] evita que la pantalla pierda altura total al colapsar el menú */}
-      <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-[120vh] pb-32 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
+      <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-32 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
 
         {/* ENCABEZADO FIJO */}
         <div className="sticky top-0 z-30 bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-md pt-2 pb-1 transition-all">
           <div className="shadow-xl shadow-stone-900/10 rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900 transition-all duration-300">
-            
+
             {/* 1. Buscador Fijo Superior */}
             <div className="px-4 pt-4 pb-3">
               <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
             </div>
 
-            {/* 2. Acciones Rápidas con animación de altura */}
+            {/* 2. Acciones Rápidas con animación suave */}
             <div
               className={`transition-all duration-300 ease-in-out px-4 overflow-hidden origin-top ${
                 showSubHeader
