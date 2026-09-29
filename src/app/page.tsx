@@ -34,10 +34,6 @@ export default function HomePage() {
   // Estado para visibilidad
   const [showSubHeader, setShowSubHeader] = useState(true);
 
-  // Ref de control para sincronización suave de frames
-  const isVisibleRef = useRef(true);
-  const tickingRef = useRef(false);
-
   useEffect(() => {
     async function fetchBanners() {
       try {
@@ -62,29 +58,28 @@ export default function HomePage() {
     fetchBanners();
   }, []);
 
-  // Lógica de Scroll sin parpadeos optimizada para pantallas táctiles
+  // Lógica de Scroll Suave y Natural (sin saltos forzados)
   useEffect(() => {
+    let lastScrollY = window.scrollY;
+
     const handleScroll = () => {
-      if (!tickingRef.current) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = Math.max(0, window.scrollY);
+      const currentScrollY = window.scrollY;
+      const diff = currentScrollY - lastScrollY;
 
-          // Si baja más de 100px y estaba desplegado -> colapsar
-          if (currentScrollY > 100 && isVisibleRef.current) {
-            isVisibleRef.current = false;
-            setShowSubHeader(false);
-          } 
-          // Si sube y queda a menos de 30px del tope -> desplegar limpiamente
-          else if (currentScrollY < 30 && !isVisibleRef.current) {
-            isVisibleRef.current = true;
-            setShowSubHeader(true);
-          }
-
-          tickingRef.current = false;
-        });
-
-        tickingRef.current = true;
+      // 1. Si está en el tope absoluto, siempre mostrar
+      if (currentScrollY <= 15) {
+        setShowSubHeader(true);
+      } 
+      // 2. Si baja mas de 100px y scrollea hacia abajo -> Ocultar
+      else if (diff > 10 && currentScrollY > 100) {
+        setShowSubHeader(false);
+      } 
+      // 3. Si scrollea hacia arriba claramente -> Mostrar
+      else if (diff < -15) {
+        setShowSubHeader(true);
       }
+
+      lastScrollY = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -93,7 +88,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--primary))]/5 via-stone-50 to-stone-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 transition-colors relative">
-      <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
+      <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 space-y-6">
 
         {/* ENCABEZADO FIJO */}
         <div className="sticky top-0 z-30 bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-md pt-2 pb-1 transition-all">
@@ -104,15 +99,17 @@ export default function HomePage() {
               <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
             </div>
 
-            {/* 2. Acciones Rápidas con animación suave */}
+            {/* 2. Acciones Rápidas con animación limpia */}
             <div
-              className={`transition-all duration-300 ease-in-out px-4 overflow-hidden origin-top ${
+              className={`grid transition-all duration-300 ease-in-out px-4 ${
                 showSubHeader
-                  ? 'max-h-48 opacity-100 pb-5 pointer-events-auto'
-                  : 'max-h-0 opacity-0 pb-0 pointer-events-none'
+                  ? 'grid-rows-[1fr] opacity-100 pb-5 pointer-events-auto'
+                  : 'grid-rows-[0fr] opacity-0 pb-0 pointer-events-none'
               }`}
             >
-              <AccionesRapidas />
+              <div className="overflow-hidden">
+                <AccionesRapidas />
+              </div>
             </div>
 
           </div>
