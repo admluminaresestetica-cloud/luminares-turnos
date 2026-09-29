@@ -9,7 +9,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { 
   ArrowLeft, Building2, Image as ImageIcon, Flame, BookOpen, 
   Clock, Tag, Layers, Share2, ClipboardList, HelpCircle, Shield,
-  ChevronRight, Sparkles
+  ChevronRight, Sparkles, Palette
 } from 'lucide-react'
 
 import { useConfigCalendario } from '@/hooks/admin/useConfigCalendario'
@@ -29,6 +29,7 @@ import ReferidosTab from './components/ReferidosTab'
 import ConfiguracionAnamnesisTab from './components/ConfiguracionAnamnesis'
 import ConfiguracionPinTab from './components/ConfiguracionPinTab'
 import DestacadosAjustesTab from './components/DestacadosAjustesTab'
+import AparienciaAjustesTab from './components/AparienciaAjustesTab'
 
 import ModalServicioLaser from '@/app/admin/turnos/components/modals/ModalServicioLaser'
 import ModalPromo from '@/app/admin/turnos/components/modals/ModalPromo'
@@ -41,6 +42,7 @@ const supabase = createBrowserClient(
 
 type ModuloAjustes = 
   | 'empresa'
+  | 'apariencia'
   | 'banners_home'
   | 'destacados'
   | 'guias_app'
@@ -134,6 +136,14 @@ export default function AjustesAdminPage() {
     {
       titulo: 'Experiencia & App',
       tarjetas: [
+        {
+          id: 'apariencia',
+          titulo: 'Colores & Apariencia',
+          descripcion: 'Personalizá el esquema de colores de la aplicación en tiempo real.',
+          icono: Palette,
+          colorIcono: 'text-pink-500 bg-pink-500/10',
+          badge: 'Nuevo'
+        },
         {
           id: 'banners_home',
           titulo: 'Banners Inicio App',
@@ -295,6 +305,7 @@ export default function AjustesAdminPage() {
       {moduloActivo && (
         <div className="animate-in fade-in duration-200">
           {moduloActivo === 'empresa' && <FormularioEmpresaTab />}
+          {moduloActivo === 'apariencia' && <AparienciaAjustesTab />}
           {moduloActivo === 'banners_home' && <BannersHomeTab />}
           {moduloActivo === 'destacados' && <DestacadosAjustesTab />}
           {moduloActivo === 'guias_app' && <GuiasAjustesTab />}

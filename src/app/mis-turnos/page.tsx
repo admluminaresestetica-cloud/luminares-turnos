@@ -124,13 +124,13 @@ export default function MisTurnosPage() {
   const urlWhatsAppReprogramar = `https://wa.me/${numeroWhatsApp}?text=${mensajeReprogramar}`;
 
   return (
-    <main className="min-h-screen bg-white p-4 sm:p-6 md:p-12 relative font-sans selection:bg-rose-100 selection:text-rose-900">
+    <main className="min-h-screen bg-background text-foreground p-4 sm:p-6 md:p-12 relative font-sans selection:bg-muted">
       <div className="max-w-md mx-auto space-y-6">
 
         {/* Volver */}
         <Link 
           href="/turnos" 
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs transition-all active:scale-95"
+          className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground bg-card border border-border px-3.5 py-2 rounded-xl shadow-xs transition-all active:scale-95"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Volver al inicio</span>
@@ -138,26 +138,26 @@ export default function MisTurnosPage() {
 
         {/* Header */}
         <div className="space-y-1">
-          <span className="text-[10px] font-black tracking-[0.2em] uppercase text-rose-600 block">
+          <span className="text-[10px] font-black tracking-[0.2em] uppercase text-primary block">
             Gestión de turnos
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
             Mis Turnos
           </h1>
-          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+          <p className="text-xs text-muted-foreground font-medium leading-relaxed">
             Consultá o gestioná el estado de tu reserva de forma rápida.
           </p>
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleBuscar} className="bg-white border border-slate-200/80 rounded-[24px] p-5 shadow-xs space-y-4">
+        <form onSubmit={handleBuscar} className="bg-card border border-border rounded-[24px] p-5 shadow-xs space-y-4">
           <div className="space-y-3.5">
             <div>
-              <label htmlFor="celular" className="block text-xs font-bold text-slate-900 mb-1.5">
+              <label htmlFor="celular" className="block text-xs font-bold text-foreground mb-1.5">
                 Celular (WhatsApp)
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
                   <Phone className="w-4 h-4" />
                 </div>
                 <input
@@ -167,17 +167,17 @@ export default function MisTurnosPage() {
                   onChange={(e) => setCelular(e.target.value)}
                   placeholder="Ej: 11 2345-6789"
                   required
-                  className="w-full pl-10 pr-3.5 py-3 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 transition-all outline-none focus:ring-2 focus:ring-rose-500/10 focus:border-rose-500"
+                  className="w-full pl-10 pr-3.5 py-3 text-xs sm:text-sm bg-background border border-input rounded-xl text-foreground placeholder:text-muted-foreground transition-all outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="codigo" className="block text-xs font-bold text-slate-900 mb-1.5">
+              <label htmlFor="codigo" className="block text-xs font-bold text-foreground mb-1.5">
                 Código de reserva
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
                   <Hash className="w-4 h-4" />
                 </div>
                 <input
@@ -187,7 +187,7 @@ export default function MisTurnosPage() {
                   onChange={(e) => setCodigo(e.target.value)}
                   placeholder="#7842"
                   required
-                  className="w-full pl-10 pr-3.5 py-3 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 transition-all outline-none focus:ring-2 focus:ring-rose-500/10 focus:border-rose-500"
+                  className="w-full pl-10 pr-3.5 py-3 text-xs sm:text-sm bg-background border border-input rounded-xl text-foreground placeholder:text-muted-foreground transition-all outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary"
                 />
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function MisTurnosPage() {
           <button
             type="submit"
             disabled={buscando}
-            className="w-full bg-slate-900 hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+            className="w-full bg-primary hover:bg-primary/90 active:scale-[0.98] disabled:opacity-50 text-primary-foreground font-bold py-3.5 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs cursor-pointer"
           >
             {buscando ? (
               <>
@@ -214,28 +214,28 @@ export default function MisTurnosPage() {
 
         {/* Alertas */}
         {error && (
-          <div className="bg-white border border-rose-200 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-            <p className="text-xs font-semibold text-rose-900 leading-relaxed">{error}</p>
+          <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
+            <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+            <p className="text-xs font-semibold text-destructive leading-relaxed">{error}</p>
           </div>
         )}
 
         {mensaje && (
-          <div className="bg-white border border-emerald-200 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            <p className="text-xs font-semibold text-emerald-900 leading-relaxed">{mensaje}</p>
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+            <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 leading-relaxed">{mensaje}</p>
           </div>
         )}
 
         {/* Detalle del Turno */}
         {reserva && estadoInfo && (
-          <div className="bg-white border border-slate-200/80 rounded-[24px] p-5 shadow-xs space-y-4 animate-fadeIn">
-            <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div className="bg-card border border-border rounded-[24px] p-5 shadow-xs space-y-4 animate-fadeIn">
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-border">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block mb-0.5">
                   Código
                 </span>
-                <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                <h2 className="text-base sm:text-lg font-black text-foreground tracking-tight">
                   {reserva.codigo_unico}
                 </h2>
               </div>
@@ -245,31 +245,31 @@ export default function MisTurnosPage() {
             </div>
 
             <div className="space-y-2.5 text-xs">
-              <div className="flex items-center gap-2.5 text-slate-700 bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs">
-                <User className="w-4 h-4 text-slate-400 shrink-0" />
-                <span>Cliente: <strong className="text-slate-900 font-bold">{reserva.cliente_nombre}</strong></span>
+              <div className="flex items-center gap-2.5 text-foreground bg-background p-3 rounded-xl border border-border shadow-xs">
+                <User className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span>Cliente: <strong className="text-foreground font-bold">{reserva.cliente_nombre}</strong></span>
               </div>
 
-              <div className="flex items-center gap-2.5 text-slate-700 bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs">
-                <Sparkles className="w-4 h-4 text-slate-400 shrink-0" />
-                <span>Servicio: <strong className="text-slate-900 font-bold">{formatDetalleReservaDisplay(reserva)}</strong></span>
+              <div className="flex items-center gap-2.5 text-foreground bg-background p-3 rounded-xl border border-border shadow-xs">
+                <Sparkles className="w-4 h-4 text-muted-foreground shrink-0" />
+                <span>Servicio: <strong className="text-foreground font-bold">{formatDetalleReservaDisplay(reserva)}</strong></span>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center gap-2 text-slate-700 bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span className="truncate font-semibold text-slate-900">{formatFechaDisplay(fechaStr)}</span>
+                <div className="flex items-center gap-2 text-foreground bg-background p-3 rounded-xl border border-border shadow-xs">
+                  <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <span className="truncate font-semibold text-foreground">{formatFechaDisplay(fechaStr)}</span>
                 </div>
 
-                <div className="flex items-center gap-2 text-slate-700 bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs">
-                  <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                  <span className="font-semibold text-slate-900">{horaStr} hs <span className="text-slate-400 font-normal">({reserva.duracion_total}m)</span></span>
+                <div className="flex items-center gap-2 text-foreground bg-background p-3 rounded-xl border border-border shadow-xs">
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <span className="font-semibold text-foreground">{horaStr} hs <span className="text-muted-foreground font-normal">({reserva.duracion_total}m)</span></span>
                 </div>
               </div>
 
-              <div className="pt-2.5 flex items-center justify-between border-t border-slate-100 px-1">
-                <span className="text-xs font-semibold text-slate-500">Monto total:</span>
-                <span className="text-base font-black text-slate-900">
+              <div className="pt-2.5 flex items-center justify-between border-t border-border px-1">
+                <span className="text-xs font-semibold text-muted-foreground">Monto total:</span>
+                <span className="text-base font-black text-foreground">
                   ${Number(reserva.precio_total).toLocaleString('es-AR')}
                 </span>
               </div>
@@ -284,7 +284,7 @@ export default function MisTurnosPage() {
                   href={urlWhatsAppReprogramar}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full border border-slate-200/80 bg-white hover:border-slate-300 active:scale-[0.98] text-slate-800 font-bold py-3 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 shadow-2xs cursor-pointer"
+                  className="w-full border border-border bg-background hover:bg-accent hover:text-accent-foreground active:scale-[0.98] text-foreground font-bold py-3 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 shadow-2xs cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-600 fill-current" />
                   <span>Solicitar reprogramación</span>
@@ -296,7 +296,7 @@ export default function MisTurnosPage() {
                     type="button"
                     onClick={() => setModalCancelarOpen(true)}
                     disabled={cancelando}
-                    className="w-full border border-rose-200 text-rose-700 bg-white hover:border-rose-300 active:scale-[0.98] font-bold py-3 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-xs"
+                    className="w-full border border-destructive/30 text-destructive bg-destructive/10 hover:bg-destructive/20 active:scale-[0.98] font-bold py-3 rounded-xl transition-all text-xs sm:text-sm flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shadow-xs"
                   >
                     {cancelando ? (
                       <>
@@ -311,8 +311,8 @@ export default function MisTurnosPage() {
                     )}
                   </button>
                 ) : (
-                  <div className="flex items-center justify-center gap-2 text-[11px] font-medium text-slate-500 bg-white rounded-xl p-3 border border-slate-200/80 text-center shadow-xs">
-                    <AlertCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <div className="flex items-center justify-center gap-2 text-[11px] font-medium text-muted-foreground bg-background rounded-xl p-3 border border-border text-center shadow-xs">
+                    <AlertCircle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                     <span>No podés cancelar: faltan menos de {ventanaHoras} horas para el turno.</span>
                   </div>
                 )}
@@ -325,14 +325,14 @@ export default function MisTurnosPage() {
 
       {/* POP-UP / MODAL DE CONFIRMACIÓN DE CANCELACIÓN */}
       {modalCancelarOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 animate-fadeIn">
-          <div className="bg-white border border-slate-200/80 rounded-[24px] p-6 max-w-sm w-full space-y-4 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-card border border-border rounded-[24px] p-6 max-w-sm w-full space-y-4 shadow-xl">
             <div className="flex flex-col items-center text-center space-y-2.5">
-              <div className="w-12 h-12 rounded-2xl bg-white border border-amber-200/80 text-amber-600 flex items-center justify-center shadow-xs">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-xs">
                 <HelpCircle className="w-6 h-6 stroke-[2]" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">¿Deseás cancelar tu turno?</h3>
-              <p className="text-xs text-slate-500 leading-relaxed font-medium">
+              <h3 className="text-base font-bold text-foreground">¿Deseás cancelar tu turno?</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                 Si cancelás tu turno dentro de las 48 hs previas, la seña abonada no contempla devolución. ¿Estás seguro/a de continuar?
               </p>
             </div>
@@ -341,7 +341,7 @@ export default function MisTurnosPage() {
               <button
                 type="button"
                 onClick={() => setModalCancelarOpen(false)}
-                className="flex-1 py-3 px-3 bg-white border border-slate-200 hover:border-slate-300 active:scale-95 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs"
+                className="flex-1 py-3 px-3 bg-background border border-border hover:bg-accent hover:text-accent-foreground active:scale-95 text-foreground font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs"
               >
                 Volver atrás
               </button>
@@ -351,7 +351,7 @@ export default function MisTurnosPage() {
                   setModalCancelarOpen(false);
                   handleCancelar();
                 }}
-                className="flex-1 py-3 px-3 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold text-xs rounded-xl transition-all shadow-md cursor-pointer"
+                className="flex-1 py-3 px-3 bg-destructive hover:bg-destructive/90 active:scale-95 text-destructive-foreground font-bold text-xs rounded-xl transition-all shadow-md cursor-pointer"
               >
                 Cancelar igual
               </button>

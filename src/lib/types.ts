@@ -120,3 +120,27 @@ export interface CrearReservaInput {
   duracion_total: number;
   fecha_hora_inicio: string;
 }
+
+export interface TemaColores {
+  primary: string;
+  primary_foreground: string;
+  secondary: string;
+  secondary_foreground: string;
+  accent: string;
+  accent_foreground: string;
+  background: string;
+  foreground: string;
+  border: string;
+}
+
+export const TEMA_COLORES_DEFAULT: TemaColores = {
+  primary: '#0f172a',
+  primary_foreground: '#ffffff',
+  secondary: '#f1f5f9',
+  secondary_foreground: '#0f172a',
+  accent: '#f1f5f9',
+  accent_foreground: '#0f172a',
+  background: '#ffffff',
+  foreground: '#020817',
+  border: '#e2e8f0',
+};
