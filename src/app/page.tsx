@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useConfig } from '@/context/ConfigContext';
@@ -33,6 +33,9 @@ export default function HomePage() {
 
   // Estado para visibilidad
   const [showSubHeader, setShowSubHeader] = useState(true);
+  
+  // Ref para ignorar el scroll fantasma causado por el cambio de tamaño del DOM
+  const isAnimatingRef = useRef(false);
 
   useEffect(() => {
     async function fetchBanners() {
@@ -58,25 +61,40 @@ export default function HomePage() {
     fetchBanners();
   }, []);
 
-  // Lógica de Scroll fluida (sin saltos ni tirones repentinos)
+  // Lógica de Scroll protegida contra rebote de layout
   useEffect(() => {
     let lastScrollY = window.scrollY;
 
     const handleScroll = () => {
+      // Ignorar eventos mientras el header se está colapsando/expandiendo
+      if (isAnimatingRef.current) return;
+
       const currentScrollY = window.scrollY;
       const diff = currentScrollY - lastScrollY;
 
-      // Si estamos en la parte superior (0 a 20px), mantener visible
+      // Si estamos en el tope superior
       if (currentScrollY <= 20) {
-        setShowSubHeader(true);
+        if (!showSubHeader) {
+          setShowSubHeader(true);
+          isAnimatingRef.current = true;
+          setTimeout(() => { isAnimatingRef.current = false; }, 320);
+        }
       } 
-      // Si desliza hacia abajo claramente y superó los 60px -> Ocultar menú secundario
-      else if (diff > 10 && currentScrollY > 60) {
-        setShowSubHeader(false);
+      // Scroll hacia abajo con margen claro (> 25px)
+      else if (diff > 25 && currentScrollY > 100) {
+        if (showSubHeader) {
+          setShowSubHeader(false);
+          isAnimatingRef.current = true;
+          setTimeout(() => { isAnimatingRef.current = false; }, 320);
+        }
       } 
-      // Si desliza hacia arriba -> Volver a mostrar
-      else if (diff < -10) {
-        setShowSubHeader(true);
+      // Scroll hacia arriba con margen claro (< -25px)
+      else if (diff < -25) {
+        if (!showSubHeader) {
+          setShowSubHeader(true);
+          isAnimatingRef.current = true;
+          setTimeout(() => { isAnimatingRef.current = false; }, 320);
+        }
       }
 
       lastScrollY = currentScrollY;
@@ -84,7 +102,7 @@ export default function HomePage() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [showSubHeader]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--primary))]/5 via-stone-50 to-stone-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 transition-colors relative">
@@ -99,7 +117,7 @@ export default function HomePage() {
               <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
             </div>
 
-            {/* 2. Acciones Rápidas con animación suave */}
+            {/* 2. Acciones Rápidas */}
             <div
               className={`transition-all duration-300 ease-in-out px-4 overflow-hidden origin-top ${
                 showSubHeader
