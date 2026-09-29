@@ -31,9 +31,8 @@ export default function HomePage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
 
-  // Estados para controlar el scroll desplegable
-  const [showHeader, setShowHeader] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  // Estado: solo true si está bien arriba
+  const [isAtTop, setIsAtTop] = useState(true);
 
   useEffect(() => {
     async function fetchBanners() {
@@ -59,52 +58,57 @@ export default function HomePage() {
     fetchBanners();
   }, []);
 
-  // Lógica para detectar dirección del scroll en móviles y desktop
+  // Control estricto: Desplegado SOLO si está en el tope superior (<= 10px)
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY < 10) {
-        // En la cima siempre se muestra desplegado
-        setShowHeader(true);
-      } else if (currentScrollY > lastScrollY && currentScrollY > 80) {
-        // Scrolleando hacia abajo: oculta/pliega el bloque
-        setShowHeader(false);
-      } else if (currentScrollY < lastScrollY) {
-        // Scrolleando hacia arriba: despliega de nuevo
-        setShowHeader(true);
+      if (window.scrollY <= 10) {
+        setIsAtTop(true);
+      } else {
+        setIsAtTop(false);
       }
-
-      setLastScrollY(currentScrollY);
     };
+
+    // Ejecutar al inicio para verificar la posición inicial
+    handleScroll();
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--primary))]/5 via-stone-50 to-stone-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 transition-colors relative">
-      <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
+      <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 space-y-6">
 
-        {/* 1. Bloque Superior Unificado (Sticky con animación de despliegue) */}
-        <section
-          className={`sticky top-0 z-30 transition-all duration-300 ease-in-out bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900 px-4 pt-4 pb-6 rounded-b-[2.5rem] md:rounded-3xl shadow-xl shadow-stone-900/10 space-y-4 ${
-            showHeader
-              ? 'translate-y-0 opacity-100'
-              : '-translate-y-full opacity-0 pointer-events-none'
-          }`}
-        >
-          <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
-          <AccionesRapidas />
-        </section>
+        {/* ENCABEZADO FIJO DE ALTURA DINÁMICA SUAVE */}
+        <div className="sticky top-0 z-30 bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-md pt-2 pb-1">
+          <div className="shadow-xl shadow-stone-900/10 rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900 transition-all duration-300">
+            
+            {/* 1. Buscador: Siempre visible */}
+            <div className="px-4 pt-4 pb-3">
+              <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
+            </div>
 
-        {/* Contenedor con padding lateral para el resto del contenido */}
+            {/* 2. Botón y Acciones Rápidas: Solo se despliega bien arriba */}
+            <div
+              className={`grid transition-all duration-300 ease-in-out px-4 ${
+                isAtTop
+                  ? 'grid-rows-[1fr] opacity-100 pb-5 pointer-events-auto'
+                  : 'grid-rows-[0fr] opacity-0 pb-0 pointer-events-none'
+              }`}
+            >
+              <div className="overflow-hidden">
+                <AccionesRapidas />
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* CONTENIDO PRINCIPAL */}
         <div className="px-4 sm:px-0 space-y-6">
 
-          {/* 2. Grilla Principal Responsiva */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 
-            {/* Columna Izquierda */}
             <div className="lg:col-span-7 space-y-6">
               <section className="space-y-2">
                 <CategoriasRapidas />
@@ -112,7 +116,6 @@ export default function HomePage() {
 
               <ServiciosDestacados />
 
-              {/* Banners Promocionales */}
               <section className="space-y-2">
                 <div className="flex items-center justify-between px-1">
                   <h2 className="text-xs font-black tracking-wider text-stone-500 uppercase dark:text-zinc-400">
@@ -124,13 +127,11 @@ export default function HomePage() {
               </section>
             </div>
 
-            {/* Columna Derecha */}
             <div className="lg:col-span-5 space-y-6">
               <section className="space-y-2">
                 <GuiaReservaCard />
               </section>
 
-              {/* Bloque de Beneficios */}
               <section className="bg-white/90 dark:bg-zinc-900/60 backdrop-blur-md border border-stone-200/60 dark:border-zinc-800 rounded-3xl p-4 space-y-3 shadow-xl shadow-stone-900/5">
                 <h3 className="text-[11px] font-black text-stone-400 dark:text-zinc-400 uppercase tracking-wider px-1">
                   ¿Por qué elegirnos?
@@ -168,7 +169,6 @@ export default function HomePage() {
                 </div>
               </section>
 
-              {/* Tarjeta de acceso a FAQ */}
               <section className="pt-1">
                 <Link
                   href="/faq"
@@ -195,7 +195,6 @@ export default function HomePage() {
 
       </main>
 
-      {/* Banner flotante de instalación PWA */}
       <InstallPrompt />
     </div>
   );
