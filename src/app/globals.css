@@ -11,9 +11,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* BASE NEUTRA (Evita el destello violeta al recargar) */
-    --primary: 0 0% 100%;           /* Blanco neutro inicial */
-    --primary-dark: 0 0% 90%;      /* Gris claro neutro inicial */
+    /* BASE GRIS CLARO NEUTRO (Elimina el destello violeta) */
+    --primary: 210 20% 94%;          /* Gris suave y neutro */
+    --primary-dark: 210 15% 85%;     /* Gris un tono más oscuro para bordes/sombras iniciales */
     --primary-foreground: 222.2 84% 4.9%;
 
     --secondary: 214.3 31.8% 91.4%;
@@ -26,7 +26,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 0 0% 80%;
+    --ring: 210 20% 80%;
     --radius: 0.5rem;
   }
 
@@ -38,9 +38,9 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    /* BASE NEUTRA MODO OSCURO */
-    --primary: 222.2 84% 4.9%;
-    --primary-dark: 0 0% 0%;
+    /* BASE GRIS OSCURO NEUTRO PARA MODO OSCURO */
+    --primary: 217.2 32.6% 17.5%;
+    --primary-dark: 222.2 84% 4.9%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 217.2 32.6% 17.5%;
