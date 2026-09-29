@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap, Sun, Moon } from 'lucide-react';
+import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface HeaderBusquedaProps {
@@ -45,35 +45,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
   const [productos, setProductos] = useState<ProductoResultado[]>([]);
   const [servicios, setServicios] = useState<ServicioResultado[]>([]);
   const [tags, setTags] = useState<TagBusqueda[]>([]);
-
-  // Estado y lógica para Modo Oscuro
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    // Detectar si el modo oscuro está guardado en localStorage o preferencia del sistema
-    const isDarkStored = localStorage.getItem('theme') === 'dark';
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    if (isDarkStored || (!('theme' in localStorage) && prefersDark)) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  const toggleDarkMode = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      setIsDarkMode(false);
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      setIsDarkMode(true);
-    }
-  };
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -253,7 +224,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
 
   return (
     <div ref={containerRef} className="space-y-3 relative z-30">
-      {/* Saludo + Botones de Acción (Mis Turnos + Cambio de Tema) */}
+      {/* Saludo + Botón Mis Turnos */}
       <div className="flex items-center justify-between px-1">
         <div>
           <p className="text-xs font-medium text-white/80">
@@ -264,30 +235,13 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Botón de Modo Oscuro / Claro */}
-          <button
-            type="button"
-            onClick={toggleDarkMode}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-xs transition-colors border border-white/10 shadow-xs cursor-pointer active:scale-95"
-            aria-label="Cambiar tema"
-          >
-            {isDarkMode ? (
-              <Sun className="h-4 w-4 text-amber-300" />
-            ) : (
-              <Moon className="h-4 w-4 text-white" />
-            )}
-          </button>
-
-          {/* Botón Mis Turnos */}
-          <Link
-            href="/mis-turnos"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
-          >
-            <Calendar className="h-3.5 w-3.5 text-white" />
-            <span>Mis Turnos</span>
-          </Link>
-        </div>
+        <Link
+          href="/mis-turnos"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
+        >
+          <Calendar className="h-3.5 w-3.5 text-white" />
+          <span>Mis Turnos</span>
+        </Link>
       </div>
 
       {/* Input de Búsqueda */}
