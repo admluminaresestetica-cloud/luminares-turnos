@@ -31,29 +31,30 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    /* FONDO Y TARJETAS EN NEGRO PURO / CASI NEGRO */
+    --background: 0 0% 5%;            /* Casi negro (#0d0d0d) */
+    --foreground: 0 0% 98%;           /* Texto en blanco brillante */
+    --card: 0 0% 9%;                  /* Tarjetas en negro-gris muy oscuro (#171717) */
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
 
-    /* BASE GRIS OSCURO NEUTRO PARA MODO OSCURO */
-    --primary: 217.2 32.6% 17.5%;
-    --primary-dark: 222.2 84% 4.9%;
-    --primary-foreground: 210 40% 98%;
+    /* Mantiene las variables neutras sin interferir con la paleta de /ajustes */
+    --primary: 0 0% 18%;
+    --primary-dark: 0 0% 10%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 217.2 32.6% 17.5%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 25%;
   }
 
   html, body {
@@ -67,6 +68,14 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+  }
+
+  /* REGLA GLOBAL PARA MODO OSCURO:
+     Hace que los fondos de páginas y bloques que usan background blanco cambien
+     automáticamente a negro sin necesidad de modificar cada page.tsx. */
+  .dark body,
+  .dark main {
+    background-color: hsl(var(--background)) !important;
   }
 }
 
