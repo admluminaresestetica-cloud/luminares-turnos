@@ -18,26 +18,26 @@ export default function LaserAgendaPage() {
   // Estado si el usuario entra directo sin haber seleccionado zonas
   if (!seleccion) {
     return (
-      <main className="min-h-screen bg-[#edf0ec] dark:bg-zinc-950 flex items-center justify-center p-4 font-sans">
-        <div className="max-w-md w-full bg-white/90 dark:bg-zinc-900 backdrop-blur-sm border border-stone-200/80 dark:border-zinc-800 rounded-[28px] p-6 sm:p-8 shadow-xs text-center relative overflow-hidden">
+      <main className="min-h-screen bg-background flex items-center justify-center p-4 font-sans">
+        <div className="max-w-md w-full bg-card/90 backdrop-blur-sm border border-border rounded-[28px] p-6 sm:p-8 shadow-xs text-center relative overflow-hidden">
           
-          <div className="w-14 h-14 bg-[#1c352a] text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xs">
+          <div className="w-14 h-14 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-xs">
             <Calendar className="w-7 h-7 stroke-[2]" />
           </div>
 
-          <span className="text-[10px] font-black tracking-[0.2em] text-[#1c352a] dark:text-emerald-400 uppercase block mb-1">
+          <span className="text-[10px] font-black tracking-[0.2em] text-primary uppercase block mb-1">
             Paso previo requerido
           </span>
-          <h2 className="text-xl font-extrabold text-stone-900 dark:text-white mb-2">
+          <h2 className="text-xl font-extrabold text-foreground mb-2">
             No hay servicio seleccionado
           </h2>
-          <p className="text-xs text-stone-500 dark:text-zinc-400 font-medium mb-8 leading-relaxed">
+          <p className="text-xs text-muted-foreground font-medium mb-8 leading-relaxed">
             Para elegir el día y horario de tu turno, primero elegí tus zonas o promos de depilación láser.
           </p>
 
           <Link
             href="/laser"
-            className="w-full bg-[#1c352a] hover:bg-[#183024] text-white font-bold py-3.5 px-5 rounded-2xl transition-all duration-200 shadow-xs active:scale-[0.98] flex items-center justify-center gap-2 text-xs tracking-wide"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3.5 px-5 rounded-2xl transition-all duration-200 shadow-xs active:scale-[0.98] flex items-center justify-center gap-2 text-xs tracking-wide"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Volver a elegir servicios</span>
@@ -57,21 +57,21 @@ export default function LaserAgendaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#edf0ec] dark:bg-zinc-950 font-sans flex flex-col">
-      {/* 1. Header móvil limpio e integrado con los tonos verde/manteca */}
-      <header className="sticky top-0 z-30 bg-[#edf0ec]/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-stone-200/80 dark:border-zinc-800 px-4 sm:px-6 py-3">
+    <div className="min-h-screen bg-background font-sans flex flex-col">
+      {/* 1. Header móvil limpio e integrado con los tonos semánticos */}
+      <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border px-4 sm:px-6 py-3">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <Link
             href="/laser"
-            className="inline-flex items-center gap-2 text-xs font-bold text-stone-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-stone-200/80 dark:border-zinc-800 px-3.5 py-2 rounded-2xl transition-all active:scale-95 shadow-xs hover:text-stone-900 dark:hover:text-white"
+            className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground bg-card border border-border px-3.5 py-2 rounded-2xl transition-all active:scale-95 shadow-xs hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Volver</span>
           </Link>
 
-          <div className="flex items-center gap-2 bg-white/80 dark:bg-zinc-900/80 border border-stone-200/80 dark:border-zinc-800 px-3 py-1.5 rounded-full">
-            <Zap className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600 dark:text-emerald-400" />
-            <span className="text-xs font-extrabold text-stone-800 dark:text-zinc-200 tracking-tight">
+          <div className="flex items-center gap-2 bg-card/80 border border-border px-3 py-1.5 rounded-full">
+            <Zap className="w-3.5 h-3.5 text-primary fill-primary" />
+            <span className="text-xs font-extrabold text-foreground tracking-tight">
               Elegir fecha y hora
             </span>
           </div>

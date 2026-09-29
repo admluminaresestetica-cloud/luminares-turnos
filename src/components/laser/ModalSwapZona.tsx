@@ -13,22 +13,22 @@ interface Props {
 
 export default function ModalSwapZona({ zonaOriginal, opciones, onSelect, onClose }: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl max-h-[85vh] flex flex-col border border-slate-200/80 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-card text-card-foreground rounded-2xl w-full max-w-md shadow-2xl max-h-[85vh] flex flex-col border border-border overflow-hidden">
         
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 bg-slate-50/50">
+        <div className="p-5 border-b border-border bg-muted/40">
           <div className="flex justify-between items-start gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-slate-100 rounded-lg text-slate-700">
+                <div className="p-1.5 bg-muted rounded-lg text-foreground">
                   <ArrowRightLeft className="w-4 h-4" />
                 </div>
-                <h3 className="font-bold text-slate-900 text-base">Intercambiar zona</h3>
+                <h3 className="font-bold text-foreground text-base">Intercambiar zona</h3>
               </div>
-              <p className="text-xs text-slate-500 leading-relaxed pt-1">
-                Reemplazá <strong className="font-semibold text-slate-800">{zonaOriginal.nombre_zona}</strong> por otra zona{' '}
-                <span className="font-semibold text-slate-700">
+              <p className="text-xs text-muted-foreground leading-relaxed pt-1">
+                Reemplazá <strong className="font-semibold text-foreground">{zonaOriginal.nombre_zona}</strong> por otra zona{' '}
+                <span className="font-semibold text-foreground">
                   {ETIQUETA_CATEGORIA[zonaOriginal.categoria_zona]}
                 </span>{' '}
                 de igual categoría.
@@ -38,7 +38,7 @@ export default function ModalSwapZona({ zonaOriginal, opciones, onSelect, onClos
             <button
               type="button"
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-colors shrink-0"
+              className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors shrink-0 cursor-pointer"
               title="Cerrar"
             >
               <X className="w-4 h-4" />
@@ -50,7 +50,7 @@ export default function ModalSwapZona({ zonaOriginal, opciones, onSelect, onClos
         <div className="overflow-y-auto p-4 space-y-2">
           {opciones.length === 0 ? (
             <div className="text-center py-8 px-4">
-              <p className="text-slate-500 text-xs font-medium">
+              <p className="text-muted-foreground text-xs font-medium">
                 No hay zonas equivalentes disponibles para realizar el intercambio.
               </p>
             </div>
@@ -60,18 +60,18 @@ export default function ModalSwapZona({ zonaOriginal, opciones, onSelect, onClos
                 key={zona.id}
                 type="button"
                 onClick={() => onSelect(zona.id)}
-                className="w-full flex justify-between items-center p-3.5 rounded-xl border border-slate-200/80 hover:border-slate-900 hover:bg-slate-50 text-left transition-all group shadow-2xs"
+                className="w-full flex justify-between items-center p-3.5 rounded-xl border border-border hover:border-primary hover:bg-accent/50 text-left transition-all group shadow-sm cursor-pointer"
               >
                 <div>
-                  <p className="text-xs font-bold text-slate-900 group-hover:text-slate-950">
+                  <p className="text-xs font-bold text-foreground group-hover:text-accent-foreground">
                     {zona.nombre_zona}
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
                     {zona.duracion_minutos} min
                   </p>
                 </div>
-                <p className="text-xs font-bold text-slate-900">
-                  ${Number(zona.precio_lista).toLocaleString()}
+                <p className="text-xs font-bold text-foreground">
+                  ${Number(zona.precio_lista).toLocaleString('es-AR')}
                 </p>
               </button>
             ))
@@ -79,11 +79,11 @@ export default function ModalSwapZona({ zonaOriginal, opciones, onSelect, onClos
         </div>
 
         {/* Footer opcional de cierre */}
-        <div className="p-3 bg-slate-50 border-t border-slate-100 text-right">
+        <div className="p-3 bg-muted/40 border-t border-border text-right">
           <button
             type="button"
             onClick={onClose}
-            className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-slate-200/50 transition-colors"
+            className="text-xs font-semibold text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg hover:bg-muted transition-colors cursor-pointer"
           >
             Cancelar
           </button>

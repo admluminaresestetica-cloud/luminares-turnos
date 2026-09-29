@@ -70,10 +70,10 @@ export default function GuiaReservaCard() {
                 alert('Pronto estará disponible el contenido explicativo.');
               }
             }}
-            className="text-left p-3.5 rounded-2xl bg-white/90 dark:bg-zinc-900/80 backdrop-blur-md border border-rose-950/10 dark:border-zinc-800 flex flex-col justify-between space-y-2.5 active:scale-95 transition-all duration-200 shadow-md shadow-rose-950/5 w-full group h-full cursor-pointer hover:bg-white dark:hover:bg-zinc-900"
+            className="text-left p-3.5 rounded-2xl bg-[hsl(var(--card))/0.9] backdrop-blur-md border border-[hsl(var(--border))] flex flex-col justify-between space-y-2.5 active:scale-95 transition-all duration-200 shadow-md w-full group h-full cursor-pointer hover:bg-[hsl(var(--card))]"
           >
-            {/* Contenedor del ícono con badge rosa uniforme */}
-            <div className="w-full h-14 rounded-xl bg-rose-50 dark:bg-rose-950/50 flex items-center justify-center text-rose-600 dark:text-rose-400 group-hover:scale-[1.02] transition-transform relative">
+            {/* Contenedor del ícono con badge temático */}
+            <div className="w-full h-14 rounded-xl bg-[hsl(var(--primary))/0.1] flex items-center justify-center text-[hsl(var(--primary))] group-hover:scale-[1.02] transition-transform relative">
               <BookOpen className="w-5 h-5 stroke-[2.2]" />
 
               {/* Indicadores en la tarjeta si hay más de 1 guía */}
@@ -84,8 +84,8 @@ export default function GuiaReservaCard() {
                       key={idx}
                       className={`h-1 rounded-full transition-all ${
                         idx === indiceActual
-                          ? 'w-3 bg-rose-600 dark:bg-rose-400'
-                          : 'w-1 bg-rose-600/30 dark:bg-rose-400/30'
+                          ? 'w-3 bg-[hsl(var(--primary))]'
+                          : 'w-1 bg-[hsl(var(--primary))/0.3]'
                       }`}
                     />
                   ))}
@@ -94,13 +94,13 @@ export default function GuiaReservaCard() {
             </div>
 
             <div>
-              <h4 className="text-xs font-bold text-stone-800 dark:text-zinc-100 leading-tight line-clamp-2">
+              <h4 className="text-xs font-bold text-[hsl(var(--card-foreground))] leading-tight line-clamp-2">
                 {guiaActual.titulo}
               </h4>
-              <p className="text-[10px] text-stone-500 dark:text-zinc-400 font-medium leading-tight mt-0.5 line-clamp-1">
+              <p className="text-[10px] text-[hsl(var(--muted-foreground))] font-medium leading-tight mt-0.5 line-clamp-1">
                 {guiaActual.subtitulo}
               </p>
-              <span className="text-[10px] font-extrabold text-rose-600 dark:text-rose-400 block mt-1">
+              <span className="text-[10px] font-extrabold text-[hsl(var(--primary))] block mt-1">
                 Ver guía →
               </span>
             </div>
@@ -110,20 +110,20 @@ export default function GuiaReservaCard() {
         {/* Consultar Mi Reserva */}
         <Link
           href="/mis-turnos"
-          className="p-3.5 rounded-2xl bg-white/90 dark:bg-zinc-900/80 backdrop-blur-md border border-rose-950/10 dark:border-zinc-800 flex flex-col justify-between space-y-2.5 active:scale-95 transition-all duration-200 shadow-md shadow-rose-950/5 group cursor-pointer hover:bg-white dark:hover:bg-zinc-900"
+          className="p-3.5 rounded-2xl bg-[hsl(var(--card))/0.9] backdrop-blur-md border border-[hsl(var(--border))] flex flex-col justify-between space-y-2.5 active:scale-95 transition-all duration-200 shadow-md group cursor-pointer hover:bg-[hsl(var(--card))]"
         >
           {/* Contenedor del ícono */}
-          <div className="w-full h-14 rounded-xl bg-rose-50 dark:bg-rose-950/50 flex items-center justify-center text-rose-600 dark:text-rose-400 group-hover:scale-[1.02] transition-transform">
+          <div className="w-full h-14 rounded-xl bg-[hsl(var(--primary))/0.1] flex items-center justify-center text-[hsl(var(--primary))] group-hover:scale-[1.02] transition-transform">
             <Lock className="w-5 h-5 stroke-[2.2]" />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-stone-800 dark:text-zinc-100 leading-tight">
+            <h4 className="text-xs font-bold text-[hsl(var(--card-foreground))] leading-tight">
               Consultar Mi Reserva
             </h4>
-            <p className="text-[10px] text-stone-500 dark:text-zinc-400 font-medium leading-tight mt-0.5">
+            <p className="text-[10px] text-[hsl(var(--muted-foreground))] font-medium leading-tight mt-0.5">
               Ingresá Celular + Código
             </p>
-            <span className="text-[10px] font-extrabold text-rose-600 dark:text-rose-400 block mt-1">
+            <span className="text-[10px] font-extrabold text-[hsl(var(--primary))] block mt-1">
               Consultar aquí →
             </span>
           </div>
@@ -133,7 +133,7 @@ export default function GuiaReservaCard() {
       {/* Pop-up Modal */}
       {guiaSeleccionada && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] border border-rose-950/10 dark:border-zinc-800">
+          <div className="bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] w-full max-w-md rounded-3xl overflow-hidden shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] border border-[hsl(var(--border))]">
             <button
               type="button"
               onClick={() => setGuiaSeleccionada(null)}
@@ -142,14 +142,14 @@ export default function GuiaReservaCard() {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="p-4 bg-gradient-to-r from-rose-600 to-pink-600 text-white">
+            <div className="p-4 bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary))/0.8] text-[hsl(var(--primary-foreground))]">
               <h3 className="text-sm font-extrabold">{guiaSeleccionada.titulo}</h3>
               {guiaSeleccionada.subtitulo && (
-                <p className="text-xs text-rose-100/90 mt-0.5">{guiaSeleccionada.subtitulo}</p>
+                <p className="text-xs opacity-90 mt-0.5">{guiaSeleccionada.subtitulo}</p>
               )}
             </div>
 
-            <div className="p-2 overflow-y-auto flex-1 flex items-center justify-center bg-slate-50 dark:bg-zinc-950">
+            <div className="p-2 overflow-y-auto flex-1 flex items-center justify-center bg-[hsl(var(--background))]">
               {guiaSeleccionada.tipo_contenido === 'video' ? (
                 <video
                   src={guiaSeleccionada.media_url}
@@ -166,11 +166,11 @@ export default function GuiaReservaCard() {
               )}
             </div>
 
-            <div className="p-4 bg-white dark:bg-zinc-900 border-t border-slate-100 dark:border-zinc-800">
+            <div className="p-4 bg-[hsl(var(--card))] border-t border-[hsl(var(--border))]">
               <button
                 type="button"
                 onClick={() => setGuiaSeleccionada(null)}
-                className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer shadow-lg shadow-rose-600/20"
+                className="w-full py-3 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))/0.9] text-[hsl(var(--primary-foreground))] font-bold rounded-xl text-xs transition-colors cursor-pointer shadow-md"
               >
                 Entendido
               </button>

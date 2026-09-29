@@ -15,46 +15,46 @@ export default function Footer() {
     return null;
   }
 
-  const direccionTexto = config?.direccion || "Rosario, Santa Fe";
+  const direccionTexto = config?.direccion_texto || "Rosario, Santa Fe";
   const mapsUrl = config?.google_maps_url || "https://maps.google.com";
   const nombreEmpresa = config?.nombre_empresa || "Luminares Estética";
 
   return (
-    <footer className="w-full border-t border-slate-200 bg-slate-50 py-8 mt-auto forced-color-adjust-none">
+    <footer className="w-full border-t border-border bg-card py-8 mt-auto">
       <div className="max-w-md mx-auto px-4 text-center space-y-4">
         
         {/* Ubicación y Medios de Pago */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 text-xs font-medium text-slate-700">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 text-xs font-medium text-foreground">
           <a
             href={mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-xs"
+            className="inline-flex items-center gap-1.5 hover:text-primary transition-colors bg-secondary/60 px-3.5 py-1.5 rounded-full border border-border shadow-xs cursor-pointer"
           >
-            <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+            <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
             <span>{direccionTexto} · Ver mapa</span>
           </a>
 
-          <div className="inline-flex items-center gap-1.5 bg-white px-3.5 py-1.5 rounded-full border border-slate-200 shadow-xs">
-            <Wallet className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <div className="inline-flex items-center gap-1.5 bg-secondary/60 px-3.5 py-1.5 rounded-full border border-border shadow-xs">
+            <Wallet className="w-3.5 h-3.5 text-primary shrink-0" />
             <span>Efectivo · Transferencia</span>
           </div>
         </div>
 
         {/* Links de navegación y Políticas */}
-        <div className="flex justify-center items-center gap-3 text-xs text-slate-600 font-semibold pt-1">
-          <Link href="/mis-turnos" className="hover:text-slate-900 transition-colors">
+        <div className="flex justify-center items-center gap-3 text-xs text-muted-foreground font-semibold pt-1">
+          <Link href="/mis-turnos" className="hover:text-foreground transition-colors">
             Mis Turnos
           </Link>
-          <span className="text-slate-300">•</span>
-          <Link href="/faq" className="hover:text-slate-900 transition-colors inline-flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
+          <span className="text-border">•</span>
+          <Link href="/faq" className="hover:text-foreground transition-colors inline-flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" />
             Políticas y FAQ
           </Link>
         </div>
 
         {/* Copyright */}
-        <p className="text-[11px] text-slate-500 font-medium">
+        <p className="text-[11px] text-muted-foreground font-medium">
           © {anioActual} {nombreEmpresa}. Todos los derechos reservados.
         </p>
 

@@ -154,11 +154,11 @@ export default function ServiciosDestacados() {
       {/* Título de la sección */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2.5">
-          <div className="relative p-2 bg-rose-500/10 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 rounded-xl border border-rose-500/20 flex items-center justify-center">
-            <Flame className="w-4 h-4 fill-rose-500/20 text-rose-600 dark:text-rose-400 animate-pulse" />
+          <div className="relative p-2 bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] rounded-xl border border-[hsl(var(--primary))]/20 flex items-center justify-center">
+            <Flame className="w-4 h-4 fill-[hsl(var(--primary))]/20 text-[hsl(var(--primary))] animate-pulse" />
           </div>
           <div>
-            <h2 className="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-zinc-100">
+            <h2 className="text-xs font-black uppercase tracking-wider text-stone-800 dark:text-zinc-100">
               Lo más buscado
             </h2>
             <p className="text-[10px] text-stone-500 dark:text-zinc-400 font-semibold">
@@ -184,13 +184,11 @@ export default function ServiciosDestacados() {
           className="flex gap-2.5 overflow-x-auto scrollbar-none py-1 px-0.5 touch-pan-x snap-x snap-mandatory scroll-smooth"
         >
           {destacados.map((item) => {
-            const esLaser = item.tabla === 'promos_laser' || item.tabla === 'servicios_laser';
-
             return (
               <div
                 key={`${item.tabla}-${item.id}`}
                 onClick={() => handleReservar(item)}
-                className="snap-start min-w-[195px] max-w-[195px] bg-white dark:bg-zinc-900 border border-stone-200/80 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs hover:shadow-md hover:border-rose-500/40 dark:hover:border-rose-500/35 transition-all cursor-pointer group shrink-0 flex flex-col justify-between"
+                className="snap-start min-w-[195px] max-w-[195px] bg-white dark:bg-zinc-900 border border-stone-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs hover:shadow-md hover:border-[hsl(var(--primary))]/50 transition-all cursor-pointer group shrink-0 flex flex-col justify-between"
               >
                 {/* 1. ZONA SUPERIOR (IMAGEN O BANNER VECTORIAL) */}
                 {item.imagen ? (
@@ -201,18 +199,18 @@ export default function ServiciosDestacados() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute top-2 left-2">
-                      <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-900/90 text-stone-700 dark:text-zinc-200 backdrop-blur-xs border border-stone-200/50 shadow-xs">
+                      <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-900/90 text-stone-800 dark:text-zinc-100 backdrop-blur-xs border border-stone-200 dark:border-zinc-700 shadow-xs">
                         Estética
                       </span>
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full h-20 bg-gradient-to-br from-rose-500 via-rose-600 to-pink-600 dark:from-rose-950 dark:via-zinc-900 dark:to-zinc-900 p-2.5 relative flex flex-col justify-between overflow-hidden">
+                  <div className="w-full h-20 bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--primary-dark))] p-2.5 relative flex flex-col justify-between overflow-hidden">
                     {/* Marca de agua flotante */}
-                    <Zap className="absolute -right-2 -bottom-2 w-16 h-16 text-white/10 dark:text-rose-500/10 rotate-12 pointer-events-none group-hover:scale-110 transition-transform duration-300" />
+                    <Zap className="absolute -right-2 -bottom-2 w-16 h-16 text-white/15 rotate-12 pointer-events-none group-hover:scale-110 transition-transform duration-300" />
 
                     <div className="flex items-center justify-between relative z-10">
-                      <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 dark:bg-rose-500/20 text-white border border-white/30 backdrop-blur-md">
+                      <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 backdrop-blur-md">
                         {item.tabla === 'promos_laser' ? 'Promo Láser' : 'Depilación'}
                       </span>
 
@@ -234,18 +232,18 @@ export default function ServiciosDestacados() {
                 <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
                   <div className="space-y-1">
                     {item.imagen && item.duracion && (
-                      <span className="text-[9px] font-medium text-stone-400 dark:text-zinc-500 flex items-center gap-1">
+                      <span className="text-[9px] font-medium text-stone-500 dark:text-zinc-400 flex items-center gap-1">
                         <Clock className="w-2.5 h-2.5" />
                         {item.duracion} min
                       </span>
                     )}
 
-                    <h3 className="font-bold text-stone-800 dark:text-zinc-100 text-xs leading-snug line-clamp-2 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                    <h3 className="font-bold text-stone-800 dark:text-zinc-100 text-xs leading-snug line-clamp-2 group-hover:text-[hsl(var(--primary))] transition-colors">
                       {item.nombre}
                     </h3>
                   </div>
 
-                  <div className="pt-2 flex items-end justify-between border-t border-stone-100 dark:border-zinc-800/80">
+                  <div className="pt-2 flex items-end justify-between border-t border-stone-100 dark:border-zinc-800">
                     <div>
                       <span className="text-[8px] text-stone-400 dark:text-zinc-500 font-semibold block uppercase">Precio</span>
                       <p className="text-xs font-black text-stone-900 dark:text-zinc-100">
@@ -259,7 +257,7 @@ export default function ServiciosDestacados() {
                         e.stopPropagation();
                         handleReservar(item);
                       }}
-                      className="bg-stone-900 dark:bg-zinc-800 hover:bg-rose-600 dark:hover:bg-rose-600 active:scale-95 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-xl shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+                      className="bg-[hsl(var(--primary))] hover:opacity-90 active:scale-95 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-xl shadow-xs transition-all flex items-center gap-1 cursor-pointer"
                       aria-label="Reservar"
                     >
                       <span>Reservar</span>

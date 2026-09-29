@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap, Clock } from 'lucide-react';
+import Image from 'next/image';
+import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface HeaderBusquedaProps {
@@ -45,8 +46,20 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
   const [servicios, setServicios] = useState<ServicioResultado[]>([]);
   const [tags, setTags] = useState<TagBusqueda[]>([]);
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Cerrar el dropdown al hacer clic fuera
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setFocused(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Cargar tags iniciales
   useEffect(() => {
     async function fetchTags() {
       try {
@@ -65,6 +78,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
     fetchTags();
   }, []);
 
+  // Búsqueda reactiva con debounce
   useEffect(() => {
     if (!query.trim() || query.length < 2) {
       setProductos([]);
@@ -113,9 +127,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           reqPromosLaser,
         ]);
 
-        if (resProd.data) {
-          setProductos(resProd.data);
-        }
+        if (resProd.data) setProductos(resProd.data);
 
         const serviciosUnificados: ServicioResultado[] = [];
 
@@ -169,12 +181,13 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
     return () => clearTimeout(timer);
   }, [query]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const handleSearchSubmit = (e?: React.FormEvent, busquedaDirecta?: string) => {
+    if (e) e.preventDefault();
+    const termino = busquedaDirecta || query.trim();
+    if (!termino) return;
 
     setFocused(false);
-    router.push(`/tienda?busqueda=${encodeURIComponent(query.trim())}`);
+    router.push(`/tienda?busqueda=${encodeURIComponent(termino)}`);
   };
 
   const seleccionarProducto = (id: number) => {
@@ -206,32 +219,33 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
 
   const seleccionarTag = (tag: TagBusqueda) => {
     setQuery(tag.nombre);
+    handleSearchSubmit(undefined, tag.nombre);
   };
 
   return (
-    <div className="space-y-3 relative z-30">
-      {/* Saludo + Botón Mis Turnos arriba a la derecha */}
-<div className="flex items-center justify-between px-1">
-  <div>
-    <p className="text-xs font-medium text-white/80">
-      ¡Hola! Te damos la bienvenida a
-    </p>
-    <h1 className="text-xl font-extrabold tracking-tight text-white">
-      {nombreEmpresa}
-    </h1>
-  </div>
+    <div ref={containerRef} className="space-y-3 relative z-30">
+      {/* Saludo + Botón Mis Turnos */}
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <p className="text-xs font-medium text-white/80">
+            ¡Hola! Te damos la bienvenida a
+          </p>
+          <h1 className="text-xl font-extrabold tracking-tight text-white">
+            {nombreEmpresa}
+          </h1>
+        </div>
 
-  {/* Botón Mis Turnos */}
-  <Link
-    href="/mis-turnos"
-    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
-  >
-    <Calendar className="h-3.5 w-3.5 text-white" />
-    <span>Mis Turnos</span>
-  </Link>
-</div>
+        <Link
+          href="/mis-turnos"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
+        >
+          <Calendar className="h-3.5 w-3.5 text-white" />
+          <span>Mis Turnos</span>
+        </Link>
+      </div>
 
-      <form onSubmit={handleSearchSubmit} className="relative">
+      {/* Input de Búsqueda */}
+      <form onSubmit={(e) => handleSearchSubmit(e)} className="relative">
         <div className="relative flex items-center">
           <Search className="absolute left-3.5 h-4 w-4 text-stone-400 pointer-events-none" />
           <input
@@ -240,10 +254,10 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setFocused(true)}
             placeholder="¿Qué servicio, promo o producto buscás hoy?"
-            className="w-full rounded-2xl border border-stone-200/80 bg-white dark:bg-zinc-900 dark:border-zinc-800 py-3 pl-10 pr-9 text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 placeholder:text-stone-400 focus:border-[#0E6E55] focus:outline-none focus:ring-2 focus:ring-[#0E6E55]/20 shadow-xs transition-all"
+            className="w-full rounded-2xl border border-stone-200/80 bg-white dark:bg-zinc-900 dark:border-zinc-800 py-3 pl-10 pr-9 text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 placeholder:text-stone-400 focus:border-[hsl(var(--primary))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))]/20 shadow-xs transition-all"
           />
           {loading ? (
-            <Loader2 className="absolute right-3 h-4 w-4 text-[#0E6E55] animate-spin" />
+            <Loader2 className="absolute right-3 h-4 w-4 text-[hsl(var(--primary))] animate-spin" />
           ) : query ? (
             <button
               type="button"
@@ -259,128 +273,124 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           ) : null}
         </div>
 
+        {/* Dropdown de Resultados */}
         {focused && (
-          <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setFocused(false)}
-            />
+          <div className="absolute left-0 right-0 top-full mt-2 z-20 rounded-2xl border border-stone-200 bg-white dark:bg-zinc-900 dark:border-zinc-800 p-3 shadow-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-150 max-h-[380px] overflow-y-auto">
+            {!query.trim() && (
+              <div className="space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1">
+                  Búsquedas populares
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {tags.length > 0 ? (
+                    tags.map((tag) => (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => seleccionarTag(tag)}
+                        className="px-3 py-1.5 rounded-xl bg-stone-100 dark:bg-zinc-800 hover:bg-[hsl(var(--primary))]/10 hover:text-[hsl(var(--primary))] text-xs font-semibold text-stone-700 dark:text-zinc-300 transition-colors cursor-pointer"
+                      >
+                        {tag.nombre}
+                      </button>
+                    ))
+                  ) : (
+                    <span className="text-xs text-stone-400 px-1">
+                      Escribí para buscar en el catálogo...
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
 
-            <div
-              ref={dropdownRef}
-              className="absolute left-0 right-0 top-full mt-2 z-20 rounded-2xl border border-stone-200 bg-white dark:bg-zinc-900 dark:border-zinc-800 p-3 shadow-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-150 max-h-[380px] overflow-y-auto"
-            >
-              {!query.trim() && (
-                <div className="space-y-2">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1">
-                    Búsquedas populares
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {tags.length > 0 ? (
-                      tags.map((tag) => (
-                        <button
-                          key={tag.id}
-                          type="button"
-                          onClick={() => seleccionarTag(tag)}
-                          className="px-3 py-1.5 rounded-xl bg-stone-100 dark:bg-zinc-800 hover:bg-[#0E6E55]/10 hover:text-[#0E6E55] text-xs font-semibold text-stone-700 dark:text-zinc-300 transition-colors cursor-pointer"
-                        >
-                          {tag.nombre}
-                        </button>
-                      ))
-                    ) : (
-                      <span className="text-xs text-stone-400 px-1">
-                        Escribí para buscar en el catálogo...
+            {servicios.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1 flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-[hsl(var(--primary))]" /> Servicios, Zonas & Promos Láser
+                </p>
+                {servicios.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => seleccionarServicio(s)}
+                    className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      {s.tipo.includes('laser') ? (
+                        <Zap className="h-3.5 w-3.5 text-[hsl(var(--primary))] fill-[hsl(var(--primary))]" />
+                      ) : (
+                        <Sparkles className="h-3.5 w-3.5 text-[hsl(var(--primary))]" />
+                      )}
+                      <span className="text-xs font-semibold text-stone-800 dark:text-zinc-200">
+                        {s.nombre}
+                      </span>
+                    </div>
+                    {s.precio !== undefined && (
+                      <span className="text-xs font-bold text-[hsl(var(--primary))]">
+                        ${s.precio.toLocaleString('es-AR')}
                       </span>
                     )}
-                  </div>
-                </div>
-              )}
+                  </button>
+                ))}
+              </div>
+            )}
 
-              {servicios.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1 flex items-center gap-1">
-                    <Calendar className="h-3 w-3 text-[#0E6E55]" /> Servicios, Zonas & Promos Láser
-                  </p>
-                  {servicios.map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => seleccionarServicio(s)}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors text-left cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2">
-                        {s.tipo.includes('laser') ? (
-                          <Zap className="h-3.5 w-3.5 text-rose-500 fill-rose-500" />
-                        ) : (
-                          <Sparkles className="h-3.5 w-3.5 text-[#0E6E55]" />
-                        )}
-                        <span className="text-xs font-semibold text-stone-800 dark:text-zinc-200">
-                          {s.nombre}
-                        </span>
-                      </div>
-                      {s.precio !== undefined && (
-                        <span className="text-xs font-bold text-[#0E6E55]">
-                          ${s.precio.toLocaleString('es-AR')}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {productos.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1 flex items-center gap-1">
-                    <ShoppingBag className="h-3 w-3 text-[#0E6E55]" /> Productos en Tienda
-                  </p>
-                  {productos.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => seleccionarProducto(p.id)}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors text-left cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        {p.imagen_url ? (
-                          <img
+            {productos.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-stone-400 px-1 flex items-center gap-1">
+                  <ShoppingBag className="h-3 w-3 text-[hsl(var(--primary))]" /> Productos en Tienda
+                </p>
+                {productos.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => seleccionarProducto(p.id)}
+                    className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      {p.imagen_url ? (
+                        <div className="relative h-7 w-7 rounded-lg overflow-hidden shrink-0">
+                          <Image
                             src={p.imagen_url}
                             alt={p.nombre}
-                            className="h-7 w-7 rounded-lg object-cover"
+                            fill
+                            sizes="28px"
+                            className="object-cover"
+                            unoptimized
                           />
-                        ) : (
-                          <div className="h-7 w-7 rounded-lg bg-stone-100 dark:bg-zinc-800 flex items-center justify-center">
-                            <ShoppingBag className="h-3.5 w-3.5 text-stone-400" />
-                          </div>
-                        )}
-                        <span className="text-xs font-semibold text-stone-800 dark:text-zinc-200 line-clamp-1">
-                          {p.nombre}
-                        </span>
-                      </div>
-                      <span className="text-xs font-bold text-[#0E6E55]">
-                        ${p.precio.toLocaleString('es-AR')}
+                        </div>
+                      ) : (
+                        <div className="h-7 w-7 rounded-lg bg-stone-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                          <ShoppingBag className="h-3.5 w-3.5 text-stone-400" />
+                        </div>
+                      )}
+                      <span className="text-xs font-semibold text-stone-800 dark:text-zinc-200 line-clamp-1">
+                        {p.nombre}
                       </span>
-                    </button>
-                  ))}
+                    </div>
+                    <span className="text-xs font-bold text-[hsl(var(--primary))]">
+                      ${p.precio.toLocaleString('es-AR')}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {query.trim().length >= 2 &&
+              !loading &&
+              productos.length === 0 &&
+              servicios.length === 0 && (
+                <div className="p-3 text-center text-xs text-stone-500 dark:text-zinc-400">
+                  No encontramos coincidencias exactas.
+                  <button
+                    type="button"
+                    onClick={() => handleSearchSubmit()}
+                    className="block mx-auto mt-1 font-bold text-[hsl(var(--primary))] hover:underline cursor-pointer"
+                  >
+                    Buscar &quot;{query}&quot; en la tienda →
+                  </button>
                 </div>
               )}
-
-              {query.trim().length >= 2 &&
-                !loading &&
-                productos.length === 0 &&
-                servicios.length === 0 && (
-                  <div className="p-3 text-center text-xs text-stone-500 dark:text-zinc-400">
-                    No encontramos coincidencias exactas.
-                    <button
-                      type="button"
-                      onClick={handleSearchSubmit}
-                      className="block mx-auto mt-1 font-bold text-[#0E6E55] hover:underline cursor-pointer"
-                    >
-                      Buscar &quot;{query}&quot; en la tienda →
-                    </button>
-                  </div>
-                )}
-            </div>
-          </>
+          </div>
         )}
       </form>
     </div>

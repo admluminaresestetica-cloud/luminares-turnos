@@ -16,7 +16,6 @@ interface Props {
   diasSemana: number[];
   fechaSeleccionada: string | null;
   onSelect: (fecha: string) => void;
-  colorAccent?: 'violet' | 'indigo' | 'rose' | 'emerald';
 }
 
 const MESES = [
@@ -26,44 +25,15 @@ const MESES = [
 
 const DIAS_CORTOS = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do'];
 
-const ACCENT_STYLES = {
-  violet: {
-    enabled: 'bg-violet-50 text-violet-700 hover:bg-violet-100/80 border border-violet-200/80',
-    selected: 'bg-violet-600 text-white shadow-md shadow-violet-500/20 scale-105 z-10 ring-2 ring-violet-500/30',
-    dot: 'bg-violet-500',
-    icon: 'text-violet-600',
-  },
-  indigo: {
-    enabled: 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100/80 border border-indigo-200/80',
-    selected: 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20 scale-105 z-10 ring-2 ring-indigo-500/30',
-    dot: 'bg-indigo-500',
-    icon: 'text-indigo-600',
-  },
-  rose: {
-    enabled: 'bg-rose-50 text-rose-700 hover:bg-rose-100/80 border border-rose-200/80',
-    selected: 'bg-rose-600 text-white shadow-md shadow-rose-500/20 scale-105 z-10 ring-2 ring-rose-500/30',
-    dot: 'bg-rose-500',
-    icon: 'text-rose-600',
-  },
-  emerald: {
-    enabled: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100/80 border border-emerald-200/80',
-    selected: 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20 scale-105 z-10 ring-2 ring-emerald-500/30',
-    dot: 'bg-emerald-500',
-    icon: 'text-emerald-600',
-  },
-};
-
 export default function SelectorFecha({
   tipo,
   fechasLaser,
   diasSemana,
   fechaSeleccionada,
   onSelect,
-  colorAccent = 'emerald',
 }: Props) {
   const hoy = useMemo(() => new Date(), []);
   const [mesOffset, setMesOffset] = useState(0);
-  const styles = ACCENT_STYLES[colorAccent] || ACCENT_STYLES.emerald;
 
   const { year, month, celdas } = useMemo(() => {
     const base = new Date(hoy.getFullYear(), hoy.getMonth() + mesOffset, 1);
@@ -84,7 +54,7 @@ export default function SelectorFecha({
   }, [hoy, mesOffset]);
 
   return (
-    <Card className="bg-slate-50/70 border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-none animate-in fade-in duration-300">
+    <Card className="bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-none animate-in fade-in duration-300">
       {/* Cabecera del Calendario */}
       <div className="flex items-center justify-between mb-4">
         <Button
@@ -93,14 +63,14 @@ export default function SelectorFecha({
           size="icon"
           onClick={() => setMesOffset((m) => m - 1)}
           disabled={mesOffset === 0}
-          className="h-8 w-8 rounded-xl border-slate-200 text-slate-600 bg-white hover:bg-slate-100 active:scale-95 disabled:opacity-30 shadow-2xs transition-all cursor-pointer"
+          className="h-8 w-8 rounded-xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 disabled:opacity-30 shadow-2xs transition-all cursor-pointer"
           aria-label="Mes anterior"
         >
           <ChevronLeft className="w-4 h-4" />
         </Button>
 
         <div className="text-center">
-          <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 uppercase tracking-wider">
+          <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-zinc-100 uppercase tracking-wider">
             {MESES[month]} {year}
           </h3>
         </div>
@@ -110,7 +80,7 @@ export default function SelectorFecha({
           variant="outline"
           size="icon"
           onClick={() => setMesOffset((m) => m + 1)}
-          className="h-8 w-8 rounded-xl border-slate-200 text-slate-600 bg-white hover:bg-slate-100 active:scale-95 shadow-2xs transition-all cursor-pointer"
+          className="h-8 w-8 rounded-xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 shadow-2xs transition-all cursor-pointer"
           aria-label="Mes siguiente"
         >
           <ChevronRight className="w-4 h-4" />
@@ -120,7 +90,7 @@ export default function SelectorFecha({
       {/* Días de la semana */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {DIAS_CORTOS.map((d) => (
-          <div key={d} className="text-center text-[11px] font-bold text-slate-400 py-1">
+          <div key={d} className="text-center text-[11px] font-bold text-slate-400 dark:text-zinc-500 py-1">
             {d}
           </div>
         ))}
@@ -143,13 +113,13 @@ export default function SelectorFecha({
               disabled={!habilitada}
               onClick={() => onSelect(iso)}
               className={`
-                relative aspect-square rounded-2xl text-xs sm:text-sm font-extrabold transition-all duration-150 flex flex-col items-center justify-center cursor-pointer active:scale-95
+                relative aspect-square rounded-2xl text-xs sm:text-sm font-extrabold transition-all duration-150 flex flex-col items-center justify-center active:scale-95
                 ${
                   seleccionada
-                    ? styles.selected
+                    ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-md scale-105 z-10 ring-2 ring-[hsl(var(--primary))]/30'
                     : habilitada
-                    ? `${styles.enabled} cursor-pointer`
-                    : 'bg-white/40 text-slate-300 border border-slate-100 cursor-not-allowed'
+                    ? 'bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/20 border border-[hsl(var(--primary))]/20 cursor-pointer'
+                    : 'bg-white/40 dark:bg-zinc-800/30 text-slate-300 dark:text-zinc-700 border border-slate-100 dark:border-zinc-800/50 cursor-not-allowed'
                 }
               `}
             >
@@ -157,7 +127,7 @@ export default function SelectorFecha({
               
               {/* Indicador sutil para el día de HOY si no está seleccionado */}
               {esHoy && !seleccionada && (
-                <span className={`absolute bottom-1.5 w-1.5 h-1.5 rounded-full ${styles.dot}`} />
+                <span className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-[hsl(var(--primary))]" />
               )}
             </button>
           );
@@ -166,8 +136,8 @@ export default function SelectorFecha({
 
       {/* Leyenda de servicio Láser */}
       {tipo === 'laser' && fechasLaser.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center gap-2 text-[11px] font-medium text-slate-500">
-          <Calendar className={`w-3.5 h-3.5 shrink-0 ${styles.icon}`} />
+        <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-zinc-800 flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+          <Calendar className="w-3.5 h-3.5 shrink-0 text-[hsl(var(--primary))]" />
           <span>Días destacados disponibles exclusivamente para la jornada láser.</span>
         </div>
       )}

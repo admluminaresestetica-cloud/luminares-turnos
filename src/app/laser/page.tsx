@@ -240,14 +240,14 @@ function LaserContent() {
   };
 
   return (
-    <main className="min-h-screen bg-[#edf0ec] dark:bg-zinc-950 flex flex-col items-center justify-start p-4 sm:p-6 pb-36 font-sans">
+    <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-start p-4 sm:p-6 pb-36 font-sans">
       <div className="max-w-md sm:max-w-2xl w-full space-y-4">
 
         {/* Volver */}
         <div className="w-full flex justify-start">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-bold text-stone-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-stone-200/80 dark:border-zinc-800 px-3.5 py-2 rounded-2xl shadow-xs hover:text-stone-900 dark:hover:text-white active:scale-95 transition-all"
+            className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground bg-card border border-border px-3.5 py-2 rounded-2xl shadow-xs hover:text-foreground active:scale-95 transition-all"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Volver al inicio</span>
@@ -255,24 +255,24 @@ function LaserContent() {
         </div>
 
         {/* Header estilo Card Verde del Inicio */}
-        <header className="bg-[#1c352a] text-white rounded-[26px] p-5 sm:p-6 shadow-md relative overflow-hidden space-y-2">
+        <header className="bg-primary text-primary-foreground rounded-[26px] p-5 sm:p-6 shadow-md relative overflow-hidden space-y-2">
           <div className="flex items-center justify-between">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/10">
-              <Zap className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
-              <span className="text-[10px] font-black tracking-[0.18em] uppercase text-emerald-200">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/10">
+              <Zap className="w-3.5 h-3.5 text-primary-foreground fill-primary-foreground" />
+              <span className="text-[10px] font-black tracking-[0.18em] uppercase text-primary-foreground/90">
                 Reserva Online
               </span>
             </div>
-            <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10">
-              <Zap className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-2xl bg-primary-foreground/10 backdrop-blur-sm flex items-center justify-center border border-primary-foreground/10">
+              <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
           </div>
 
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-primary-foreground">
               Depilación Láser
             </h1>
-            <p className="text-xs text-emerald-100/80 font-medium mt-1">
+            <p className="text-xs text-primary-foreground/80 font-medium mt-1">
               {!genero
                 ? 'Paso 1: Seleccioná tu perfil (Femenino o Masculino)'
                 : 'Paso 2: Elegí combos en promo o zonas individuales'}
@@ -281,8 +281,8 @@ function LaserContent() {
         </header>
 
         {/* Paso 1: Género */}
-        <section className="bg-white/90 dark:bg-zinc-900 backdrop-blur-sm border border-stone-200/80 dark:border-zinc-800 rounded-[24px] p-4 sm:p-5 shadow-xs space-y-3">
-          <h2 className="text-[11px] font-black uppercase tracking-wider text-stone-400 dark:text-zinc-400">
+        <section className="bg-card/90 backdrop-blur-sm border border-border rounded-[24px] p-4 sm:p-5 shadow-xs space-y-3">
+          <h2 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
             ¿Para quién es el turno?
           </h2>
           <SelectorGenero genero={genero} onSelect={handleGenero} />
@@ -292,13 +292,13 @@ function LaserContent() {
         {genero && (
           <section className="space-y-4 animate-in fade-in duration-200">
             {cargando ? (
-              <div className="bg-white/90 dark:bg-zinc-900 border border-stone-200/80 dark:border-zinc-800 rounded-[24px] p-8 text-center shadow-xs">
-                <div className="w-6 h-6 border-2 border-[#1c352a] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                <p className="text-xs font-bold text-stone-500 dark:text-zinc-400">Cargando opciones disponibles...</p>
+              <div className="bg-card/90 border border-border rounded-[24px] p-8 text-center shadow-xs">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                <p className="text-xs font-bold text-muted-foreground">Cargando opciones disponibles...</p>
               </div>
             ) : (
               <>
-                <div className="bg-white/90 dark:bg-zinc-900 border border-stone-200/80 dark:border-zinc-800 rounded-[24px] p-3 shadow-xs">
+                <div className="bg-card/90 border border-border rounded-[24px] p-3 shadow-xs">
                   <SelectorModoLaser modo={modo} onChange={handleModoChange} />
                 </div>
 
@@ -378,8 +378,8 @@ export default function LaserPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#edf0ec] dark:bg-zinc-950 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-[#1c352a] border-t-transparent rounded-full animate-spin" />
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       }
     >

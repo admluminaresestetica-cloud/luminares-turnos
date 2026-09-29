@@ -2,22 +2,29 @@ import { supabase } from '../supabase';
 
 export interface ConfiguracionEmpresa {
   id?: string;
-  nombre_empresa: string;
-  subtitulo_tienda: string;
-  logo_url: string;
-  whatsapp_numero: string;
-  google_maps_url: string;
-  direccion_texto?: string; 
+  nombre_empresa?: string;
+  subtitulo_tienda?: string;
+  logo_url?: string;
+  whatsapp_numero?: string;
+  google_maps_url?: string;
+  direccion_texto?: string;
   instagram_usuario?: string;
-  mp_access_token: string;
-  mp_alias: string;
+  mp_access_token?: string;
+  mp_alias?: string;
+
+  // Acceso y PINs
+  pin_acceso?: string;
+  pin_admin?: string;
+
   // Campos de Datos Bancarios / Transferencia
   cbu?: string;
   banco?: string;
   titular_cuenta?: string;
+
   // Campos de personalización de Ticket / Comprobante
-  cuit?: string;            // <-- Agregado
-  mensaje_ticket?: string;  // <-- Agregado
+  cuit?: string;
+  mensaje_ticket?: string;
+
   // Campos de configuración de Envíos
   envio_domicilio_activo?: boolean;
   costo_envio_base?: number;
@@ -25,6 +32,8 @@ export interface ConfiguracionEmpresa {
   monto_envio_gratis?: number;
   cuotas_habilitadas?: boolean;
   monto_minimo_cuotas?: number;
+
+  updated_at?: string;
 }
 
 // Obtener la configuración actual
