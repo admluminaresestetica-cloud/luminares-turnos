@@ -8,12 +8,26 @@ import {
   guardarTemaColores,
 } from '@/lib/supabase/configuracion-empresa';
 import { obtenerColorTextoContraste } from '@/lib/utils/color';
-import { Palette, RefreshCw, Save, Check, Sparkles } from 'lucide-react';
+import { Palette, RefreshCw, Save, Check } from 'lucide-react';
 
 const PALETAS_PREDEFINIDAS: { nombre: string; colores: TemaColores }[] = [
   {
     nombre: 'Original Dark Slate',
     colores: TEMA_COLORES_DEFAULT,
+  },
+  {
+    nombre: 'Fucsia Luminares',
+    colores: {
+      primary: '#e11d48',
+      primary_foreground: '#ffffff',
+      secondary: '#ffe4e6',
+      secondary_foreground: '#9f1239',
+      accent: '#f43f5e',
+      accent_foreground: '#ffffff',
+      background: '#fafafa',
+      foreground: '#18181b',
+      border: '#fecdd3',
+    },
   },
   {
     nombre: 'Rosa & Estética Chic',
@@ -69,6 +83,34 @@ const PALETAS_PREDEFINIDAS: { nombre: string; colores: TemaColores }[] = [
       background: '#fffbeb',
       foreground: '#451a03',
       border: '#fde68a',
+    },
+  },
+  {
+    nombre: 'Lila & Lavanda Relax',
+    colores: {
+      primary: '#8b5cf6',
+      primary_foreground: '#ffffff',
+      secondary: '#ede9fe',
+      secondary_foreground: '#5b21b6',
+      accent: '#a78bfa',
+      accent_foreground: '#ffffff',
+      background: '#fbfbfe',
+      foreground: '#2e1065',
+      border: '#ddd6fe',
+    },
+  },
+  {
+    nombre: 'Menta & Salvia Fresh',
+    colores: {
+      primary: '#0d9488',
+      primary_foreground: '#ffffff',
+      secondary: '#ccfbf1',
+      secondary_foreground: '#115e59',
+      accent: '#2dd4bf',
+      accent_foreground: '#134e4a',
+      background: '#f0fdfa',
+      foreground: '#042f2e',
+      border: '#99f6e4',
     },
   },
 ];
@@ -177,10 +219,10 @@ export default function AparienciaAjustesTab() {
       {/* Paletas de Colores Rápidas */}
       <div className="bg-card border border-border p-5 rounded-2xl space-y-3 shadow-xs">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4 text-primary" />
+    
           Plantillas de Marca Predefinidas
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {PALETAS_PREDEFINIDAS.map((p) => (
             <button
               key={p.nombre}

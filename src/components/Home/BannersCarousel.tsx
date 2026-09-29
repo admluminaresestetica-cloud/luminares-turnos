@@ -32,15 +32,22 @@ export default function BannersCarousel({ banners, isLoading }: BannersCarouselP
         {banners.map((banner) => {
           const Content = (
             <div className="w-full h-full relative group">
-              {/* Imagen limpia sin filtros */}
+              {/* Imagen base */}
               <img
                 src={banner.imagen_url}
                 alt={banner.titulo || 'Banner promocional'}
                 className="w-full h-full object-cover"
               />
 
+              {/* CAPA TRANSLÚCIDA CON EL TONO DE LA APP */}
+              {/* 1. Tinte uniforme con el color primario activo */}
+              <div className="absolute inset-0 bg-[hsl(var(--primary))]/25 pointer-events-none transition-colors duration-300" />
+
+              {/* 2. Degradado sutil para dar elegancia y legibilidad a los textos */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10 pointer-events-none" />
+
               {/* Elementos flotantes alineados a tu sistema de diseño con variables CSS */}
-              <div className="absolute inset-0 p-3.5 flex flex-col justify-between pointer-events-none">
+              <div className="absolute inset-0 p-3.5 flex flex-col justify-between pointer-events-none z-10">
                 {banner.titulo && (
                   <div className="self-start">
                     <span className="inline-flex items-center px-3 py-1 rounded-full bg-[hsl(var(--card))/0.85] backdrop-blur-md text-[hsl(var(--primary))] text-[10px] font-black tracking-wider uppercase shadow-md border border-[hsl(var(--primary))/0.2]">
