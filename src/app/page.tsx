@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useConfig } from '@/context/ConfigContext';
@@ -31,8 +31,12 @@ export default function HomePage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
 
-  // Estado para visibilidad del bloque secundario del header
+  // Estado para visibilidad
   const [showSubHeader, setShowSubHeader] = useState(true);
+
+  // Ref de control para sincronización suave de frames
+  const isVisibleRef = useRef(true);
+  const tickingRef = useRef(false);
 
   useEffect(() => {
     async function fetchBanners() {
@@ -58,15 +62,28 @@ export default function HomePage() {
     fetchBanners();
   }, []);
 
-  // Lógica: Mantiene la búsqueda siempre visible y pliega/despliega las acciones rápidas
+  // Lógica de Scroll sin parpadeos optimizada para pantallas táctiles
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      if (!tickingRef.current) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = Math.max(0, window.scrollY);
 
-      if (currentScrollY > 40) {
-        setShowSubHeader(false);
-      } else {
-        setShowSubHeader(true);
+          // Si baja más de 100px y estaba desplegado -> colapsar
+          if (currentScrollY > 100 && isVisibleRef.current) {
+            isVisibleRef.current = false;
+            setShowSubHeader(false);
+          } 
+          // Si sube y queda a menos de 30px del tope -> desplegar limpiamente
+          else if (currentScrollY < 30 && !isVisibleRef.current) {
+            isVisibleRef.current = true;
+            setShowSubHeader(true);
+          }
+
+          tickingRef.current = false;
+        });
+
+        tickingRef.current = true;
       }
     };
 
@@ -78,31 +95,33 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--primary))]/5 via-stone-50 to-stone-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 transition-colors relative">
       <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
 
-        {/* CONTENEDOR ENCABEZADO SUPERIOR */}
-        <div className="sticky top-0 z-30 shadow-xl shadow-stone-900/10 rounded-b-[2.5rem] md:rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900">
-          
-          {/* 1. Barra de búsqueda (SIEMPRE VISIBLE / FIXED AL SCROLLEAR) */}
-          <div className="px-4 pt-4 pb-3">
-            <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
-          </div>
+        {/* ENCABEZADO FIJO */}
+        <div className="sticky top-0 z-30 bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-md pt-2 pb-1 transition-all">
+          <div className="shadow-xl shadow-stone-900/10 rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900 transition-all duration-300">
+            
+            {/* 1. Buscador Fijo Superior */}
+            <div className="px-4 pt-4 pb-3">
+              <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
+            </div>
 
-          {/* 2. Tarjeta / Acciones Rápidas (SE DESPLIEGA SOLO ARRIBA DE TODO) */}
-          <div
-            className={`transition-all duration-300 ease-in-out px-4 pb-5 origin-top ${
-              showSubHeader
-                ? 'max-h-96 opacity-100 pointer-events-auto'
-                : 'max-h-0 opacity-0 pb-0 overflow-hidden pointer-events-none'
-            }`}
-          >
-            <AccionesRapidas />
-          </div>
+            {/* 2. Acciones Rápidas con animación suave */}
+            <div
+              className={`transition-all duration-300 ease-in-out px-4 overflow-hidden origin-top ${
+                showSubHeader
+                  ? 'max-h-48 opacity-100 pb-5 pointer-events-auto'
+                  : 'max-h-0 opacity-0 pb-0 pointer-events-none'
+              }`}
+            >
+              <AccionesRapidas />
+            </div>
 
+          </div>
         </div>
 
-        {/* Contenedor con padding lateral para el resto del contenido */}
+        {/* CONTENIDO PRINCIPAL */}
         <div className="px-4 sm:px-0 space-y-6">
 
-          {/* Grilla Principal Responsiva */}
+          {/* Grilla Principal */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 
             {/* Columna Izquierda */}
@@ -169,7 +188,7 @@ export default function HomePage() {
                 </div>
               </section>
 
-              {/* Tarjeta de acceso a FAQ */}
+              {/* FAQ */}
               <section className="pt-1">
                 <Link
                   href="/faq"
@@ -196,7 +215,6 @@ export default function HomePage() {
 
       </main>
 
-      {/* Banner flotante de instalación PWA */}
       <InstallPrompt />
     </div>
   );

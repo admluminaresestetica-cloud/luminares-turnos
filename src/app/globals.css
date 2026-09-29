@@ -55,9 +55,12 @@
     --ring: 270 70% 65%;
   }
 
+  html, body {
+    touch-action: pan-y; /* Aplica el control de scroll solo a nivel de página */
+  }
+
   * {
     border-color: hsl(var(--border));
-    touch-action: pan-y; /* Habilita el scroll vertical fluido en pantallas táctiles */
   }
 
   body {
@@ -75,7 +78,7 @@
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Regla especial para elementos que requieran arrastre horizontal (como carruseles de banners) */
+/* Regla para elementos con scroll horizontal (carruseles / tarjetas) */
 .touch-pan-x {
   touch-action: pan-x pan-y !important;
 }
