@@ -31,6 +31,9 @@ export default function HomePage() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
 
+  // Estado para visibilidad del bloque secundario del header
+  const [showSubHeader, setShowSubHeader] = useState(true);
+
   useEffect(() => {
     async function fetchBanners() {
       try {
@@ -55,20 +58,51 @@ export default function HomePage() {
     fetchBanners();
   }, []);
 
+  // Lógica: Mantiene la búsqueda siempre visible y pliega/despliega las acciones rápidas
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > 40) {
+        setShowSubHeader(false);
+      } else {
+        setShowSubHeader(true);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--primary))]/5 via-stone-50 to-stone-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 transition-colors relative">
       <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-28 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
 
-        {/* 1. Bloque Superior Unificado (Buscador + Accesos Directos con Degradado Dinámico) */}
-<section className="bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900 px-4 pt-4 pb-6 rounded-b-[2.5rem] md:rounded-3xl shadow-xl shadow-stone-900/10 space-y-4">
-          <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
-          <AccionesRapidas />
-        </section>
+        {/* CONTENEDOR ENCABEZADO SUPERIOR */}
+        <div className="sticky top-0 z-30 shadow-xl shadow-stone-900/10 rounded-b-[2.5rem] md:rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900">
+          
+          {/* 1. Barra de búsqueda (SIEMPRE VISIBLE / FIXED AL SCROLLEAR) */}
+          <div className="px-4 pt-4 pb-3">
+            <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
+          </div>
+
+          {/* 2. Tarjeta / Acciones Rápidas (SE DESPLIEGA SOLO ARRIBA DE TODO) */}
+          <div
+            className={`transition-all duration-300 ease-in-out px-4 pb-5 origin-top ${
+              showSubHeader
+                ? 'max-h-96 opacity-100 pointer-events-auto'
+                : 'max-h-0 opacity-0 pb-0 overflow-hidden pointer-events-none'
+            }`}
+          >
+            <AccionesRapidas />
+          </div>
+
+        </div>
 
         {/* Contenedor con padding lateral para el resto del contenido */}
         <div className="px-4 sm:px-0 space-y-6">
 
-          {/* 2. Grilla Principal Responsiva */}
+          {/* Grilla Principal Responsiva */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
 
             {/* Columna Izquierda */}

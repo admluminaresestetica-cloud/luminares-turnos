@@ -13,7 +13,7 @@
     
     /* VIOLETA / MORA PREMIUM */
     --primary: 270 76% 53%;         /* Tono vibrante principal */
-    --primary-dark: 275 80% 28%;    /* Tono profundo para degradados y sombras (como el guinda de la foto 1) */
+    --primary-dark: 275 80% 28%;    /* Tono profundo para degradados y sombras */
     --primary-foreground: 210 40% 98%;
     
     --secondary: 214.3 31.8% 91.4%;
@@ -57,7 +57,9 @@
 
   * {
     border-color: hsl(var(--border));
+    touch-action: pan-y; /* Habilita el scroll vertical fluido en pantallas táctiles */
   }
+
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
@@ -71,4 +73,9 @@
 
 .animate-fadeIn {
   animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Regla especial para elementos que requieran arrastre horizontal (como carruseles de banners) */
+.touch-pan-x {
+  touch-action: pan-x pan-y !important;
 }
