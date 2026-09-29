@@ -58,9 +58,7 @@ export default function HomePage() {
     fetchBanners();
   }, []);
 
-  // Lógica de Scroll Simplificada:
-  // - Si bajás más de 30px -> Oculta las acciones rápidas.
-  // - Solo cuando volvés exactamente arriba de todo (scrollY <= 10) -> Se vuelve a desplegar.
+  // Lógica de Scroll Simplificada
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -80,18 +78,19 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--primary))]/5 via-stone-50 to-stone-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 transition-colors relative">
       <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-32 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
 
-        {/* ENCABEZADO FIJO */}
-        <div className="sticky top-0 z-30 bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-md pt-2 pb-1 transition-all">
-          <div className="shadow-xl shadow-stone-900/10 rounded-3xl overflow-hidden bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900 transition-all duration-300">
+        {/* ENCABEZADO FIJO (Subimos z-index a z-40 para que flote sobre todo el contenido) */}
+        <div className="sticky top-0 z-40 bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-md pt-2 pb-1 transition-all">
+          {/* Se quitó 'overflow-hidden' de este div para que el desplegable de búsqueda pueda sobrepasarlo libremente */}
+          <div className="shadow-xl shadow-stone-900/10 rounded-3xl bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900 transition-all duration-300 relative">
 
             {/* 1. Buscador Fijo Superior */}
-            <div className="px-4 pt-4 pb-3">
+            <div className="px-4 pt-4 pb-3 relative z-50">
               <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
             </div>
 
             {/* 2. Acciones Rápidas */}
             <div
-              className={`transition-all duration-300 ease-in-out px-4 overflow-hidden origin-top ${
+              className={`transition-all duration-300 ease-in-out px-4 overflow-hidden rounded-b-3xl origin-top ${
                 showSubHeader
                   ? 'max-h-48 opacity-100 pb-5 pointer-events-auto'
                   : 'max-h-0 opacity-0 pb-0 pointer-events-none'
