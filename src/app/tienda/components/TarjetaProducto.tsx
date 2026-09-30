@@ -1,6 +1,7 @@
 'use client';
 
 import React from "react";
+import Image from "next/image";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 import { useFavoritos } from "@/context/FavoritosContext";
@@ -101,13 +102,13 @@ export default function TarjetaProducto({
   return (
     <div
       onClick={() => onVerDetalle && onVerDetalle(producto)}
-      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card p-2.5 sm:p-3.5 shadow-xs hover:shadow-md transition-all duration-150 active:scale-[0.97] cursor-pointer select-none"
+      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card p-2.5 sm:p-3.5 shadow-xs hover:shadow-md hover:border-[#0E6E55]/30 dark:hover:border-emerald-500/30 transition-all duration-150 active:scale-[0.98] cursor-pointer select-none"
     >
       {/* Botón Flotante de Favoritos (Esquina Superior Izquierda) */}
       <button
         type="button"
         onClick={handleToggleFavorito}
-        className="absolute top-3 left-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-white dark:hover:bg-zinc-800"
+        className="absolute top-3 left-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-card/80 dark:bg-card/90 border border-border/40 backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-card cursor-pointer"
         title={esFav ? "Quitar de favoritos" : "Guardar en favoritos"}
       >
         <Heart
@@ -131,28 +132,30 @@ export default function TarjetaProducto({
         )}
       </div>
 
-      {/* Badge de Envío Gratis (Alineado debajo del botón favorito) */}
+      {/* Badge de Envío Gratis */}
       {esEnvioGratis && !sinStock && (
-        <span className="absolute top-12 left-3 z-10 flex items-center gap-1 rounded-md bg-slate-900 dark:bg-zinc-800 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-white dark:text-zinc-200 shadow-xs">
+        <span className="absolute top-12 left-3 z-10 flex items-center gap-1 rounded-md bg-foreground text-background px-2 py-0.5 text-[10px] sm:text-[11px] font-bold shadow-xs">
           <Truck className="h-3 w-3" /> Envío gratis
         </span>
       )}
 
       {/* Imagen del Producto */}
-      <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-zinc-900 flex items-center justify-center">
+      <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-muted/50 border border-border/40 flex items-center justify-center">
         {producto.imagen_url ? (
-          <img
+          <Image
             src={producto.imagen_url}
             alt={producto.nombre}
-            className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 250px"
+            className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <span className="text-3xl">🛍️</span>
+          <span className="text-3xl select-none">🛍️</span>
         )}
 
         {sinStock && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[1px]">
-            <span className="rounded-md bg-white/90 dark:bg-zinc-900/90 px-2 py-1 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-zinc-100">
+            <span className="rounded-md bg-card/95 border border-border px-2.5 py-1 text-[10px] sm:text-[11px] font-bold text-foreground shadow-xs">
               Sin Stock
             </span>
           </div>
@@ -205,7 +208,7 @@ export default function TarjetaProducto({
         ) : cantidadEnCarrito === 0 ? (
           <button
             onClick={handleSumar}
-            className="w-full py-2.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-[#0E6E55] dark:hover:bg-emerald-500 dark:hover:text-white active:scale-[0.95] cursor-pointer shadow-xs"
+            className="w-full py-2.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-foreground text-background hover:bg-[#0E6E55] hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white active:scale-[0.95] cursor-pointer shadow-xs"
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             <span>Agregar</span>

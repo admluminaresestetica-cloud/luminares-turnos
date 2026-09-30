@@ -39,25 +39,25 @@ export default function FormularioEnvio({
   const costoEnvioSeguro = Number(costoEnvio) || 0;
 
   const inputClass =
-    "w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] py-2.5 pl-10 pr-3.5 text-sm text-[#12151B] placeholder:text-gray-400 outline-none transition-all duration-200 focus:border-[#12151B] focus:bg-white focus:ring-4 focus:ring-[#12151B]/[0.06]";
+    "w-full rounded-xl border border-border bg-muted/50 py-2.5 pl-10 pr-3.5 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-all duration-200 focus:border-foreground focus:bg-background focus:ring-2 focus:ring-ring/20";
 
   return (
-    <div className="border-t border-[#E7E5E0] pt-4">
+    <div className="border-t border-border pt-4">
       {/* Resumen de compra */}
-      <div className="mb-4 flex items-center justify-between rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] px-4 py-3.5">
+      <div className="mb-4 flex items-center justify-between rounded-xl border border-border bg-muted/40 px-4 py-3.5">
         <div>
-          <span className="block text-[11px] font-medium uppercase tracking-wide text-gray-500">
+          <span className="block text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             Total a pagar
           </span>
-          <span className="text-2xl font-extrabold text-[#12151B]">
+          <span className="text-2xl font-extrabold text-foreground">
             ${totalSeguro.toLocaleString("es-AR")}
           </span>
         </div>
         <span
           className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
             metodoPago === "mercadopago"
-              ? "bg-blue-50 text-blue-700"
-              : "bg-[#0E6E55]/10 text-[#0E6E55]"
+              ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+              : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
           }`}
         >
           {metodoPago === "mercadopago" ? (
@@ -74,14 +74,14 @@ export default function FormularioEnvio({
         </span>
       </div>
 
-      <h3 className="mb-2.5 text-sm font-semibold text-[#12151B]">
+      <h3 className="mb-2.5 text-sm font-semibold text-foreground">
         Datos del Comprador
       </h3>
 
       <div className="flex flex-col gap-2.5">
         {/* Campo Nombre y Apellido */}
         <div className="relative">
-          <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
+          <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2} />
           <input
             type="text"
             placeholder="Tu Nombre completo *"
@@ -96,7 +96,7 @@ export default function FormularioEnvio({
 
         {/* Campo Teléfono */}
         <div className="relative">
-          <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
+          <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2} />
           <input
             type="tel"
             inputMode="numeric"
@@ -116,8 +116,8 @@ export default function FormularioEnvio({
           <label
             className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
               datosEnvio?.metodoEnvio === "retiro"
-                ? "border-[#12151B] bg-[#12151B] text-white shadow-sm"
-                : "border-[#E7E5E0] bg-white text-[#12151B] hover:border-[#12151B]/40 hover:bg-[#F7F7F5]"
+                ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                : "border-border bg-card text-foreground hover:border-foreground/30 hover:bg-muted/50"
             }`}
           >
             <input
@@ -136,8 +136,8 @@ export default function FormularioEnvio({
             <label
               className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                 datosEnvio?.metodoEnvio === "envio"
-                  ? "border-[#12151B] bg-[#12151B] text-white shadow-sm"
-                  : "border-[#E7E5E0] bg-white text-[#12151B] hover:border-[#12151B]/40 hover:bg-[#F7F7F5]"
+                  ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                  : "border-border bg-card text-foreground hover:border-foreground/30 hover:bg-muted/50"
               }`}
             >
               <input
@@ -158,7 +158,7 @@ export default function FormularioEnvio({
         {envioDomicilioActivo && datosEnvio?.metodoEnvio === "envio" && (
           <div className="flex flex-col gap-2 animate-[fadeIn_0.2s_ease-out]">
             <div className="relative">
-              <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" strokeWidth={2} />
+              <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={2} />
               <input
                 type="text"
                 placeholder="Dirección de envío *"
@@ -169,17 +169,17 @@ export default function FormularioEnvio({
             </div>
 
             {/* Cartel de Costo de Envío */}
-            <div className="flex items-start gap-2.5 rounded-xl border border-amber-200/70 bg-amber-50/80 p-3 text-xs text-amber-900 shadow-2xs">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={2} />
+            <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200 shadow-2xs">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" strokeWidth={2} />
               <p className="m-0 leading-relaxed">
                 {tieneEnvioGratis ? (
-                  <strong className="font-semibold text-emerald-800">
+                  <strong className="font-semibold text-emerald-700 dark:text-emerald-400">
                     ¡Tenés envío gratis bonificado!
                   </strong>
                 ) : (
                   <>
                     Costo de envío / cadetería:{" "}
-                    <strong className="font-bold text-amber-950">
+                    <strong className="font-bold text-amber-950 dark:text-amber-100">
                       ${costoEnvioSeguro.toLocaleString("es-AR")}
                     </strong>{" "}
                     (sumado al total).
@@ -195,10 +195,10 @@ export default function FormularioEnvio({
           disabled={guardandoPedido}
           className={`mt-1 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-[15px] font-bold text-white shadow-md transition-all duration-200 ${
             guardandoPedido
-              ? "cursor-not-allowed bg-gray-400"
+              ? "cursor-not-allowed bg-muted-foreground/40 text-muted-foreground"
               : metodoPago === "mercadopago"
-              ? "bg-[#0B3B78] hover:-translate-y-0.5 hover:bg-[#0A346B] hover:shadow-lg active:translate-y-0 active:shadow-md"
-              : "bg-[#0E6E55] hover:-translate-y-0.5 hover:bg-[#0B5C47] hover:shadow-lg active:translate-y-0 active:shadow-md"
+              ? "bg-sky-700 hover:bg-sky-800 dark:bg-sky-600 dark:hover:bg-sky-500 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-md cursor-pointer"
+              : "bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-md cursor-pointer"
           }`}
         >
           {guardandoPedido ? (

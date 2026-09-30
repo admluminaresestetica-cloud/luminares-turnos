@@ -233,7 +233,7 @@ export default function ModalDetalleProducto({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 overscroll-none"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 overscroll-none"
     >
       <div
         ref={modalContainerRef}
@@ -241,7 +241,7 @@ export default function ModalDetalleProducto({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[88vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white p-4 sm:p-8 shadow-2xl flex flex-col justify-between"
+        className="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[88vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-card border border-border text-card-foreground p-4 sm:p-8 shadow-2xl flex flex-col justify-between"
         style={{
           overscrollBehaviorY: "contain",
           transform: `translateY(${currentOffsetY}px)`,
@@ -250,22 +250,24 @@ export default function ModalDetalleProducto({
       >
         {/* Barra superior indicadora de deslizamiento para mobile */}
         <div className="flex justify-center -mt-1 mb-3 sm:hidden cursor-grab active:cursor-grabbing">
-          <span className="h-1.5 w-12 rounded-full bg-slate-300" />
+          <span className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />
         </div>
 
         {/* Botones Flotantes de Cierre / Compartir */}
         <div className="sticky top-0 float-right z-30 -mr-1 -mt-1 sm:-mr-4 sm:-mt-4 flex items-center gap-2">
           <button
+            type="button"
             onClick={handleCompartir}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-600 backdrop-blur-md border border-slate-100 shadow-sm transition-all hover:bg-slate-100 active:scale-90 cursor-pointer"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-card/90 text-muted-foreground backdrop-blur-md border border-border shadow-xs transition-all hover:bg-accent hover:text-foreground active:scale-90 cursor-pointer"
             title="Compartir producto"
           >
             <Share2 className="h-4 w-4" />
           </button>
 
           <button
+            type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-slate-500 backdrop-blur-md border border-slate-100 shadow-sm transition-all hover:bg-slate-100 active:scale-90 cursor-pointer"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-card/90 text-muted-foreground backdrop-blur-md border border-border shadow-xs transition-all hover:bg-accent hover:text-foreground active:scale-90 cursor-pointer"
             title="Cerrar (Esc)"
           >
             <X className="h-5 w-5" />
@@ -287,11 +289,11 @@ export default function ModalDetalleProducto({
           {/* INFORMACIÓN DEL PRODUCTO */}
           <div className="flex flex-col justify-between space-y-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#0E6E55]">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#0E6E55] dark:text-emerald-400">
                 {producto.categoria}
               </span>
 
-              <h2 className="text-xl font-bold text-slate-900 sm:text-2xl mt-1 leading-snug">
+              <h2 className="text-xl font-bold text-foreground sm:text-2xl mt-1 leading-snug">
                 {producto.nombre}
               </h2>
 
@@ -303,10 +305,10 @@ export default function ModalDetalleProducto({
                       key={idx}
                       type="button"
                       onClick={() => setTagSeleccionadoCarrusel(tag)}
-                      className="inline-flex items-center gap-1 rounded-md bg-slate-100 hover:bg-[#0E6E55]/10 px-2 py-0.5 text-xs font-medium text-slate-600 hover:text-[#0E6E55] transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 rounded-md bg-muted hover:bg-[#0E6E55]/10 dark:hover:bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-muted-foreground hover:text-[#0E6E55] dark:hover:text-emerald-300 transition-colors cursor-pointer border border-border/40"
                       title={`Ver productos con #${tag}`}
                     >
-                      <Tag className="h-3 w-3 text-slate-400" />
+                      <Tag className="h-3 w-3 text-muted-foreground/70" />
                       #{tag}
                     </button>
                   ))}
@@ -315,11 +317,11 @@ export default function ModalDetalleProducto({
 
               {/* PRECIOS Y CUOTAS */}
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-slate-900">
+                <span className="text-2xl font-extrabold text-foreground">
                   ${producto.precio.toLocaleString("es-AR")}
                 </span>
                 {tieneDescuento && (
-                  <span className="text-sm font-medium text-slate-400 line-through">
+                  <span className="text-sm font-medium text-muted-foreground line-through">
                     ${precioOriginal.toLocaleString("es-AR")}
                   </span>
                 )}
@@ -328,29 +330,29 @@ export default function ModalDetalleProducto({
               {!sinStock && (
                 <div className="mt-2">
                   {permiteCuotas ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-semibold text-purple-700">
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 dark:border-purple-900/50 bg-purple-50 dark:bg-purple-950/40 px-2.5 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300">
                       <CreditCard className="h-3.5 w-3.5" />
                       3 cuotas fijas de ${montoCuota.toLocaleString("es-AR")}
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/60 px-2.5 py-1 text-xs font-medium text-muted-foreground">
                       Solo Contado / Débito
                     </span>
                   )}
                 </div>
               )}
 
-              <p className="text-xs text-slate-500 mt-2">
-                Stock disponible: <strong className="text-slate-800">{stockDisponible}</strong>
+              <p className="text-xs text-muted-foreground mt-2">
+                Stock disponible: <strong className="text-foreground">{stockDisponible}</strong>
                 {cantidadEnCarrito > 0 && (
-                  <span className="ml-1 text-emerald-700 font-medium">
+                  <span className="ml-1 text-emerald-600 dark:text-emerald-400 font-medium">
                     ({cantidadEnCarrito} en el carrito)
                   </span>
                 )}
               </p>
 
               {producto.descripcion && (
-                <p className="mt-4 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                <p className="mt-4 text-xs sm:text-sm text-muted-foreground leading-relaxed">
                   {producto.descripcion}
                 </p>
               )}
@@ -358,32 +360,34 @@ export default function ModalDetalleProducto({
 
             {/* CONTROLES DE CANTIDAD (DESKTOP) */}
             <div className="hidden sm:block pt-2 space-y-4">
-              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-2">
-                <span className="text-xs font-semibold text-slate-600 pl-2">Cantidad a agregar:</span>
-                <div className="flex items-center gap-3 bg-white rounded-xl border border-slate-200 p-1">
+              <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/40 p-2">
+                <span className="text-xs font-semibold text-muted-foreground pl-2">Cantidad a agregar:</span>
+                <div className="flex items-center gap-3 bg-card rounded-xl border border-border p-1">
                   <button
+                    type="button"
                     onClick={() => puedeRestar && setCantidad(cantidad - 1)}
                     disabled={!puedeRestar}
                     className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
                       puedeRestar
-                        ? "text-slate-700 hover:bg-slate-100 cursor-pointer"
-                        : "text-slate-300 cursor-not-allowed"
+                        ? "text-foreground hover:bg-accent cursor-pointer"
+                        : "text-muted-foreground/40 cursor-not-allowed"
                     }`}
                   >
                     <Minus className="h-3.5 w-3.5" />
                   </button>
 
-                  <span className="w-6 text-center text-sm font-bold text-slate-900">
+                  <span className="w-6 text-center text-sm font-bold text-foreground">
                     {cantidad}
                   </span>
 
                   <button
+                    type="button"
                     onClick={() => puedeSumar && setCantidad(cantidad + 1)}
                     disabled={!puedeSumar}
                     className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
                       puedeSumar
-                        ? "text-slate-700 hover:bg-slate-100 cursor-pointer"
-                        : "text-slate-300 cursor-not-allowed"
+                        ? "text-foreground hover:bg-accent cursor-pointer"
+                        : "text-muted-foreground/40 cursor-not-allowed"
                     }`}
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -392,12 +396,13 @@ export default function ModalDetalleProducto({
               </div>
 
               <button
+                type="button"
                 onClick={handleAgregarPrincipal}
                 disabled={sinStock || maximoPermitidoParaAgregar <= 0}
                 className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all ${
                   sinStock || maximoPermitidoParaAgregar <= 0
-                    ? "bg-slate-200 text-slate-500 cursor-not-allowed"
-                    : "bg-[#0E6E55] text-white hover:bg-[#0b5944] active:scale-[0.98] shadow-md shadow-[#0E6E55]/20 cursor-pointer"
+                    ? "bg-muted text-muted-foreground cursor-not-allowed border border-border"
+                    : "bg-[#0E6E55] text-white hover:bg-[#0b5944] dark:bg-emerald-600 dark:hover:bg-emerald-500 active:scale-[0.98] shadow-md shadow-[#0E6E55]/20 dark:shadow-none cursor-pointer"
                 }`}
               >
                 <ShoppingBag className="h-4 w-4" />
@@ -411,9 +416,10 @@ export default function ModalDetalleProducto({
               </button>
 
               <button
+                type="button"
                 onClick={handleComprarAhora}
                 disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold transition-all border-2 border-[#0E6E55] bg-transparent text-[#0E6E55] hover:bg-[#0E6E55]/10 cursor-pointer ${
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold transition-all border-2 border-[#0E6E55] dark:border-emerald-500 bg-transparent text-[#0E6E55] dark:text-emerald-400 hover:bg-[#0E6E55]/10 dark:hover:bg-emerald-500/10 cursor-pointer ${
                   sinStock || maximoPermitidoParaAgregar <= 0 ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -434,26 +440,28 @@ export default function ModalDetalleProducto({
           handleRestarRecomendado={handleRestarRecomendado}
         />
 
-        {/* BARRA STICKY INFERIOR EXCLUSIVA PARA MOVILES */}
-        <div className="sticky bottom-0 -mx-4 -mb-4 mt-6 p-3 bg-white/95 backdrop-blur-md border-t border-slate-200 sm:hidden z-20 space-y-2 pb-safe">
+        {/* BARRA STICKY INFERIOR EXCLUSIVA PARA MÓVILES */}
+        <div className="sticky bottom-0 -mx-4 -mb-4 mt-6 p-3 bg-card/95 backdrop-blur-md border-t border-border sm:hidden z-20 space-y-2 pb-safe">
           <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-xs font-semibold text-slate-600">Cantidad:</span>
-            <div className="flex items-center gap-3 bg-slate-100 rounded-xl p-1">
+            <span className="text-xs font-semibold text-muted-foreground">Cantidad:</span>
+            <div className="flex items-center gap-3 bg-muted rounded-xl p-1 border border-border/40">
               <button
+                type="button"
                 onClick={() => puedeRestar && setCantidad(cantidad - 1)}
                 disabled={!puedeRestar}
                 className={`flex h-7 w-7 items-center justify-center rounded-lg active:scale-90 ${
-                  puedeRestar ? "bg-white text-slate-700 shadow-sm" : "text-slate-300"
+                  puedeRestar ? "bg-card text-foreground shadow-xs" : "text-muted-foreground/40"
                 }`}
               >
                 <Minus className="h-3 w-3" />
               </button>
-              <span className="w-5 text-center text-xs font-bold text-slate-900">{cantidad}</span>
+              <span className="w-5 text-center text-xs font-bold text-foreground">{cantidad}</span>
               <button
+                type="button"
                 onClick={() => puedeSumar && setCantidad(cantidad + 1)}
                 disabled={!puedeSumar}
                 className={`flex h-7 w-7 items-center justify-center rounded-lg active:scale-90 ${
-                  puedeSumar ? "bg-white text-slate-700 shadow-sm" : "text-slate-300"
+                  puedeSumar ? "bg-card text-foreground shadow-xs" : "text-muted-foreground/40"
                 }`}
               >
                 <Plus className="h-3 w-3" />
@@ -463,12 +471,13 @@ export default function ModalDetalleProducto({
 
           <div className="grid grid-cols-2 gap-2">
             <button
+              type="button"
               onClick={handleAgregarPrincipal}
               disabled={sinStock || maximoPermitidoParaAgregar <= 0}
               className={`flex items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold transition-all ${
                 sinStock || maximoPermitidoParaAgregar <= 0
-                  ? "bg-slate-200 text-slate-500 cursor-not-allowed"
-                  : "bg-[#0E6E55] text-white active:scale-[0.98] shadow-sm"
+                  ? "bg-muted text-muted-foreground cursor-not-allowed border border-border"
+                  : "bg-[#0E6E55] dark:bg-emerald-600 text-white active:scale-[0.98] shadow-xs"
               }`}
             >
               <ShoppingBag className="h-3.5 w-3.5" />
@@ -478,9 +487,10 @@ export default function ModalDetalleProducto({
             </button>
 
             <button
+              type="button"
               onClick={handleComprarAhora}
               disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-              className={`flex items-center justify-center rounded-xl py-3 text-xs font-bold border border-[#0E6E55] text-[#0E6E55] active:scale-[0.98] ${
+              className={`flex items-center justify-center rounded-xl py-3 text-xs font-bold border border-[#0E6E55] dark:border-emerald-500 text-[#0E6E55] dark:text-emerald-400 active:scale-[0.98] ${
                 sinStock || maximoPermitidoParaAgregar <= 0 ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >

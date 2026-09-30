@@ -32,7 +32,7 @@ export default function TagsFiltros({ tags, tagSeleccionado, onSelectTag }: Tags
     `relative w-8 h-8 rounded-full flex items-center justify-center mb-1 overflow-hidden transition-colors ${
       activo 
         ? 'bg-white/20 text-white' 
-        : 'bg-slate-100 dark:bg-zinc-800 text-[#0E6E55] dark:text-emerald-400'
+        : 'bg-muted text-[#0E6E55] dark:text-emerald-400'
     }`;
 
   return (

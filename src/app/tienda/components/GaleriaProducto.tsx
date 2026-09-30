@@ -81,7 +81,7 @@ export default function GaleriaProducto({
       <div
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group select-none"
+        className="relative aspect-square w-full overflow-hidden rounded-2xl bg-muted/40 border border-border flex items-center justify-center group select-none"
       >
         {imagenSeleccionada && !errorCarga ? (
           <Image
@@ -94,18 +94,18 @@ export default function GaleriaProducto({
             onError={() => setErrorCarga(true)}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center gap-2 text-slate-400">
+          <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground/70">
             <ImageOff className="h-8 w-8 stroke-[1.5]" />
             <span className="text-xs font-medium">Imagen no disponible</span>
           </div>
         )}
 
-        {/* FLECHAS DE NAVEGACIÓN EN IMAGEN PRINCIPAL (Visible en Hover o si hay varias fotos) */}
+        {/* FLECHAS DE NAVEGACIÓN EN IMAGEN PRINCIPAL */}
         {totalImagenes > 1 && (
           <>
             <button
               onClick={irAAnterior}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-slate-700 backdrop-blur-md shadow-sm transition-all hover:bg-white hover:scale-105 active:scale-95 cursor-pointer md:opacity-0 md:group-hover:opacity-100"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-card/80 dark:bg-card/90 text-foreground border border-border/50 backdrop-blur-md shadow-sm transition-all hover:bg-card hover:scale-105 active:scale-95 cursor-pointer md:opacity-0 md:group-hover:opacity-100"
               aria-label="Imagen anterior"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -113,7 +113,7 @@ export default function GaleriaProducto({
 
             <button
               onClick={irASiguiente}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 text-slate-700 backdrop-blur-md shadow-sm transition-all hover:bg-white hover:scale-105 active:scale-95 cursor-pointer md:opacity-0 md:group-hover:opacity-100"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-card/80 dark:bg-card/90 text-foreground border border-border/50 backdrop-blur-md shadow-sm transition-all hover:bg-card hover:scale-105 active:scale-95 cursor-pointer md:opacity-0 md:group-hover:opacity-100"
               aria-label="Imagen siguiente"
             >
               <ChevronRight className="h-5 w-5" />
@@ -123,15 +123,15 @@ export default function GaleriaProducto({
 
         {/* BADGE DESCUENTO */}
         {tieneDescuento && !sinStock && (
-          <span className="absolute top-3 right-3 rounded-full bg-[#0E6E55] px-2.5 py-1 text-[11px] font-bold tracking-wide text-white shadow-md z-10">
+          <span className="absolute top-3 right-3 rounded-full bg-[#0E6E55] dark:bg-emerald-600 px-2.5 py-1 text-[11px] font-bold tracking-wide text-white shadow-md z-10">
             -{porcentajeDescuento}% OFF
           </span>
         )}
 
         {/* CARTEL SIN STOCK */}
         {sinStock && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px]">
-            <span className="rounded-xl bg-white/95 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-slate-900 shadow-lg">
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
+            <span className="rounded-xl bg-card/95 border border-border px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-foreground shadow-lg">
               Sin Stock
             </span>
           </div>
@@ -139,7 +139,7 @@ export default function GaleriaProducto({
 
         {/* INDICADOR PUNTOS MOBILE (DOTS) */}
         {totalImagenes > 1 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-black/20 backdrop-blur-md px-2 py-1 sm:hidden">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-black/40 dark:bg-black/60 backdrop-blur-md px-2 py-1 sm:hidden">
             {imagenesTotales.map((_, idx) => (
               <span
                 key={idx}
@@ -164,8 +164,8 @@ export default function GaleriaProducto({
                 aria-label={`Ver foto ${index + 1}`}
                 className={`relative h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${
                   esSeleccionada
-                    ? "border-[#0E6E55] ring-2 ring-[#0E6E55]/20 scale-95 shadow-sm"
-                    : "border-slate-100 opacity-60 hover:opacity-100 hover:border-slate-300"
+                    ? "border-[#0E6E55] dark:border-emerald-500 ring-2 ring-[#0E6E55]/20 dark:ring-emerald-500/20 scale-95 shadow-xs"
+                    : "border-border opacity-60 hover:opacity-100 hover:border-muted-foreground/30"
                 }`}
               >
                 <Image
