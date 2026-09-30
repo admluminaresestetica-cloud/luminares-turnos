@@ -10,25 +10,23 @@ export const metadata: Metadata = {
   description: 'Sistema de gestión de turnos para centros de estética',
 };
 
-export default function RootLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" suppressHydrationWarning>
-      <body className={`${inter.className} bg-background text-foreground antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <ConfigProvider>
-            {children}
-          </ConfigProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <ConfigProvider>
+        <div className={`${inter.className} bg-background text-foreground antialiased min-h-screen`}>
+          {children}
+        </div>
+      </ConfigProvider>
+    </ThemeProvider>
   );
 }

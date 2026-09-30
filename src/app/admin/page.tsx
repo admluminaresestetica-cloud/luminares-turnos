@@ -139,7 +139,7 @@ export default function AdminHubPage() {
     <div className="min-h-screen bg-slate-50/80 dark:bg-zinc-950 flex flex-col justify-center p-4 sm:p-8 select-none transition-colors duration-200 relative">
 
       {/* ENCABEZADO SUPERIOR */}
-      <header className="w-full max-w-lg mx-auto flex items-center justify-between pt-2 pb-4">
+      <header suppressHydrationWarning className="w-full max-w-lg mx-auto flex items-center justify-between pt-2 pb-4">
         <div className="flex items-center gap-3">
           <ThemeToggle />
           <div>
