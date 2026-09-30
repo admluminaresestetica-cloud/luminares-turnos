@@ -2,7 +2,7 @@
 
 import localFont from "next/font/local";
 import { usePathname } from "next/navigation";
-import '@/app/globals.css';
+import '../globals.css';
 import Footer from "@/components/footer";
 import BottomNav from '@/components/Home/BottomNav';
 import { CarritoProvider } from "@/context/CarritoContext";
