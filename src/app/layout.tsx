@@ -31,9 +31,9 @@ export default function RootLayout({
   const isAdmin = pathname?.startsWith('/admin');
 
   return (
-    <html lang="es" suppressHydrationWarning className="dark:color-scheme-dark">
+    <html lang="es" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 min-h-screen flex flex-col pb-16 md:pb-0 transition-colors duration-200`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col pb-16 md:pb-0 transition-colors duration-200`}
       >
         <ThemeProvider
           attribute="class"
