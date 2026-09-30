@@ -101,18 +101,18 @@ export default function TarjetaProducto({
   return (
     <div
       onClick={() => onVerDetalle && onVerDetalle(producto)}
-      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white p-2.5 sm:p-3.5 shadow-sm transition-transform duration-150 active:scale-[0.97] hover:shadow-md cursor-pointer select-none"
+      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card p-2.5 sm:p-3.5 shadow-xs hover:shadow-md transition-all duration-150 active:scale-[0.97] cursor-pointer select-none"
     >
       {/* Botón Flotante de Favoritos (Esquina Superior Izquierda) */}
       <button
         type="button"
         onClick={handleToggleFavorito}
-        className="absolute top-3 left-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-md shadow-sm transition-transform active:scale-90 hover:bg-white"
+        className="absolute top-3 left-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-white dark:hover:bg-zinc-800"
         title={esFav ? "Quitar de favoritos" : "Guardar en favoritos"}
       >
         <Heart
           className={`h-4 w-4 transition-colors ${
-            esFav ? "fill-red-500 text-red-500" : "text-slate-400 hover:text-slate-600"
+            esFav ? "fill-red-500 text-red-500" : "text-muted-foreground hover:text-foreground"
           }`}
         />
       </button>
@@ -120,12 +120,12 @@ export default function TarjetaProducto({
       {/* Badges superiores derechos (% OFF / Últimas Unidades) */}
       <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1 pointer-events-none">
         {tieneOferta && !sinStock && (
-          <span className="rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
+          <span className="rounded-md bg-[#0E6E55] dark:bg-emerald-600 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-xs">
             {porcentajeDescuento}% OFF
           </span>
         )}
         {esUltimasUnidades && (
-          <span className="flex items-center gap-1 rounded-md bg-amber-500 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm animate-pulse">
+          <span className="flex items-center gap-1 rounded-md bg-amber-500 dark:bg-amber-600 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-xs animate-pulse">
             <Flame className="h-3 w-3" /> Últimas unidades
           </span>
         )}
@@ -133,13 +133,13 @@ export default function TarjetaProducto({
 
       {/* Badge de Envío Gratis (Alineado debajo del botón favorito) */}
       {esEnvioGratis && !sinStock && (
-        <span className="absolute top-12 left-3 z-10 flex items-center gap-1 rounded-md bg-[#12151B] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-white shadow-sm">
+        <span className="absolute top-12 left-3 z-10 flex items-center gap-1 rounded-md bg-slate-900 dark:bg-zinc-800 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-white dark:text-zinc-200 shadow-xs">
           <Truck className="h-3 w-3" /> Envío gratis
         </span>
       )}
 
       {/* Imagen del Producto */}
-      <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[#F7F7F5] flex items-center justify-center">
+      <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-zinc-900 flex items-center justify-center">
         {producto.imagen_url ? (
           <img
             src={producto.imagen_url}
@@ -151,8 +151,8 @@ export default function TarjetaProducto({
         )}
 
         {sinStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
-            <span className="rounded-md bg-white/90 px-2 py-1 text-[10px] sm:text-[11px] font-bold text-[#12151B]">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-[1px]">
+            <span className="rounded-md bg-white/90 dark:bg-zinc-900/90 px-2 py-1 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-zinc-100">
               Sin Stock
             </span>
           </div>
@@ -162,7 +162,7 @@ export default function TarjetaProducto({
       {/* Información del Producto */}
       <div className="flex flex-1 flex-col justify-between">
         <div>
-          <h3 className="line-clamp-2 text-xs sm:text-sm font-semibold text-[#12151B] leading-snug">
+          <h3 className="line-clamp-2 text-xs sm:text-sm font-semibold text-foreground leading-snug">
             {producto.nombre}
           </h3>
         </div>
@@ -170,11 +170,11 @@ export default function TarjetaProducto({
         {/* Precios, Cuotas y Stock */}
         <div className="mt-2 mb-2">
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-base sm:text-lg font-extrabold text-[#12151B] tracking-tight">
+            <span className="text-base sm:text-lg font-extrabold text-foreground tracking-tight">
               ${precioFormateado}
             </span>
             {tieneOferta && (
-              <span className="text-[11px] text-[#A6A29B] line-through">
+              <span className="text-[11px] text-muted-foreground line-through">
                 ${precioOriginalFormateado}
               </span>
             )}
@@ -183,13 +183,13 @@ export default function TarjetaProducto({
           {/* Badge de 3 cuotas fijas */}
           {!sinStock && producto.permite_cuotas !== false && (
             <div className="mt-1">
-              <span className="inline-block rounded-md border border-purple-200 bg-purple-50 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700">
+              <span className="inline-block rounded-md border border-purple-200 dark:border-purple-900/50 bg-purple-50 dark:bg-purple-950/40 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 dark:text-purple-300">
                 💳 3 cuotas fijas de ${cuotaFormateada}
               </span>
             </div>
           )}
 
-          <p className="text-[10px] text-[#A6A29B] mt-1">
+          <p className="text-[10px] text-muted-foreground mt-1">
             Stock: {producto.stock}
           </p>
         </div>
@@ -198,14 +198,14 @@ export default function TarjetaProducto({
         {sinStock ? (
           <button
             disabled
-            className="w-full py-2 px-2 rounded-xl text-xs font-bold bg-[#E7E5E0] text-[#6B675F] cursor-not-allowed opacity-80"
+            className="w-full py-2 px-2 rounded-xl text-xs font-bold bg-muted text-muted-foreground cursor-not-allowed opacity-80"
           >
             Agotado
           </button>
         ) : cantidadEnCarrito === 0 ? (
           <button
             onClick={handleSumar}
-            className="w-full py-2.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-[#12151B] text-white hover:bg-[#0E6E55] active:scale-[0.95]"
+            className="w-full py-2.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-[#0E6E55] dark:hover:bg-emerald-500 dark:hover:text-white active:scale-[0.95] cursor-pointer shadow-xs"
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             <span>Agregar</span>
@@ -213,17 +213,17 @@ export default function TarjetaProducto({
         ) : (
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center justify-between w-full rounded-xl border border-[#0E6E55]/30 bg-[#0E6E55]/5 p-1"
+            className="flex items-center justify-between w-full rounded-xl border border-[#0E6E55]/30 dark:border-emerald-500/30 bg-[#0E6E55]/5 dark:bg-emerald-500/10 p-1"
           >
             <button
               onClick={handleRestar}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#0E6E55] shadow-sm hover:bg-[#0E6E55] hover:text-white transition-all active:scale-90 cursor-pointer"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-card text-[#0E6E55] dark:text-emerald-400 border border-border shadow-xs hover:bg-[#0E6E55] dark:hover:bg-emerald-600 hover:text-white dark:hover:text-white transition-all active:scale-90 cursor-pointer"
               title="Restar una unidad"
             >
               <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
             </button>
 
-            <span className="text-xs font-extrabold text-[#0E6E55] px-1">
+            <span className="text-xs font-extrabold text-[#0E6E55] dark:text-emerald-400 px-1">
               {cantidadEnCarrito} en carrito
             </span>
 
@@ -232,8 +232,8 @@ export default function TarjetaProducto({
               disabled={limiteAlcanzado}
               className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
                 limiteAlcanzado
-                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  : "bg-[#0E6E55] text-white hover:bg-[#0b5944] cursor-pointer shadow-sm"
+                  ? "bg-muted text-muted-foreground cursor-not-allowed"
+                  : "bg-[#0E6E55] dark:bg-emerald-600 text-white hover:bg-[#0b5944] dark:hover:bg-emerald-500 cursor-pointer shadow-xs"
               }`}
               title={limiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
             >
