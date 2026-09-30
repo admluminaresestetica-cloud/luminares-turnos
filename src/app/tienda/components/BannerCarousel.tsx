@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -118,7 +118,7 @@ export default function BannerCarousel() {
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-3xl shadow-sm my-4 bg-slate-100 select-none group touch-pan-y"
+      className="relative w-full overflow-hidden rounded-3xl border border-border shadow-xs my-4 bg-slate-100 dark:bg-zinc-900 select-none group touch-pan-y"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -151,7 +151,7 @@ export default function BannerCarousel() {
             type="button"
             onClick={irAlAnterior}
             aria-label="Banner anterior"
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-slate-700 shadow-md backdrop-blur-xs transition-all active:scale-95 cursor-pointer opacity-90 sm:opacity-0 sm:group-hover:opacity-100"
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-900 text-slate-700 dark:text-zinc-200 shadow-md backdrop-blur-xs transition-all active:scale-95 cursor-pointer opacity-90 sm:opacity-0 sm:group-hover:opacity-100"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -160,7 +160,7 @@ export default function BannerCarousel() {
             type="button"
             onClick={irAlSiguiente}
             aria-label="Siguiente banner"
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-slate-700 shadow-md backdrop-blur-xs transition-all active:scale-95 cursor-pointer opacity-90 sm:opacity-0 sm:group-hover:opacity-100"
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-white/80 dark:bg-zinc-900/80 hover:bg-white dark:hover:bg-zinc-900 text-slate-700 dark:text-zinc-200 shadow-md backdrop-blur-xs transition-all active:scale-95 cursor-pointer opacity-90 sm:opacity-0 sm:group-hover:opacity-100"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -180,8 +180,8 @@ export default function BannerCarousel() {
               <span
                 className={`h-2 rounded-full transition-all duration-300 ${
                   currentIndex === idx
-                    ? "w-6 bg-white shadow-md"
-                    : "w-2 bg-white/60 hover:bg-white/80"
+                    ? "w-6 bg-white dark:bg-zinc-100 shadow-md"
+                    : "w-2 bg-white/60 dark:bg-white/40 hover:bg-white/80 dark:hover:bg-white/60"
                 }`}
               />
             </button>
