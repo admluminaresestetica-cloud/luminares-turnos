@@ -37,14 +37,14 @@ export default function BeneficiosTienda() {
         {beneficios.map(({ icon: Icon, titulo, sub }) => (
           <div
             key={titulo}
-            className="flex items-center gap-2.5 rounded-2xl border border-[#E7E5E0] bg-white px-3.5 py-3 shrink-0 w-[190px] sm:w-auto shadow-2xs snap-start select-none"
+            className="flex items-center gap-2.5 rounded-2xl border border-border bg-card px-3.5 py-3 shrink-0 w-[190px] sm:w-auto shadow-2xs snap-start select-none"
           >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0E6E55]/10 text-[#0E6E55]">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0E6E55]/10 dark:bg-emerald-500/15 text-[#0E6E55] dark:text-emerald-400">
               <Icon className="w-4 h-4" strokeWidth={2.2} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="m-0 text-xs font-bold text-[#12151B] truncate">{titulo}</p>
-              <p className="m-0 text-[10px] font-medium text-slate-400 truncate">{sub}</p>
+              <p className="m-0 text-xs font-bold text-foreground truncate">{titulo}</p>
+              <p className="m-0 text-[10px] font-medium text-muted-foreground truncate">{sub}</p>
             </div>
           </div>
         ))}
@@ -54,14 +54,14 @@ export default function BeneficiosTienda() {
           href={urlWhatsApp}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2.5 rounded-2xl border border-[#25D366]/30 bg-[#25D366]/5 px-3.5 py-3 shrink-0 w-[190px] sm:w-auto shadow-2xs transition-all active:scale-95 hover:bg-[#25D366]/10 snap-start select-none group"
+          className="flex items-center gap-2.5 rounded-2xl border border-[#25D366]/30 dark:border-[#25D366]/40 bg-[#25D366]/5 dark:bg-[#25D366]/10 px-3.5 py-3 shrink-0 w-[190px] sm:w-auto shadow-2xs transition-all active:scale-95 hover:bg-[#25D366]/10 dark:hover:bg-[#25D366]/20 snap-start select-none group"
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#25D366]/15 text-[#128C4A] group-hover:bg-[#25D366] group-hover:text-white transition-colors">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#25D366]/15 text-[#128C4A] dark:text-[#25D366] group-hover:bg-[#25D366] group-hover:text-white dark:group-hover:text-zinc-950 transition-colors">
             <MessageCircle className="w-4 h-4" strokeWidth={2.2} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="m-0 text-xs font-bold text-[#12151B] truncate">Atención por WhatsApp</p>
-            <p className="m-0 text-[10px] font-medium text-[#128C4A] truncate">Escribinos ahora</p>
+            <p className="m-0 text-xs font-bold text-foreground truncate">Atención por WhatsApp</p>
+            <p className="m-0 text-[10px] font-medium text-[#128C4A] dark:text-[#25D366] truncate">Escribinos ahora</p>
           </div>
         </a>
       </div>
