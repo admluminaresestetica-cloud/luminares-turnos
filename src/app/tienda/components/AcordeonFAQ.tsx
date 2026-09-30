@@ -42,7 +42,7 @@ export default function AcordeonFAQ() {
   };
 
   return (
-    <div className="mt-8 border-t border-slate-100 pt-6 space-y-2">
+    <div className="mt-8 border-t border-border pt-6 space-y-2">
       {FAQ_ITEMS.map(({ id, title, icon: Icon, content }) => {
         const isOpen = faqAbierta === id;
         const panelId = `faq-panel-${id}`;
@@ -51,7 +51,7 @@ export default function AcordeonFAQ() {
         return (
           <div
             key={id}
-            className="rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden transition-colors"
+            className="rounded-2xl border border-border bg-muted/40 overflow-hidden transition-colors"
           >
             <button
               id={buttonId}
@@ -59,15 +59,15 @@ export default function AcordeonFAQ() {
               onClick={() => toggleFaq(id)}
               aria-expanded={isOpen}
               aria-controls={panelId}
-              className="flex w-full items-center justify-between p-3.5 text-left text-xs font-bold text-slate-800 hover:bg-slate-100/60 active:scale-[0.99] transition-all cursor-pointer"
+              className="flex w-full items-center justify-between p-3.5 text-left text-xs font-bold text-foreground hover:bg-accent active:scale-[0.99] transition-all cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
-                <Icon className="h-4 w-4 text-[#0E6E55] shrink-0" />
+                <Icon className="h-4 w-4 text-[#0E6E55] dark:text-emerald-400 shrink-0" />
                 <span>{title}</span>
               </div>
               <ChevronDown
-                className={`h-4 w-4 text-slate-400 transition-transform duration-200 shrink-0 ${
-                  isOpen ? "rotate-180 text-[#0E6E55]" : ""
+                className={`h-4 w-4 text-muted-foreground transition-transform duration-200 shrink-0 ${
+                  isOpen ? "rotate-180 text-[#0E6E55] dark:text-emerald-400" : ""
                 }`}
               />
             </button>
@@ -77,7 +77,7 @@ export default function AcordeonFAQ() {
                 id={panelId}
                 role="region"
                 aria-labelledby={buttonId}
-                className="px-3.5 pb-3.5 pt-2 text-xs text-slate-600 leading-relaxed border-t border-slate-100/60 bg-white animate-in fade-in-50 duration-150"
+                className="px-3.5 pb-3.5 pt-2 text-xs text-muted-foreground leading-relaxed border-t border-border bg-card animate-in fade-in-50 duration-150"
               >
                 {content}
               </div>
