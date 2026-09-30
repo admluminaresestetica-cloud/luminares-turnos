@@ -8,7 +8,7 @@ import BottomNav from '@/components/Home/BottomNav';
 import { CarritoProvider } from "@/context/CarritoContext";
 import { ConfigProvider } from "@/context/ConfigContext";
 import { FavoritosProvider } from "@/context/FavoritosContext";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeProvider } from '@/components/theme-provider';
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -31,15 +31,14 @@ export default function RootLayout({
   const isAdmin = pathname?.startsWith('/admin');
 
   return (
-    <html lang="es" className="bg-white" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-white text-slate-900 min-h-screen flex flex-col pb-16 md:pb-0`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col pb-16 md:pb-0`}
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
-          forcedTheme="light"
-          enableSystem={false}
+          defaultTheme="system"
+          enableSystem
         >
           <ConfigProvider>
             <FavoritosProvider>

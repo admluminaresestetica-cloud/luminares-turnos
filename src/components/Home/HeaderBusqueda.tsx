@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
 
 interface HeaderBusquedaProps {
@@ -38,6 +39,9 @@ interface TagBusqueda {
 
 export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
   const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,6 +51,16 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
   const [tags, setTags] = useState<TagBusqueda[]>([]);
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const esOscuro = resolvedTheme === 'dark';
+
+  const toggleTheme = () => {
+    setTheme(esOscuro ? 'light' : 'dark');
+  };
 
   // Cerrar el dropdown al hacer clic fuera
   useEffect(() => {
@@ -214,7 +228,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
 
   return (
     <div ref={containerRef} className="space-y-3 relative z-50">
-      {/* Saludo + Botón Mis Turnos */}
+      {/* Saludo + Controles Superiores (Switch Tema & Mis Turnos) */}
       <div className="flex items-center justify-between px-1">
         <div>
           <p className="text-xs font-medium text-white/80">
@@ -225,13 +239,31 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           </h1>
         </div>
 
-        <Link
-          href="/mis-turnos"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
-        >
-          <Calendar className="h-3.5 w-3.5 text-white" />
-          <span>Mis Turnos</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Switch Modo Oscuro / Claro elegante */}
+          {mounted && (
+  <button
+    onClick={toggleTheme}
+    type="button"
+    aria-label="Cambiar tema"
+    className="relative flex items-center w-11 h-6 rounded-full bg-black/20 hover:bg-black/30 backdrop-blur-md border border-white/20 p-0.5 transition-all duration-300 cursor-pointer shadow-inner active:scale-95 shrink-0"
+  >
+    <div
+      className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-300 ease-spring ${
+        esOscuro ? 'translate-x-[20px]' : 'translate-x-0'
+      }`}
+    />
+  </button>
+)}
+
+          <Link
+            href="/mis-turnos"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
+          >
+            <Calendar className="h-3.5 w-3.5 text-white" />
+            <span>Mis Turnos</span>
+          </Link>
+        </div>
       </div>
 
       {/* Input de Búsqueda */}

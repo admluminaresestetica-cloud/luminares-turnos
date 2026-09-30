@@ -2,429 +2,336 @@
 
 import React, { useState, useEffect } from 'react';
 import { useConfig } from '@/context/ConfigContext';
-import {
-  TemaColores,
-  TEMA_COLORES_DEFAULT,
-  guardarTemaColores,
-} from '@/lib/supabase/configuracion-empresa';
+import { guardarConfiguracion, TemaColores, TEMA_COLORES_DEFAULT } from '@/lib/supabase/configuracion-empresa';
 import { obtenerColorTextoContraste } from '@/lib/utils/color';
-import { Palette, RefreshCw, Save, Check } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Loader2, Palette, RotateCcw, Check, Sparkles } from 'lucide-react';
 
-const PALETAS_PREDEFINIDAS: { nombre: string; colores: TemaColores }[] = [
-  {
-    nombre: 'Original Dark Slate',
-    colores: TEMA_COLORES_DEFAULT,
-  },
-  {
-    nombre: 'Fucsia Luminares',
-    colores: {
-      primary: '#e11d48',
-      primary_foreground: '#ffffff',
-      secondary: '#ffe4e6',
-      secondary_foreground: '#9f1239',
-      accent: '#f43f5e',
-      accent_foreground: '#ffffff',
-      background: '#fafafa',
-      foreground: '#18181b',
-      border: '#fecdd3',
-    },
-  },
-  {
-    nombre: 'Rosa & Estética Chic',
-    colores: {
-      primary: '#ec4899',
-      primary_foreground: '#ffffff',
-      secondary: '#fbcfe8',
-      secondary_foreground: '#831843',
-      accent: '#f472b6',
-      accent_foreground: '#ffffff',
-      background: '#fff1f2',
-      foreground: '#4c0519',
-      border: '#fbcfe8',
-    },
-  },
+const PLANTILLAS_TEMA: { nombre: string; descripcion: string; tema: Partial<TemaColores> }[] = [
   {
     nombre: 'Esmeralda & Spa',
-    colores: {
+    descripcion: 'Verdes elegantes ideales para estética y bienestar.',
+    tema: {
       primary: '#059669',
       primary_foreground: '#ffffff',
-      secondary: '#d1fae5',
-      secondary_foreground: '#065f46',
+      secondary: '#10b981',
+      secondary_foreground: '#ffffff',
       accent: '#34d399',
       accent_foreground: '#064e3b',
-      background: '#f0fdf4',
-      foreground: '#022c22',
-      border: '#a7f3d0',
+      border: '#e2e8f0',
     },
   },
   {
-    nombre: 'Azul Moderno',
-    colores: {
+    nombre: 'Rosa & Elegancia',
+    descripcion: 'Tonos fucsia y rosa ideales para manicuría y cosmética.',
+    tema: {
+      primary: '#e11d48',
+      primary_foreground: '#ffffff',
+      secondary: '#f43f5e',
+      secondary_foreground: '#ffffff',
+      accent: '#fb7185',
+      accent_foreground: '#881337',
+      border: '#e2e8f0',
+    },
+  },
+  {
+    nombre: 'Violeta & Místico',
+    descripcion: 'Púrpuras y violetas sofisticados para belleza integral.',
+    tema: {
+      primary: '#7c3aed',
+      primary_foreground: '#ffffff',
+      secondary: '#8b5cf6',
+      secondary_foreground: '#ffffff',
+      accent: '#a78bfa',
+      accent_foreground: '#2e1065',
+      border: '#e2e8f0',
+    },
+  },
+  {
+    nombre: 'Azul & Profesional',
+    descripcion: 'Líneas limpias y corporativas en tonos azulados.',
+    tema: {
       primary: '#2563eb',
       primary_foreground: '#ffffff',
-      secondary: '#dbeafe',
-      secondary_foreground: '#1e40af',
+      secondary: '#3b82f6',
+      secondary_foreground: '#ffffff',
       accent: '#60a5fa',
       accent_foreground: '#1e3a8a',
-      background: '#f8fafc',
-      foreground: '#0f172a',
-      border: '#bfdbfe',
+      border: '#e2e8f0',
     },
   },
   {
-    nombre: 'Dorado & Glamour Luxury',
-    colores: {
+    nombre: 'Cálido & Ámbar',
+    descripcion: 'Dorados y cobres acogedores para estudio de cejas y piel.',
+    tema: {
       primary: '#d97706',
       primary_foreground: '#ffffff',
-      secondary: '#fef3c7',
-      secondary_foreground: '#78350f',
-      accent: '#f59e0b',
-      accent_foreground: '#ffffff',
-      background: '#fffbeb',
-      foreground: '#451a03',
-      border: '#fde68a',
-    },
-  },
-  {
-    nombre: 'Lila & Lavanda Relax',
-    colores: {
-      primary: '#8b5cf6',
-      primary_foreground: '#ffffff',
-      secondary: '#ede9fe',
-      secondary_foreground: '#5b21b6',
-      accent: '#a78bfa',
-      accent_foreground: '#ffffff',
-      background: '#fbfbfe',
-      foreground: '#2e1065',
-      border: '#ddd6fe',
-    },
-  },
-  {
-    nombre: 'Menta & Salvia Fresh',
-    colores: {
-      primary: '#0d9488',
-      primary_foreground: '#ffffff',
-      secondary: '#ccfbf1',
-      secondary_foreground: '#115e59',
-      accent: '#2dd4bf',
-      accent_foreground: '#134e4a',
-      background: '#f0fdfa',
-      foreground: '#042f2e',
-      border: '#99f6e4',
+      secondary: '#f59e0b',
+      secondary_foreground: '#ffffff',
+      accent: '#fbbf24',
+      accent_foreground: '#78350f',
+      border: '#e2e8f0',
     },
   },
 ];
 
 export default function AparienciaAjustesTab() {
   const { config, refetchConfig, actualizarTema } = useConfig();
-  const [colores, setColores] = useState<TemaColores>(
-    config?.tema_colores || TEMA_COLORES_DEFAULT
-  );
+  
+  const [temaLocal, setTemaLocal] = useState<TemaColores>(TEMA_COLORES_DEFAULT);
   const [guardando, setGuardando] = useState(false);
-  const [guardadoExito, setGuardadoExito] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState(false);
 
   useEffect(() => {
     if (config?.tema_colores) {
-      setColores(config.tema_colores);
+      setTemaLocal(config.tema_colores);
     }
   }, [config]);
 
-  // Modificar un color individual y actualizar instantáneamente en la interfaz
-  const handleChangeColor = (clave: keyof TemaColores, valorHex: string) => {
-    const nuevosColores = { ...colores, [clave]: valorHex };
+  const handleColorChange = (key: keyof TemaColores, value: string) => {
+    const nuevoTema = { ...temaLocal, [key]: value };
 
-    // Auto-calcular color de texto de contraste al cambiar colores de fondo clave
-    if (clave === 'primary') {
-      nuevosColores.primary_foreground = obtenerColorTextoContraste(valorHex);
-    } else if (clave === 'secondary') {
-      nuevosColores.secondary_foreground = obtenerColorTextoContraste(valorHex);
-    } else if (clave === 'accent') {
-      nuevosColores.accent_foreground = obtenerColorTextoContraste(valorHex);
+    if (key === 'primary') {
+      nuevoTema.primary_foreground = obtenerColorTextoContraste(value);
+    } else if (key === 'secondary') {
+      nuevoTema.secondary_foreground = obtenerColorTextoContraste(value);
+    } else if (key === 'accent') {
+      nuevoTema.accent_foreground = obtenerColorTextoContraste(value);
     }
 
-    setColores(nuevosColores);
-    actualizarTema(nuevosColores); // Live preview instantáneo
+    setTemaLocal(nuevoTema);
+    actualizarTema(nuevoTema);
   };
 
-  const aplicarPaletaPredefinida = (paleta: TemaColores) => {
-    setColores(paleta);
-    actualizarTema(paleta);
+  const aplicarPlantilla = (plantilla: Partial<TemaColores>) => {
+    const nuevoTema = { ...temaLocal, ...plantilla };
+    setTemaLocal(nuevoTema);
+    actualizarTema(nuevoTema);
   };
 
   const handleRestablecer = () => {
-    setColores(TEMA_COLORES_DEFAULT);
+    setTemaLocal(TEMA_COLORES_DEFAULT);
     actualizarTema(TEMA_COLORES_DEFAULT);
   };
 
   const handleGuardar = async () => {
     setGuardando(true);
-    setGuardadoExito(false);
+    setMensajeExito(false);
 
-    const ok = await guardarTemaColores(colores);
-    if (ok) {
-      await refetchConfig();
-      setGuardadoExito(true);
-      setTimeout(() => setGuardadoExito(false), 3000);
-    } else {
-      alert('Hubo un error al guardar los colores en Supabase.');
+    try {
+      const exito = await guardarConfiguracion({
+        tema_colores: temaLocal,
+      });
+
+      if (exito) {
+        await refetchConfig();
+        setMensajeExito(true);
+        setTimeout(() => setMensajeExito(false), 3000);
+      }
+    } catch (error) {
+      console.error('Error al guardar el tema:', error);
+    } finally {
+      setGuardando(false);
     }
-    setGuardando(false);
   };
 
   return (
-    <div className="space-y-8">
-      {/* Encabezado y Acciones Principal */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card border border-border p-6 rounded-2xl shadow-xs">
-        <div>
-          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-            <Palette className="w-5 h-5 text-primary" />
-            Personalización de Colores de la App
-          </h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            Ajusta los tonos principales de tu marca. Los cambios se muestran en vivo a medida que los seleccionas.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={handleRestablecer}
-            className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-border text-foreground hover:bg-accent transition-colors flex items-center gap-1.5 cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Restablecer
-          </button>
-
-          <button
-            type="button"
-            onClick={handleGuardar}
-            disabled={guardando}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all flex items-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer"
-          >
-            {guardadoExito ? (
-              <>
-                <Check className="w-4 h-4 text-emerald-400" />
-                ¡Guardado!
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                {guardando ? 'Guardando...' : 'Guardar Cambios'}
-              </>
-            )}
-          </button>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium">Personalización de Marca</h3>
+        <p className="text-sm text-muted-foreground">
+          Ajustá los colores representativos de tu negocio. El fondo claro u oscuro se adaptará automáticamente.
+        </p>
       </div>
 
-      {/* Paletas de Colores Rápidas */}
-      <div className="bg-card border border-border p-5 rounded-2xl space-y-3 shadow-xs">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-    
-          Plantillas de Marca Predefinidas
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {PALETAS_PREDEFINIDAS.map((p) => (
-            <button
-              key={p.nombre}
-              type="button"
-              onClick={() => aplicarPaletaPredefinida(p.colores)}
-              className="p-3 rounded-xl border border-border hover:border-primary/50 text-left transition-all bg-background/50 hover:bg-card shadow-2xs group cursor-pointer"
-            >
-              <div className="flex items-center gap-1 mb-2">
-                <span className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: p.colores.primary }} />
-                <span className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: p.colores.secondary }} />
-                <span className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: p.colores.accent }} />
-                <span className="w-4 h-4 rounded-full border border-black/10" style={{ backgroundColor: p.colores.background }} />
-              </div>
-              <span className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors block truncate">
-                {p.nombre}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Plantillas Recomendadas
+          </CardTitle>
+          <CardDescription>
+            Elegí una paleta prediseñada para aplicar al instante los colores de tu marca.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {PLANTILLAS_TEMA.map((plantilla) => (
+              <button
+                key={plantilla.nombre}
+                type="button"
+                onClick={() => aplicarPlantilla(plantilla.tema)}
+                className="flex flex-col text-left p-3 rounded-lg border bg-card hover:bg-accent/50 transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div
+                    className="h-4 w-4 rounded-full border"
+                    style={{ backgroundColor: plantilla.tema.primary }}
+                  />
+                  <div
+                    className="h-4 w-4 rounded-full border"
+                    style={{ backgroundColor: plantilla.tema.secondary }}
+                  />
+                  <div
+                    className="h-4 w-4 rounded-full border"
+                    style={{ backgroundColor: plantilla.tema.accent }}
+                  />
+                </div>
+                <span className="font-medium text-xs group-hover:text-primary transition-colors">
+                  {plantilla.nombre}
+                </span>
+                <span className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+                  {plantilla.descripcion}
+                </span>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Panel de Controles de Color (Pickers) */}
-        <div className="lg:col-span-7 bg-card border border-border p-5 rounded-2xl space-y-4 shadow-xs">
-          <h3 className="text-sm font-bold text-foreground pb-2 border-b border-border">
-            Selectores de Color
-          </h3>
-
-          <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Palette className="h-4 w-4 text-primary" />
+            Colores Principales
+          </CardTitle>
+          <CardDescription>
+            Personalizá manualmente cada token de color para ajustarlo a tu identidad visual.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
             {/* Color Primario */}
-            <div className="flex items-center justify-between gap-4 p-3 rounded-xl border border-border bg-background/30">
-              <div>
-                <span className="text-xs font-bold text-foreground block">Color Primario (Marca)</span>
-                <span className="text-[11px] text-muted-foreground">Botones principales, íconos activos y destacados.</span>
-              </div>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold block">Color Primario</label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
-                  value={colores.primary}
-                  onChange={(e) => handleChangeColor('primary', e.target.value)}
-                  className="w-9 h-9 rounded-lg border border-border cursor-pointer bg-transparent"
+                  value={temaLocal.primary || '#000000'}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleColorChange('primary', e.target.value)}
+                  className="w-12 h-10 p-1 cursor-pointer rounded-md border bg-background"
                 />
                 <input
                   type="text"
-                  value={colores.primary}
-                  onChange={(e) => handleChangeColor('primary', e.target.value)}
-                  className="w-20 px-2 py-1 text-xs rounded-lg border border-border font-mono text-center uppercase bg-card text-foreground"
+                  value={temaLocal.primary || ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleColorChange('primary', e.target.value)}
+                  placeholder="#000000"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono uppercase focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
+              <p className="text-[11px] text-muted-foreground">
+                Botones principales, enlaces activos y destacados clave.
+              </p>
             </div>
 
             {/* Color Secundario */}
-            <div className="flex items-center justify-between gap-4 p-3 rounded-xl border border-border bg-background/30">
-              <div>
-                <span className="text-xs font-bold text-foreground block">Color Secundario</span>
-                <span className="text-[11px] text-muted-foreground">Tarjetas secundarias, fondos de insignias y selecciones.</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={colores.secondary}
-                  onChange={(e) => handleChangeColor('secondary', e.target.value)}
-                  className="w-9 h-9 rounded-lg border border-border cursor-pointer bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={colores.secondary}
-                  onChange={(e) => handleChangeColor('secondary', e.target.value)}
-                  className="w-20 px-2 py-1 text-xs rounded-lg border border-border font-mono text-center uppercase bg-card text-foreground"
-                />
-              </div>
-            </div>
-
-            {/* Color Acento */}
-            <div className="flex items-center justify-between gap-4 p-3 rounded-xl border border-border bg-background/30">
-              <div>
-                <span className="text-xs font-bold text-foreground block">Color de Acento / Hover</span>
-                <span className="text-[11px] text-muted-foreground">Estados al pasar el cursor y elementos interactivos.</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={colores.accent}
-                  onChange={(e) => handleChangeColor('accent', e.target.value)}
-                  className="w-9 h-9 rounded-lg border border-border cursor-pointer bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={colores.accent}
-                  onChange={(e) => handleChangeColor('accent', e.target.value)}
-                  className="w-20 px-2 py-1 text-xs rounded-lg border border-border font-mono text-center uppercase bg-card text-foreground"
-                />
-              </div>
-            </div>
-
-            {/* Fondo General */}
-            <div className="flex items-center justify-between gap-4 p-3 rounded-xl border border-border bg-background/30">
-              <div>
-                <span className="text-xs font-bold text-foreground block">Fondo Principal</span>
-                <span className="text-[11px] text-muted-foreground">Fondo general de toda la aplicación.</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={colores.background}
-                  onChange={(e) => handleChangeColor('background', e.target.value)}
-                  className="w-9 h-9 rounded-lg border border-border cursor-pointer bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={colores.background}
-                  onChange={(e) => handleChangeColor('background', e.target.value)}
-                  className="w-20 px-2 py-1 text-xs rounded-lg border border-border font-mono text-center uppercase bg-card text-foreground"
-                />
-              </div>
-            </div>
-
-            {/* Color de Texto */}
-            <div className="flex items-center justify-between gap-4 p-3 rounded-xl border border-border bg-background/30">
-              <div>
-                <span className="text-xs font-bold text-foreground block">Texto General</span>
-                <span className="text-[11px] text-muted-foreground">Color de letras y títulos principales.</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={colores.foreground}
-                  onChange={(e) => handleChangeColor('foreground', e.target.value)}
-                  className="w-9 h-9 rounded-lg border border-border cursor-pointer bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={colores.foreground}
-                  onChange={(e) => handleChangeColor('foreground', e.target.value)}
-                  className="w-20 px-2 py-1 text-xs rounded-lg border border-border font-mono text-center uppercase bg-card text-foreground"
-                />
-              </div>
-            </div>
-
-            {/* Bordes */}
-            <div className="flex items-center justify-between gap-4 p-3 rounded-xl border border-border bg-background/30">
-              <div>
-                <span className="text-xs font-bold text-foreground block">Bordes y Separadores</span>
-                <span className="text-[11px] text-muted-foreground">Líneas divisoras y contornos de tarjetas.</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={colores.border}
-                  onChange={(e) => handleChangeColor('border', e.target.value)}
-                  className="w-9 h-9 rounded-lg border border-border cursor-pointer bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={colores.border}
-                  onChange={(e) => handleChangeColor('border', e.target.value)}
-                  className="w-20 px-2 py-1 text-xs rounded-lg border border-border font-mono text-center uppercase bg-card text-foreground"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Muestra / Live Preview Card */}
-        <div className="lg:col-span-5 space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Vista Previa en Vivo (Live Preview)
-          </h3>
-
-          <div className="p-5 rounded-2xl border border-border bg-card space-y-4 shadow-sm">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <span className="text-sm font-bold text-foreground">Vista Previa de Componentes</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-secondary text-secondary-foreground">
-                Badge Activo
-              </span>
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              Así se verán los textos, tarjetas, bordes y botones en tu tienda y sistema de agendamiento.
-            </p>
-
             <div className="space-y-2">
-              <button
-                type="button"
-                className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-primary text-primary-foreground shadow-xs hover:opacity-95 transition-all cursor-pointer"
-              >
-                Botón Principal de Reserva
-              </button>
-
-              <button
-                type="button"
-                className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-secondary text-secondary-foreground border border-border hover:bg-accent transition-all cursor-pointer"
-              >
-                Botón Secundario
-              </button>
+              <label className="text-xs font-semibold block">Color Secundario</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={temaLocal.secondary || '#000000'}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleColorChange('secondary', e.target.value)}
+                  className="w-12 h-10 p-1 cursor-pointer rounded-md border bg-background"
+                />
+                <input
+                  type="text"
+                  value={temaLocal.secondary || ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleColorChange('secondary', e.target.value)}
+                  placeholder="#000000"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono uppercase focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Botones secundarios, badges de estado y badges complementarios.
+              </p>
             </div>
 
-            <div className="p-3 rounded-xl border border-border bg-background/50 space-y-1">
-              <span className="text-xs font-bold text-foreground block">Tarjeta de Servicio Simulación</span>
-              <span className="text-[11px] text-muted-foreground">Depilación Láser Soprano Ice • 30 min</span>
+            {/* Color de Acento */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold block">Color de Acento</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={temaLocal.accent || '#000000'}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleColorChange('accent', e.target.value)}
+                  className="w-12 h-10 p-1 cursor-pointer rounded-md border bg-background"
+                />
+                <input
+                  type="text"
+                  value={temaLocal.accent || ''}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleColorChange('accent', e.target.value)}
+                  placeholder="#000000"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-mono uppercase focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Efectos hover, selecciones y detalles de interacción.
+              </p>
+            </div>
+
+          </div>
+
+          <div className="pt-4 border-t space-y-3">
+            <span className="text-xs font-semibold text-muted-foreground block">
+              Vista previa de elementos interactivos
+            </span>
+            <div className="p-4 rounded-lg border bg-card flex flex-wrap items-center gap-3">
+              <Button style={{ backgroundColor: temaLocal.primary, color: temaLocal.primary_foreground }}>
+                Botón Primario
+              </Button>
+              <Button
+                variant="outline"
+                style={{ borderColor: temaLocal.primary, color: temaLocal.primary }}
+              >
+                Delineado
+              </Button>
+              <div
+                className="px-2.5 py-1 rounded-full text-xs font-medium"
+                style={{ backgroundColor: temaLocal.secondary, color: temaLocal.secondary_foreground }}
+              >
+                Badge Secundario
+              </div>
+              <div
+                className="px-2.5 py-1 rounded-md text-xs font-medium"
+                style={{ backgroundColor: temaLocal.accent, color: temaLocal.accent_foreground }}
+              >
+                Acento
+              </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex items-center justify-between pt-2">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleRestablecer}
+          className="text-xs gap-1.5"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Restablecer por defecto
+        </Button>
+
+        <div className="flex items-center gap-3">
+          {mensajeExito && (
+            <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+              <Check className="h-3.5 w-3.5" /> ¡Cambios guardados!
+            </span>
+          )}
+          <Button onClick={handleGuardar} disabled={guardando} className="min-w-[120px]">
+            {guardando ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Guardando...
+              </>
+            ) : (
+              'Guardar Cambios'
+            )}
+          </Button>
         </div>
       </div>
     </div>
