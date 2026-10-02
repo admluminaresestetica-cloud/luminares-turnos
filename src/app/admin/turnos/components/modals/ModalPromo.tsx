@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Tag, X, Clock, DollarSign, Users, RefreshCw, CheckCircle2, Sparkles, Loader2 } from 'lucide-react'
+import { Tag, X, Clock, DollarSign, Users, RefreshCw, CheckCircle2, Pencil, Loader2 } from 'lucide-react'
 import { PromoLaser, ServicioLaser } from '../types'
 import { supabase } from '@/lib/supabase'
 
@@ -119,7 +119,7 @@ export default function ModalPromo({
             {/* Nombre Promoción */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5 dark:text-zinc-400">
-                <Sparkles className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
+                <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
                 Nombre de la Promoción
               </label>
               <input

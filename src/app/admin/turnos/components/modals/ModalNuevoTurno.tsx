@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Sparkles, Scissors, Tag, X, User, Phone, Calendar, FileText,
+  Zap, Scissors, Tag, X, User, Phone, Calendar, FileText,
   DollarSign, CreditCard, CheckCircle2, Loader2
 } from 'lucide-react'
 import { PromoLaser, ServicioGeneral, ServicioLaser, TurnoForm } from '../types'
@@ -148,7 +148,7 @@ export default function ModalNuevoTurno({
                       : 'bg-white border-gray-200 text-gray-600 hover:bg-rose-50/50 hover:border-rose-200 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700'
                   }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Zap className="w-3.5 h-3.5" />
                   Zonas Laser
                 </button>
 

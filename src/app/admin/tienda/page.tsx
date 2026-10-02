@@ -101,13 +101,16 @@ export default function AdminTiendaPage() {
           }
         }
 
+        const itemsFinales = itemsPOS.length > 0 ? itemsPOS : itemsWeb;
+
         return {
           ...pedido,
-          pedido_items: itemsPOS.length > 0 ? itemsPOS : itemsWeb,
+          pedido_items: itemsFinales,
+          items: itemsFinales,
         };
       });
 
-      setPedidos(pedidosFormateados);
+      setPedidos(pedidosFormateados as Pedido[]);
     }
 
     setCargandoPedidos(false);
@@ -126,7 +129,7 @@ export default function AdminTiendaPage() {
     const rawItems =
       pedido.pedido_items && pedido.pedido_items.length > 0
         ? pedido.pedido_items
-        : (pedido as any).items || [];
+        : pedido.items || [];
 
     const itemsMapeados: ItemAAnular[] = rawItems.map((item: any) => {
       let rawProdId =
@@ -329,35 +332,61 @@ export default function AdminTiendaPage() {
           {activeTab === "caja" && <ControlCajaTab supabase={supabase} />}
 
           {activeTab === "pedidos" && (
-            <PedidosTab
-              pedidos={pedidos}
-              cargandoPedidos={cargandoPedidos}
-              procesandoPedidoId={procesandoPedidoId}
-              onFetchPedidos={fetchPedidos}
-              onAprobarPedido={async (id) => {
-                setProcesandoPedidoId(id);
-                const { error } = await supabase.rpc(
-                  "aprobar_pedido_y_descontar_stock",
-                  { p_pedido_id: id }
-                );
+  <PedidosTab
+    pedidos={pedidos}
+    cargandoPedidos={cargandoPedidos}
+    procesandoPedidoId={procesandoPedidoId}
+    onFetchPedidos={fetchPedidos}
+    onActualizarEstado={async (id: string, nuevoEstado: string) => {
+      setProcesandoPedidoId(id);
+      try {
+        if (nuevoEstado === "confirmado" || nuevoEstado === "aprobado") {
+          // Si lo aprueban/confirman manualmente, ejecutamos la RPC que descuenta stock
+          const { error } = await supabase.rpc(
+            "aprobar_pedido_y_descontar_stock",
+            { p_pedido_id: id }
+          );
+          if (error) throw error;
+        } else {
+          // Para otros cambios de estado (ej. entregado, pendiente)
+          const { error } = await supabase
+            .from("pedidos")
+            .update({ estado: nuevoEstado })
+            .eq("id", id);
+          if (error) throw error;
+        }
 
-                if (error) {
-                  alert("Error al aprobar pedido: " + error.message);
-                } else {
-                  await Promise.all([fetchPedidos(), fetchProductos()]);
-                }
-                setProcesandoPedidoId(null);
-              }}
-              onCancelarPedido={(id) => {
-                const ped = pedidos.find((p) => p.id === id);
-                if (ped) iniciarAnulacion(ped);
-              }}
-              onEliminarPedido={(id) => {
-                const ped = pedidos.find((p) => p.id === id);
-                if (ped) iniciarAnulacion(ped);
-              }}
-            />
-          )}
+        await Promise.all([fetchPedidos(), fetchProductos()]);
+      } catch (error: any) {
+        alert("Error al actualizar estado del pedido: " + error.message);
+      } finally {
+        setProcesandoPedidoId(null);
+      }
+    }}
+    onAprobarPedido={async (id: string) => {
+      setProcesandoPedidoId(id);
+      const { error } = await supabase.rpc(
+        "aprobar_pedido_y_descontar_stock",
+        { p_pedido_id: id }
+      );
+
+      if (error) {
+        alert("Error al aprobar pedido: " + error.message);
+      } else {
+        await Promise.all([fetchPedidos(), fetchProductos()]);
+      }
+      setProcesandoPedidoId(null);
+    }}
+    onCancelarPedido={(id: string) => {
+      const ped = pedidos.find((p) => p.id === id);
+      if (ped) iniciarAnulacion(ped);
+    }}
+    onEliminarPedido={(id: string) => {
+      const ped = pedidos.find((p) => p.id === id);
+      if (ped) iniciarAnulacion(ped);
+    }}
+  />
+)}
 
           {activeTab === "banners" && <BannersTab />}
           {activeTab === "tags" && <TagsTab />}

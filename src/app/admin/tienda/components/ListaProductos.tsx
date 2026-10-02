@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Search, Pencil, Trash2, Package, Tag } from "lucide-react";
+import { WandSparkles, Search, Pencil, Trash2, Package, Tag } from "lucide-react";
 import { calcularCuotas } from "@/lib/precios";
 import { ModalGeneradorStory } from "@/components/story-generator/ModalGeneradorStory";
 
@@ -229,7 +229,7 @@ export default function ListaProductos({
                     title="Generar imagen para Redes / Story"
                     className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/30 text-[#0E6E55] dark:text-emerald-400 transition-all hover:bg-emerald-100 active:scale-95 shrink-0"
                   >
-                    <Sparkles className="h-4 w-4" />
+                    <WandSparkles className="h-4 w-4" />
                   </button>
 
                   <button

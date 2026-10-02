@@ -25,7 +25,6 @@ export async function POST(request: Request) {
 
     const client = new MercadoPagoConfig({ accessToken });
 
-    // Recibimos recargoAplicado desde el body enviado por CarritoDrawer
     const { itemsCarrito, cliente, recargoPorcentaje = 0.10 } = await request.json();
 
     if (!itemsCarrito || !Array.isArray(itemsCarrito) || itemsCarrito.length === 0) {
@@ -41,7 +40,8 @@ export async function POST(request: Request) {
     let algunProductoBloqueaCuotas = false;
 
     const itemsMP = [];
-    const itemsValidados = [];
+    const itemsValidadosJSON = [];
+    const itemsParaPedidoItems = [];
 
     const tablasASecundar = ["servicios_laser", "promos_laser", "productos", "servicios_generales"];
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         );
       }
 
-      // Manejo de Envío: No aplicamos recargo sobre la cadetería
+      // Manejo del Envío por Cadetería
       if (productoId === "envio-cadeteria") {
         const precioOficial = Number(item.precio) || 0;
 
@@ -71,16 +71,27 @@ export async function POST(request: Request) {
           currency_id: "ARS",
         });
 
-        itemsValidados.push({
+        // Estructura limpia para el JSONB del pedido
+        itemsValidadosJSON.push({
+          id: "envio-cadeteria",
           nombre_producto: String(item.nombre || "Costo de Cadetería / Envío"),
           cantidad: cantidad,
           precio_unitario: precioOficial,
+        });
+
+        // Estructura para la tabla relacionada `pedido_items` (producto_id queda null al no ser un int8 de productos)
+        itemsParaPedidoItems.push({
+          nombre_producto: String(item.nombre || "Costo de Cadetería / Envío"),
+          cantidad: cantidad,
+          precio_unitario: precioOficial,
+          producto_id: null,
         });
 
         continue;
       }
 
       let productoDb: any = null;
+      let tablaOrigen = "";
 
       for (const tabla of tablasASecundar) {
         const { data, error } = await supabase
@@ -91,6 +102,7 @@ export async function POST(request: Request) {
 
         if (data && !error) {
           productoDb = data;
+          tablaOrigen = tabla;
           break;
         }
       }
@@ -120,11 +132,22 @@ export async function POST(request: Request) {
         currency_id: "ARS",
       });
 
-      itemsValidados.push({
-        producto_id: Number(productoDb.id),
+      itemsValidadosJSON.push({
+        id: productoDb.id,
+        producto_id: productoDb.id,
         nombre_producto: String(productoDb.nombre),
         cantidad: cantidad,
         precio_unitario: precioUnitarioConRecargo,
+      });
+
+      // Validamos si el ID es numérico para respetar la Foreign Key (int8) de la tabla productos
+      const esProductoNum = tablaOrigen === "productos" && !isNaN(Number(productoDb.id));
+
+      itemsParaPedidoItems.push({
+        nombre_producto: String(productoDb.nombre),
+        cantidad: cantidad,
+        precio_unitario: precioUnitarioConRecargo,
+        producto_id: esProductoNum ? Number(productoDb.id) : null,
       });
     }
 
@@ -133,17 +156,22 @@ export async function POST(request: Request) {
       subtotalSinRecargo >= montoMinimoCuotas &&
       !algunProductoBloqueaCuotas;
 
-    // Registro en Supabase
+    // 1. Insert en la tabla `pedidos` con los nombres de columna EXACTOS
     const { data: pedido, error: errorPedido } = await supabase
       .from("pedidos")
       .insert({
         nombre_cliente: cliente?.nombre || "Cliente Tienda",
-        telefono_cliente: cliente?.telefono || "",
-        cliente_email: cliente?.email || "",
+        telefono_cliente: cliente?.telefono || null,
+        cliente_email: cliente?.email || null,
+        direccion: cliente?.direccion || null,
+        nota_adicional: cliente?.notaAdicional || null,
         total: totalPedido,
         estado: "pendiente",
-        items: itemsValidados,
+        items: itemsValidadosJSON,
         metodo_envio: cliente?.metodoEnvio || cliente?.metodoEntrega || "retiro",
+        metodo_pago: "mercadopago",
+        origen: "web",
+        es_cuotas: permiteFinanciacion,
       })
       .select()
       .single();
@@ -156,20 +184,25 @@ export async function POST(request: Request) {
       );
     }
 
-    const itemsParaInsertarConId = itemsValidados.map((item) => ({
+    // 2. Insert en la tabla `pedido_items` vinculando `pedido_id`
+    const relacionItems = itemsParaPedidoItems.map((item) => ({
       ...item,
       pedido_id: pedido.id,
     }));
 
-    await supabase.from("pedido_items").insert(itemsParaInsertarConId);
+    const { error: errorItems } = await supabase.from("pedido_items").insert(relacionItems);
+    if (errorItems) {
+      console.error("Error al insertar items del pedido:", errorItems);
+    }
 
+    // 3. Crear Preferencia de Mercado Pago
     const preference = new Preference(client);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
 
     const result = await preference.create({
       body: {
         items: itemsMP,
-        external_reference: pedido.id,
+        external_reference: String(pedido.id),
         back_urls: {
           success: `${baseUrl}/?status=success`,
           failure: `${baseUrl}/?status=failure`,

@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Clock, Sparkles, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Banknote, ChevronRight } from 'lucide-react';
 import SelectorFecha from '@/components/booking/SelectorFecha';
 import SelectorHorario from '@/components/booking/SelectorHorario';
 import { Button } from '@/components/ui/button';
@@ -108,7 +108,7 @@ export default function PasoSeleccionFechaHora({
       >
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 text-slate-700 dark:text-zinc-200 text-xs sm:text-sm font-bold">
-            <Sparkles className="w-4 h-4 text-[hsl(var(--primary))] shrink-0" />
+            <Banknote className="w-4 h-4 text-[hsl(var(--primary))] shrink-0" />
             <span>Total estimado</span>
           </div>
           <div className="text-right flex items-baseline gap-1.5">

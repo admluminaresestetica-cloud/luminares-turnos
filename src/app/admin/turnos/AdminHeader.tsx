@@ -2,18 +2,17 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { LogOut, Calendar, User, ShieldCheck, UserCheck } from 'lucide-react'
+import { Calendar, User, ShieldCheck, UserCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { usePerfil } from '@/hooks/usePerfil'
 
 interface AdminHeaderProps {
-  onLogout: () => void
+  onLogout?: () => void
   userEmail?: string
   logoUrl?: string
 }
 
 export default function AdminHeader({
-  onLogout,
   userEmail,
   logoUrl = '/logo.jpg',
 }: AdminHeaderProps) {
@@ -70,7 +69,7 @@ export default function AdminHeader({
           </div>
         </div>
 
-        {/* Lado Derecho: Avatar de Usuario, Rol y Acción */}
+        {/* Lado Derecho: Avatar de Usuario y Rol */}
         <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-100 dark:border-zinc-800">
 
           {/* Avatar / Usuario con datos del hook usePerfil */}
@@ -100,16 +99,6 @@ export default function AdminHeader({
               </div>
             </div>
           </div>
-
-          {/* Botón Salir */}
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 active:scale-95 px-3 py-2.5 sm:py-2 rounded-xl transition-all duration-200 border border-transparent hover:border-rose-100 dark:hover:border-rose-500/20 shrink-0"
-            title="Cerrar sesión"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Salir</span>
-          </button>
 
         </div>
       </div>

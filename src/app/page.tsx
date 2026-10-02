@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useConfig } from '@/context/ConfigContext';
-import { Sparkles, ShieldCheck, Clock, HelpCircle, ChevronRight } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, Clock, HelpCircle, ChevronRight } from 'lucide-react';
 
 import HeaderBusqueda from '@/components/Home/HeaderBusqueda';
 import AccionesRapidas from '@/components/Home/AccionesRapidas';
@@ -152,7 +152,7 @@ export default function HomePage() {
 
                   <div className="flex items-center gap-3 bg-stone-50/80 dark:bg-zinc-800/80 p-3 rounded-2xl border border-stone-200/40 dark:border-zinc-700/50 hover:bg-white transition-colors">
                     <div className="p-2.5 rounded-xl bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] dark:bg-[hsl(var(--primary))]/20 shrink-0">
-                      <Sparkles className="w-4 h-4" />
+                      <CheckCircle2 className="w-4 h-4" />
                     </div>
                     <div>
                       <p className="font-bold text-stone-800 dark:text-zinc-100 text-xs">Confirmación Inmediata</p>

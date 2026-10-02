@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Folder, Layers, DollarSign, Clock, CheckCircle2, X, Scissors, FileText, Image as ImageIcon, Upload, Loader2, Sparkles } from 'lucide-react'
+import { Folder, Layers, DollarSign, Clock, CheckCircle2, X, Scissors, FileText, Image as ImageIcon, Upload, Loader2, Pencil } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export interface ServicioGeneral {
@@ -164,7 +164,7 @@ export default function ModalServicioGeneral({
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5 dark:text-zinc-400">
-              <Sparkles className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
+              <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
               Nombre del Ícono (Lucide)
             </label>
             <input

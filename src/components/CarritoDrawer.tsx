@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useCarrito } from "@/context/CarritoContext";
 import { useConfig } from "@/context/ConfigContext";
 import { supabase } from "@/lib/supabase";
-import { X, Trash2, ShoppingBag, ArrowRight, Package } from "lucide-react";
+import { X, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import FormularioEnvio from "./carrito/FormularioEnvio";
 
 interface CarritoDrawerProps {
@@ -24,20 +24,17 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     vaciarCarrito,
   } = useCarrito();
 
-  // Estados del formulario y flujo de compra
   const [paso, setPaso] = useState<"carrito" | "checkout">("carrito");
   const [cargandoMP, setCargandoMP] = useState(false);
   const [metodoPago, setMetodoPago] = useState<
     "whatsapp" | "mercadopago_debito" | "mercadopago_cuotas"
   >("whatsapp");
 
-  // Configuración desde DB
-  const [cuotasHabilitadas, setCuotasHabilitadas] = useState(true);
-  const [montoMinimoCuotas, setMontoMinimoCuotas] = useState(0);
+  const [cuotasHabilitadas] = useState(true);
+  const [montoMinimoCuotas] = useState(0);
   const [costoEnvioFijo, setCostoEnvioFijo] = useState(0);
   const [whatsappNumeroDB, setWhatsappNumeroDB] = useState<string>("");
 
-  // Estados para reglas de envío desde configuracion_empresa
   const [envioDomicilioActivo, setEnvioDomicilioActivo] = useState(true);
   const [envioGratisActivo, setEnvioGratisActivo] = useState(false);
   const [montoEnvioGratis, setMontoEnvioGratis] = useState(0);
@@ -51,7 +48,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           .maybeSingle();
 
         if (error) {
-          console.error("Error al obtener la configuración de la empresa:", error);
+          console.error("Error al obtener configuración:", error);
           return;
         }
 
@@ -65,7 +62,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           }
         }
       } catch (err) {
-        console.error("Error inesperado al cargar la configuración:", err);
+        console.error("Error inesperado al cargar configuración:", err);
       }
     }
 
@@ -78,13 +75,12 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     0
   );
 
-  // Evaluación de Envío Gratis según la DB y si eligió Envío a Domicilio
   const tieneEnvioGratis =
     envioGratisActivo &&
     montoEnvioGratis > 0 &&
     subtotalProductos >= montoEnvioGratis;
 
-  const esEnvioADomicilio = envioDomicilioActivo && datosEnvio.metodoEnvio === "envio";
+  const esEnvioADomicilio = datosEnvio.metodoEnvio === "envio";
   const costoEnvioAplicado =
     esEnvioADomicilio && !tieneEnvioGratis ? costoEnvioFijo : 0;
 
@@ -95,7 +91,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const aptoParaCuotas =
     cuotasHabilitadas && !productoNoAptoCuotas && alcanzaMontoMinimoCuotas;
 
-  // ──> NUEVO: EFECTO DE SEGURIDAD PARA CUOTAS <──
   useEffect(() => {
     if (!aptoParaCuotas && metodoPago === "mercadopago_cuotas") {
       setMetodoPago("whatsapp");
@@ -104,16 +99,13 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
   const PORCENTAJE_DEBITO = 0.10;
   const PORCENTAJE_CUOTAS = 0.25;
-  // Base real para calcular recargos (Productos + Envío)
   const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
 
-  // Opciones de Pago Calculadas
   const totalTransferencia = totalBaseConEnvio;
   const totalDebitoOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_DEBITO));
   const totalCuotasOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_CUOTAS));
   const valorCuotaOp = Math.round(totalCuotasOp / 3);
 
-  // Determinación del Total Final según la opción seleccionada
   let totalFinalAbonar = totalTransferencia;
   let recargoMonto = 0;
 
@@ -125,7 +117,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     recargoMonto = totalCuotasOp - totalBaseConEnvio;
   }
 
-  // Validación previa de campos obligatorios
   const validarCamposFormulario = (): boolean => {
     const nombre = datosEnvio.nombreCliente?.trim() || "";
     const telefono = datosEnvio.telefonoCliente?.trim() || "";
@@ -139,7 +130,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       alert("Por favor, ingresá tu número de teléfono / celular.");
       return false;
     }
-    if (envioDomicilioActivo && datosEnvio.metodoEnvio === "envio" && !direccion) {
+    if (datosEnvio.metodoEnvio === "envio" && !direccion) {
       alert("Por favor, ingresá la dirección de envío.");
       return false;
     }
@@ -151,24 +142,27 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     medioPagoStr: string
   ) => {
     try {
+      // Tomamos la dirección directamente de datosEnvio
+      const direccionReal =
+        datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion?.trim()
+          ? datosEnvio.direccion.trim()
+          : null;
+
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
         .insert([
           {
             nombre_cliente: datosEnvio.nombreCliente.trim(),
             telefono_cliente: datosEnvio.telefonoCliente.trim() || null,
-            metodo_envio: envioDomicilioActivo ? datosEnvio.metodoEnvio : "retiro",
+            metodo_envio: datosEnvio.metodoEnvio || "retiro",
             metodo_pago: medioPagoStr,
             es_cuotas: metodoPago === "mercadopago_cuotas",
             recargo_monto: recargoMonto,
             total: montoFinal,
             estado: "pendiente",
-            direccion:
-              envioDomicilioActivo && datosEnvio.metodoEnvio === "envio"
-                ? datosEnvio.direccion.trim()
-                : null,
+            direccion: direccionReal,
             nota_adicional:
-              `${datosEnvio.notaAdicional.trim()} [Pago: ${medioPagoStr}]`.trim(),
+              `${datosEnvio.notaAdicional?.trim() || ""} [Pago: ${medioPagoStr}]`.trim(),
           },
         ])
         .select();
@@ -203,7 +197,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       mensaje += `📞 *Teléfono:* ${datosEnvio.telefonoCliente.trim()}\n`;
     }
     mensaje += `🚚 *Método de entrega:* ${
-      envioDomicilioActivo && datosEnvio.metodoEnvio === "envio"
+      datosEnvio.metodoEnvio === "envio"
         ? `Envío a domicilio (${datosEnvio.direccion.trim()})`
         : "Retiro en local"
     }\n`;
@@ -217,16 +211,12 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     });
 
     if (costoEnvioAplicado > 0) {
-      mensaje += `• Costo de envío: $${costoEnvioAplicado.toLocaleString(
-        "es-AR"
-      )}\n`;
+      mensaje += `• Costo de envío: $${costoEnvioAplicado.toLocaleString("es-AR")}\n`;
     }
 
-    mensaje += `\n💰 *Total a abonar:* $${totalFinalAbonar.toLocaleString(
-      "es-AR"
-    )}\n`;
+    mensaje += `\n💰 *Total a abonar:* $${totalFinalAbonar.toLocaleString("es-AR")}\n`;
 
-    if (datosEnvio.notaAdicional.trim()) {
+    if (datosEnvio.notaAdicional?.trim()) {
       mensaje += `\n📝 *Nota:* ${datosEnvio.notaAdicional.trim()}\n`;
     }
 
@@ -236,6 +226,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     const whatsappUrl = `https://wa.me/${numeroTelefono}?text=${encodeURIComponent(
       mensaje
     )}`;
+    
+    // Al pedir por WhatsApp SÍ vaciamos el carrito porque ya fue enviado la solicitud
     vaciarCarrito();
     onClose();
     window.open(whatsappUrl, "_blank");
@@ -246,6 +238,11 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
     setCargandoMP(true);
     try {
+      await guardarPedidoEnDB(
+        totalFinalAbonar,
+        metodoPago === "mercadopago_cuotas" ? "Mercado Pago (3 Cuotas)" : "Mercado Pago (Débito/1 Pago)"
+      );
+
       const recargoPorcentaje = metodoPago === "mercadopago_cuotas" ? PORCENTAJE_CUOTAS : PORCENTAJE_DEBITO;
 
       const itemsParaApi = carritoSeguro.map((item) => ({
@@ -273,8 +270,8 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           cliente: {
             nombre: datosEnvio.nombreCliente.trim(),
             telefono: datosEnvio.telefonoCliente.trim(),
-            metodoEnvio: envioDomicilioActivo ? datosEnvio.metodoEnvio : "retiro",
-            direccion: envioDomicilioActivo ? datosEnvio.direccion : "",
+            metodoEnvio: datosEnvio.metodoEnvio,
+            direccion: datosEnvio.direccion,
           },
         }),
       });
@@ -282,6 +279,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       const data = await response.json();
 
       if (response.ok && data.init_point) {
+        // 🔴 NO LLAMAMOS vaciarCarrito() AQUÍ PARA NO BORRAR EL CARRITO SI VUELVE ATRÁS
         onClose();
         window.location.href = data.init_point;
       } else {
@@ -333,7 +331,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
               </div>
             ) : paso === "carrito" ? (
               <div className="space-y-3">
-                {/* --- BARRITA / MENSAJE DE ENVÍO GRATIS --- */}
+                {/* Barrita envío gratis */}
                 {envioGratisActivo && montoEnvioGratis > 0 && (
                   <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 mb-4 text-xs">
                     {subtotalProductos >= montoEnvioGratis ? (
@@ -351,7 +349,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                             {Math.min(100, Math.round((subtotalProductos / montoEnvioGratis) * 100))}%
                           </span>
                         </div>
-                        {/* Barrita de Progreso */}
                         <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                           <div
                             className="bg-emerald-600 dark:bg-emerald-500 h-2 rounded-full transition-all duration-300 ease-out"
@@ -371,7 +368,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     key={item.id}
                     className="flex items-center justify-between p-3 border border-border rounded-xl bg-muted/40 gap-3"
                   >
-                    {/* Miniatura del producto */}
                     <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-card border border-border flex items-center justify-center">
                       {item.imagen_url ? (
                         <img
@@ -433,13 +429,12 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   envioDomicilioActivo={envioDomicilioActivo}
                 />
 
-                {/* Selección de Método de Pago */}
+                {/* Métodos de Pago */}
                 <div className="space-y-2 pt-2">
                   <label className="block text-xs font-semibold text-foreground mb-2">
                     Seleccionar Método de Pago:
                   </label>
 
-                  {/* Opción 1: WhatsApp */}
                   <button
                     type="button"
                     onClick={() => setMetodoPago("whatsapp")}
@@ -460,7 +455,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     </span>
                   </button>
 
-                  {/* Opción 2: Débito / 1 Pago (+10%) */}
                   <button
                     type="button"
                     onClick={() => setMetodoPago("mercadopago_debito")}
@@ -483,7 +477,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     </span>
                   </button>
 
-                  {/* Opción 3: 3 Cuotas Fijas (+25%) */}
                   <button
                     type="button"
                     disabled={!aptoParaCuotas}
@@ -513,27 +506,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                       ${totalCuotasOp.toLocaleString("es-AR")}
                     </span>
                   </button>
-                </div>
-
-                {/* Avisos */}
-                <div className="mt-2 text-[11px] space-y-1">
-                  {productoNoAptoCuotas ? (
-                    <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300">
-                      ⚠️ El producto <strong>{productoNoAptoCuotas.nombre}</strong> solo
-                      se abona al contado/débito.
-                    </div>
-                  ) : !alcanzaMontoMinimoCuotas && cuotasHabilitadas ? (
-                    <div className="p-2 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-800 dark:text-sky-300">
-                      ℹ️ Sumá{" "}
-                      <strong>
-                        $
-                        {(
-                          montoMinimoCuotas - subtotalProductos
-                        ).toLocaleString("es-AR")}
-                      </strong>{" "}
-                      más para habilitar las 3 cuotas.
-                    </div>
-                  ) : null}
                 </div>
               </form>
             )}

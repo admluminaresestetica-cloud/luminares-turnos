@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import { createClient } from "@supabase/supabase-js";
-
-const client = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN || "",
-});
+import { obtenerConfiguracion } from "@/lib/supabase/configuracion-empresa";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,6 +15,16 @@ export async function POST(request: Request) {
     const dataId = searchParams.get("data.id") || searchParams.get("id");
 
     if (type === "payment" && dataId) {
+      // 1. Obtener token dinámico configurado
+      const configEmpresa = await obtenerConfiguracion();
+      const accessToken = configEmpresa?.mp_access_token || process.env.MP_ACCESS_TOKEN || "";
+
+      if (!accessToken) {
+        console.error("No se encontró Access Token de Mercado Pago en el webhook");
+        return NextResponse.json({ error: "No Access Token" }, { status: 500 });
+      }
+
+      const client = new MercadoPagoConfig({ accessToken });
       const payment = new Payment(client);
       const paymentData = await payment.get({ id: dataId });
 
@@ -49,7 +56,6 @@ export async function POST(request: Request) {
             console.error("Error intentando actualizar reserva en webhook:", errorReserva);
           }
 
-          // Si afectó una fila en 'reservas', cortamos aquí la ejecución exitosa
           if (reservaActualizada) {
             return NextResponse.json({ received: true, type: "reserva" }, { status: 200 });
           }
@@ -76,7 +82,6 @@ export async function POST(request: Request) {
           // -------------------------------------------------------------
           if (pedido && pedido.telefono_cliente) {
             const telefonoCliente = pedido.telefono_cliente.trim();
-            // Ventana de seguridad de las últimas 3 horas para evitar tocar pedidos viejos
             const haceTresHoras = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
 
             const { error: errorLimpieza } = await supabase
@@ -84,7 +89,7 @@ export async function POST(request: Request) {
               .update({ estado: "cancelado" })
               .eq("telefono_cliente", telefonoCliente)
               .eq("estado", "pendiente")
-              .neq("id", externalRef) // Excluimos estrictamente el pedido aprobado actual
+              .neq("id", externalRef)
               .gte("created_at", haceTresHoras);
 
             if (errorLimpieza) {
@@ -92,22 +97,27 @@ export async function POST(request: Request) {
             }
           }
 
-          // Descontar stock de los productos comprados si aplica
-          if (pedido && pedido.items) {
+          // -------------------------------------------------------------
+          // DESCUENTO DE STOCK EN TABLA PRODUCTOS
+          // -------------------------------------------------------------
+          if (pedido && Array.isArray(pedido.items)) {
             for (const item of pedido.items) {
-              if (item.id) {
+              // Evaluamos id o producto_id de forma indistinta para garantizar coincidencia
+              const targetId = item.producto_id || item.id;
+
+              if (targetId && targetId !== "envio-cadeteria") {
                 const { data: prod } = await supabase
                   .from("productos")
                   .select("stock")
-                  .eq("id", item.id)
-                  .single();
+                  .eq("id", targetId)
+                  .maybeSingle();
 
-                if (prod) {
-                  const nuevoStock = Math.max(0, prod.stock - (item.cantidad || 1));
+                if (prod && typeof prod.stock === "number") {
+                  const nuevoStock = Math.max(0, prod.stock - (Number(item.cantidad) || 1));
                   await supabase
                     .from("productos")
                     .update({ stock: nuevoStock })
-                    .eq("id", item.id);
+                    .eq("id", targetId);
                 }
               }
             }

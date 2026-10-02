@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Tag, Sparkles, Zap, Flame, CheckCircle, Circle } from 'lucide-react';
+import { Tag, Loader, Zap, Flame, CheckCircle, Circle } from 'lucide-react';
 
 interface ItemDestacado {
   id: string;
@@ -157,7 +157,7 @@ export default function DestacadosAjustesTab() {
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
-          <Sparkles className="h-4 w-4" />
+          <Loader className="h-4 w-4" />
           Estética ({items.filter((i) => i.tabla === 'servicios_generales').length})
         </button>
 

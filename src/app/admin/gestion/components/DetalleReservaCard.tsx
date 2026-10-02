@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Phone, Sparkles, History, CheckCircle2, UserCheck, Clock, DollarSign } from 'lucide-react'
+import { Phone, Pen, History, CheckCircle2, UserCheck, Clock, DollarSign } from 'lucide-react'
 import BadgeModificado from './BadgeModificado'
 import { verificarSiFueModificado } from '@/utils/turnoHelpers'
 
@@ -124,7 +124,7 @@ export default function DetalleReservaCard({
       {modificado && (
         <div className="space-y-1.5 bg-rose-50/80 dark:bg-rose-950/40 p-3.5 rounded-2xl border border-rose-200/80 dark:border-rose-900/50">
           <div className="flex items-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
+            <Pen className="w-3.5 h-3.5" />
             <span>Servicio Modificado (Recepción):</span>
           </div>
           <p className="text-sm font-semibold text-rose-950 dark:text-rose-200">
@@ -160,7 +160,7 @@ export default function DetalleReservaCard({
           onClick={onAbrirEdicion}
           className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 active:scale-98 text-white rounded-2xl text-sm font-extrabold transition-all shadow-md shadow-rose-500/20"
         >
-          <Sparkles className="w-4 h-4 shrink-0" />
+          <Pen className="w-4 h-4 shrink-0" />
           <span>Modificar Zonas / Promos de este Turno</span>
         </button>
       </div>

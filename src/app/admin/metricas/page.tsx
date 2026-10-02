@@ -126,7 +126,7 @@ export default function MetricasPage() {
   const [origenReservas, setOrigenReservas] = useState<DistribucionOrigen[]>([]);
   const [impactoFinanciero, setImpactoFinanciero] = useState<ImpactoMedioPago[]>([]);
 
-  // Ajuste de rango de fechas
+  // Ajuste de rango de fechas (Formato local YYYY-MM-DD sin desfasaje)
   useEffect(() => {
     const ahora = new Date();
     let inicio = new Date();
@@ -138,18 +138,23 @@ export default function MetricasPage() {
     } else if (rango === 'semana') {
       const diaSemana = ahora.getDay();
       const diffInicio = ahora.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
-      inicio = new Date(ahora.setDate(diffInicio));
-      fin = new Date();
+      inicio = new Date(ahora.getFullYear(), ahora.getMonth(), diffInicio);
+      fin = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
     } else if (rango === 'mes') {
       inicio = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
       fin = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0);
     }
 
     if (rango !== 'personalizado') {
-      const inicioStr = `${inicio.getFullYear()}-${String(inicio.getMonth() + 1).padStart(2, '0')}-${String(inicio.getDate()).padStart(2, '0')}`;
-      const finStr = `${fin.getFullYear()}-${String(fin.getMonth() + 1).padStart(2, '0')}-${String(fin.getDate()).padStart(2, '0')}`;
-      setFechaInicio(inicioStr);
-      setFechaFin(finStr);
+      const formatearFecha = (d: Date) => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
+      setFechaInicio(formatearFecha(inicio));
+      setFechaFin(formatearFecha(fin));
     }
   }, [rango]);
 

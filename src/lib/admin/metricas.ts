@@ -7,6 +7,12 @@ import { supabase } from '../supabase';
 // FUNCIONES EXISTENTES DE MÉTRICAS RÁPIDAS
 // ==========================================
 
+export function construirFiltrosFecha(rango: { desde: string; hasta: string }) {
+  // Asegura el inicio del primer día a las 00:00:00 y el final del último a las 23:59:59
+  const desde = `${rango.desde}T00:00:00`;
+  const hasta = `${rango.hasta}T23:59:59.999`;
+  return { desde, hasta };
+}
 export function citasHoy(reservas: Reserva[]): Reserva[] {
   const hoy = new Date();
   const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
@@ -118,22 +124,23 @@ export interface SerieIngresosPorFecha {
   turnos: number;
 }
 
-/**
- * Obtiene los KPIs de resumen financiero, señas y la variación vs el período anterior
- */
 export async function getKpisReservas(rango: RangoFechas): Promise<KpisResumen> {
-  const desde = new Date(`${rango.desde}T00:00:00`);
-  const hasta = new Date(`${rango.hasta}T23:59:59`);
+  const desdeStr = `${rango.desde}T00:00:00`;
+  const hastaStr = `${rango.hasta}T23:59:59`;
 
-  const diffTiempo = hasta.getTime() - desde.getTime();
-  const desdeAnteriorTS = new Date(desde.getTime() - diffTiempo).toISOString();
+  const fDesde = new Date(`${rango.desde}T00:00:00`);
+  const fHasta = new Date(`${rango.hasta}T23:59:59`);
+  const diffTiempo = fHasta.getTime() - fDesde.getTime();
+  
+  const fDesdeAnterior = new Date(fDesde.getTime() - diffTiempo);
+  const desdeAnteriorStr = `${fDesdeAnterior.getFullYear()}-${String(fDesdeAnterior.getMonth() + 1).padStart(2, '0')}-${String(fDesdeAnterior.getDate()).padStart(2, '0')}T00:00:00`;
 
+  // 1. Consulta limpia a Supabase (sin filtro de eliminado)
   const { data: reservas, error } = await supabase
     .from('reservas')
-    .select('precio_total, monto_sena, monto_abonado, estado, fecha_hora_inicio, eliminado')
-    .gte('fecha_hora_inicio', desdeAnteriorTS)
-    .lte('fecha_hora_inicio', hasta.toISOString())
-    .or('eliminado.eq.false,eliminado.is.null');
+    .select('precio_total, monto_sena, monto_abonado, estado, fecha_hora_inicio')
+    .gte('fecha_hora_inicio', desdeAnteriorStr)
+    .lte('fecha_hora_inicio', hastaStr);
 
   if (error || !reservas) {
     console.error('Error cargando KPIs de reservas:', error);
@@ -153,54 +160,36 @@ export async function getKpisReservas(rango: RangoFechas): Promise<KpisResumen> 
     };
   }
 
-  const desdeActualIso = desde.toISOString();
+  const tsCorteActual = fDesde.getTime();
 
-  const actual = reservas.filter((r) => r.fecha_hora_inicio >= desdeActualIso);
-  const anterior = reservas.filter((r) => r.fecha_hora_inicio < desdeActualIso);
+  // 2. Separación de períodos
+  const actual = reservas.filter((r) => {
+    if (!r.fecha_hora_inicio) return false;
+    const tsReserva = new Date(r.fecha_hora_inicio.replace(' ', 'T')).getTime();
+    return tsReserva >= tsCorteActual;
+  });
 
-  const esValido = (r: (typeof reservas)[0]) => r.estado !== 'cancelado';
+  const anterior = reservas.filter((r) => {
+    if (!r.fecha_hora_inicio) return false;
+    const tsReserva = new Date(r.fecha_hora_inicio.replace(' ', 'T')).getTime();
+    return tsReserva < tsCorteActual;
+  });
 
-  // --- Período Actual ---
-  const validosActual = actual.filter(esValido);
-  const ingresosTotales = validosActual.reduce(
-    (sum, r) => sum + Number(r.monto_abonado || r.precio_total || 0),
-    0
-  );
-  const senasTotales = validosActual.reduce(
-    (sum, r) => sum + Number(r.monto_sena || 0),
-    0
-  );
+  // 3. Cálculo directo tomando precio_total si abonado es 0 o nulo
+  const calcularMonto = (r: (typeof reservas)[0]) => {
+    const abonado = Number(r.monto_abonado || 0);
+    const precio = Number(r.precio_total || 0);
+    return abonado > 0 ? abonado : precio;
+  };
+
+  const ingresosTotales = actual.reduce((sum, r) => sum + calcularMonto(r), 0);
+  const senasTotales = actual.reduce((sum, r) => sum + Number(r.monto_sena || 0), 0);
   const totalTurnos = actual.length;
-  const turnosValidosCount = validosActual.length;
-  const ticketPromedio =
-    turnosValidosCount > 0 ? Math.round(ingresosTotales / turnosValidosCount) : 0;
+  const ticketPromedio = totalTurnos > 0 ? Math.round(ingresosTotales / totalTurnos) : 0;
 
-  const turnosCompletadosCount = actual.filter(
-    (r) => r.estado === 'confirmado' || r.estado === 'atendido' || r.estado === 'completado'
-  ).length;
-
-  const turnosPendienteSena = actual.filter(
-    (r) => r.estado === 'pendiente_sena' || r.estado === 'pendiente'
-  ).length;
-
-  const turnosCancelados = actual.filter((r) => r.estado === 'cancelado').length;
-
-  const tasaAsistencia =
-    totalTurnos > 0 ? Math.round((turnosCompletadosCount / totalTurnos) * 100) : 0;
-
-  // --- Período Anterior ---
-  const validosAnterior = anterior.filter(esValido);
-  const ingresosAnterior = validosAnterior.reduce(
-    (sum, r) => sum + Number(r.monto_abonado || r.precio_total || 0),
-    0
-  );
-  const senasAnterior = validosAnterior.reduce(
-    (sum, r) => sum + Number(r.monto_sena || 0),
-    0
-  );
-  const turnosAnteriorCount = validosAnterior.length;
-  const ticketAnterior =
-    turnosAnteriorCount > 0 ? Math.round(ingresosAnterior / turnosAnteriorCount) : 0;
+  const ingresosAnterior = anterior.reduce((sum, r) => sum + calcularMonto(r), 0);
+  const turnosAnteriorCount = anterior.length;
+  const ticketAnterior = turnosAnteriorCount > 0 ? Math.round(ingresosAnterior / turnosAnteriorCount) : 0;
 
   const calcVar = (act: number, ant: number) => {
     if (ant === 0) return act > 0 ? 100 : 0;
@@ -210,16 +199,16 @@ export async function getKpisReservas(rango: RangoFechas): Promise<KpisResumen> 
   return {
     ingresosTotales,
     ingresosVariacion: calcVar(ingresosTotales, ingresosAnterior),
-    totalTurnos: turnosValidosCount,
-    turnosVariacion: calcVar(turnosValidosCount, turnosAnteriorCount),
+    totalTurnos,
+    turnosVariacion: calcVar(totalTurnos, anterior.length),
     ticketPromedio,
     ticketVariacion: calcVar(ticketPromedio, ticketAnterior),
     senasTotales,
-    senasVariacion: calcVar(senasTotales, senasAnterior),
-    turnosCompletados: turnosCompletadosCount,
-    turnosPendienteSena,
-    turnosCancelados,
-    tasaAsistencia,
+    senasVariacion: calcVar(senasTotales, Number(anterior.reduce((s, r) => s + Number(r.monto_sena || 0), 0))),
+    turnosCompletados: actual.filter((r) => r.estado !== 'cancelado').length,
+    turnosPendienteSena: actual.filter((r) => r.estado === 'pendiente' || r.estado === 'pendiente_sena').length,
+    turnosCancelados: actual.filter((r) => r.estado === 'cancelado').length,
+    tasaAsistencia: totalTurnos > 0 ? 100 : 0,
   };
 }
 

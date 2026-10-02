@@ -1,6 +1,7 @@
 'use client';
 
 import type { GeneroLaser } from '@/lib/types';
+import { User, Star } from 'lucide-react';
 
 interface Props {
   genero: GeneroLaser | null;
@@ -22,18 +23,16 @@ const OPCIONES: { valor: GeneroLaser; label: string; descripcion: string }[] = [
 
 export default function SelectorGenero({ genero, onSelect }: Props) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full">
       {OPCIONES.map((op) => {
         const activo = genero === op.valor;
 
-        // Función para definir el color de la línea superior por género
-        const getColorAcento = (valor: GeneroLaser) => {
-          if (valor === 'femenino') return 'bg-rose-500';
-          if (valor === 'masculino') return 'bg-blue-500';
-          return 'bg-primary';
-        };
-
-        const colorAcento = getColorAcento(op.valor);
+        const isFemenino = op.valor === 'femenino';
+        const colorAcento = isFemenino ? 'bg-rose-500' : 'bg-blue-500';
+        const colorTextoAcento = isFemenino ? 'text-rose-500' : 'text-blue-500';
+        const colorBordeActivo = isFemenino
+          ? 'border-rose-500/80 ring-2 ring-rose-500/20'
+          : 'border-blue-500/80 ring-2 ring-blue-500/20';
 
         return (
           <button
@@ -41,56 +40,50 @@ export default function SelectorGenero({ genero, onSelect }: Props) {
             type="button"
             onClick={() => onSelect(op.valor)}
             aria-pressed={activo}
-            className={`group relative flex flex-col justify-between overflow-hidden p-5 sm:p-6 min-h-[104px] rounded-3xl border-2 text-left transition-all duration-300 ease-out outline-none cursor-pointer select-none focus-visible:ring-4 focus-visible:ring-ring/20 focus-visible:ring-offset-2 active:scale-[0.98] ${
+            className={`group relative flex flex-col justify-between overflow-hidden p-5 rounded-2xl border text-left transition-all duration-200 outline-none cursor-pointer select-none active:scale-[0.98] ${
               activo
-                ? 'border-primary bg-card text-card-foreground shadow-xl shadow-foreground/5 -translate-y-1'
-                : 'border-border bg-card text-card-foreground hover:border-muted-foreground/30 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-foreground/5'
+                ? `bg-card text-card-foreground shadow-md ${colorBordeActivo}`
+                : 'border-border bg-card text-card-foreground hover:border-muted-foreground/30 hover:bg-slate-50/50 dark:hover:bg-zinc-800/50'
             }`}
           >
-            {/* Resplandor decorativo cuando está activo */}
-            <div
-              className={`pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full blur-2xl transition-opacity duration-300 ${
-                activo ? 'opacity-100 bg-primary/10' : 'opacity-0'
-              }`}
-            />
-
             {/* Barra de acento superior */}
             <div
-              className={`absolute top-0 left-0 h-1 rounded-full transition-all duration-300 ease-out ${colorAcento} ${
-                activo ? 'w-full' : 'w-0 group-hover:w-8'
+              className={`absolute top-0 left-0 h-1 transition-all duration-300 ease-out ${colorAcento} ${
+                activo ? 'w-full' : 'w-0 group-hover:w-12'
               }`}
             />
 
-            <div className="relative flex items-start justify-between w-full gap-3 mb-2.5">
-              <span
-                className={`text-lg sm:text-xl font-black tracking-tight transition-colors ${
-                  activo ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'
-                }`}
-              >
-                {op.label}
-              </span>
+            <div className="relative flex items-center justify-between w-full gap-3 mb-2">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`text-base sm:text-lg font-bold tracking-tight transition-colors ${
+                    activo ? 'text-foreground' : 'text-slate-700 dark:text-zinc-200'
+                  }`}
+                >
+                  {op.label}
+                </span>
+                {activo && (
+                  <Star className={`w-4 h-4 ${colorTextoAcento} animate-in fade-in duration-300`} />
+                )}
+              </div>
 
-              {/* Indicador tipo Radio Button estilizado */}
+              {/* Indicador de Selección */}
               <div
-                className={`shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
                   activo
-                    ? 'border-primary bg-primary scale-100'
-                    : 'border-muted-foreground/30 bg-transparent scale-95 group-hover:border-muted-foreground/60 group-hover:scale-100'
+                    ? `${colorAcento} border-transparent scale-100`
+                    : 'border-slate-300 dark:border-zinc-600 bg-transparent scale-95 group-hover:border-slate-400'
                 }`}
               >
                 <div
-                  className={`rounded-full bg-primary-foreground transition-all duration-300 ${
-                    activo ? 'w-2 h-2 opacity-100 scale-100' : 'w-2 h-2 opacity-0 scale-0'
+                  className={`rounded-full bg-white transition-all duration-200 ${
+                    activo ? 'w-2 h-2 opacity-100 scale-100' : 'w-1.5 h-1.5 opacity-0 scale-0'
                   }`}
                 />
               </div>
             </div>
 
-            <p
-              className={`relative text-xs sm:text-[13px] font-medium leading-relaxed transition-colors ${
-                activo ? 'text-muted-foreground' : 'text-muted-foreground/80 group-hover:text-muted-foreground'
-              }`}
-            >
+            <p className="relative text-xs font-medium leading-relaxed text-muted-foreground">
               {op.descripcion}
             </p>
           </button>

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { X, Send, Bot, Trash2, Sparkles, User, GripHorizontal } from 'lucide-react'
+import { X, Send, Bot, Trash2, Crown, User, GripHorizontal } from 'lucide-react'
 
 interface Message {
   id: string
@@ -213,7 +213,7 @@ export default function AdminChatWidget() {
               </div>
               <div>
                 <h3 className="font-bold text-[11px] uppercase tracking-wider text-slate-800 dark:text-zinc-100 flex items-center gap-1">
-                  Luminares IA <Sparkles className="w-3 h-3 text-amber-400" />
+                  Luminares IA <Crown className="w-3 h-3 text-amber-400" />
                 </h3>
               </div>
             </div>

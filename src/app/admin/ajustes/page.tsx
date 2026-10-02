@@ -9,7 +9,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { 
   ArrowLeft, Building2, Image as ImageIcon, Flame, BookOpen, 
   Clock, Tag, Layers, Share2, ClipboardList, HelpCircle, Shield,
-  ChevronRight, Sparkles, Palette
+  ChevronRight, Images, Palette
 } from 'lucide-react'
 
 import { useConfigCalendario } from '@/hooks/admin/useConfigCalendario'
@@ -148,7 +148,7 @@ export default function AjustesAdminPage() {
           id: 'banners_home',
           titulo: 'Banners Inicio App',
           descripcion: 'Novedades y promociones principales del inicio.',
-          icono: Sparkles,
+          icono: Images,
           colorIcono: 'text-teal-500 bg-teal-500/10',
           badge: 'Inicio'
         },

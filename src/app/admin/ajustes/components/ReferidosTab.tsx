@@ -13,7 +13,7 @@ import {
   UserCheck, 
   Plus, 
   Minus,
-  Sparkles
+  Gem
 } from 'lucide-react';
 
 interface Cliente {
@@ -276,7 +276,7 @@ export default function ReferidosTab() {
                                 : 'bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400'
                             }`}
                           >
-                            <Sparkles className="w-3 h-3" />
+                            <Gem className="w-3 h-3" />
                             {cliente.descuentos_disponibles || 0} dispon.
                           </span>
                         </td>

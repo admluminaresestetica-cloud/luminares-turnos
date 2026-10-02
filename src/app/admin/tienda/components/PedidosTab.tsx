@@ -1,354 +1,325 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import ModalPinAutorizacion from '@/app/admin/components/ModalPinAutorizacion';
-import { createBrowserClient } from '@supabase/ssr';
+import React, { useState } from "react";
+import {
+  Package,
+  Truck,
+  Store,
+  MapPin,
+  Phone,
+  User,
+  Calendar,
+  CreditCard,
+  MessageCircle,
+  Search,
+  Filter,
+} from "lucide-react";
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-interface PedidoItem {
-  id: string;
-  nombre_producto: string;
+export interface ItemPedido {
+  id?: string;
+  pedido_id?: string;
+  producto_id?: number | null;
+  nombre_producto?: string;
+  nombre?: string;
   precio_unitario: number;
   cantidad: number;
+  subtotal?: number;
 }
 
 export interface Pedido {
   id: string;
   created_at: string;
   nombre_cliente: string;
-  metodo_envio: string;
+  cliente_nombre?: string;
+  telefono_cliente: string | null;
+  cliente_email?: string | null;
+  metodo_envio: "envio" | "retiro" | string;
   direccion: string | null;
-  nota_adicional: string | null;
+  nota_adicional?: string | null;
   total: number;
-  estado: string;
-  pedido_items?: PedidoItem[];
-  items?: any[];
+  estado: "pendiente" | "confirmado" | "entregado" | "cancelado" | string;
+  metodo_pago?: "whatsapp" | "mercadopago" | string | null;
+  items?: ItemPedido[];
+  pedido_items?: ItemPedido[]; // Soporta la propiedad nativa de Supabase
+  origen?: string | null;
 }
 
-interface PedidosTabProps {
-  pedidos: Pedido[];
-  cargandoPedidos: boolean;
-  procesandoPedidoId: string | null;
-  onFetchPedidos: () => void;
-  onAprobarPedido: (id: string) => void;
-  onCancelarPedido: (id: string) => void;
-  onEliminarPedido: (id: string) => void;
+export interface PedidosTabProps {
+  pedidos?: Pedido[];
+  cargandoPedidos?: boolean;
+  procesandoPedidoId?: string | null;
+  onFetchPedidos?: () => Promise<void>;
+  onActualizarEstado?: (pedidoId: string, nuevoEstado: string) => Promise<void>;
+  onAprobarPedido?: (id: string) => Promise<void>;
+  onCancelarPedido?: (id: string) => void | Promise<void>;
+  onEliminarPedido?: (id: string) => void | Promise<void>;
 }
 
 export default function PedidosTab({
-  pedidos,
-  cargandoPedidos,
-  procesandoPedidoId,
-  onFetchPedidos,
+  pedidos = [],
+  cargandoPedidos = false,
+  procesandoPedidoId = null,
+  onActualizarEstado,
   onAprobarPedido,
   onCancelarPedido,
   onEliminarPedido,
 }: PedidosTabProps) {
-  const [busqueda, setBusqueda] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('todos');
-  const [filtroFecha, setFiltroFecha] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState<string>("todos");
+  const [busqueda, setBusqueda] = useState<string>("");
+  const [actualizandoId, setActualizandoId] = useState<string | null>(null);
 
-  // Estado para el PIN real de la base de datos
-  const [pinAdminBD, setPinAdminBD] = useState<string>('1234');
+  const listaPedidos = Array.isArray(pedidos) ? pedidos : [];
 
-  // Estados para controlar el Modal de PIN
-  const [mostrarModalPin, setMostrarModalPin] = useState(false);
-  const [accionPendiente, setAccionPendiente] = useState<{
-    tipo: 'cancelar' | 'eliminar';
-    pedidoId: string;
-  } | null>(null);
+  const pedidosFiltrados = listaPedidos.filter((pedido) => {
+    const coincideEstado =
+      filtroEstado === "todos" || pedido.estado?.toLowerCase() === filtroEstado.toLowerCase();
 
-  // Consultar el PIN configurado en 'configuracion_empresa'
-  useEffect(() => {
-    const fetchPin = async () => {
-      const { data } = await supabase
-        .from('configuracion_empresa')
-        .select('pin_admin')
-        .limit(1)
-        .maybeSingle();
+    const nombre = (pedido.nombre_cliente || pedido.cliente_nombre || "").toLowerCase();
+    const telefono = (pedido.telefono_cliente || "").toLowerCase();
+    const id = (pedido.id || "").toLowerCase();
+    const termino = busqueda.toLowerCase();
 
-      if (data?.pin_admin) {
-        setPinAdminBD(data.pin_admin);
-      }
-    };
-    fetchPin();
-  }, []);
-
-  // Abrir modal pidiendo PIN
-  const solicitarAutorizacion = (tipo: 'cancelar' | 'eliminar', pedidoId: string) => {
-    setAccionPendiente({ tipo, pedidoId });
-    setMostrarModalPin(true);
-  };
-
-  // Se ejecuta solo si el PIN ingresado es correcto
-  const ejecutarAccionConfirmada = () => {
-    if (!accionPendiente) return;
-
-    if (accionPendiente.tipo === 'cancelar') {
-      onCancelarPedido(accionPendiente.pedidoId);
-    } else if (accionPendiente.tipo === 'eliminar') {
-      onEliminarPedido(accionPendiente.pedidoId);
-    }
-
-    setMostrarModalPin(false);
-    setAccionPendiente(null);
-  };
-
-  // Filtrado de pedidos según los criterios seleccionados
-  const pedidosFiltrados = pedidos.filter((pedido) => {
-    if (filtroEstado !== 'todos' && pedido.estado !== filtroEstado) {
-      return false;
-    }
-
-    if (filtroFecha) {
-      const fechaPedido = new Date(pedido.created_at).toISOString().split('T')[0];
-      if (fechaPedido !== filtroFecha) {
-        return false;
-      }
-    }
-
-    if (busqueda.trim() !== '') {
-      const termino = busqueda.toLowerCase();
-      const coincideNombre = pedido.nombre_cliente?.toLowerCase().includes(termino) ?? false;
-      const coincideId = pedido.id?.toLowerCase().includes(termino) ?? false;
-      if (!coincideNombre && !coincideId) {
-        return false;
-      }
-    }
-
-    return true;
+    return coincideEstado && (nombre.includes(termino) || telefono.includes(termino) || id.includes(termino));
   });
 
-  // Función para exportar los pedidos filtrados a CSV
-  const exportarACSV = () => {
-    if (pedidosFiltrados.length === 0) {
-      alert("No hay pedidos para exportar con los filtros actuales.");
-      return;
+  const cambiarEstado = async (id: string, estado: string) => {
+    if (onActualizarEstado) {
+      try {
+        setActualizandoId(id);
+        await onActualizarEstado(id, estado);
+      } finally {
+        setActualizandoId(null);
+      }
+    } else if (estado === "confirmado" && onAprobarPedido) {
+      await onAprobarPedido(id);
+    } else if (estado === "cancelado" && onCancelarPedido) {
+      await onCancelarPedido(id);
     }
-
-    const encabezados = ["ID", "Fecha", "Cliente", "Método Envío", "Dirección", "Estado", "Total"];
-    const filas = pedidosFiltrados.map((p) => [
-      p.id,
-      new Date(p.created_at).toLocaleString("es-AR"),
-      `"${p.nombre_cliente || ''}"`,
-      p.metodo_envio,
-      `"${p.direccion || ''}"`,
-      p.estado,
-      p.total
-    ]);
-
-    const contenidoCSV = [encabezados.join(";"), ...filas.map((f) => f.join(";"))].join("\n");
-    const blob = new Blob(["\ufeff" + contenidoCSV], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `pedidos_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
-  const estadoStyles: Record<string, string> = {
-    completado: "bg-[#D1FAE5] text-[#065F46]",
-    aprobado: "bg-[#D1FAE5] text-[#065F46]",
-    cancelado: "bg-[#FEE2E2] text-[#991B1B]",
-    pendiente: "bg-[#FEF3C7] text-[#92400E]",
-  };
+const getBadgeEstado = (estado: string) => {
+  switch (estado?.toLowerCase()) {
+    case "confirmado":
+    case "aprobado":
+    case "completado":
+      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+    case "entregado":
+      return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
+    case "cancelado":
+      return "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20";
+    default:
+      return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+  }
+};
 
   return (
-    <div className="rounded-2xl border border-[#E7E5E0] bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="m-0 text-base font-bold text-[#12151B] sm:text-lg">📋 Pedidos Recibidos</h2>
-
-        <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-          <button
-            onClick={exportarACSV}
-            className="h-10 shrink-0 rounded-xl border border-[#0E6E55] bg-[#0E6E55]/10 px-4 text-xs font-semibold text-[#0E6E55] transition-colors hover:bg-[#0E6E55]/20 active:scale-95"
-          >
-            📊 Exportar CSV
-          </button>
-
-          <button
-            onClick={onFetchPedidos}
-            className="h-10 shrink-0 rounded-xl border border-[#E7E5E0] px-4 text-xs font-semibold text-[#12151B] transition-colors hover:bg-[#F7F7F5] active:scale-95"
-          >
-            🔄 Actualizar
-          </button>
+    <div className="space-y-6">
+      {/* Filtros */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-md">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Buscar por cliente, teléfono o ID..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="w-full rounded-xl border border-border bg-background py-2 pl-10 pr-4 text-sm text-foreground outline-none transition focus:border-foreground focus:ring-2 focus:ring-ring/20"
+          />
         </div>
-      </div>
 
-      {/* Barra de Filtros */}
-      <div className="mb-5 flex flex-col gap-3 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 sm:flex-row sm:flex-wrap">
-        <input
-          type="text"
-          placeholder="Buscar cliente o código..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          className="h-10 w-full min-w-0 flex-1 rounded-lg border border-[#E7E5E0] bg-white px-3 text-xs text-[#12151B] outline-none focus:border-[#0E6E55] sm:min-w-[180px]"
-        />
-
-        <div className="flex gap-3">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
           <select
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
-            className="h-10 flex-1 rounded-lg border border-[#E7E5E0] bg-white px-3 text-xs font-semibold text-[#12151B] outline-none focus:border-[#0E6E55] sm:flex-none"
+            className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-foreground"
           >
-            <option value="todos">Todos los Estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="completado">Completado</option>
-            <option value="cancelado">Cancelado</option>
-            <option value="aprobado">Aprobado</option>
+            <option value="todos">Todos los estados</option>
+            <option value="pendiente">Pendientes</option>
+            <option value="confirmado">Confirmados</option>
+            <option value="entregado">Entregados</option>
+            <option value="cancelado">Cancelados</option>
           </select>
-
-          <div className="flex items-center gap-1.5">
-            <input
-              type="date"
-              value={filtroFecha}
-              onChange={(e) => setFiltroFecha(e.target.value)}
-              className="h-10 rounded-lg border border-[#E7E5E0] bg-white px-3 text-xs text-[#12151B] outline-none focus:border-[#0E6E55]"
-            />
-            {filtroFecha && (
-              <button
-                onClick={() => setFiltroFecha('')}
-                className="text-[11px] font-bold text-[#C84343] hover:underline"
-              >
-                Limpiar
-              </button>
-            )}
-          </div>
         </div>
       </div>
 
+      {/* Lista de Pedidos */}
       {cargandoPedidos ? (
-        <p className="text-sm text-[#6B675F]">Cargando pedidos...</p>
-      ) : pedidosFiltrados.length === 0 ? (
-        <p className="text-sm text-[#6B675F]">
-          {pedidos.length === 0
-            ? "No hay pedidos registrados aún."
-            : "No se encontraron pedidos con los filtros seleccionados."}
-        </p>
-      ) : (
-        <div className="flex flex-col gap-3 sm:gap-4">
-          {pedidosFiltrados.map((pedido) => (
-            <div
-              key={pedido.id}
-              className="rounded-2xl border border-[#E7E5E0] bg-[#F7F7F5] p-4 transition-all sm:p-5"
-            >
-              <div className="mb-3 flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <span className="rounded-md border border-[#E7E5E0] bg-white px-2 py-0.5 font-mono text-[11px] font-bold text-[#12151B] shadow-xs">
-                      #{pedido.id.slice(0, 6).toUpperCase()}
-                    </span>
-                    <h3 className="m-0 truncate text-sm font-bold text-[#12151B] sm:text-base">
-                      {pedido.nombre_cliente}
-                    </h3>
-                  </div>
-                  <p className="m-0 mt-0.5 text-xs text-[#6B675F]">
-                    {new Date(pedido.created_at).toLocaleString("es-AR")}
-                  </p>
-                </div>
-
-                {/* CONTENEDOR DE ESTADO + BOTÓN ELIMINAR */}
-                <div className="flex shrink-0 items-center gap-2">
-                  <span
-                    className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase sm:px-3 sm:text-xs ${
-                      estadoStyles[pedido.estado] || "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {pedido.estado}
-                  </span>
-
-                  <button
-                    onClick={() => solicitarAutorizacion('eliminar', pedido.id)}
-                    title="Eliminar pedido"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7E5E0] bg-white text-xs font-bold text-gray-400 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 active:scale-95"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-
-              <div className="mb-3 rounded-lg bg-white/60 p-2.5 text-xs text-[#12151B]">
-                <strong>Método:</strong>{" "}
-                {pedido.metodo_envio === "envio" ? "Envío a domicilio" : "Retiro en local"}
-                {pedido.direccion && (
-                  <span> | <strong>Dirección:</strong> {pedido.direccion}</span>
-                )}
-                {pedido.nota_adicional && (
-                  <p className="mt-1 italic text-[#6B675F]">
-                    Nota: "{pedido.nota_adicional}"
-                  </p>
-                )}
-              </div>
-
-              <div className="border-t border-[#E7E5E0] pt-3">
-                <p className="m-0 text-xs font-bold text-[#6B675F]">Detalle del pedido:</p>
-                <ul className="my-2 list-disc pl-5 text-xs text-[#12151B]">
-                  {(pedido.pedido_items && pedido.pedido_items.length > 0
-                    ? pedido.pedido_items
-                    : (pedido.items || []).map((i: any) => ({
-                        id: i.id || Math.random(),
-                        nombre_producto: i.nombre || i.title || "Producto",
-                        cantidad: i.cantidad || 1,
-                        precio_unitario: i.precio || i.unit_price || 0,
-                      }))
-                  ).map((item, idx) => (
-                    <li key={item.id || idx}>
-                      {item.cantidad}x {item.nombre_producto} - ${item.precio_unitario} c/u
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="mt-4 flex flex-col gap-3 border-t border-[#E7E5E0] pt-3 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-base font-bold text-[#12151B]">
-                  Total: ${pedido.total}
-                </span>
-
-                {pedido.estado === "pendiente" && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => solicitarAutorizacion('cancelar', pedido.id)}
-                      disabled={procesandoPedidoId === pedido.id}
-                      className="h-10 flex-1 rounded-lg border border-[#C84343] px-3 text-xs font-semibold text-[#C84343] transition-colors hover:bg-red-50 active:scale-95 disabled:opacity-50 sm:flex-none"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={() => onAprobarPedido(pedido.id)}
-                      disabled={procesandoPedidoId === pedido.id}
-                      className="h-10 flex-1 rounded-lg bg-[#0E6E55] px-4 text-xs font-semibold text-white transition-colors hover:bg-[#0A5340] active:scale-95 disabled:opacity-50 sm:flex-none"
-                    >
-                      {procesandoPedidoId === pedido.id ? "Aprobando..." : "Aprobar Compra"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+        <div className="flex justify-center py-12 text-sm text-muted-foreground">
+          Cargando pedidos...
         </div>
-      )}
+      ) : pedidosFiltrados.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-12 text-center">
+          <Package className="h-10 w-10 text-muted-foreground/60 mb-2" />
+          <p className="text-sm font-medium text-muted-foreground">
+            No se encontraron pedidos con los filtros aplicados.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {pedidosFiltrados.map((pedido) => {
+            const nombreCliente = pedido.nombre_cliente || pedido.cliente_nombre || "Cliente sin nombre";
+            const esEnvio = pedido.metodo_envio === "envio";
+            const itemsDetalle = pedido.pedido_items || pedido.items || [];
 
-      {/* MODAL DE AUTORIZACIÓN VÍA PIN DE ADMIN */}
-      {mostrarModalPin && (
-        <ModalPinAutorizacion
-          isOpen={mostrarModalPin}
-          onClose={() => {
-            setMostrarModalPin(false);
-            setAccionPendiente(null);
-          }}
-          onSuccess={ejecutarAccionConfirmada}
-          pinCorrecto={pinAdminBD}
-          titulo="Autorización requerida"
-          subtitulo={`Ingresá el PIN de Administrador para ${
-            accionPendiente?.tipo === 'cancelar' ? 'cancelar' : 'eliminar'
-          } este pedido.`}
-        />
+            return (
+              <div
+                key={pedido.id}
+                className="rounded-2xl border border-border bg-card p-5 shadow-xs transition-all hover:shadow-md"
+              >
+                {/* Cabecera */}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-mono text-xs font-semibold text-muted-foreground">
+                      #{pedido.id.slice(0, 8)}
+                    </span>
+                    <span
+                      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide ${getBadgeEstado(
+                        pedido.estado
+                      )}`}
+                    >
+                      {pedido.estado || "Pendiente"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {new Date(pedido.created_at).toLocaleString("es-AR", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </div>
+                </div>
+
+                {/* Cliente y Dirección */}
+                <div className="mt-4 grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      {nombreCliente}
+                    </div>
+
+                    {pedido.telefono_cliente && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Phone className="h-3.5 w-3.5" />
+                        <a
+                          href={`https://wa.me/549${pedido.telefono_cliente.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline hover:text-emerald-600 dark:hover:text-emerald-400"
+                        >
+                          {pedido.telefono_cliente}
+                        </a>
+                      </div>
+                    )}
+
+                    {pedido.metodo_pago && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {pedido.metodo_pago === "mercadopago" ? (
+                          <CreditCard className="h-3.5 w-3.5 text-blue-500" />
+                        ) : (
+                          <MessageCircle className="h-3.5 w-3.5 text-emerald-500" />
+                        )}
+                        Pago: <span className="font-medium capitalize">{pedido.metodo_pago}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Dirección */}
+                  <div className="flex flex-col justify-center">
+                    {esEnvio ? (
+                      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3.5 dark:bg-amber-500/10">
+                        <div className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                          <Truck className="h-4 w-4 shrink-0" />
+                          Envío a domicilio
+                        </div>
+                        <div className="flex items-start gap-2 text-sm text-foreground">
+                          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                          <span className="font-medium">
+                            {pedido.direccion && pedido.direccion.trim() !== "" ? (
+                              pedido.direccion
+                            ) : (
+                              <span className="italic text-muted-foreground">
+                                No se especificó dirección.
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/40 p-3 text-xs font-semibold text-foreground">
+                        <Store className="h-4 w-4 text-muted-foreground" />
+                        Retiro en local
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Items del Pedido */}
+                {itemsDetalle.length > 0 && (
+                  <div className="mt-4 rounded-xl border border-border/80 bg-muted/20 p-3.5">
+                    <span className="block mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Productos del Pedido
+                    </span>
+                    <ul className="divide-y divide-border/40 text-xs">
+                      {itemsDetalle.map((item, idx) => {
+                        const nombreProd = item.nombre_producto || item.nombre || "Producto";
+                        const subtotal = item.subtotal ?? (Number(item.precio_unitario || 0) * Number(item.cantidad || 1));
+
+                        return (
+                          <li key={idx} className="flex justify-between py-1.5">
+                            <span className="text-foreground">
+                              <strong className="font-semibold">{item.cantidad}x</strong> {nombreProd}
+                            </span>
+                            <span className="font-semibold text-foreground">
+                              ${Number(subtotal).toLocaleString("es-AR")}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Footer */}
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3.5">
+                  <div>
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      Total del Pedido
+                    </span>
+                    <span className="text-lg font-extrabold text-foreground">
+                      ${Number(pedido.total || 0).toLocaleString("es-AR")}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <select
+  disabled={actualizandoId === pedido.id || procesandoPedidoId === pedido.id}
+  value={pedido.estado || "pendiente"}
+  onChange={(e) => cambiarEstado(pedido.id, e.target.value)}
+  className="..."
+>
+  <option value="pendiente">Pendiente</option>
+  <option value="confirmado">Confirmado / Aprobado</option>
+  <option value="completado">Completado (POS)</option>
+  <option value="entregado">Entregado</option>
+  <option value="cancelado">Cancelado</option>
+</select>
+
+                    {onEliminarPedido && (
+                      <button
+                        onClick={() => onEliminarPedido(pedido.id)}
+                        className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-600 transition hover:bg-rose-500/20 dark:text-rose-400"
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

@@ -6,7 +6,7 @@ import { guardarConfiguracion, TemaColores, TEMA_COLORES_DEFAULT } from '@/lib/s
 import { obtenerColorTextoContraste } from '@/lib/utils/color';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Palette, RotateCcw, Check, Sparkles } from 'lucide-react';
+import { Loader2, Palette, RotateCcw, Check, Layers } from 'lucide-react';
 
 const PLANTILLAS_TEMA: { nombre: string; descripcion: string; tema: Partial<TemaColores> }[] = [
   {
@@ -148,7 +148,7 @@ export default function AparienciaAjustesTab() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
+            <Layers className="h-4 w-4 text-primary" />
             Plantillas Recomendadas
           </CardTitle>
           <CardDescription>

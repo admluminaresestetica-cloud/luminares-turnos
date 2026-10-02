@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, X, Clock, DollarSign, Users, Folder, CheckCircle2, Loader2 } from 'lucide-react'
+import { Pencil, X, Clock, DollarSign, Users, Folder, CheckCircle2, Loader2 } from 'lucide-react'
 import { ServicioLaser } from '../types'
 import { supabase } from '@/lib/supabase' // Ajusta esta ruta según dónde tengas configurado tu cliente de Supabase
 
@@ -98,7 +98,7 @@ export default function ModalServicioLaser({
                 ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' 
                 : 'bg-blue-100 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400'
             }`}>
-              <Sparkles className="w-5 h-5" />
+              <Pencil className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900 leading-tight dark:text-zinc-100">
@@ -120,7 +120,7 @@ export default function ModalServicioLaser({
             {/* Nombre de la Zona */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1.5 flex items-center gap-1.5 dark:text-zinc-400">
-                <Sparkles className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
+                <Pencil className="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
                 Nombre de la Zona
               </label>
               <input
