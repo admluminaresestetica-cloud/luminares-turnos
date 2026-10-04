@@ -59,14 +59,16 @@ export async function POST(request: Request) {
       // Manejo del Envío por Cadetería
       if (productoId === "envio-cadeteria") {
         const precioOficial = Number(item.precio) || 0;
+        // 🟢 CORRECCIÓN: Aplicamos el recargo al envío de la misma forma que a los productos
+        const precioUnitarioConRecargo = Math.round(precioOficial * (1 + PORCENTAJE_RECARGO));
 
-        totalPedido += precioOficial * cantidad;
+        totalPedido += precioUnitarioConRecargo * cantidad;
         subtotalSinRecargo += precioOficial * cantidad;
 
         itemsMP.push({
           id: "envio-cadeteria",
           title: String(item.nombre || "Costo de Cadetería / Envío"),
-          unit_price: precioOficial,
+          unit_price: precioUnitarioConRecargo,
           quantity: cantidad,
           currency_id: "ARS",
         });
@@ -76,14 +78,14 @@ export async function POST(request: Request) {
           id: "envio-cadeteria",
           nombre_producto: String(item.nombre || "Costo de Cadetería / Envío"),
           cantidad: cantidad,
-          precio_unitario: precioOficial,
+          precio_unitario: precioUnitarioConRecargo,
         });
 
-        // Estructura para la tabla relacionada `pedido_items` (producto_id queda null al no ser un int8 de productos)
+        // Estructura para la tabla relacionada `pedido_items`
         itemsParaPedidoItems.push({
           nombre_producto: String(item.nombre || "Costo de Cadetería / Envío"),
           cantidad: cantidad,
-          precio_unitario: precioOficial,
+          precio_unitario: precioUnitarioConRecargo,
           producto_id: null,
         });
 

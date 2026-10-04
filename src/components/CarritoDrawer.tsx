@@ -238,10 +238,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
     setCargandoMP(true);
     try {
-      await guardarPedidoEnDB(
-        totalFinalAbonar,
-        metodoPago === "mercadopago_cuotas" ? "Mercado Pago (3 Cuotas)" : "Mercado Pago (Débito/1 Pago)"
-      );
 
       const recargoPorcentaje = metodoPago === "mercadopago_cuotas" ? PORCENTAJE_CUOTAS : PORCENTAJE_DEBITO;
 
