@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ScannerModal from "./ScannerModal";
 
 interface PuntoVentaTabProps {
@@ -14,6 +14,26 @@ export default function PuntoVentaTab({ productos, supabase, onActualizarProduct
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [cantidad, setCantidad] = useState("1");
   const [loading, setLoading] = useState(false);
+  
+  // Nuevo estado para validar la caja
+  const [cajaAbierta, setCajaAbierta] = useState<boolean | null>(null);
+
+  // Verificar estado de la caja al montar el componente
+  useEffect(() => {
+    const verificarCaja = async () => {
+      const { data } = await supabase
+        .from("cajas")
+        .select("*")
+        .eq("estado", "abierta")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      setCajaAbierta(!!data);
+    };
+
+    verificarCaja();
+  }, [supabase]);
 
   const handleScanCode = (code: string) => {
     const found = productos.find((p) => p.codigo_barras === code);
@@ -25,6 +45,11 @@ export default function PuntoVentaTab({ productos, supabase, onActualizarProduct
   };
 
   const handleAjustarStock = async (modo: "venta" | "restock") => {
+    if (!cajaAbierta && modo === "venta") {
+      alert("No se pueden realizar ventas porque la caja se encuentra cerrada.");
+      return;
+    }
+
     if (!selectedProduct) return;
     const num = Number(cantidad);
     if (isNaN(num) || num <= 0) return;
@@ -122,6 +147,13 @@ export default function PuntoVentaTab({ productos, supabase, onActualizarProduct
 
   return (
     <div className="space-y-6">
+      {/* Aviso si la caja está cerrada */}
+      {cajaAbierta === false && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs font-medium text-amber-800">
+          ⚠️ <strong>Atención:</strong> La caja se encuentra cerrada. Podés navegar por el panel y ver el catálogo, pero las operaciones de venta en el POS están deshabilitadas hasta que abras la caja en la sección de Control de Caja.
+        </div>
+      )}
+
       <div className="rounded-2xl border border-[#E7E5E0] bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -130,7 +162,8 @@ export default function PuntoVentaTab({ productos, supabase, onActualizarProduct
           </div>
           <button
             onClick={() => setIsScannerOpen(true)}
-            className="flex items-center justify-center gap-2 rounded-xl bg-[#0E6E55] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#0A5340]"
+            disabled={!cajaAbierta}
+            className="flex items-center justify-center gap-2 rounded-xl bg-[#0E6E55] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#0A5340] disabled:opacity-50"
           >
             📷 Abrir Lector
           </button>
@@ -155,7 +188,7 @@ export default function PuntoVentaTab({ productos, supabase, onActualizarProduct
                 />
                 <button
                   onClick={() => handleAjustarStock("venta")}
-                  disabled={loading}
+                  disabled={loading || !cajaAbierta}
                   className="rounded-lg bg-[#C84343] px-3 py-2 text-xs font-bold text-white hover:bg-[#A33434] disabled:opacity-50"
                 >
                   {loading ? "Procesando..." : "Descontar Venta"}

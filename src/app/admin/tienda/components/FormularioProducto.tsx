@@ -39,6 +39,51 @@ export default function FormularioProducto({
   const [imagenesExistentes, setImagenesExistentes] = useState<string[]>([]);
   const [imagenesNuevasFiles, setImagenesNuevasFiles] = useState<File[]>([]);
   const [previewsNuevas, setPreviewsNuevas] = useState<string[]>([]);
+  const [productoExistenteAviso, setProductoExistenteAviso] = useState<string | null>(null);
+
+  const verificarCodigoEnSupabase = async (codigo: string) => {
+    if (!codigo || codigo.trim() === "") {
+      setProductoExistenteAviso(null);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("productos")
+        .select("*")
+        .eq("codigo_barras", codigo.trim())
+        .maybeSingle();
+
+      if (data && !error) {
+        // Autocompleta los estados
+        setNombre(data.nombre || "");
+        setDescripcion(data.descripcion || "");
+        setPrecio(data.precio || "");
+        setPrecioOriginal(data.precio_original || "");
+        setStock(data.stock || "");
+        setStockMinimo(data.stock_minimo ?? "5");
+        setCategoria(data.categoria || "");
+        setEtiquetas(Array.isArray(data.etiquetas) ? data.etiquetas : []);
+        setMostrarUltimasUnidades(data.mostrar_ultimas_unidades || false);
+        setPermiteCuotas(data.permite_cuotas !== false);
+
+        const fotosExistentes: string[] = data.imagenes_urls && data.imagenes_urls.length > 0
+          ? data.imagenes_urls
+          : data.imagen_url
+          ? [data.imagen_url]
+          : [];
+
+        setImagenesExistentes(fotosExistentes);
+
+        // ¡En vez de alert, seteamos un aviso visual sutil!
+        setProductoExistenteAviso(`Producto existente encontrado: "${data.nombre}". Se cargaron sus datos para edición.`);
+      } else {
+        setProductoExistenteAviso(null);
+      }
+    } catch (err) {
+      console.error("Error al buscar el código de barras:", err);
+    }
+  };
 
   useEffect(() => {
     if (productoEditando) {
@@ -249,13 +294,33 @@ export default function FormularioProducto({
                 <input
                   type="text"
                   value={codigoBarras}
-                  onChange={(e) => setCodigoBarras(e.target.value)}
+                  onChange={(e) => {
+                    setCodigoBarras(e.target.value);
+                    setProductoExistenteAviso(null); // Limpia el aviso si edita el código
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      verificarCodigoEnSupabase(codigoBarras);
+                    }
+                  }}
                   placeholder="Ej: 779123456789"
                   className="w-full min-w-0 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3.5 text-sm font-medium text-[#12151B] outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
                 />
                 <button
                   type="button"
-                  onClick={generarCodigoBarras}
+                  onClick={() => verificarCodigoEnSupabase(codigoBarras)}
+                  title="Buscar código en la base"
+                  className="shrink-0 rounded-xl bg-gray-100 px-3 text-xs font-bold text-[#12151B] transition-colors hover:bg-gray-200 active:scale-95 whitespace-nowrap"
+                >
+                  🔍
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    generarCodigoBarras();
+                    setProductoExistenteAviso(null);
+                  }}
                   title="Generar código"
                   className="shrink-0 rounded-xl bg-gray-100 px-3 text-xs font-bold text-[#12151B] transition-colors hover:bg-gray-200 active:scale-95 whitespace-nowrap"
                 >
@@ -269,6 +334,14 @@ export default function FormularioProducto({
                   📷
                 </button>
               </div>
+
+              {/* Aviso visual integrado y sutil debajo del campo */}
+              {productoExistenteAviso && (
+                <div className="mt-2 flex items-center gap-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 p-3 text-xs font-medium text-amber-800 dark:text-amber-300 animate-fadeIn">
+                  <span>⚠️</span>
+                  <p>{productoExistenteAviso}</p>
+                </div>
+              )}
             </div>
 
             <div>
@@ -414,7 +487,10 @@ export default function FormularioProducto({
       <ScannerModal
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
-        onScan={(code) => setCodigoBarras(code)}
+        onScan={(code) => {
+          setCodigoBarras(code);
+          verificarCodigoEnSupabase(code);
+        }}
       />
     </div>
   );

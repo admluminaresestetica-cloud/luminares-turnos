@@ -7,12 +7,14 @@ interface PosGridProductosProps {
   productos: ProductoPOS[];
   busqueda: string;
   onAgregarAlCarrito: (producto: ProductoPOS) => void;
+  cajaAbierta?: boolean | null; // <-- Añadimos la prop opcional
 }
 
 export default function PosGridProductos({
   productos,
   busqueda,
   onAgregarAlCarrito,
+  cajaAbierta,
 }: PosGridProductosProps) {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("Todas");
 
@@ -73,15 +75,18 @@ export default function PosGridProductos({
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 sm:gap-3.5">
           {productosFiltrados.map((prod) => {
             const sinStock = prod.stock <= 0;
+            const cajaCerrada = cajaAbierta === false;
+            const bloqueado = sinStock || cajaCerrada;
+
             return (
               <button
                 key={prod.id}
-                disabled={sinStock}
+                disabled={bloqueado}
                 onClick={() => onAgregarAlCarrito(prod)}
-                className={`group relative flex flex-col justify-between rounded-2xl border bg-white p-3 text-left transition-all active:scale-95 sm:p-3.5 dark:bg-zinc-900 ${
-                  sinStock
+                className={`group relative flex flex-col justify-between rounded-2xl border bg-white p-3 text-left transition-all sm:p-3.5 dark:bg-zinc-900 ${
+                  bloqueado
                     ? "opacity-50 border-gray-200 dark:border-zinc-800 cursor-not-allowed"
-                    : "border-gray-200/80 hover:border-[#0E6E55] hover:shadow-md dark:border-zinc-800 dark:hover:border-[#0E6E55]"
+                    : "border-gray-200/80 hover:border-[#0E6E55] hover:shadow-md dark:border-zinc-800 dark:hover:border-[#0E6E55] active:scale-95"
                 }`}
               >
                 <div>
@@ -115,8 +120,12 @@ export default function PosGridProductos({
                     ${prod.precio.toLocaleString("es-AR")}
                   </span>
                   
-                  <span className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] text-xs font-black group-hover:bg-[#0E6E55] group-hover:text-white transition-colors">
-                    +
+                  <span className={`flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl text-xs font-black transition-colors ${
+                    cajaCerrada
+                      ? "bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-600"
+                      : "bg-[#0E6E55]/10 text-[#0E6E55] group-hover:bg-[#0E6E55] group-hover:text-white"
+                  }`}>
+                    {cajaCerrada ? "🔒" : "+"}
                   </span>
                 </div>
               </button>

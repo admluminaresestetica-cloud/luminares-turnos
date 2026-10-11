@@ -7,7 +7,7 @@ import ModalCobro from "./ModalCobro";
 import TicketVenta from "./TicketVenta";
 import ModalHistorialVentas from "./ModalHistorialVentas";
 import { ProductoPOS, PosCartItem } from "./types";
-import { Keyboard, X, Info } from "lucide-react";
+import { Keyboard, X, Info, AlertTriangle } from "lucide-react";
 
 interface PuntoVentaTabProps {
   productos: ProductoPOS[];
@@ -22,6 +22,26 @@ export default function PuntoVentaTab({
 }: PuntoVentaTabProps) {
   const [busqueda, setBusqueda] = useState("");
   const [carrito, setCarrito] = useState<PosCartItem[]>([]);
+
+  // Estado para validar si la caja está abierta
+  const [cajaAbierta, setCajaAbierta] = useState<boolean | null>(null);
+
+  // Verificar el estado de la caja al cargar la pestaña
+  useEffect(() => {
+    const verificarCaja = async () => {
+      const { data } = await supabase
+        .from("cajas")
+        .select("*")
+        .eq("estado", "abierta")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      setCajaAbierta(!!data);
+    };
+
+    verificarCaja();
+  }, [supabase]);
 
   // Estado para el Modal de Cobro
   const [isModalCobroOpen, setIsModalCobroOpen] = useState(false);
@@ -49,9 +69,13 @@ export default function PuntoVentaTab({
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   // --------------------------------------------------------
-  // LÓGICA DE AGREGAR AL CARRITO
+  // LÓGICA DE AGREGAR AL CARRITO (CON VALIDACIÓN DE CAJA)
   // --------------------------------------------------------
-  const handleAgregarAlCarrito = (prod: ProductoPOS) => {
+const handleAgregarAlCarrito = (prod: ProductoPOS) => {
+    if (cajaAbierta === false) {
+      return;
+    }
+
     if (prod.stock <= 0) {
       alert(`El producto "${prod.nombre}" no tiene stock disponible.`);
       return;
@@ -172,7 +196,7 @@ export default function PuntoVentaTab({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [carrito, isModalCobroOpen, isTicketOpen, isHelpOpen, isHistorialOpen, productos]);
+  }, [carrito, isModalCobroOpen, isTicketOpen, isHelpOpen, isHistorialOpen, productos, cajaAbierta]);
 
   const handleModificarCantidad = (productoId: number, delta: number) => {
     setCarrito((prev) =>
@@ -193,6 +217,10 @@ export default function PuntoVentaTab({
   };
 
   const handleIniciarCobro = (subtotal: number, descuentoCalculado: number, totalFinal: number) => {
+    if (cajaAbierta === false) {
+      alert("⚠️ No se puede procesar el cobro porque la caja se encuentra cerrada.");
+      return;
+    }
     setDatosCobro({ subtotal, descuentoCalculado, totalFinal });
     setIsModalCobroOpen(true);
   };
@@ -218,6 +246,16 @@ export default function PuntoVentaTab({
 
   return (
     <div className="relative flex flex-col gap-4">
+      {/* Aviso visual sutil si la caja está cerrada */}
+      {cajaAbierta === false && (
+        <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs font-medium text-amber-800 dark:bg-amber-950/40 dark:border-amber-900/50 dark:text-amber-300">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+          <p>
+            <strong>Caja Cerrada:</strong> Podés navegar libremente por el panel de administración, pero el punto de venta (agregar productos y cobrar) se encuentra temporalmente inactivo hasta que inicies turno de caja.
+          </p>
+        </div>
+      )}
+
       <PosHeader
         busqueda={busqueda}
         setBusqueda={setBusqueda}
@@ -229,10 +267,11 @@ export default function PuntoVentaTab({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <PosGridProductos
-            productos={productos}
-            busqueda={busqueda}
-            onAgregarAlCarrito={handleAgregarAlCarrito}
-          />
+    productos={productos}
+    busqueda={busqueda}
+    onAgregarAlCarrito={handleAgregarAlCarrito}
+    cajaAbierta={cajaAbierta} // <-- Pasamos el estado de la caja aquí
+  />
         </div>
 
         <div className="lg:col-span-1">
