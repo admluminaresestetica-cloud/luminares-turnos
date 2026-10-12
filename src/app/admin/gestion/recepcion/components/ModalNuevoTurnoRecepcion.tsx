@@ -2,171 +2,178 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Reserva } from '@/app/admin/turnos/components/types'
-import { X, CheckCircle2, AlertCircle, FileText, Save } from 'lucide-react'
+import { ServicioLaser, PromoLaser, Reserva, datetimeLocalToIso, isoToDatetimeLocal } from '@/app/admin/turnos/components/types'
+import { X, Clock, DollarSign, User, Phone, Calendar, Sparkles, Layers } from 'lucide-react'
 
-interface PreguntaAnamnesis {
-  id: string
-  pregunta: string
-  categoria: string
-  activo: boolean
-  orden: number
-}
-
-interface RespuestaItem {
-  pregunta_id: string
-  pregunta: string
-  categoria: string
-  respuesta: 'si' | 'no'
-  observacion: string
-}
-
-interface ModalAnamnesisRecepcionProps {
+interface ModalNuevoTurnoRecepcionProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
-  turno: Reserva | null
+  turnoAEditar?: Reserva | null
 }
 
-export default function ModalAnamnesisRecepcion({
+export default function ModalNuevoTurnoRecepcion({
   isOpen,
   onClose,
   onSuccess,
-  turno
-}: ModalAnamnesisRecepcionProps) {
-  const [preguntas, setPreguntas] = useState<PreguntaAnamnesis[]>([])
-  const [respuestas, setRespuestas] = useState<{ [key: string]: RespuestaItem }>({})
-  const [loading, setLoading] = useState(true)
+  turnoAEditar
+}: ModalNuevoTurnoRecepcionProps) {
+  const [nombre, setNombre] = useState('')
+  const [celular, setCelular] = useState('')
+  const [fechaHoraLocal, setFechaHoraLocal] = useState('')
+  
+  const [tipoSeleccion, setTipoSeleccion] = useState<'zonas' | 'promo'>('zonas')
+  const [serviciosLaser, setServiciosLaser] = useState<ServicioLaser[]>([])
+  const [promosLaser, setPromosLaser] = useState<PromoLaser[]>([])
+  
+  const [zonasSeleccionadas, setZonasSeleccionadas] = useState<string[]>([])
+  const [promoSeleccionadaId, setPromoSeleccionadaId] = useState<string>('')
+  
+  const [filtroGenero, setFiltroGenero] = useState<string>('todos')
+  const [loadingCatalogos, setLoadingCatalogos] = useState(true)
   const [guardando, setGuardando] = useState(false)
 
+  // Cargar catálogos y precargar si es edición
   useEffect(() => {
-    if (!isOpen || !turno) return
+    if (!isOpen) return
 
-    const cargarDatos = async () => {
-      setLoading(true)
+    const fetchData = async () => {
+      setLoadingCatalogos(true)
+      
+      const [resServicios, resPromos] = await Promise.all([
+        supabase.from('servicios_laser').select('*').eq('activo', true),
+        supabase.from('promos_laser').select('*').eq('activo', true)
+      ])
 
-      // 1. Cargar preguntas activas desde checklist_anamnesis
-      const { data: dataPreguntas, error: errorPreguntas } = await supabase
-        .from('checklist_anamnesis')
-        .select('*')
-        .eq('activo', true)
-        .order('orden', { ascending: true })
+      const listServicios = (resServicios.data as ServicioLaser[]) || []
+      const listPromos = (resPromos.data as PromoLaser[]) || []
+      
+      setServiciosLaser(listServicios)
+      setPromosLaser(listPromos)
 
-      if (errorPreguntas) {
-        console.error('Error al cargar preguntas de anamnesis:', errorPreguntas)
-        setLoading(false)
-        return
+      if (turnoAEditar) {
+        setNombre(turnoAEditar.cliente_nombre || '')
+        setCelular(turnoAEditar.cliente_celular || '')
+        setFechaHoraLocal(isoToDatetimeLocal(turnoAEditar.fecha_hora_inicio))
+        // Si tuviera zonas guardadas o texto, las dejamos preparadas
+      } else {
+        const now = new Date()
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+        setFechaHoraLocal(now.toISOString().slice(0, 16))
+        setNombre('')
+        setCelular('')
+        setZonasSeleccionadas([])
+        setPromoSeleccionadaId('')
       }
-
-      const listaPreguntas: PreguntaAnamnesis[] = dataPreguntas || []
-      setPreguntas(listaPreguntas)
-
-      // 2. Revisar si el turno ya tiene anamnesis guardada en detalle_reserva
-      let detalleObj = typeof turno.detalle_reserva === 'string'
-        ? JSON.parse(turno.detalle_reserva || '{}')
-        : turno.detalle_reserva || {}
-
-      const respuestasPrevias: RespuestaItem[] = detalleObj.anamnesis?.respuestas || []
-
-      // Mapa inicial de respuestas (por defecto todas 'no')
-      const mapaInicial: { [key: string]: RespuestaItem } = {}
-      listaPreguntas.forEach((p) => {
-        const previa = respuestasPrevias.find((r) => r.pregunta_id === p.id)
-        mapaInicial[p.id] = {
-          pregunta_id: p.id,
-          pregunta: p.pregunta,
-          categoria: p.categoria || 'General',
-          respuesta: previa ? previa.respuesta : 'no',
-          observacion: previa ? previa.observacion : ''
-        }
-      })
-
-      setRespuestas(mapaInicial)
-      setLoading(false)
+      
+      setLoadingCatalogos(false)
     }
 
-    cargarDatos()
-  }, [isOpen, turno])
+    fetchData()
+  }, [isOpen, turnoAEditar])
 
-  if (!isOpen || !turno) return null
+  if (!isOpen) return null
 
-  const handleToggleRespuesta = (id: string, nuevaRespuesta: 'si' | 'no') => {
-    setRespuestas((prev) => ({
-      ...prev,
-      [id]: {
-        ...prev[id],
-        respuesta: nuevaRespuesta,
-        // Limpiar observación si pasa a "no"
-        observacion: nuevaRespuesta === 'no' ? '' : prev[id]?.observacion || ''
-      }
-    }))
+  const serviciosFiltrados = serviciosLaser.filter(
+    (s) => filtroGenero === 'todos' || s.genero === filtroGenero
+  )
+  const promosFiltradas = promosLaser.filter(
+    (p) => filtroGenero === 'todos' || p.genero === filtroGenero
+  )
+
+  const toggleZona = (id: string) => {
+    setZonasSeleccionadas((prev) =>
+      prev.includes(id) ? prev.filter((z) => z !== id) : [...prev, id]
+    )
   }
 
-  const handleObservacionChange = (id: string, texto: string) => {
-    setRespuestas((prev) => ({
-      ...prev,
-      [id]: {
-        ...prev[id],
-        observacion: texto
-      }
-    }))
+  let precioTotal = 0
+  let duracionTotal = 30
+  let detalleTexto = ''
+
+  if (tipoSeleccion === 'zonas') {
+    const zonasElegidasObj = serviciosLaser.filter((s) => zonasSeleccionadas.includes(s.id))
+    precioTotal = zonasElegidasObj.reduce((acc, z) => acc + (Number(z.precio_lista) || 0), 0)
+    duracionTotal = zonasElegidasObj.reduce((acc, z) => acc + (Number(z.duracion_minutos) || 0), 0) || 30
+    detalleTexto = zonasElegidasObj.map((z) => z.nombre_zona).filter(Boolean).join(' + ')
+  } else {
+    const promoElegida = promosLaser.find((p) => p.id === promoSeleccionadaId)
+    if (promoElegida) {
+      precioTotal = Number(promoElegida.precio_promo) || 0
+      duracionTotal = Number(promoElegida.duracion_total_min) || 30
+      detalleTexto = `Promo: ${promoElegida.nombre_promo}`
+    }
   }
 
-  const handleGuardar = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!nombre.trim() || !fechaHoraLocal) {
+      alert('Por favor completá al menos el nombre del cliente y la fecha/hora.')
+      return
+    }
+
+    if (tipoSeleccion === 'zonas' && zonasSeleccionadas.length === 0 && !turnoAEditar) {
+      alert('Seleccioná al menos una zona láser.')
+      return
+    }
+
     setGuardando(true)
 
-    try {
-      let detalleObj = typeof turno.detalle_reserva === 'string'
-        ? JSON.parse(turno.detalle_reserva || '{}')
-        : turno.detalle_reserva || {}
+    const payload: any = {
+      cliente_nombre: nombre,
+      cliente_celular: celular,
+      fecha_hora_inicio: datetimeLocalToIso(fechaHoraLocal),
+      duracion_total: duracionTotal,
+      precio_total: Number(precioTotal),
+      modificado_por_admin: true
+    }
 
-      const listaRespuestas = Object.values(respuestas)
+    if (detalleTexto) {
+      payload.detalle_reserva = { detalle_texto: detalleTexto }
+    }
 
-      detalleObj = {
-        ...detalleObj,
-        anamnesis: {
-          completado: true,
-          fecha_completado: new Date().toISOString(),
-          respuestas: listaRespuestas
-        }
-      }
+    let errorSupabase = null
+
+    if (turnoAEditar) {
+      // EDITAR
+      const { error } = await supabase
+        .from('reservas')
+        .update(payload)
+        .eq('id', turnoAEditar.id)
+      errorSupabase = error
+    } else {
+      // CREAR NUEVO
+      payload.codigo_unico = `RECEPCION-${Date.now().toString(36).toUpperCase()}`
+      payload.servicio_tipo = 'laser'
+      payload.estado = 'pendiente_sena'
+      payload.metodo_pago = 'efectivo'
 
       const { error } = await supabase
         .from('reservas')
-        .update({ detalle_reserva: detalleObj, modificado_por_admin: true })
-        .eq('id', turno.id)
+        .insert([payload])
+      errorSupabase = error
+    }
 
-      if (error) throw error
-
-      alert('Checklist de anamnesis guardado correctamente.')
+    if (errorSupabase) {
+      alert('Error al guardar el turno: ' + errorSupabase.message)
+    } else {
+      alert(turnoAEditar ? 'Turno actualizado con éxito.' : 'Turno registrado con éxito.')
       onSuccess()
       onClose()
-    } catch (err: any) {
-      alert('Error al guardar anamnesis: ' + err.message)
-    } finally {
-      setGuardando(false)
     }
-  }
 
-  // Agrupar preguntas por categoría
-  const categoriasUnicas = Array.from(new Set(preguntas.map((p) => p.categoria || 'General')))
+    setGuardando(false)
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden my-8 flex flex-col max-h-[90vh]">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden my-8">
         
-        {/* HEADER */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-zinc-800 shrink-0">
-          <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-              <span>Anamnesis / Check Clínico</span>
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-              Paciente: <strong className="text-slate-800 dark:text-zinc-200">{turno.cliente_nombre}</strong> ({turno.cliente_celular || 'Sin celular'})
-            </p>
-          </div>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-zinc-800">
+          <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
+            {turnoAEditar ? 'Editar Turno' : 'Nuevo Turno - Mostrador'}
+          </h2>
           <button
             onClick={onClose}
             className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400"
@@ -175,112 +182,187 @@ export default function ModalAnamnesisRecepcion({
           </button>
         </div>
 
-        {/* BODY */}
-        <form onSubmit={handleGuardar} className="p-5 overflow-y-auto space-y-6 flex-1">
-          {loading ? (
-            <div className="py-12 text-center text-xs text-slate-400">
-              Cargando checklist de preguntas...
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1">
+                Nombre del Cliente *
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. María Pérez"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                />
+              </div>
             </div>
-          ) : preguntas.length === 0 ? (
-            <div className="py-12 text-center text-xs text-slate-400">
-              No hay preguntas activas configuradas en la sección de Ajustes.
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1">
+                Celular / WhatsApp
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Ej. 3416123456"
+                  value={celular}
+                  onChange={(e) => setCelular(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                />
+              </div>
             </div>
-          ) : (
-            categoriasUnicas.map((cat) => {
-              const preguntasCat = preguntas.filter((p) => (p.categoria || 'General') === cat)
-              return (
-                <div key={cat} className="space-y-3">
-                  <span className="inline-block px-2.5 py-1 text-xs font-bold rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 border border-teal-200 dark:border-teal-900">
-                    {cat}
-                  </span>
+          </div>
 
-                  <div className="space-y-2">
-                    {preguntasCat.map((p) => {
-                      const itemResp = respuestas[p.id] || { respuesta: 'no', observacion: '' }
-                      const esSi = itemResp.respuesta === 'si'
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1">
+              Fecha y Hora del Turno *
+            </label>
+            <div className="relative">
+              <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <input
+                type="datetime-local"
+                required
+                value={fechaHoraLocal}
+                onChange={(e) => setFechaHoraLocal(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+              />
+            </div>
+          </div>
 
-                      return (
-                        <div
-                          key={p.id}
-                          className={`p-3.5 rounded-xl border transition-all ${
-                            esSi
-                              ? 'border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20'
-                              : 'border-slate-200 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/30'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-xs font-semibold text-slate-800 dark:text-zinc-200 flex-1">
-                              {p.pregunta}
-                            </span>
+          <div className="flex bg-slate-100 dark:bg-zinc-800 p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => { setTipoSeleccion('zonas'); setPromoSeleccionadaId(''); }}
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                tipoSeleccion === 'zonas'
+                  ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span>Zonas Individuales</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setTipoSeleccion('promo'); setZonasSeleccionadas([]); }}
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                tipoSeleccion === 'promo'
+                  ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Promos y Combos</span>
+            </button>
+          </div>
 
-                            <div className="flex bg-slate-200/80 dark:bg-zinc-800 p-0.5 rounded-lg shrink-0">
-                              <button
-                                type="button"
-                                onClick={() => handleToggleRespuesta(p.id, 'no')}
-                                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                                  !esSi
-                                    ? 'bg-white dark:bg-zinc-700 text-slate-800 dark:text-zinc-100 shadow-xs'
-                                    : 'text-slate-500'
-                                }`}
-                              >
-                                NO
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleToggleRespuesta(p.id, 'si')}
-                                className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                                  esSi
-                                    ? 'bg-amber-500 text-white font-bold shadow-xs'
-                                    : 'text-slate-500'
-                                }`}
-                              >
-                                SÍ
-                              </button>
-                            </div>
-                          </div>
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold text-slate-600 dark:text-zinc-400">
+              {tipoSeleccion === 'zonas' ? 'Zonas Láser Disponibles' : 'Promociones Activas'}
+            </label>
+            <div className="flex bg-slate-100 dark:bg-zinc-800 p-0.5 rounded-lg text-[11px]">
+              {['todos', 'femenino', 'masculino'].map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setFiltroGenero(g)}
+                  className={`px-2 py-0.5 rounded-md capitalize transition-all ${
+                    filtroGenero === g
+                      ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 font-bold shadow-xs'
+                      : 'text-slate-500'
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                          {esSi && (
-                            <div className="mt-2.5">
-                              <input
-                                type="text"
-                                placeholder="Aclaración / Detalle (ej. qué medicación, antecedentes, etc.)..."
-                                value={itemResp.observacion}
-                                onChange={(e) => handleObservacionChange(p.id, e.target.value)}
-                                className="w-full text-xs bg-white dark:bg-zinc-900 border border-amber-300 dark:border-amber-800 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )
-            })
-          )}
+          <div className="max-h-48 overflow-y-auto border border-slate-200 dark:border-zinc-800 rounded-xl p-2 space-y-1">
+            {loadingCatalogos ? (
+              <p className="text-xs text-slate-400 p-2 text-center">Cargando opciones...</p>
+            ) : tipoSeleccion === 'zonas' ? (
+              serviciosFiltrados.map((s) => {
+                const checked = zonasSeleccionadas.includes(s.id)
+                return (
+                  <button
+                    type="button"
+                    key={s.id}
+                    onClick={() => toggleZona(s.id)}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border ${
+                      checked
+                        ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold border-transparent shadow-xs'
+                        : 'bg-white dark:bg-zinc-800/50 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-100 dark:border-zinc-800'
+                    }`}
+                  >
+                    <span>{s.nombre_zona}</span>
+                    <span className="font-bold">${Number(s.precio_lista).toLocaleString('es-AR')}</span>
+                  </button>
+                )
+              })
+            ) : (
+              promosFiltradas.map((p) => {
+                const selected = promoSeleccionadaId === p.id
+                return (
+                  <button
+                    type="button"
+                    key={p.id}
+                    onClick={() => setPromoSeleccionadaId(p.id)}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border text-left ${
+                      selected
+                        ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold border-transparent shadow-xs'
+                        : 'bg-white dark:bg-zinc-800/50 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-100 dark:border-zinc-800'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-bold">{p.nombre_promo}</p>
+                    </div>
+                    <span className="font-bold text-sm">${Number(p.precio_promo).toLocaleString('es-AR')}</span>
+                  </button>
+                )
+              })
+            )}
+          </div>
 
-          {/* FOOTER ACCIONES */}
-          <div className="pt-2 flex gap-2 shrink-0 border-t border-slate-100 dark:border-zinc-800">
+          <div className="bg-slate-50 dark:bg-zinc-800/50 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-1">
+            <div className="flex justify-between text-xs text-slate-500">
+              <span>Duración estimada:</span>
+              <span className="font-semibold text-slate-700 dark:text-zinc-300">{duracionTotal} minutos</span>
+            </div>
+            <div className="flex justify-between text-sm font-bold text-slate-900 dark:text-zinc-100">
+              <span>Total a cobrar:</span>
+              <span className="text-emerald-600 dark:text-emerald-400">${precioTotal.toLocaleString('es-AR')}</span>
+            </div>
+            {detalleTexto && (
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate pt-0.5">
+                Detalle: {detalleTexto}
+              </p>
+            )}
+          </div>
+
+          <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 text-xs font-semibold rounded-xl transition-all"
+              className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 text-xs font-semibold rounded-xl"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              disabled={guardando || loading}
-              className="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5"
+              disabled={guardando}
+              className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-50"
             >
-              <Save className="h-4 w-4" />
-              <span>{guardando ? 'Guardando...' : 'Guardar Anamnesis'}</span>
+              {guardando ? 'Guardando...' : turnoAEditar ? 'Guardar Cambios' : 'Crear Turno'}
             </button>
           </div>
         </form>
-
       </div>
     </div>
   )
 }
-
