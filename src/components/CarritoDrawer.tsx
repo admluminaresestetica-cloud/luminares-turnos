@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useCarrito } from "@/context/CarritoContext";
 import { useConfig } from "@/context/ConfigContext";
 import { supabase } from "@/lib/supabase";
-import { X, Trash2, ShoppingBag, ArrowRight, Package } from "lucide-react";
+import { X, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import FormularioEnvio from "./carrito/FormularioEnvio";
 
 interface CarritoDrawerProps {
@@ -24,20 +24,17 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     vaciarCarrito,
   } = useCarrito();
 
-  // Estados del formulario y flujo de compra
   const [paso, setPaso] = useState<"carrito" | "checkout">("carrito");
   const [cargandoMP, setCargandoMP] = useState(false);
   const [metodoPago, setMetodoPago] = useState<
     "whatsapp" | "mercadopago_debito" | "mercadopago_cuotas"
   >("whatsapp");
 
-  // Configuración desde DB
-  const [cuotasHabilitadas, setCuotasHabilitadas] = useState(true);
-  const [montoMinimoCuotas, setMontoMinimoCuotas] = useState(0);
+  const [cuotasHabilitadas] = useState(true);
+  const [montoMinimoCuotas] = useState(0);
   const [costoEnvioFijo, setCostoEnvioFijo] = useState(0);
   const [whatsappNumeroDB, setWhatsappNumeroDB] = useState<string>("");
 
-  // Estados para reglas de envío desde configuracion_empresa
   const [envioDomicilioActivo, setEnvioDomicilioActivo] = useState(true);
   const [envioGratisActivo, setEnvioGratisActivo] = useState(false);
   const [montoEnvioGratis, setMontoEnvioGratis] = useState(0);
@@ -51,7 +48,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           .maybeSingle();
 
         if (error) {
-          console.error("Error al obtener la configuración de la empresa:", error);
+          console.error("Error al obtener configuración:", error);
           return;
         }
 
@@ -65,26 +62,25 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           }
         }
       } catch (err) {
-        console.error("Error inesperado al cargar la configuración:", err);
+        console.error("Error inesperado al cargar configuración:", err);
       }
     }
 
     cargarConfiguracion();
   }, []);
 
-const carritoSeguro = Array.isArray(carrito) ? carrito : [];
+  const carritoSeguro = Array.isArray(carrito) ? carrito : [];
   const subtotalProductos = carritoSeguro.reduce(
     (acc, item) => acc + (Number(item.precio) || 0) * (item.cantidad || 1),
     0
   );
 
-  // Evaluación de Envío Gratis según la DB y si eligió Envío a Domicilio
   const tieneEnvioGratis =
     envioGratisActivo &&
     montoEnvioGratis > 0 &&
     subtotalProductos >= montoEnvioGratis;
 
-  const esEnvioADomicilio = envioDomicilioActivo && datosEnvio.metodoEnvio === "envio";
+  const esEnvioADomicilio = datosEnvio.metodoEnvio === "envio";
   const costoEnvioAplicado =
     esEnvioADomicilio && !tieneEnvioGratis ? costoEnvioFijo : 0;
 
@@ -95,7 +91,6 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
   const aptoParaCuotas =
     cuotasHabilitadas && !productoNoAptoCuotas && alcanzaMontoMinimoCuotas;
 
-  // ──> NUEVO: EFECTO DE SEGURIDAD PARA CUOTAS <──
   useEffect(() => {
     if (!aptoParaCuotas && metodoPago === "mercadopago_cuotas") {
       setMetodoPago("whatsapp");
@@ -104,16 +99,13 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
 
   const PORCENTAJE_DEBITO = 0.10;
   const PORCENTAJE_CUOTAS = 0.25;
-  // Base real para calcular recargos (Productos + Envío)
   const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
 
-  // Opciones de Pago Calculadas
   const totalTransferencia = totalBaseConEnvio;
   const totalDebitoOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_DEBITO));
   const totalCuotasOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_CUOTAS));
   const valorCuotaOp = Math.round(totalCuotasOp / 3);
 
-  // Determinación del Total Final según la opción seleccionada
   let totalFinalAbonar = totalTransferencia;
   let recargoMonto = 0;
 
@@ -125,7 +117,6 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
     recargoMonto = totalCuotasOp - totalBaseConEnvio;
   }
 
-  // Validación previa de campos obligatorios
   const validarCamposFormulario = (): boolean => {
     const nombre = datosEnvio.nombreCliente?.trim() || "";
     const telefono = datosEnvio.telefonoCliente?.trim() || "";
@@ -139,7 +130,7 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
       alert("Por favor, ingresá tu número de teléfono / celular.");
       return false;
     }
-    if (envioDomicilioActivo && datosEnvio.metodoEnvio === "envio" && !direccion) {
+    if (datosEnvio.metodoEnvio === "envio" && !direccion) {
       alert("Por favor, ingresá la dirección de envío.");
       return false;
     }
@@ -151,24 +142,27 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
     medioPagoStr: string
   ) => {
     try {
+      // Tomamos la dirección directamente de datosEnvio
+      const direccionReal =
+        datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion?.trim()
+          ? datosEnvio.direccion.trim()
+          : null;
+
       const { data: pedidoData, error: pedidoError } = await supabase
         .from("pedidos")
         .insert([
           {
             nombre_cliente: datosEnvio.nombreCliente.trim(),
             telefono_cliente: datosEnvio.telefonoCliente.trim() || null,
-            metodo_envio: envioDomicilioActivo ? datosEnvio.metodoEnvio : "retiro",
+            metodo_envio: datosEnvio.metodoEnvio || "retiro",
             metodo_pago: medioPagoStr,
             es_cuotas: metodoPago === "mercadopago_cuotas",
             recargo_monto: recargoMonto,
             total: montoFinal,
             estado: "pendiente",
-            direccion:
-              envioDomicilioActivo && datosEnvio.metodoEnvio === "envio"
-                ? datosEnvio.direccion.trim()
-                : null,
+            direccion: direccionReal,
             nota_adicional:
-              `${datosEnvio.notaAdicional.trim()} [Pago: ${medioPagoStr}]`.trim(),
+              `${datosEnvio.notaAdicional?.trim() || ""} [Pago: ${medioPagoStr}]`.trim(),
           },
         ])
         .select();
@@ -203,7 +197,7 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
       mensaje += `📞 *Teléfono:* ${datosEnvio.telefonoCliente.trim()}\n`;
     }
     mensaje += `🚚 *Método de entrega:* ${
-      envioDomicilioActivo && datosEnvio.metodoEnvio === "envio"
+      datosEnvio.metodoEnvio === "envio"
         ? `Envío a domicilio (${datosEnvio.direccion.trim()})`
         : "Retiro en local"
     }\n`;
@@ -217,16 +211,12 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
     });
 
     if (costoEnvioAplicado > 0) {
-      mensaje += `• Costo de envío: $${costoEnvioAplicado.toLocaleString(
-        "es-AR"
-      )}\n`;
+      mensaje += `• Costo de envío: $${costoEnvioAplicado.toLocaleString("es-AR")}\n`;
     }
 
-    mensaje += `\n💰 *Total a abonar:* $${totalFinalAbonar.toLocaleString(
-      "es-AR"
-    )}\n`;
+    mensaje += `\n💰 *Total a abonar:* $${totalFinalAbonar.toLocaleString("es-AR")}\n`;
 
-    if (datosEnvio.notaAdicional.trim()) {
+    if (datosEnvio.notaAdicional?.trim()) {
       mensaje += `\n📝 *Nota:* ${datosEnvio.notaAdicional.trim()}\n`;
     }
 
@@ -236,6 +226,8 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
     const whatsappUrl = `https://wa.me/${numeroTelefono}?text=${encodeURIComponent(
       mensaje
     )}`;
+    
+    // Al pedir por WhatsApp SÍ vaciamos el carrito porque ya fue enviado la solicitud
     vaciarCarrito();
     onClose();
     window.open(whatsappUrl, "_blank");
@@ -246,6 +238,7 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
 
     setCargandoMP(true);
     try {
+
       const recargoPorcentaje = metodoPago === "mercadopago_cuotas" ? PORCENTAJE_CUOTAS : PORCENTAJE_DEBITO;
 
       const itemsParaApi = carritoSeguro.map((item) => ({
@@ -273,8 +266,8 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
           cliente: {
             nombre: datosEnvio.nombreCliente.trim(),
             telefono: datosEnvio.telefonoCliente.trim(),
-            metodoEnvio: envioDomicilioActivo ? datosEnvio.metodoEnvio : "retiro",
-            direccion: envioDomicilioActivo ? datosEnvio.direccion : "",
+            metodoEnvio: datosEnvio.metodoEnvio,
+            direccion: datosEnvio.direccion,
           },
         }),
       });
@@ -282,6 +275,7 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
       const data = await response.json();
 
       if (response.ok && data.init_point) {
+        // 🔴 NO LLAMAMOS vaciarCarrito() AQUÍ PARA NO BORRAR EL CARRITO SI VUELVE ATRÁS
         onClose();
         window.location.href = data.init_point;
       } else {
@@ -307,18 +301,18 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] overflow-hidden bg-black/50 backdrop-blur-sm transition-opacity">
+    <div className="fixed inset-0 z-[60] overflow-hidden bg-black/60 backdrop-blur-xs transition-opacity">
       <div className="absolute inset-y-0 right-0 flex max-w-full pl-4 sm:pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+        <div className="w-screen max-w-md bg-card border-l border-border shadow-2xl flex flex-col text-foreground transition-colors">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#E7E5E0]">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-[#0E6E55]" />
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               {paso === "carrito" ? "Tu Carrito" : "Finalizar Compra"}
             </h2>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -328,33 +322,32 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-6 pb-20 sm:pb-6 space-y-6">
             {carritoSeguro.length === 0 ? (
               <div className="text-center py-12 space-y-4">
-                <ShoppingBag className="w-16 h-16 mx-auto text-gray-300" />
-                <p className="text-gray-500 font-medium">El carrito está vacío</p>
+                <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground/50" />
+                <p className="text-muted-foreground font-medium">El carrito está vacío</p>
               </div>
             ) : paso === "carrito" ? (
               <div className="space-y-3">
-                {/* --- BARRITA / MENSAJE DE ENVÍO GRATIS --- */}
+                {/* Barrita envío gratis */}
                 {envioGratisActivo && montoEnvioGratis > 0 && (
-                  <div className="bg-[#0E6E55]/10 border border-[#0E6E55]/20 rounded-xl p-3 mb-4 text-xs">
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 mb-4 text-xs">
                     {subtotalProductos >= montoEnvioGratis ? (
-                      <div className="flex items-center gap-2 text-[#0E6E55] font-bold">
+                      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
                         <span>🎉</span>
                         <span>¡Felicitaciones! Tenés <strong>Envío Gratis</strong> alcanzado.</span>
                       </div>
                     ) : (
                       <div>
-                        <div className="flex justify-between text-gray-800 font-semibold mb-1.5">
+                        <div className="flex justify-between text-foreground font-semibold mb-1.5">
                           <span>
                             Agregá <strong>${(montoEnvioGratis - subtotalProductos).toLocaleString("es-AR")}</strong> más para envío gratis
                           </span>
-                          <span className="text-[#0E6E55] font-bold">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                             {Math.min(100, Math.round((subtotalProductos / montoEnvioGratis) * 100))}%
                           </span>
                         </div>
-                        {/* Barrita de Progreso */}
-                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                           <div
-                            className="bg-[#0E6E55] h-2 rounded-full transition-all duration-300 ease-out"
+                            className="bg-emerald-600 dark:bg-emerald-500 h-2 rounded-full transition-all duration-300 ease-out"
                             style={{
                               width: `${Math.min(100, (subtotalProductos / montoEnvioGratis) * 100)}%`,
                             }}
@@ -369,10 +362,9 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
                 {carritoSeguro.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-3 border border-[#E7E5E0] rounded-xl bg-gray-50/50 gap-3"
+                    className="flex items-center justify-between p-3 border border-border rounded-xl bg-muted/40 gap-3"
                   >
-                    {/* Miniatura del producto */}
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-white border border-gray-200 flex items-center justify-center">
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-card border border-border flex items-center justify-center">
                       {item.imagen_url ? (
                         <img
                           src={item.imagen_url}
@@ -385,24 +377,24 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-xs text-gray-800 truncate">{item.nombre}</h4>
-                      <p className="text-xs text-gray-500">${(Number(item.precio) || 0).toLocaleString("es-AR")}</p>
+                      <h4 className="font-semibold text-xs text-foreground truncate">{item.nombre}</h4>
+                      <p className="text-xs text-muted-foreground">${(Number(item.precio) || 0).toLocaleString("es-AR")}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center border border-gray-200 rounded-lg bg-white">
+                      <div className="flex items-center border border-border rounded-lg bg-card">
                         <button
                           onClick={() => restarDelCarrito(item.id)}
-                          className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-l-lg text-xs font-bold"
+                          className="px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground rounded-l-lg text-xs font-bold transition-colors cursor-pointer"
                         >
                           -
                         </button>
-                        <span className="px-2 text-xs font-bold text-gray-800">
+                        <span className="px-2 text-xs font-bold text-foreground">
                           {item.cantidad}
                         </span>
                         <button
                           onClick={() => agregarAlCarrito(item)}
-                          className="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded-r-lg text-xs font-bold"
+                          className="px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground rounded-r-lg text-xs font-bold transition-colors cursor-pointer"
                         >
                           +
                         </button>
@@ -410,7 +402,7 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
 
                       <button
                         onClick={() => eliminarDelCarrito(item.id)}
-                        className="text-gray-400 hover:text-red-500 p-1 transition-colors"
+                        className="text-muted-foreground hover:text-rose-500 p-1 transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -433,107 +425,83 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
                   envioDomicilioActivo={envioDomicilioActivo}
                 />
 
-                {/* Selección de Método de Pago */}
+                {/* Métodos de Pago */}
                 <div className="space-y-2 pt-2">
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                  <label className="block text-xs font-semibold text-foreground mb-2">
                     Seleccionar Método de Pago:
                   </label>
 
-                  {/* Opción 1: WhatsApp */}
                   <button
                     type="button"
                     onClick={() => setMetodoPago("whatsapp")}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left text-xs font-semibold transition-all active:scale-[0.98] ${
+                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer ${
                       metodoPago === "whatsapp"
-                        ? "border-[#0E6E55] bg-[#0E6E55]/10 text-[#0E6E55] shadow-sm"
-                        : "border-[#E7E5E0] bg-white text-gray-700 hover:bg-gray-50"
+                        ? "border-emerald-600 dark:border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-2xs"
+                        : "border-border bg-card text-foreground hover:bg-muted/60"
                     }`}
                   >
                     <div>
                       <div className="font-bold text-sm">💬 Transferencia / Efectivo</div>
-                      <div className="text-[11px] font-normal text-gray-500">
+                      <div className="text-[11px] font-normal text-muted-foreground">
                         Pago directo de contado
                       </div>
                     </div>
-                    <span className="font-bold text-[#0E6E55] text-sm">
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
                       ${totalTransferencia.toLocaleString("es-AR")}
                     </span>
                   </button>
 
-                  {/* Opción 2: Débito / 1 Pago (+10%) */}
                   <button
                     type="button"
                     onClick={() => setMetodoPago("mercadopago_debito")}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left text-xs font-semibold transition-all active:scale-[0.98] ${
+                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer ${
                       metodoPago === "mercadopago_debito"
-                        ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
-                        : "border-[#E7E5E0] bg-white text-gray-700 hover:bg-gray-50"
+                        ? "border-sky-600 dark:border-sky-500 bg-sky-500/10 text-sky-700 dark:text-sky-400 shadow-2xs"
+                        : "border-border bg-card text-foreground hover:bg-muted/60"
                     }`}
                   >
                     <div>
                       <div className="font-bold text-sm">
                         💳 Mercado Pago (Débito / 1 Pago)
                       </div>
-                      <div className="text-[11px] font-normal text-gray-500">
+                      <div className="text-[11px] font-normal text-muted-foreground">
                         Tarjeta de débito o saldo en cuenta
                       </div>
                     </div>
-                    <span className="font-bold text-blue-700 text-sm">
+                    <span className="font-bold text-sky-700 dark:text-sky-400 text-sm">
                       ${totalDebitoOp.toLocaleString("es-AR")}
                     </span>
                   </button>
 
-                  {/* Opción 3: 3 Cuotas Fijas (+25%) */}
                   <button
                     type="button"
                     disabled={!aptoParaCuotas}
                     onClick={() => aptoParaCuotas && setMetodoPago("mercadopago_cuotas")}
                     className={`w-full flex items-center justify-between p-3 rounded-xl border text-left text-xs font-semibold transition-all ${
                       !aptoParaCuotas
-                        ? "border-gray-200 bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed"
+                        ? "border-border bg-muted/40 text-muted-foreground opacity-60 cursor-not-allowed"
                         : metodoPago === "mercadopago_cuotas"
-                        ? "border-purple-600 bg-purple-50 text-purple-700 shadow-sm active:scale-[0.98]"
-                        : "border-[#E7E5E0] bg-white text-gray-700 hover:bg-gray-50 active:scale-[0.98]"
+                        ? "border-purple-600 dark:border-purple-500 bg-purple-500/10 text-purple-700 dark:text-purple-300 shadow-2xs active:scale-[0.98] cursor-pointer"
+                        : "border-border bg-card text-foreground hover:bg-muted/60 active:scale-[0.98] cursor-pointer"
                     }`}
                   >
                     <div>
                       <div className="font-bold text-sm flex items-center gap-1.5">
                         💳 3 Cuotas Fijas
                         {!aptoParaCuotas && (
-                          <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-normal">
+                          <span className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded font-normal">
                             No disponible
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] font-normal text-gray-500">
+                      <div className="text-[11px] font-normal text-muted-foreground">
                         3 pagos de ${valorCuotaOp.toLocaleString("es-AR")}
                       </div>
                     </div>
-                    <span className="font-bold text-purple-700 text-sm">
+                    <span className="font-bold text-purple-700 dark:text-purple-300 text-sm">
                       ${totalCuotasOp.toLocaleString("es-AR")}
                     </span>
                   </button>
-                </div>
-
-                {/* Avisos */}
-                <div className="mt-2 text-[11px] space-y-1">
-                  {productoNoAptoCuotas ? (
-                    <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
-                      ⚠️ El producto <strong>{productoNoAptoCuotas.nombre}</strong> solo
-                      se abona al contado/débito.
-                    </div>
-                  ) : !alcanzaMontoMinimoCuotas && cuotasHabilitadas ? (
-                    <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-800">
-                      ℹ️ Sumá{" "}
-                      <strong>
-                        $
-                        {(
-                          montoMinimoCuotas - subtotalProductos
-                        ).toLocaleString("es-AR")}
-                      </strong>{" "}
-                      más para habilitar las 3 cuotas.
-                    </div>
-                  ) : null}
                 </div>
               </form>
             )}
@@ -541,8 +509,8 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
 
           {/* Footer */}
           {carritoSeguro.length > 0 && (
-            <div className="p-4 sm:p-6 pb-20 sm:pb-6 border-t border-[#E7E5E0] bg-gray-50 space-y-4">
-              <div className="space-y-1.5 text-xs text-gray-600">
+            <div className="p-4 sm:p-6 pb-20 sm:pb-6 border-t border-border bg-muted/30 space-y-4">
+              <div className="space-y-1.5 text-xs text-muted-foreground">
                 <div className="flex justify-between">
                   <span>Subtotal productos:</span>
                   <span>${subtotalProductos.toLocaleString("es-AR")}</span>
@@ -551,7 +519,7 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
                   <span>Costo de envío:</span>
                   <span>
                     {costoEnvioAplicado === 0 ? (
-                      <span className="font-bold text-[#0E6E55]">
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
                         {datosEnvio.metodoEnvio === "retiro"
                           ? "Gratis (Retiro en local)"
                           : "Gratis (Envío promocional)"}
@@ -562,16 +530,16 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
                   </span>
                 </div>
                 {recargoMonto > 0 && (
-                  <div className="flex justify-between text-gray-500">
+                  <div className="flex justify-between text-muted-foreground/80">
                     <span>
                       {metodoPago === "mercadopago_cuotas"
-                        ? `Recargo cuotas (${PORCENTAJE_CUOTAS}%)`
-                        : `Recargo débito (${PORCENTAJE_DEBITO}%)`}
+                        ? `Recargo cuotas (${PORCENTAJE_CUOTAS * 100}%)`
+                        : `Recargo débito (${PORCENTAJE_DEBITO * 100}%)`}
                     </span>
                     <span>+${recargoMonto.toLocaleString("es-AR")}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
+                <div className="flex justify-between text-base font-bold text-foreground pt-2 border-t border-border">
                   <span>Total final:</span>
                   <span>${totalFinalAbonar.toLocaleString("es-AR")}</span>
                 </div>
@@ -580,7 +548,7 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
               {paso === "carrito" ? (
                 <button
                   onClick={() => setPaso("checkout")}
-                  className="w-full bg-[#0E6E55] hover:bg-[#0b5643] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                  className="w-full bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-2xs cursor-pointer"
                 >
                   Continuar compra
                   <ArrowRight className="w-4 h-4" />
@@ -590,7 +558,7 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
                   <button
                     type="button"
                     onClick={() => setPaso("carrito")}
-                    className="w-1/3 border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold text-xs transition-colors"
+                    className="w-1/3 border border-border bg-card hover:bg-muted text-foreground py-3 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
                   >
                     Volver
                   </button>
@@ -598,7 +566,7 @@ const carritoSeguro = Array.isArray(carrito) ? carrito : [];
                     form="checkout-form"
                     type="submit"
                     disabled={cargandoMP}
-                    className="w-2/3 bg-[#0E6E55] hover:bg-[#0b5643] text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-sm disabled:opacity-50"
+                    className="w-2/3 bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-2xs disabled:opacity-50 cursor-pointer"
                   >
                     {cargandoMP
                       ? "Procesando..."
