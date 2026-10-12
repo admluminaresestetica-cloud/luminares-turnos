@@ -70,7 +70,7 @@ export default function ModalNuevoTurnoRecepcion({
   const duracionTotal = zonasElegidasObj.reduce((acc, z) => acc + (Number(z.duracion_minutos) || 0), 0) || 30
   const detalleTexto = zonasElegidasObj.map((z) => z.nombre_zona).filter(Boolean).join(' + ')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!nombre.trim() || !fechaHoraLocal) {
@@ -95,18 +95,22 @@ export default function ModalNuevoTurnoRecepcion({
       servicio_tipo: 'laser',
       duracion_total: duracionTotal,
       detalle_reserva: { detalle_texto: detalleTexto },
-      precio_total: precioTotal,
-      estado: 'PENDIENTE_SENA', // Probá con 'CONFIRMADO' o 'PENDIENTE_SENA'
+      precio_total: Number(precioTotal),
+      estado: 'pendiente_sena', // <--- Clave: coincide con la constraint de Supabase
+      metodo_pago: 'efectivo',
       modificado_por_admin: true
     }
 
-    const { error } = await supabase.from('reservas').insert([payload])
+    const { data, error } = await supabase
+      .from('reservas')
+      .insert([payload])
+      .select()
+      .single()
 
     if (error) {
       alert('Error al crear el turno: ' + error.message)
     } else {
       alert('Turno registrado con éxito.')
-      // Resetear campos y cerrar
       setNombre('')
       setCelular('')
       setZonasSeleccionadas([])
