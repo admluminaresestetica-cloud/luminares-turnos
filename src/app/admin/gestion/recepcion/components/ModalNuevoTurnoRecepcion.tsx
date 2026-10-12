@@ -2,25 +2,26 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { ServicioLaser, PromoLaser, datetimeLocalToIso } from '@/app/admin/turnos/components/types'
+import { ServicioLaser, PromoLaser, Reserva, datetimeLocalToIso, isoToDatetimeLocal } from '@/app/admin/turnos/components/types'
 import { X, Clock, DollarSign, User, Phone, Calendar, Sparkles, Layers } from 'lucide-react'
 
 interface ModalNuevoTurnoRecepcionProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
+  turnoAEditar?: Reserva | null
 }
 
 export default function ModalNuevoTurnoRecepcion({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
+  turnoAEditar
 }: ModalNuevoTurnoRecepcionProps) {
   const [nombre, setNombre] = useState('')
   const [celular, setCelular] = useState('')
   const [fechaHoraLocal, setFechaHoraLocal] = useState('')
   
-  // Modos y catálogos
   const [tipoSeleccion, setTipoSeleccion] = useState<'zonas' | 'promo'>('zonas')
   const [serviciosLaser, setServiciosLaser] = useState<ServicioLaser[]>([])
   const [promosLaser, setPromosLaser] = useState<PromoLaser[]>([])
@@ -32,13 +33,9 @@ export default function ModalNuevoTurnoRecepcion({
   const [loadingCatalogos, setLoadingCatalogos] = useState(true)
   const [guardando, setGuardando] = useState(false)
 
-  // Cargar servicios láser y promos activas al abrir el modal
+  // Cargar catálogos y precargar si es edición
   useEffect(() => {
     if (!isOpen) return
-
-    const now = new Date()
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
-    setFechaHoraLocal(now.toISOString().slice(0, 16))
 
     const fetchData = async () => {
       setLoadingCatalogos(true)
@@ -48,22 +45,35 @@ export default function ModalNuevoTurnoRecepcion({
         supabase.from('promos_laser').select('*').eq('activo', true)
       ])
 
-      if (!resServicios.error && resServicios.data) {
-        setServiciosLaser(resServicios.data as ServicioLaser[])
-      }
-      if (!resPromos.error && resPromos.data) {
-        setPromosLaser(resPromos.data as PromoLaser[])
+      const listServicios = (resServicios.data as ServicioLaser[]) || []
+      const listPromos = (resPromos.data as PromoLaser[]) || []
+      
+      setServiciosLaser(listServicios)
+      setPromosLaser(listPromos)
+
+      if (turnoAEditar) {
+        setNombre(turnoAEditar.cliente_nombre || '')
+        setCelular(turnoAEditar.cliente_celular || '')
+        setFechaHoraLocal(isoToDatetimeLocal(turnoAEditar.fecha_hora_inicio))
+        // Si tuviera zonas guardadas o texto, las dejamos preparadas
+      } else {
+        const now = new Date()
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
+        setFechaHoraLocal(now.toISOString().slice(0, 16))
+        setNombre('')
+        setCelular('')
+        setZonasSeleccionadas([])
+        setPromoSeleccionadaId('')
       }
       
       setLoadingCatalogos(false)
     }
 
     fetchData()
-  }, [isOpen])
+  }, [isOpen, turnoAEditar])
 
   if (!isOpen) return null
 
-  // Filtrado por género
   const serviciosFiltrados = serviciosLaser.filter(
     (s) => filtroGenero === 'todos' || s.genero === filtroGenero
   )
@@ -77,7 +87,6 @@ export default function ModalNuevoTurnoRecepcion({
     )
   }
 
-  // Cálculos dinámicos según el tipo de selección
   let precioTotal = 0
   let duracionTotal = 30
   let detalleTexto = ''
@@ -104,48 +113,52 @@ export default function ModalNuevoTurnoRecepcion({
       return
     }
 
-    if (tipoSeleccion === 'zonas' && zonasSeleccionadas.length === 0) {
+    if (tipoSeleccion === 'zonas' && zonasSeleccionadas.length === 0 && !turnoAEditar) {
       alert('Seleccioná al menos una zona láser.')
-      return
-    }
-
-    if (tipoSeleccion === 'promo' && !promoSeleccionadaId) {
-      alert('Seleccioná una promoción.')
       return
     }
 
     setGuardando(true)
 
-    const codigoGenerado = `RECEPCION-${Date.now().toString(36).toUpperCase()}`
-
-    const payload = {
-      codigo_unico: codigoGenerado,
+    const payload: any = {
       cliente_nombre: nombre,
       cliente_celular: celular,
       fecha_hora_inicio: datetimeLocalToIso(fechaHoraLocal),
-      servicio_tipo: 'laser',
       duracion_total: duracionTotal,
-      detalle_reserva: { detalle_texto: detalleTexto },
       precio_total: Number(precioTotal),
-      estado: 'pendiente_sena',
-      metodo_pago: 'efectivo',
       modificado_por_admin: true
     }
 
-    const { data, error } = await supabase
-      .from('reservas')
-      .insert([payload])
-      .select()
-      .single()
+    if (detalleTexto) {
+      payload.detalle_reserva = { detalle_texto: detalleTexto }
+    }
 
-    if (error) {
-      alert('Error al crear el turno: ' + error.message)
+    let errorSupabase = null
+
+    if (turnoAEditar) {
+      // EDITAR
+      const { error } = await supabase
+        .from('reservas')
+        .update(payload)
+        .eq('id', turnoAEditar.id)
+      errorSupabase = error
     } else {
-      alert('Turno registrado con éxito.')
-      setNombre('')
-      setCelular('')
-      setZonasSeleccionadas([])
-      setPromoSeleccionadaId('')
+      // CREAR NUEVO
+      payload.codigo_unico = `RECEPCION-${Date.now().toString(36).toUpperCase()}`
+      payload.servicio_tipo = 'laser'
+      payload.estado = 'pendiente_sena'
+      payload.metodo_pago = 'efectivo'
+
+      const { error } = await supabase
+        .from('reservas')
+        .insert([payload])
+      errorSupabase = error
+    }
+
+    if (errorSupabase) {
+      alert('Error al guardar el turno: ' + errorSupabase.message)
+    } else {
+      alert(turnoAEditar ? 'Turno actualizado con éxito.' : 'Turno registrado con éxito.')
       onSuccess()
       onClose()
     }
@@ -157,9 +170,10 @@ export default function ModalNuevoTurnoRecepcion({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden my-8">
         
-        {/* HEADER MODAL */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-zinc-800">
-          <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">Nuevo Turno - Mostrador</h2>
+          <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
+            {turnoAEditar ? 'Editar Turno' : 'Nuevo Turno - Mostrador'}
+          </h2>
           <button
             onClick={onClose}
             className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400"
@@ -169,8 +183,6 @@ export default function ModalNuevoTurnoRecepcion({
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          
-          {/* DATOS CLIENTE */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1">
@@ -206,7 +218,6 @@ export default function ModalNuevoTurnoRecepcion({
             </div>
           </div>
 
-          {/* FECHA Y HORA */}
           <div>
             <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1">
               Fecha y Hora del Turno *
@@ -223,7 +234,6 @@ export default function ModalNuevoTurnoRecepcion({
             </div>
           </div>
 
-          {/* SELECTOR DE TIPO (ZONAS vs PROMOS) */}
           <div className="flex bg-slate-100 dark:bg-zinc-800 p-1 rounded-xl">
             <button
               type="button"
@@ -251,7 +261,6 @@ export default function ModalNuevoTurnoRecepcion({
             </button>
           </div>
 
-          {/* FILTRO DE GÉNERO */}
           <div className="flex items-center justify-between">
             <label className="text-xs font-semibold text-slate-600 dark:text-zinc-400">
               {tipoSeleccion === 'zonas' ? 'Zonas Láser Disponibles' : 'Promociones Activas'}
@@ -274,79 +283,52 @@ export default function ModalNuevoTurnoRecepcion({
             </div>
           </div>
 
-          {/* LISTADO INTERACTIVO (ZONAS O PROMOS) */}
           <div className="max-h-48 overflow-y-auto border border-slate-200 dark:border-zinc-800 rounded-xl p-2 space-y-1">
             {loadingCatalogos ? (
               <p className="text-xs text-slate-400 p-2 text-center">Cargando opciones...</p>
             ) : tipoSeleccion === 'zonas' ? (
-              serviciosFiltrados.length === 0 ? (
-                <p className="text-xs text-slate-400 p-2 text-center">No hay zonas para este filtro.</p>
-              ) : (
-                serviciosFiltrados.map((s) => {
-                  const checked = zonasSeleccionadas.includes(s.id)
-                  // Distinción visual por género si el filtro está en 'todos'
-                  const generoBadge = s.genero === 'femenino' 
-                    ? 'bg-pink-100 text-pink-700 dark:bg-pink-950/50 dark:text-pink-300 border-pink-200' 
-                    : s.genero === 'masculino'
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200'
-                    : 'bg-purple-100 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border-purple-200'
-
-                  return (
-                    <button
-                      type="button"
-                      key={s.id}
-                      onClick={() => toggleZona(s.id)}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border ${
-                        checked
-                          ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold border-transparent shadow-xs'
-                          : 'bg-white dark:bg-zinc-800/50 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-100 dark:border-zinc-800'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span>{s.nombre_zona}</span>
-                        {filtroGenero === 'todos' && s.genero && (
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border uppercase tracking-wider font-medium ${generoBadge}`}>
-                            {s.genero.slice(0, 3)}
-                          </span>
-                        )}
-                      </div>
-                      <span className="font-bold">${Number(s.precio_lista).toLocaleString('es-AR')}</span>
-                    </button>
-                  )
-                })
-              )
+              serviciosFiltrados.map((s) => {
+                const checked = zonasSeleccionadas.includes(s.id)
+                return (
+                  <button
+                    type="button"
+                    key={s.id}
+                    onClick={() => toggleZona(s.id)}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border ${
+                      checked
+                        ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold border-transparent shadow-xs'
+                        : 'bg-white dark:bg-zinc-800/50 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-100 dark:border-zinc-800'
+                    }`}
+                  >
+                    <span>{s.nombre_zona}</span>
+                    <span className="font-bold">${Number(s.precio_lista).toLocaleString('es-AR')}</span>
+                  </button>
+                )
+              })
             ) : (
-              promosFiltradas.length === 0 ? (
-                <p className="text-xs text-slate-400 p-2 text-center">No hay promos para este filtro.</p>
-              ) : (
-                promosFiltradas.map((p) => {
-                  const selected = promoSeleccionadaId === p.id
-                  return (
-                    <button
-                      type="button"
-                      key={p.id}
-                      onClick={() => setPromoSeleccionadaId(p.id)}
-                      className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border text-left ${
-                        selected
-                          ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold border-transparent shadow-xs'
-                          : 'bg-white dark:bg-zinc-800/50 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-100 dark:border-zinc-800'
-                      }`}
-                    >
-                      <div>
-                        <p className="font-bold">{p.nombre_promo}</p>
-                        <p className={`text-[11px] ${selected ? 'text-zinc-300 dark:text-zinc-600' : 'text-slate-400'}`}>
-                          {p.duracion_total_min || 30} mins
-                        </p>
-                      </div>
-                      <span className="font-bold text-sm">${Number(p.precio_promo).toLocaleString('es-AR')}</span>
-                    </button>
-                  )
-                })
-              )
+              promosFiltradas.map((p) => {
+                const selected = promoSeleccionadaId === p.id
+                return (
+                  <button
+                    type="button"
+                    key={p.id}
+                    onClick={() => setPromoSeleccionadaId(p.id)}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border text-left ${
+                      selected
+                        ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold border-transparent shadow-xs'
+                        : 'bg-white dark:bg-zinc-800/50 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-100 dark:border-zinc-800'
+                    }`}
+                  >
+                    <div>
+                      <p className="font-bold">{p.nombre_promo}</p>
+                    </div>
+                    <span className="font-bold text-sm">${Number(p.precio_promo).toLocaleString('es-AR')}</span>
+                  </button>
+                )
+              })
             )}
           </div>
 
-          {/* RESUMEN TOTALES */}
           <div className="bg-slate-50 dark:bg-zinc-800/50 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-1">
             <div className="flex justify-between text-xs text-slate-500">
               <span>Duración estimada:</span>
@@ -363,7 +345,6 @@ export default function ModalNuevoTurnoRecepcion({
             )}
           </div>
 
-          {/* BOTONES ACCIÓN */}
           <div className="flex gap-2 pt-2">
             <button
               type="button"
@@ -377,10 +358,9 @@ export default function ModalNuevoTurnoRecepcion({
               disabled={guardando}
               className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-50"
             >
-              {guardando ? 'Guardando...' : 'Crear Turno en Recepción'}
+              {guardando ? 'Guardando...' : turnoAEditar ? 'Guardar Cambios' : 'Crear Turno'}
             </button>
           </div>
-
         </form>
       </div>
     </div>
