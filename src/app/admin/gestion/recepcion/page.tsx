@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Reserva } from '@/app/admin/turnos/components/types'
-import { Search, RefreshCw, UserPlus, Edit3, MessageCircle, DollarSign, FileText, Check } from 'lucide-react'
+import { Search, RefreshCw, UserPlus, Edit3, MessageCircle, FileText, Check, ClipboardList } from 'lucide-react'
 import ModalNuevoTurnoRecepcion from './components/ModalNuevoTurnoRecepcion'
+import ModalAnamnesisRecepcion from './components/ModalAnamnesisRecepcion'
 
 export default function RecepcionPage() {
   const [turnos, setTurnos] = useState<Reserva[]>([])
@@ -18,10 +19,11 @@ export default function RecepcionPage() {
   const [modalOpen, setModalOpen] = useState<boolean>(false)
   const [turnoAEditar, setTurnoAEditar] = useState<Reserva | null>(null)
 
-  // Notas locales por ID de turno para escritura rápida
+  const [modalAnamnesisOpen, setModalAnamnesisOpen] = useState<boolean>(false)
+  const [turnoAnamnesis, setTurnoAnamnesis] = useState<Reserva | null>(null)
+
   const [notasLocales, setNotasLocales] = useState<{ [key: string]: string }>({})
 
-  // Cargar turnos desde Supabase para la fecha seleccionada
   const fetchTurnos = async () => {
     setLoading(true)
     try {
@@ -39,7 +41,6 @@ export default function RecepcionPage() {
       const turnosData = (data as Reserva[]) || []
       setTurnos(turnosData)
 
-      // Inicializar notas en estado local
       const notasInit: { [key: string]: string } = {}
       turnosData.forEach((t) => {
         const detalle = typeof t.detalle_reserva === 'string' 
@@ -60,7 +61,6 @@ export default function RecepcionPage() {
     fetchTurnos()
   }, [fechaSeleccionada])
 
-  // Actualizar estado del turno
   const cambiarEstado = async (id: string, nuevoEstado: string) => {
     try {
       const { error } = await supabase
@@ -78,7 +78,6 @@ export default function RecepcionPage() {
     }
   }
 
-  // Guardar Nota de Recepción en el JSONB
   const guardarNotaRecepcion = async (turno: Reserva) => {
     try {
       const notaActual = notasLocales[turno.id] || ''
@@ -100,7 +99,6 @@ export default function RecepcionPage() {
     }
   }
 
-  // Filtrado local por búsqueda de texto
   const turnosFiltrados = useMemo(() => {
     return turnos.filter((t) => {
       if (!busqueda.trim()) return true
@@ -112,7 +110,6 @@ export default function RecepcionPage() {
     })
   }, [turnos, busqueda])
 
-  // KPIs de resumen
   const kpis = useMemo(() => {
     return {
       total: turnos.length,
@@ -122,7 +119,6 @@ export default function RecepcionPage() {
     }
   }, [turnos])
 
-  // Helper para extraer texto del detalle de la reserva
   const obtenerDetalleTexto = (t: Reserva) => {
     if (!t.detalle_reserva) return t.servicio_tipo || 'Servicio Láser'
     let det = t.detalle_reserva
@@ -130,6 +126,15 @@ export default function RecepcionPage() {
       try { det = JSON.parse(det) } catch (e) { return det }
     }
     return det.detalle_texto || det.nombre || t.servicio_tipo || 'Turno Láser'
+  }
+
+  const tieneAnamnesisCompletada = (t: Reserva) => {
+    if (!t.detalle_reserva) return false
+    let det = t.detalle_reserva
+    if (typeof det === 'string') {
+      try { det = JSON.parse(det) } catch (e) { return false }
+    }
+    return Boolean(det.anamnesis?.completado)
   }
 
   return (
@@ -202,7 +207,7 @@ export default function RecepcionPage() {
           />
         </div>
 
-        {/* LISTA DE TURNOS DE RECEPCIÓN */}
+        {/* LISTA DE TURNOS */}
         <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-xs overflow-hidden p-4 sm:p-6">
           <h2 className="text-base font-bold mb-4">Agenda del Día</h2>
 
@@ -220,6 +225,7 @@ export default function RecepcionPage() {
                 const detalleTexto = obtenerDetalleTexto(t)
                 const celularLimpio = (t.cliente_celular || '').replace(/\D/g, '')
                 const mensajeWa = encodeURIComponent(`Hola ${t.cliente_nombre || ''}! Te escribimos de Luminares Estética por tu turno programado para hoy a las ${horaStr} hs (${detalleTexto}). ¡Te esperamos!`)
+                const anamnesisLista = tieneAnamnesisCompletada(t)
 
                 return (
                   <div
@@ -235,12 +241,26 @@ export default function RecepcionPage() {
                         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-200 dark:bg-zinc-700 text-slate-700 dark:text-zinc-300 uppercase tracking-wide">
                           {t.estado || 'pendiente'}
                         </span>
+                        
+                        {/* BADGE ANAMNESIS */}
+                        <button
+                          onClick={() => { setTurnoAnamnesis(t); setModalAnamnesisOpen(true); }}
+                          className={`text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-all ${
+                            anamnesisLista
+                              ? 'bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 dark:border-teal-800'
+                              : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                          }`}
+                        >
+                          <ClipboardList className="h-3.5 w-3.5" />
+                          <span>{anamnesisLista ? 'Anamnesis ✔' : 'Anamnesis Pendiente ⚠️'}</span>
+                        </button>
+
                         {t.codigo_unico && (
                           <span className="text-[11px] text-slate-400 font-mono">#{t.codigo_unico}</span>
                         )}
                       </div>
 
-                      {/* BOTONES ACCESOS RÁPIDOS (WHATSAPP + EDITAR) */}
+                      {/* BOTONES ACCESOS RÁPIDOS */}
                       <div className="flex items-center gap-1.5">
                         {celularLimpio && (
                           <a
@@ -263,7 +283,7 @@ export default function RecepcionPage() {
                       </div>
                     </div>
 
-                    {/* DATOS DEL CLIENTE Y DETALLE ZONAS */}
+                    {/* DATOS CLIENTE Y ZONAS */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white dark:bg-zinc-900/80 p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800/80">
                       <div>
                         <p className="font-bold text-sm text-slate-900 dark:text-zinc-100">
@@ -285,9 +305,8 @@ export default function RecepcionPage() {
                       </div>
                     </div>
 
-                    {/* NOTAS DE RECEPCIÓN Y CAMBIO DE ESTADO */}
+                    {/* NOTAS Y CAMBIO DE ESTADO */}
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
-                      {/* NOTAS INTERNAS */}
                       <div className="flex-1 flex items-center gap-2">
                         <FileText className="h-4 w-4 text-slate-400 shrink-0" />
                         <input
@@ -306,7 +325,6 @@ export default function RecepcionPage() {
                         </button>
                       </div>
 
-                      {/* BOTONES DE FLUJO (LLEGADA / GABINETE) */}
                       <div className="flex items-center gap-2 shrink-0">
                         {t.estado !== 'en_espera' && t.estado !== 'en_gabinete' && t.estado !== 'completado' && (
                           <button
@@ -351,12 +369,19 @@ export default function RecepcionPage() {
         </div>
       </div>
 
-      {/* MODAL NUEVO / EDITAR TURNO */}
+      {/* MODALES */}
       <ModalNuevoTurnoRecepcion
         isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setTurnoAEditar(null); }}
         onSuccess={fetchTurnos}
         turnoAEditar={turnoAEditar}
+      />
+
+      <ModalAnamnesisRecepcion
+        isOpen={modalAnamnesisOpen}
+        onClose={() => { setModalAnamnesisOpen(false); setTurnoAnamnesis(null); }}
+        onSuccess={fetchTurnos}
+        turno={turnoAnamnesis}
       />
     </div>
   )
