@@ -91,12 +91,29 @@ export default function ModalCierreGabinete({
         setServiciosLaser(servicios)
         setPromosLaser(promos)
 
-        // Inicializar datos del turno
+                // Inicializar datos del turno
         let det = typeof turno.detalle_reserva === 'string'
           ? JSON.parse(turno.detalle_reserva || '{}')
           : turno.detalle_reserva || {}
 
-        setOperadora(det.operadora || '')
+        // Autocompletar operadora desde el perfil del usuario activo o usar la guardada
+        if (det.operadora) {
+          setOperadora(det.operadora)
+        } else {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const { data: perfil } = await supabase
+              .from('perfiles')
+              .select('nombre')
+              .eq('user_id', user.id)
+              .maybeSingle()
+            
+            setOperadora(perfil?.nombre || '')
+          } else {
+            setOperadora('')
+          }
+        }
+
         setNotasGabinete(det.notas_gabinete || '')
 
         // Construir la grilla inicial de zonas
