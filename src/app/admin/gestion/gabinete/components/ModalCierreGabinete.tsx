@@ -21,6 +21,9 @@ import {
   precioZonaExtraConDescuento,
   SwapsMap 
 } from '@/lib/laser/calculos'
+
+import RelojCronometroGabinete from './RelojCronometroGabinete'
+
 import ModalSwapZona from '@/components/laser/ModalSwapZona'
 
 interface ModalCierreGabineteProps {
@@ -64,6 +67,10 @@ export default function ModalCierreGabinete({
   
   // Selector de zona extra
   const [mostrarSelectorExtra, setMostrarSelectorExtra] = useState<boolean>(false)
+
+  // Estado local para los segundos del cronómetro integrado
+  const [segundosSesion, setSegundosSesion] = useState<number>(duracionSegundos || 0)
+
 
   const [guardando, setGuardando] = useState<boolean>(false)
 
@@ -224,14 +231,14 @@ export default function ModalCierreGabinete({
     setSwapTargetIndex(null)
   }
 
-  const handleGuardar = async (e: React.FormEvent) => {
+    const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault()
     setGuardando(true)
 
-    // ⏱️ Calculamos el texto de duración aquí para que esté disponible en toda la función
-  const mins = Math.floor(duracionSegundos / 60)
-  const segs = duracionSegundos % 60
-  const duracionTexto = mins > 0 ? `${mins} min ${segs} seg` : `${segs} seg`
+    // ⏱️ Calculamos el texto usando los segundos del cronómetro interno
+    const mins = Math.floor(segundosSesion / 60)
+    const segs = segundosSesion % 60
+    const duracionTexto = mins > 0 ? `${mins} min ${segs} seg` : `${segs} seg`
 
     try {
       // 1. Recalcular precio total actualizado según las zonas finales en la grilla
@@ -334,6 +341,14 @@ export default function ModalCierreGabinete({
 
         {/* BODY */}
         <form onSubmit={handleGuardar} className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+
+          {/* CRONÓMETRO INTEGRADO EN LA GRILLA */}
+          <div className="bg-slate-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-slate-200 dark:border-zinc-800">
+            <RelojCronometroGabinete
+              onTiempoActualizado={(seg) => setSegundosSesion(seg)}
+            />
+          </div>
+
           
           {/* GRILLA DE ZONAS (IMAGEN 1) */}
           <div className="space-y-3">
