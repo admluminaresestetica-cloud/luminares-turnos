@@ -35,8 +35,8 @@ export default function RecepcionPage() {
   const fetchTurnos = async () => {
     setLoading(true)
     try {
-      const inicioDia = `${fechaSeleccionada}T00:00:00.000Z`
-      const finDia = `${fechaSeleccionada}T23:59:59.999Z`
+        const inicioDia = `${fechaSeleccionada}T00:00:00.000-03:00`
+        const finDia = `${fechaSeleccionada}T23:59:59.999-03:00`
 
       const { data, error } = await supabase
         .from('reservas')

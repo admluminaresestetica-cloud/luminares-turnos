@@ -11,12 +11,15 @@ import {
   ArrowRightLeft, 
   Trash2, 
   Plus, 
-  CheckCircle2 
+  CheckCircle2, 
+  AlertCircle 
 } from 'lucide-react'
 import { 
   getZonaById, 
+  getZonasPromoResueltas, 
   getZonasSwapDisponibles, 
-  precioZonaExtraConDescuento 
+  precioZonaExtraConDescuento,
+  SwapsMap 
 } from '@/lib/laser/calculos'
 import ModalSwapZona from '@/components/laser/ModalSwapZona'
 
@@ -28,7 +31,7 @@ interface ModalCierreGabineteProps {
 }
 
 interface ZonaItemSesion {
-  id: string // UUID del servicio láser
+  id: string // ID del servicio láser
   nombre: string
   categoria: string
   precio: number
@@ -36,6 +39,7 @@ interface ZonaItemSesion {
   energia: string
   pasadas: string
   esExtra?: boolean
+  zonaOriginalId?: string // Si vino de una promo y fue swappeada
 }
 
 export default function ModalCierreGabinete({
@@ -61,11 +65,11 @@ export default function ModalCierreGabinete({
 
   const [guardando, setGuardando] = useState<boolean>(false)
 
-  // Cargar catálogo láser al abrir y resolver zonas
+  // Cargar catálogo láser al abrir
   useEffect(() => {
     if (!isOpen || !turno) return
 
-    const fetchCatalogoYResolver = async () => {
+    const fetchCatalogo = async () => {
       try {
         const [resServicios, resPromos] = await Promise.all([
           supabase.from('servicios_laser').select('*'),
@@ -78,7 +82,7 @@ export default function ModalCierreGabinete({
         setServiciosLaser(servicios)
         setPromosLaser(promos)
 
-        // Parsear detalle_reserva (jsonb)
+        // Inicializar datos del turno
         let det = typeof turno.detalle_reserva === 'string'
           ? JSON.parse(turno.detalle_reserva || '{}')
           : turno.detalle_reserva || {}
@@ -86,84 +90,79 @@ export default function ModalCierreGabinete({
         setOperadora(det.operadora || '')
         setNotasGabinete(det.notas_gabinete || '')
 
-        // Si ya existen zonas guardadas previamente en la sesión, las restauramos
-        if (det.zonas_sesion && Array.isArray(det.zonas_sesion) && det.zonas_sesion.length > 0) {
-          setZonasSesion(det.zonas_sesion)
-          return
-        }
-
-        let itemsIniciales: ZonaItemSesion[] = []
-        const detalleTextoRaw = (det.detalle_texto || turno.servicio_tipo || '').trim()
-
-        // 1. Detectar si es una Promo (ej. "Promo: PROMO FEM 1" o "Combo/Promo: PROMO FEM 1")
-        const textoLimpioPromo = detalleTextoRaw
-          .replace(/^Promo:\s*/i, '')
-          .replace(/^Combo\/Promo:\s*/i, '')
-          .trim()
-
-        const promoEncontrada = promos.find(
-          p => p.nombre_promo.toLowerCase() === textoLimpioPromo.toLowerCase()
-        )
-
-        if (promoEncontrada && promoEncontrada.zonas_incluidas) {
-          // Desglosar cada UUID de zonas_incluidas en la tabla servicios_laser
-          promoEncontrada.zonas_incluidas.forEach((zonaId: string) => {
-            const servicioZ = getZonaById(servicios, zonaId)
-            if (servicioZ) {
-              itemsIniciales.push({
-                id: servicioZ.id,
-                nombre: servicioZ.nombre_zona,
-                categoria: servicioZ.categoria_zona,
-                precio: Number(servicioZ.precio_lista),
-                frecuencia: '',
-                energia: '',
-                pasadas: ''
-              })
-            }
-          })
-        }
-
-        // 2. Si no es promo, intentar interpretar por texto separado por '+' (ej. "axilas + piernas completas + cavado y tira")
-        if (itemsIniciales.length === 0 && detalleTextoRaw.includes('+')) {
-          const partes = detalleTextoRaw.split('+').map((p: string) => p.trim().toLowerCase())
-                partes.forEach((nombreParte: string) => {
-            const matchServicio = servicios.find(s => s.nombre_zona.toLowerCase() === nombreParte)
-            if (matchServicio) {
-              itemsIniciales.push({
-                id: matchServicio.id,
-                nombre: matchServicio.nombre_zona,
-                categoria: matchServicio.categoria_zona,
-                precio: Number(matchServicio.precio_lista),
-                frecuencia: '',
-                energia: '',
-                pasadas: ''
-              })
-            }
-          })
-        }
-
-        // 3. Fallback genérico si no se pudo desglosar nada
-        if (itemsIniciales.length === 0) {
-          itemsIniciales.push({
-            id: 'generico',
-            nombre: detalleTextoRaw || 'Tratamiento Láser',
-            categoria: 'media',
-            precio: Number(turno.precio_total || 0),
-            frecuencia: '',
-            energia: '',
-            pasadas: ''
-          })
-        }
-
-        setZonasSesion(itemsIniciales)
+        // Construir la grilla inicial de zonas
+        inicializarGrillaZonas(turno, servicios, promos, det)
 
       } catch (err: any) {
-        console.error('Error al resolver catálogo en gabinete:', err.message)
+        console.error('Error al cargar catálogo en gabinete:', err.message)
       }
     }
 
-    fetchCatalogoYResolver()
+    fetchCatalogo()
   }, [isOpen, turno])
+
+  const inicializarGrillaZonas = (
+    t: Reserva, 
+    servicios: ServicioLaser[], 
+    promos: PromoLaser[], 
+    detalleObj: any
+  ) => {
+    // Si ya existen parámetros previos guardados en la sesión, los restauramos
+    if (detalleObj.zonas_sesion && Array.isArray(detalleObj.zonas_sesion)) {
+      setZonasSesion(detalleObj.zonas_sesion)
+      return
+    }
+
+    let itemsIniciales: ZonaItemSesion[] = []
+
+    // Verificar si es una promo o zonas individuales
+    const promoEncontrada = promos.find(p => p.nombre_promo === detalleObj.nombre || t.servicio_tipo?.includes('Promo'))
+
+    if (promoEncontrada) {
+      const zonasResueltas = getZonasPromoResueltas(promoEncontrada, servicios, detalleObj.swaps || {})
+      itemsIniciales = zonasResueltas.map(z => ({
+        id: z.id,
+        nombre: z.nombre_zona,
+        categoria: z.categoria_zona,
+        precio: Number(z.precio_lista),
+        frecuencia: '',
+        energia: '',
+        pasadas: ''
+      }))
+    } else {
+      // Zonas individuales o texto plano
+      const idsZonas = detalleObj.zona_ids || detalleObj.zonas_ids || []
+      if (idsZonas.length > 0) {
+        idsZonas.forEach((id: string) => {
+          const z = getZonaById(servicios, id)
+          if (z) {
+            itemsIniciales.push({
+              id: z.id,
+              nombre: z.nombre_zona,
+              categoria: z.categoria_zona,
+              precio: Number(z.precio_lista),
+              frecuencia: '',
+              energia: '',
+              pasadas: ''
+            })
+          }
+        })
+      } else {
+        // Fallback genérico si no hay IDs mapeados
+        itemsIniciales.push({
+          id: 'generico',
+          nombre: detalleObj.detalle_texto || t.servicio_tipo || 'Tratamiento Láser',
+          categoria: 'media',
+          precio: Number(t.precio_total || 0),
+          frecuencia: '',
+          energia: '',
+          pasadas: ''
+        })
+      }
+    }
+
+    setZonasSesion(itemsIniciales)
+  }
 
   if (!isOpen || !turno) return null
 
@@ -188,7 +187,7 @@ export default function ModalCierreGabinete({
       ...prev,
       {
         id: servicio.id,
-        nombre: servicio.nombre_zona,
+        nombre: servicio.nombre_zona + ' (Extra)',
         categoria: servicio.categoria_zona,
         precio: precioZonaExtraConDescuento(servicio),
         frecuencia: '',
@@ -228,7 +227,7 @@ export default function ModalCierreGabinete({
     setGuardando(true)
 
     try {
-      // 1. Recalcular precio total actualizado y texto descriptivo con las zonas finales
+      // 1. Recalcular precio total actualizado según las zonas finales en la grilla
       const nuevoPrecioTotal = zonasSesion.reduce((acc, z) => acc + z.precio, 0)
       const nuevoDetalleTexto = zonasSesion.map(z => z.nombre).join(' + ')
 
@@ -245,12 +244,12 @@ export default function ModalCierreGabinete({
         fecha_atencion_gabinete: new Date().toISOString()
       }
 
-      // 2. Resumen de parámetros para el historial clínico
+      // 2. Consolidar texto resumido de parámetros para el historial
       const resumenParametros = zonasSesion
-        .map(z => `${z.nombre} -> Frec: ${z.frecuencia || '--'} | Energy: ${z.energia || '--'} | Pasadas: ${z.pasadas || '--'}`)
+        .map(z => `${z.nombre}: Frec: ${z.frecuencia || '--'} | En: ${z.energia || '--'} | Pas: ${z.pasadas || '--'}`)
         .join(' // ')
 
-      // 3. Insertar registro definitivo en la tabla historial_sesiones_laser
+      // 3. Insertar registro en historial_sesiones_laser
       const { error: errorHistorial } = await supabase
         .from('historial_sesiones_laser')
         .insert({
@@ -269,7 +268,7 @@ export default function ModalCierreGabinete({
 
       if (errorHistorial) throw errorHistorial
 
-      // 4. Actualizar la tabla reservas para que se refleje correctamente en Turnos y Recepción
+      // 4. Actualizar la reserva principal (para que refleje cambios en Recepción y Turnos)
       const { error: errorReserva } = await supabase
         .from('reservas')
         .update({
@@ -282,7 +281,7 @@ export default function ModalCierreGabinete({
 
       if (errorReserva) throw errorReserva
 
-      alert('Sesión finalizada y sincronizada correctamente en reservas y gabinete.')
+      alert('Sesión finalizada y actualizada correctamente en reservas y gabinete.')
       onSuccess()
       onClose()
 
@@ -310,7 +309,7 @@ export default function ModalCierreGabinete({
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
-                Cierre de Sesión Láser - Grilla Técnica por Zona
+                Cierre de Sesión Láser - Grilla Técnica
               </h2>
               <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
                 Paciente: <strong className="text-slate-800 dark:text-zinc-200">{turno.cliente_nombre}</strong>
@@ -328,11 +327,11 @@ export default function ModalCierreGabinete({
         {/* BODY */}
         <form onSubmit={handleGuardar} className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
           
-          {/* GRILLA DE ZONAS DESGLOSADAS */}
+          {/* GRILLA DE ZONAS (IMAGEN 1) */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="font-bold text-slate-800 dark:text-zinc-200 text-sm">
-                Zonas Incluidas (Desglose Técnico)
+                Zonas y Parámetros por Zona
               </label>
               <button
                 type="button"
@@ -356,11 +355,8 @@ export default function ModalCierreGabinete({
               <div className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
                 {zonasSesion.map((item, idx) => (
                   <div key={idx} className="grid grid-cols-12 p-3 gap-2 items-center">
-                    <div className="col-span-4 font-semibold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5 flex-wrap">
+                    <div className="col-span-4 font-semibold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5">
                       <span>{item.nombre}</span>
-                      <span className="text-[10px] text-slate-400 capitalize px-1.5 py-0.5 bg-slate-100 dark:bg-zinc-800 rounded">
-                        {item.categoria}
-                      </span>
                       {item.esExtra && (
                         <span className="text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-1.5 py-0.5 rounded-md font-bold">
                           Extra
@@ -477,7 +473,7 @@ export default function ModalCierreGabinete({
 
       </div>
 
-      {/* MODAL SWAP INTERNO (Reutiliza tu ModalSwapZona) */}
+      {/* MODAL SWAP INTERNO (Usa tu ModalSwapZona existente) */}
       {swapTargetIndex !== null && zonaOriginalSwap && (
         <ModalSwapZona
           zonaOriginal={zonaOriginalSwap}
@@ -493,7 +489,7 @@ export default function ModalCierreGabinete({
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-md rounded-2xl p-5 space-y-4 shadow-xl">
             <div className="flex justify-between items-center">
               <h3 className="font-bold text-sm">Seleccionar Zona Extra</h3>
-              <button onClick={() => setMostrarSelectorExtra(false)} className="p-1 rounded-lg hover:bg-slate-100 cursor-pointer">
+              <button onClick={() => setMostrarSelectorExtra(false)} className="p-1 rounded-lg hover:bg-slate-100">
                 <X className="h-4 w-4" />
               </button>
             </div>

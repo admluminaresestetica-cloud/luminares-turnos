@@ -44,12 +44,23 @@ export function getZonasSwapDisponibles(
   zonas: ServicioLaser[],
   idsOcupados: string[]
 ): ServicioLaser[] {
-  return zonas.filter(
-    (z) =>
-      z.categoria_zona === zonaOriginal.categoria_zona &&
-      z.id !== zonaOriginal.id &&
-      !idsOcupados.includes(z.id)
-  );
+  const generoOriginal = zonaOriginal.genero?.toLowerCase();
+
+  return zonas.filter((z) => {
+    // 1. Misma categoría (chica por chica, media por media, grande por grande)
+    const mismaCategoria = z.categoria_zona === zonaOriginal.categoria_zona;
+
+    // 2. No es la misma zona ni está ya seleccionada en la sesión
+    const noEstaOcupada = z.id !== zonaOriginal.id && !idsOcupados.includes(z.id);
+
+    // 3. Filtro estricto por género (coincide el género o es unisex)
+    const generoValido =
+      !generoOriginal ||
+      z.genero?.toLowerCase() === generoOriginal ||
+      z.genero?.toLowerCase() === 'unisex';
+
+    return mismaCategoria && noEstaOcupada && generoValido;
+  });
 }
 
 export function detectarPromoEquivalente(
