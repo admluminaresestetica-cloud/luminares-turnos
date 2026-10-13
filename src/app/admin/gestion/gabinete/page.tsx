@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import ModalHistorialCliente from '../recepcion/components/ModalHistorialCliente'
 import ModalCierreGabinete from './components/ModalCierreGabinete'
+import RelojCronometroGabinete from './components/RelojCronometroGabinete'
 
 export default function GabinetePage() {
   const [turnos, setTurnos] = useState<Reserva[]>([])
@@ -28,6 +29,7 @@ export default function GabinetePage() {
   // Modal Historial
   const [modalHistorialOpen, setModalHistorialOpen] = useState<boolean>(false)
   const [clienteHistorial, setClienteHistorial] = useState<{ celular: string; nombre: string }>({ celular: '', nombre: '' })
+  const [duracionSegundos, setDuracionSegundos] = useState<number>(0)
 
   const fetchTurnosGabinete = async () => {
     setLoading(true)
@@ -132,6 +134,12 @@ export default function GabinetePage() {
             <RefreshCw className={`h-4 w-4 text-slate-600 dark:text-zinc-300 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
+
+        <div className="mb-4">
+  <RelojCronometroGabinete 
+    onTiempoActualizado={(seg) => setDuracionSegundos(seg)} 
+  />
+</div>
       </div>
 
       <div className="max-w-7xl mx-auto space-y-6">
@@ -286,11 +294,12 @@ export default function GabinetePage() {
 
       {/* MODAL DE CIERRE AVANZADO */}
       <ModalCierreGabinete
-        isOpen={modalCierreOpen}
-        onClose={() => setModalCierreOpen(false)}
-        onSuccess={fetchTurnosGabinete}
-        turno={turnoAAtender}
-      />
+  isOpen={modalCierreOpen}
+  onClose={() => setModalCierreOpen(false)}
+  onSuccess={fetchTurnosGabinete}
+  turno={turnoAAtender}
+  duracionSegundos={duracionSegundos}
+/>
 
       {/* MODAL HISTORIAL COMPLETO */}
       <ModalHistorialCliente

@@ -28,6 +28,7 @@ interface ModalCierreGabineteProps {
   onClose: () => void
   onSuccess: () => void
   turno: Reserva | null
+  duracionSegundos?: number
 }
 
 interface ZonaItemSesion {
@@ -46,7 +47,8 @@ export default function ModalCierreGabinete({
   isOpen,
   onClose,
   onSuccess,
-  turno
+  turno,
+  duracionSegundos = 0
 }: ModalCierreGabineteProps) {
   const [serviciosLaser, setServiciosLaser] = useState<ServicioLaser[]>([])
   const [promosLaser, setPromosLaser] = useState<PromoLaser[]>([])
@@ -226,6 +228,11 @@ export default function ModalCierreGabinete({
     e.preventDefault()
     setGuardando(true)
 
+    // ⏱️ Calculamos el texto de duración aquí para que esté disponible en toda la función
+  const mins = Math.floor(duracionSegundos / 60)
+  const segs = duracionSegundos % 60
+  const duracionTexto = mins > 0 ? `${mins} min ${segs} seg` : `${segs} seg`
+
     try {
       // 1. Recalcular precio total actualizado según las zonas finales en la grilla
       const nuevoPrecioTotal = zonasSesion.reduce((acc, z) => acc + z.precio, 0)
@@ -263,7 +270,8 @@ export default function ModalCierreGabinete({
           checklist_anamnesis_respuestas: detalleObj.anamnesis?.respuestas || [],
           parametros_potencia: resumenParametros,
           notas_gabinete: notasGabinete,
-          notas_recepcion: detalleObj.nota_recepcion || ''
+          notas_recepcion: detalleObj.nota_recepcion || '',
+          duracion_sesion_texto: duracionTexto
         })
 
       if (errorHistorial) throw errorHistorial
