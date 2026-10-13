@@ -104,54 +104,59 @@ export default function GabinetePage() {
   const completados = useMemo(() => turnos.filter((t) => t.estado === 'completado'), [turnos])
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 p-4 sm:p-6 text-slate-900 dark:text-zinc-100 font-sans">
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 sm:p-8 font-sans space-y-6">
       
       {/* HEADER */}
-      <div className="max-w-7xl mx-auto mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-xs">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            <span>Gabinete - Control de Tratamientos</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-            Registro técnico de disparos, potencias e historial clínico
-          </p>
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900/90 backdrop-blur-md p-6 rounded-3xl border border-slate-800 shadow-xl">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 text-emerald-400 rounded-2xl border border-emerald-500/30">
+            <Sparkles className="h-6 w-6 animate-pulse" />
+          </div>
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white">
+              Gabinete - Control de Tratamientos
+            </h1>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Registro técnico de disparos, potencias e historial clínico
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <input
             type="date"
             value={fechaSeleccionada}
             onChange={(e) => setFechaSeleccionada(e.target.value)}
-            className="bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-xs sm:text-sm rounded-xl px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="bg-slate-950 border border-slate-800 text-xs sm:text-sm rounded-xl px-3.5 py-2.5 font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
           />
           <button
+            type="button"
             onClick={fetchTurnosGabinete}
             disabled={loading}
-            className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-xl transition-all active:scale-95 cursor-pointer"
+            className="p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl transition-all active:scale-95 cursor-pointer text-slate-300 hover:text-white"
             title="Refrescar datos"
           >
-            <RefreshCw className={`h-4 w-4 text-slate-600 dark:text-zinc-300 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
-        <div className="mb-4">
-  <RelojCronometroGabinete 
-    onTiempoActualizado={(seg) => setDuracionSegundos(seg)} 
-  />
-</div>
+        <div className="w-full lg:w-auto">
+          <RelojCronometroGabinete 
+            onTiempoActualizado={(seg) => setDuracionSegundos(seg)} 
+          />
+        </div>
       </div>
 
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* SECCIÓN 1: PACIENTES EN GABINETE */}
-        <div className="bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-2xl border border-blue-200 dark:border-blue-900/50 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
-            <h2 className="text-base font-bold text-blue-900 dark:text-blue-300 flex items-center gap-2">
-              <Zap className="h-5 w-5 text-blue-600 dark:text-blue-400 fill-blue-500/20" />
+        <div className="bg-slate-900/90 backdrop-blur-md p-6 rounded-3xl border border-slate-800 shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <Zap className="h-5 w-5 text-emerald-400 fill-emerald-500/20" />
               <span>En Atención Ahora ({enGabinete.length})</span>
             </h2>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               Listo para registrar
             </span>
           </div>
@@ -169,55 +174,55 @@ export default function GabinetePage() {
                   ? new Date(t.fecha_hora_inicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                   : '--:--'
                 const detalleTexto = obtenerDetalleTexto(t)
-                const anamnesisResp = obtenerAnamnesisRespuestas(t)
                 const notaRecep = obtenerNotaRecepcion(t)
 
                 return (
                   <div
                     key={t.id}
-                    className="p-4 sm:p-5 rounded-2xl border border-blue-200 dark:border-blue-800/80 bg-blue-50/30 dark:bg-blue-950/20 space-y-3 flex flex-col justify-between"
+                    className="p-5 rounded-2xl border border-slate-800 bg-slate-950/70 hover:border-emerald-500/50 transition-all space-y-3.5 flex flex-col justify-between shadow-sm"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-sm bg-blue-600 text-white px-2.5 py-1 rounded-xl">
+                        <span className="font-mono font-bold text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-xl">
                           {horaStr} hs
                         </span>
                         
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => abrirHistorial(t.cliente_celular || '', t.cliente_nombre || 'Cliente')}
-                            className="p-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-xl text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
-                            title="Ver Historial Clínico Completo"
-                          >
-                            <FolderClock className="h-4 w-4" />
-                            <span className="hidden sm:inline">Historial</span>
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => abrirHistorial(t.cliente_celular || '', t.cliente_nombre || 'Cliente')}
+                          className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer border border-slate-800"
+                          title="Ver Historial Clínico Completo"
+                        >
+                          <FolderClock className="h-4 w-4 text-emerald-400" />
+                          <span className="hidden sm:inline">Historial</span>
+                        </button>
                       </div>
 
-                      <div className="bg-white dark:bg-zinc-900 p-3.5 rounded-xl border border-slate-100 dark:border-zinc-800 space-y-1">
-                        <p className="font-bold text-sm text-slate-900 dark:text-zinc-100">
+                      <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-1.5">
+                        <p className="font-bold text-sm text-white">
                           {t.cliente_nombre || 'Cliente sin nombre'}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        <p className="text-xs text-slate-400 font-mono">
                           📱 {t.cliente_celular || 'Sin celular'}
                         </p>
-                        <div className="pt-2 mt-2 border-t border-slate-100 dark:border-zinc-800 flex justify-between items-center text-xs">
-                          <span className="text-slate-500 font-medium">Zonas a tratar:</span>
-                          <span className="font-bold text-slate-800 dark:text-zinc-200">{detalleTexto}</span>
+                        <div className="pt-2 mt-2 border-t border-slate-800 flex justify-between items-center text-xs">
+                          <span className="text-slate-400 font-medium">Zonas a tratar:</span>
+                          <span className="font-semibold text-slate-200">{detalleTexto}</span>
                         </div>
                       </div>
 
                       {notaRecep && (
-                        <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs text-amber-900 dark:text-amber-300">
-                          <strong>Nota de Recepción:</strong> {notaRecep}
+                        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 space-y-0.5">
+                          <strong className="block font-semibold">Nota de Recepción:</strong> 
+                          <span>{notaRecep}</span>
                         </div>
                       )}
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => abrirModalCierre(t)}
-                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer mt-2"
+                      className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-emerald-950/40 transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer mt-2"
                     >
                       <CheckCircle2 className="h-4 w-4" />
                       <span>Cargar Grilla de Potencias y Finalizar</span>
@@ -230,28 +235,29 @@ export default function GabinetePage() {
         </div>
 
         {/* SECCIÓN 2: SALA DE ESPERA */}
-        <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-xs space-y-3">
-          <h2 className="text-sm font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-amber-500" />
+        <div className="bg-slate-900/90 backdrop-blur-md p-6 rounded-3xl border border-slate-800 shadow-xl space-y-4">
+          <h2 className="text-sm font-bold text-white flex items-center gap-2">
+            <Clock className="h-4 w-4 text-amber-400" />
             <span>En Sala de Espera ({enEspera.length})</span>
           </h2>
 
           {enEspera.length === 0 ? (
-            <p className="text-xs text-slate-400">No hay pacientes esperando en sala.</p>
+            <p className="text-xs text-slate-400 py-1">No hay pacientes esperando en sala.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {enEspera.map((t) => (
                 <div
                   key={t.id}
-                  className="p-3.5 rounded-xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/20 flex items-center justify-between gap-2"
+                  className="p-4 rounded-2xl border border-amber-500/20 bg-slate-950/70 flex items-center justify-between gap-2 shadow-sm"
                 >
                   <div>
-                    <p className="font-bold text-xs text-slate-800 dark:text-zinc-200">{t.cliente_nombre}</p>
-                    <p className="text-[11px] text-slate-500">{obtenerDetalleTexto(t)}</p>
+                    <p className="font-bold text-xs text-white">{t.cliente_nombre}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{obtenerDetalleTexto(t)}</p>
                   </div>
                   <button
+                    type="button"
                     onClick={() => abrirModalCierre(t)}
-                    className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-[11px] rounded-lg transition-all shrink-0 cursor-pointer"
+                    className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] rounded-xl transition-all shrink-0 cursor-pointer shadow-md shadow-amber-950/30 active:scale-95"
                   >
                     Atender
                   </button>
@@ -262,26 +268,26 @@ export default function GabinetePage() {
         </div>
 
         {/* SECCIÓN 3: ATENDIDOS HOY */}
-        <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-xs space-y-3">
-          <h2 className="text-sm font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+        <div className="bg-slate-900/90 backdrop-blur-md p-6 rounded-3xl border border-slate-800 shadow-xl space-y-4">
+          <h2 className="text-sm font-bold text-white flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
             <span>Sesiones Finalizadas Hoy ({completados.length})</span>
           </h2>
 
           {completados.length === 0 ? (
-            <p className="text-xs text-slate-400">Aún no se han finalizado sesiones hoy.</p>
+            <p className="text-xs text-slate-400 py-1">Aún no se han finalizado sesiones hoy.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {completados.map((t) => (
                 <div
                   key={t.id}
-                  className="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/20 flex items-center justify-between gap-2 text-xs"
+                  className="p-4 rounded-2xl border border-emerald-500/20 bg-slate-950/70 flex items-center justify-between gap-2 text-xs shadow-sm"
                 >
                   <div>
-                    <p className="font-bold text-slate-800 dark:text-zinc-200">{t.cliente_nombre}</p>
-                    <p className="text-[11px] text-slate-500">{obtenerDetalleTexto(t)}</p>
+                    <p className="font-bold text-white">{t.cliente_nombre}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{obtenerDetalleTexto(t)}</p>
                   </div>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-950 px-2 py-1 rounded-md shrink-0">
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg shrink-0">
                     Atendido ✔
                   </span>
                 </div>
@@ -294,12 +300,12 @@ export default function GabinetePage() {
 
       {/* MODAL DE CIERRE AVANZADO */}
       <ModalCierreGabinete
-  isOpen={modalCierreOpen}
-  onClose={() => setModalCierreOpen(false)}
-  onSuccess={fetchTurnosGabinete}
-  turno={turnoAAtender}
-  duracionSegundos={duracionSegundos}
-/>
+        isOpen={modalCierreOpen}
+        onClose={() => setModalCierreOpen(false)}
+        onSuccess={fetchTurnosGabinete}
+        turno={turnoAAtender}
+        duracionSegundos={duracionSegundos}
+      />
 
       {/* MODAL HISTORIAL COMPLETO */}
       <ModalHistorialCliente

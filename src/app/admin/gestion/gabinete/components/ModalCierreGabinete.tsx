@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createBrowserClient } from '@supabase/ssr'
 import { Reserva } from '@/app/admin/turnos/components/types'
 import { ServicioLaser, PromoLaser } from '@/lib/types'
 import { 
@@ -53,6 +53,12 @@ export default function ModalCierreGabinete({
   turno,
   duracionSegundos = 0
 }: ModalCierreGabineteProps) {
+  // 👈 Instanciamos el cliente del navegador para leer cookies de sesión activas
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   const [serviciosLaser, setServiciosLaser] = useState<ServicioLaser[]>([])
   const [promosLaser, setPromosLaser] = useState<PromoLaser[]>([])
   
@@ -330,190 +336,197 @@ export default function ModalCierreGabinete({
   const opcionesSwap = zonaOriginalSwap ? getZonasSwapDisponibles(zonaOriginalSwap, serviciosLaser, idsOcupados) : []
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-4xl rounded-2xl shadow-xl overflow-hidden my-8 flex flex-col max-h-[92vh]">
-        
-        {/* HEADER */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-zinc-800 shrink-0 bg-slate-50/50 dark:bg-zinc-900">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-200 dark:border-blue-900">
-              <Zap className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
-                Cierre de Sesión Láser - Grilla Técnica
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                Paciente: <strong className="text-slate-800 dark:text-zinc-200">{turno.cliente_nombre}</strong>
-              </p>
-            </div>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-3 sm:p-6 overflow-y-auto">
+    <div className="bg-slate-900 border border-slate-800 w-full max-w-4xl rounded-[28px] shadow-2xl shadow-emerald-950/20 overflow-hidden my-auto flex flex-col max-h-[94vh] text-slate-100">
+      
+      {/* HEADER PREMIUM */}
+      <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 text-emerald-400 rounded-2xl border border-emerald-500/30 shadow-inner">
+            <Zap className="h-5 w-5 animate-pulse" />
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 transition-colors cursor-pointer"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div>
+            <h2 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+              Cierre de Sesión Láser
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                Grilla Técnica
+              </span>
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Paciente: <span className="text-emerald-400 font-semibold">{turno.cliente_nombre}</span>
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-2 rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer border border-slate-700/50"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* BODY */}
+      <form onSubmit={handleGuardar} className="p-5 sm:p-8 overflow-y-auto space-y-6 flex-1 text-xs custom-scrollbar">
+
+        {/* CRONÓMETRO INTEGRADO */}
+        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-inner">
+          <RelojCronometroGabinete
+            onTiempoActualizado={(seg) => setSegundosSesion(seg)}
+          />
         </div>
 
-        {/* BODY */}
-        <form onSubmit={handleGuardar} className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+        {/* ZONAS Y PARÁMETROS */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="font-bold text-white text-sm tracking-wide">
+                Zonas y Parámetros
+              </label>
+              <p className="text-[11px] text-slate-400">Configura la frecuencia, energía y pasadas por zona</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMostrarSelectorExtra(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-emerald-900/30 active:scale-95 cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Agregar Zona Extra</span>
+            </button>
+          </div>
 
-          {/* CRONÓMETRO INTEGRADO EN LA GRILLA */}
-          <div className="bg-slate-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-slate-200 dark:border-zinc-800">
-            <RelojCronometroGabinete
-              onTiempoActualizado={(seg) => setSegundosSesion(seg)}
+          {/* CONTENEDOR DE ZONAS (Responsive: Cards en mobile, Tabla elegante en Desktop) */}
+          <div className="space-y-3">
+            {zonasSesion.map((item, idx) => (
+              <div 
+                key={idx} 
+                className="bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 rounded-2xl p-4 transition-all space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-4 shadow-sm"
+              >
+                {/* Nombre de la zona */}
+                <div className="sm:w-1/4 flex items-center justify-between sm:justify-start gap-2">
+                  <span className="font-bold text-white text-sm flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    {item.nombre}
+                  </span>
+                  {item.esExtra && (
+                    <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-md font-bold">
+                      Extra
+                    </span>
+                  )}
+                </div>
+
+                {/* Inputs de parámetros (Grid interno) */}
+                <div className="grid grid-cols-3 gap-2 sm:flex-1">
+                  <div>
+                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Frecuencia</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. 10 Hz"
+                      value={item.frecuencia}
+                      onChange={(e) => actualizarFila(idx, 'frecuencia', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700/60 focus:border-emerald-500 rounded-xl px-3 py-2 text-center text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Energía</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. 14 J"
+                      value={item.energia}
+                      onChange={(e) => actualizarFila(idx, 'energia', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700/60 focus:border-emerald-500 rounded-xl px-3 py-2 text-center text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Pasadas</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. 3"
+                      value={item.pasadas}
+                      onChange={(e) => actualizarFila(idx, 'pasadas', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700/60 focus:border-emerald-500 rounded-xl px-3 py-2 text-center text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Acciones por fila */}
+                <div className="flex items-center justify-end gap-2 pt-2 sm:pt-0 border-t border-slate-800/60 sm:border-t-0">
+                  {item.id !== 'generico' && (
+                    <button
+                      type="button"
+                      onClick={() => abrirSwap(idx)}
+                      className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 rounded-xl transition-all cursor-pointer border border-slate-800"
+                      title="Intercambiar zona"
+                    >
+                      <ArrowRightLeft className="h-4 w-4" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => eliminarZona(idx)}
+                    className="p-2 bg-slate-900 hover:bg-rose-950/40 text-slate-300 hover:text-rose-400 rounded-xl transition-all cursor-pointer border border-slate-800 hover:border-rose-900/50"
+                    title="Eliminar zona"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CAMPOS GENERALES */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div className="space-y-1.5">
+            <label className="block font-semibold text-slate-300">
+              Especialista / Operadora <span className="text-emerald-400">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="Ej. Ana Belén"
+              value={operadora}
+              onChange={(e) => setOperadora(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-inner"
             />
           </div>
 
-          
-          {/* GRILLA DE ZONAS (IMAGEN 1) */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="font-bold text-slate-800 dark:text-zinc-200 text-sm">
-                Zonas y Parámetros por Zona
-              </label>
-              <button
-                type="button"
-                onClick={() => setMostrarSelectorExtra(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 font-semibold rounded-xl border border-blue-200 dark:border-blue-900 transition-all cursor-pointer"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Agregar Zona Extra</span>
-              </button>
-            </div>
-
-            <div className="border border-slate-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs">
-              <div className="grid grid-cols-12 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-bold p-3 gap-2 text-center">
-                <div className="col-span-4 text-left">ZONA</div>
-                <div className="col-span-3">AFLUENCIA / FREC.</div>
-                <div className="col-span-2">ENERGY</div>
-                <div className="col-span-2">PASADAS</div>
-                <div className="col-span-1">ACCIONES</div>
-              </div>
-
-              <div className="divide-y divide-slate-100 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
-                {zonasSesion.map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-12 p-3 gap-2 items-center">
-                    <div className="col-span-4 font-semibold text-slate-900 dark:text-zinc-100 flex items-center gap-1.5">
-                      <span>{item.nombre}</span>
-                      {item.esExtra && (
-                        <span className="text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-1.5 py-0.5 rounded-md font-bold">
-                          Extra
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="col-span-3">
-                      <input
-                        type="text"
-                        placeholder="Ej. 10 Hz"
-                        value={item.frecuencia}
-                        onChange={(e) => actualizarFila(idx, 'frecuencia', e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl px-2.5 py-1.5 text-center focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
-                      />
-                    </div>
-
-                    <div className="col-span-2">
-                      <input
-                        type="text"
-                        placeholder="Ej. 14 J"
-                        value={item.energia}
-                        onChange={(e) => actualizarFila(idx, 'energia', e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl px-2.5 py-1.5 text-center focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
-                      />
-                    </div>
-
-                    <div className="col-span-2">
-                      <input
-                        type="text"
-                        placeholder="Ej. 3"
-                        value={item.pasadas}
-                        onChange={(e) => actualizarFila(idx, 'pasadas', e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl px-2.5 py-1.5 text-center focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
-                      />
-                    </div>
-
-                    <div className="col-span-1 flex items-center justify-center gap-1">
-                      {item.id !== 'generico' && (
-                        <button
-                          type="button"
-                          onClick={() => abrirSwap(idx)}
-                          className="p-1.5 bg-slate-100 hover:bg-blue-100 dark:bg-zinc-800 dark:hover:bg-blue-950 text-slate-600 dark:text-zinc-300 dark:hover:text-blue-300 rounded-lg transition-all cursor-pointer"
-                          title="Intercambiar zona por otra de igual categoría"
-                        >
-                          <ArrowRightLeft className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => eliminarZona(idx)}
-                        className="p-1.5 bg-slate-100 hover:bg-rose-100 dark:bg-zinc-800 dark:hover:bg-rose-950 text-slate-600 dark:text-zinc-300 dark:hover:text-rose-300 rounded-lg transition-all cursor-pointer"
-                        title="Eliminar zona"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="space-y-1.5">
+            <label className="block font-semibold text-slate-300">
+              Notas de Gabinete / Evolución Piel
+            </label>
+            <input
+              type="text"
+              placeholder="Ej. Buena tolerancia al tratamiento..."
+              value={notasGabinete}
+              onChange={(e) => setNotasGabinete(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-inner"
+            />
           </div>
+        </div>
 
-          {/* CAMPOS GENERALES */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block font-bold text-slate-700 dark:text-zinc-300 mb-1">
-                Especialista / Operadora
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="Ej. Ana Belén"
-                value={operadora}
-                onChange={(e) => setOperadora(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
+        {/* FOOTER ACCIONES */}
+        <div className="pt-6 border-t border-slate-800 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition-all cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={guardando}
+            className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-emerald-950/50 active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+          >
+            <Save className="h-4 w-4" />
+            <span>{guardando ? 'Guardando...' : 'Finalizar y Guardar Sesión'}</span>
+          </button>
+        </div>
 
-            <div>
-              <label className="block font-bold text-slate-700 dark:text-zinc-300 mb-1">
-                Notas de Gabinete / Evolución Piel
-              </label>
-              <input
-                type="text"
-                placeholder="Ej. Buena tolerancia al tratamiento..."
-                value={notasGabinete}
-                onChange={(e) => setNotasGabinete(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+      </form>
 
-          {/* FOOTER ACCIONES */}
-          <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-semibold rounded-xl transition-all cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={guardando}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-sm"
-            >
-              <Save className="h-4 w-4" />
-              <span>{guardando ? 'Guardando...' : 'Finalizar y Guardar Sesión'}</span>
-            </button>
-          </div>
-
-        </form>
-
-      </div>
-
-      {/* MODAL SWAP INTERNO (Usa tu ModalSwapZona existente) */}
+      {/* MODAL SWAP INTERNO */}
       {swapTargetIndex !== null && zonaOriginalSwap && (
         <ModalSwapZona
           zonaOriginal={zonaOriginalSwap}
@@ -525,15 +538,19 @@ export default function ModalCierreGabinete({
 
       {/* MODAL SELECCIONAR ZONA EXTRA */}
       {mostrarSelectorExtra && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-md rounded-2xl p-5 space-y-4 shadow-xl">
-            <div className="flex justify-between items-center">
-              <h3 className="font-bold text-sm">Seleccionar Zona Extra</h3>
-              <button onClick={() => setMostrarSelectorExtra(false)} className="p-1 rounded-lg hover:bg-slate-100">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+              <h3 className="font-bold text-sm text-white">Seleccionar Zona Extra</h3>
+              <button 
+                type="button"
+                onClick={() => setMostrarSelectorExtra(false)} 
+                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="max-h-64 overflow-y-auto space-y-2">
+            <div className="max-h-64 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
               {serviciosLaser
                 .filter(s => !idsOcupados.includes(s.id))
                 .map(s => (
@@ -541,13 +558,13 @@ export default function ModalCierreGabinete({
                     key={s.id}
                     type="button"
                     onClick={() => agregarZonaExtra(s)}
-                    className="w-full flex justify-between items-center p-3 rounded-xl border border-slate-200 dark:border-zinc-800 hover:border-blue-500 text-left transition-all cursor-pointer"
+                    className="w-full flex justify-between items-center p-3 rounded-2xl bg-slate-950 border border-slate-800 hover:border-emerald-500/60 text-left transition-all cursor-pointer group"
                   >
                     <div>
-                      <p className="font-bold text-xs">{s.nombre_zona}</p>
-                      <p className="text-[11px] text-slate-400 capitalize">Categoría: {s.categoria_zona}</p>
+                      <p className="font-bold text-xs text-white group-hover:text-emerald-400 transition-colors">{s.nombre_zona}</p>
+                      <p className="text-[11px] text-slate-400 capitalize mt-0.5">Categoría: {s.categoria_zona}</p>
                     </div>
-                    <span className="font-bold text-xs text-blue-600 dark:text-blue-400">
+                    <span className="font-bold text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
                       ${Number(s.precio_lista).toLocaleString('es-AR')}
                     </span>
                   </button>
@@ -558,5 +575,6 @@ export default function ModalCierreGabinete({
       )}
 
     </div>
-  )
+  </div>
+)
 }
