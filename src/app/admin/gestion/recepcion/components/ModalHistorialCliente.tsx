@@ -16,6 +16,7 @@ interface SesionHistorial {
   parametros_potencia: string
   notas_gabinete: string
   notas_recepcion: string
+  duracion_sesion_texto?: string
 }
 
 interface ModalHistorialClienteProps {
@@ -151,12 +152,20 @@ export default function ModalHistorialCliente({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+<div className="flex items-center gap-2">
                         {sesion.operadora && (
                           <span className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900 hidden sm:inline-block">
                             Atendió: {sesion.operadora}
                           </span>
                         )}
+
+                        {/* ⏱️ Badge de Duración del Cronómetro */}
+                        {sesion.duracion_sesion_texto && (
+                          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900 flex items-center gap-1 hidden sm:inline-flex">
+                            <span>⏱️ {sesion.duracion_sesion_texto}</span>
+                          </span>
+                        )}
+
                         {estaAbierta ? (
                           <ChevronUp className="h-4 w-4 text-slate-400" />
                         ) : (

@@ -2,8 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { ServicioLaser, PromoLaser, Reserva, datetimeLocalToIso, isoToDatetimeLocal } from '@/app/admin/turnos/components/types'
-import { X, Clock, DollarSign, User, Phone, Calendar, Sparkles, Layers } from 'lucide-react'
+import { Reserva, datetimeLocalToIso, isoToDatetimeLocal } from '@/app/admin/turnos/components/types'
+import { ServicioLaser, PromoLaser } from '@/lib/types'
+import { X, Clock, DollarSign, User, Phone, Calendar, Sparkles, Layers, ArrowRightLeft } from 'lucide-react'
+import { 
+  getZonaById, 
+  getZonasPromoResueltas, 
+  getZonasSwapDisponibles, 
+  SwapsMap 
+} from '@/lib/laser/calculos'
+import ModalSwapZona from '@/components/laser/ModalSwapZona'
 
 interface ModalNuevoTurnoRecepcionProps {
   isOpen: boolean
@@ -29,6 +37,10 @@ export default function ModalNuevoTurnoRecepcion({
   const [zonasSeleccionadas, setZonasSeleccionadas] = useState<string[]>([])
   const [promoSeleccionadaId, setPromoSeleccionadaId] = useState<string>('')
   
+  // Mapa de Swaps realizados sobre la promo { idZonaOriginal: idZonaNueva }
+  const [swaps, setSwaps] = useState<SwapsMap>({})
+  const [swapTargetZona, setSwapTargetZona] = useState<ServicioLaser | null>(null)
+
   const [filtroGenero, setFiltroGenero] = useState<string>('todos')
   const [loadingCatalogos, setLoadingCatalogos] = useState(true)
   const [guardando, setGuardando] = useState(false)
@@ -55,7 +67,7 @@ export default function ModalNuevoTurnoRecepcion({
         setNombre(turnoAEditar.cliente_nombre || '')
         setCelular(turnoAEditar.cliente_celular || '')
         setFechaHoraLocal(isoToDatetimeLocal(turnoAEditar.fecha_hora_inicio))
-        // Si tuviera zonas guardadas o texto, las dejamos preparadas
+        setSwaps({})
       } else {
         const now = new Date()
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset())
@@ -64,6 +76,7 @@ export default function ModalNuevoTurnoRecepcion({
         setCelular('')
         setZonasSeleccionadas([])
         setPromoSeleccionadaId('')
+        setSwaps({})
       }
       
       setLoadingCatalogos(false)
@@ -87,6 +100,28 @@ export default function ModalNuevoTurnoRecepcion({
     )
   }
 
+  const handleSeleccionarPromo = (promoId: string) => {
+    setPromoSeleccionadaId(promoId)
+    setSwaps({}) // Limpiar swaps previos al cambiar de promo
+  }
+
+  const ejecutarSwap = (nuevoServicioId: string) => {
+    if (!swapTargetZona) return
+    setSwaps((prev) => ({
+      ...prev,
+      [swapTargetZona.id]: nuevoServicioId
+    }))
+    setSwapTargetZona(null)
+  }
+
+  // Obtener objeto de la promo seleccionada
+  const promoElegidaObj = promosLaser.find((p) => p.id === promoSeleccionadaId)
+
+  // Zonas resueltas de la promo (aplicando swaps activos)
+  const zonasPromoResueltas = promoElegidaObj
+    ? getZonasPromoResueltas(promoElegidaObj, serviciosLaser, swaps)
+    : []
+
   let precioTotal = 0
   let duracionTotal = 30
   let detalleTexto = ''
@@ -97,11 +132,10 @@ export default function ModalNuevoTurnoRecepcion({
     duracionTotal = zonasElegidasObj.reduce((acc, z) => acc + (Number(z.duracion_minutos) || 0), 0) || 30
     detalleTexto = zonasElegidasObj.map((z) => z.nombre_zona).filter(Boolean).join(' + ')
   } else {
-    const promoElegida = promosLaser.find((p) => p.id === promoSeleccionadaId)
-    if (promoElegida) {
-      precioTotal = Number(promoElegida.precio_promo) || 0
-      duracionTotal = Number(promoElegida.duracion_total_min) || 30
-      detalleTexto = `Promo: ${promoElegida.nombre_promo}`
+    if (promoElegidaObj) {
+      precioTotal = Number(promoElegidaObj.precio_promo) || 0
+      duracionTotal = zonasPromoResueltas.reduce((acc, z) => acc + z.duracion_minutos, 0) || Number(promoElegidaObj.duracion_total_min) || 30
+      detalleTexto = zonasPromoResueltas.map((z) => z.nombre_zona).join(' + ') || `Promo: ${promoElegidaObj.nombre_promo}`
     }
   }
 
@@ -118,6 +152,11 @@ export default function ModalNuevoTurnoRecepcion({
       return
     }
 
+    if (tipoSeleccion === 'promo' && !promoSeleccionadaId && !turnoAEditar) {
+      alert('Seleccioná una promoción.')
+      return
+    }
+
     setGuardando(true)
 
     const payload: any = {
@@ -130,20 +169,23 @@ export default function ModalNuevoTurnoRecepcion({
     }
 
     if (detalleTexto) {
-      payload.detalle_reserva = { detalle_texto: detalleTexto }
+      payload.detalle_reserva = { 
+        detalle_texto: detalleTexto,
+        nombre_promo: promoElegidaObj?.nombre_promo || null,
+        swaps: swaps,
+        hubo_cambios: Object.keys(swaps).length > 0 // 👈 Bandera que indica si hubo algún swap en la promo
+      }
     }
 
     let errorSupabase = null
 
     if (turnoAEditar) {
-      // EDITAR
       const { error } = await supabase
         .from('reservas')
         .update(payload)
         .eq('id', turnoAEditar.id)
       errorSupabase = error
     } else {
-      // CREAR NUEVO
       payload.codigo_unico = `RECEPCION-${Date.now().toString(36).toUpperCase()}`
       payload.servicio_tipo = 'laser'
       payload.estado = 'pendiente_sena'
@@ -166,6 +208,12 @@ export default function ModalNuevoTurnoRecepcion({
     setGuardando(false)
   }
 
+  // Zonas ocupadas actualmente en la promo para deshabilitarlas en el swap
+  const idsOcupadosSwap = zonasPromoResueltas.map((z) => z.id)
+  const opcionesSwapDisponibles = swapTargetZona
+    ? getZonasSwapDisponibles(swapTargetZona, serviciosLaser, idsOcupadosSwap)
+    : []
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden my-8">
@@ -176,7 +224,7 @@ export default function ModalNuevoTurnoRecepcion({
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400"
+            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -237,8 +285,8 @@ export default function ModalNuevoTurnoRecepcion({
           <div className="flex bg-slate-100 dark:bg-zinc-800 p-1 rounded-xl">
             <button
               type="button"
-              onClick={() => { setTipoSeleccion('zonas'); setPromoSeleccionadaId(''); }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              onClick={() => { setTipoSeleccion('zonas'); setPromoSeleccionadaId(''); setSwaps({}); }}
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tipoSeleccion === 'zonas'
                   ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-xs'
                   : 'text-slate-500 hover:text-slate-800'
@@ -250,7 +298,7 @@ export default function ModalNuevoTurnoRecepcion({
             <button
               type="button"
               onClick={() => { setTipoSeleccion('promo'); setZonasSeleccionadas([]); }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tipoSeleccion === 'promo'
                   ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-xs'
                   : 'text-slate-500 hover:text-slate-800'
@@ -271,7 +319,7 @@ export default function ModalNuevoTurnoRecepcion({
                   key={g}
                   type="button"
                   onClick={() => setFiltroGenero(g)}
-                  className={`px-2 py-0.5 rounded-md capitalize transition-all ${
+                  className={`px-2 py-0.5 rounded-md capitalize transition-all cursor-pointer ${
                     filtroGenero === g
                       ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 font-bold shadow-xs'
                       : 'text-slate-500'
@@ -294,7 +342,7 @@ export default function ModalNuevoTurnoRecepcion({
                     type="button"
                     key={s.id}
                     onClick={() => toggleZona(s.id)}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border ${
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border cursor-pointer ${
                       checked
                         ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold border-transparent shadow-xs'
                         : 'bg-white dark:bg-zinc-800/50 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-100 dark:border-zinc-800'
@@ -312,8 +360,8 @@ export default function ModalNuevoTurnoRecepcion({
                   <button
                     type="button"
                     key={p.id}
-                    onClick={() => setPromoSeleccionadaId(p.id)}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border text-left ${
+                    onClick={() => handleSeleccionarPromo(p.id)}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border text-left cursor-pointer ${
                       selected
                         ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold border-transparent shadow-xs'
                         : 'bg-white dark:bg-zinc-800/50 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-100 dark:border-zinc-800'
@@ -328,6 +376,51 @@ export default function ModalNuevoTurnoRecepcion({
               })
             )}
           </div>
+
+          {/* DESGLOSE Y SWAP DE LA PROMO SELECCIONADA */}
+          {tipoSeleccion === 'promo' && promoElegidaObj && (
+            <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-xl space-y-2">
+              <p className="text-xs font-bold text-blue-900 dark:text-blue-300">
+                Zonas incluidas en la promo (Podés hacer Swap 🔁):
+              </p>
+              <div className="space-y-1.5">
+                {zonasPromoResueltas.map((zona, idx) => {
+                  const originalId = promoElegidaObj.zonas_incluidas[idx]
+                  const originalZona = getZonaById(serviciosLaser, originalId)
+                  const fueCambiado = swaps[originalId] !== undefined
+
+                  return (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-2 bg-white dark:bg-zinc-800 rounded-lg border border-slate-200 dark:border-zinc-700 text-xs"
+                    >
+                      <div>
+                        <span className="font-bold text-slate-800 dark:text-zinc-200">{zona.nombre_zona}</span>
+                        <span className="ml-2 text-[10px] text-slate-400 capitalize">({zona.categoria_zona})</span>
+                        {fueCambiado && (
+                          <span className="ml-2 text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-1 py-0.5 rounded font-semibold">
+                            Intercambiado
+                          </span>
+                        )}
+                      </div>
+
+                      {originalZona && promoElegidaObj.permite_swap !== false && (
+                        <button
+                          type="button"
+                          onClick={() => setSwapTargetZona(originalZona)}
+                          className="p-1 bg-slate-100 hover:bg-blue-100 dark:bg-zinc-700 dark:hover:bg-blue-950 text-slate-600 dark:text-blue-300 rounded-md transition-all cursor-pointer flex items-center gap-1 text-[11px]"
+                          title="Cambiar esta zona por otra equivalente"
+                        >
+                          <ArrowRightLeft className="h-3 w-3" />
+                          <span>Swap</span>
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="bg-slate-50 dark:bg-zinc-800/50 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-1">
             <div className="flex justify-between text-xs text-slate-500">
@@ -349,20 +442,30 @@ export default function ModalNuevoTurnoRecepcion({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 text-xs font-semibold rounded-xl"
+              className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 text-xs font-semibold rounded-xl cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={guardando}
-              className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-50"
+              className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {guardando ? 'Guardando...' : turnoAEditar ? 'Guardar Cambios' : 'Crear Turno'}
             </button>
           </div>
         </form>
       </div>
+
+      {/* MODAL SWAP INTERNO (Reutiliza ModalSwapZona con filtro de género activo de calculos.ts) */}
+      {swapTargetZona && (
+        <ModalSwapZona
+          zonaOriginal={swapTargetZona}
+          opciones={opcionesSwapDisponibles}
+          onSelect={ejecutarSwap}
+          onClose={() => setSwapTargetZona(null)}
+        />
+      )}
     </div>
   )
 }

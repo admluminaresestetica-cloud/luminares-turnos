@@ -16,7 +16,8 @@ import {
   CheckCircle2, 
   XCircle, 
   Clock, 
-  MessageCircle 
+  MessageCircle,
+  SlidersHorizontal
 } from 'lucide-react'
 import ResumenAgenda from '@/app/admin/turnos/components/ResumenAgenda'
 import { Reserva, renderDetalle, renderFechaHora } from '@/app/admin/turnos/components/types'
@@ -423,7 +424,26 @@ export default function AgendaTab({
                     <td className="px-4 py-4 font-medium">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-gray-900 dark:text-zinc-100 font-bold">{t.cliente_nombre || 'Sin nombre'}</span>
+                         
+                         {(() => {
+      const detalle = typeof t.detalle_reserva === 'string' 
+        ? JSON.parse(t.detalle_reserva || '{}') 
+        : t.detalle_reserva || {}
+      
+      const fueModificado = (t as any).modificado_por_admin || detalle.hubo_cambios || (detalle.swaps && Object.keys(detalle.swaps).length > 0)
 
+      if (!fueModificado) return null
+
+      return (
+        <span
+          className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-md text-[11px] font-semibold dark:bg-purple-950/60 dark:border-purple-900 dark:text-purple-300"
+          title="Este turno fue modificado (contiene swaps o ajustes de zonas)"
+        >
+          <SlidersHorizontal className="w-3 h-3" />
+          <span>Modificado</span>
+        </span>
+      )
+    })()}
                         {(t as any).codigo_referido_propio && (
                           <span
                             className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
