@@ -29,9 +29,9 @@ export default function GridProductos({
 
   if (productos.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#E7E5E0] bg-white py-16 text-center">
+      <div className="rounded-2xl border border-[#E7E5E0] dark:border-zinc-800 bg-white dark:bg-zinc-900 py-16 text-center">
         <span className="text-4xl">📦</span>
-        <p className="mt-4 text-[15px] font-medium text-[#6B675F]">
+        <p className="mt-4 text-[15px] font-medium text-[#6B675F] dark:text-zinc-400">
           No se encontraron productos disponibles con esos filtros.
         </p>
       </div>

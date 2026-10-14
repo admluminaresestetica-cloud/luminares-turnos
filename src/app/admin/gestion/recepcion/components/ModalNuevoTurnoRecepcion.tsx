@@ -215,25 +215,26 @@ export default function ModalNuevoTurnoRecepcion({
     : []
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-xs p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden my-8 text-slate-900 dark:text-zinc-100">
         
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-zinc-800">
+        {/* HEADER */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/40">
           <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
             {turnoAEditar ? 'Editar Turno' : 'Nuevo Turno - Mostrador'}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 cursor-pointer"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 transition-all cursor-pointer border border-slate-200/60 dark:border-zinc-700"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                 Nombre del Cliente *
               </label>
               <div className="relative">
@@ -244,13 +245,13 @@ export default function ModalNuevoTurnoRecepcion({
                   placeholder="Ej. María Pérez"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                  className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-purple-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
                 Celular / WhatsApp
               </label>
               <div className="relative">
@@ -260,14 +261,14 @@ export default function ModalNuevoTurnoRecepcion({
                   placeholder="Ej. 3416123456"
                   value={celular}
                   onChange={(e) => setCelular(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                  className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-purple-500"
                 />
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
               Fecha y Hora del Turno *
             </label>
             <div className="relative">
@@ -277,7 +278,7 @@ export default function ModalNuevoTurnoRecepcion({
                 required
                 value={fechaHoraLocal}
                 onChange={(e) => setFechaHoraLocal(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-purple-500"
               />
             </div>
           </div>
@@ -288,11 +289,11 @@ export default function ModalNuevoTurnoRecepcion({
               onClick={() => { setTipoSeleccion('zonas'); setPromoSeleccionadaId(''); setSwaps({}); }}
               className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tipoSeleccion === 'zonas'
-                  ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300'
               }`}
             >
-              <Layers className="h-3.5 w-3.5" />
+              <Layers className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
               <span>Zonas Individuales</span>
             </button>
             <button
@@ -300,17 +301,17 @@ export default function ModalNuevoTurnoRecepcion({
               onClick={() => { setTipoSeleccion('promo'); setZonasSeleccionadas([]); }}
               className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tipoSeleccion === 'promo'
-                  ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300'
               }`}
             >
-              <Sparkles className="h-3.5 w-3.5" />
+              <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
               <span>Promos y Combos</span>
             </button>
           </div>
 
           <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-slate-600 dark:text-zinc-400">
+            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
               {tipoSeleccion === 'zonas' ? 'Zonas Láser Disponibles' : 'Promociones Activas'}
             </label>
             <div className="flex bg-slate-100 dark:bg-zinc-800 p-0.5 rounded-lg text-[11px]">
@@ -319,10 +320,10 @@ export default function ModalNuevoTurnoRecepcion({
                   key={g}
                   type="button"
                   onClick={() => setFiltroGenero(g)}
-                  className={`px-2 py-0.5 rounded-md capitalize transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-md capitalize transition-all cursor-pointer ${
                     filtroGenero === g
-                      ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 font-bold shadow-xs'
-                      : 'text-slate-500'
+                      ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 font-bold shadow-2xs'
+                      : 'text-slate-500 dark:text-zinc-400'
                   }`}
                 >
                   {g}
@@ -331,7 +332,7 @@ export default function ModalNuevoTurnoRecepcion({
             </div>
           </div>
 
-          <div className="max-h-48 overflow-y-auto border border-slate-200 dark:border-zinc-800 rounded-xl p-2 space-y-1">
+          <div className="max-h-48 overflow-y-auto border border-slate-200/80 dark:border-zinc-800 rounded-xl p-2 space-y-1 bg-slate-50/50 dark:bg-zinc-800/30">
             {loadingCatalogos ? (
               <p className="text-xs text-slate-400 p-2 text-center">Cargando opciones...</p>
             ) : tipoSeleccion === 'zonas' ? (
@@ -344,8 +345,8 @@ export default function ModalNuevoTurnoRecepcion({
                     onClick={() => toggleZona(s.id)}
                     className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border cursor-pointer ${
                       checked
-                        ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold border-transparent shadow-xs'
-                        : 'bg-white dark:bg-zinc-800/50 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-100 dark:border-zinc-800'
+                        ? 'bg-purple-600 text-white font-semibold border-transparent shadow-2xs'
+                        : 'bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-800'
                     }`}
                   >
                     <span>{s.nombre_zona}</span>
@@ -363,8 +364,8 @@ export default function ModalNuevoTurnoRecepcion({
                     onClick={() => handleSeleccionarPromo(p.id)}
                     className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border text-left cursor-pointer ${
                       selected
-                        ? 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold border-transparent shadow-xs'
-                        : 'bg-white dark:bg-zinc-800/50 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-100 dark:border-zinc-800'
+                        ? 'bg-purple-600 text-white font-semibold border-transparent shadow-2xs'
+                        : 'bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-800'
                     }`}
                   >
                     <div>
@@ -379,8 +380,8 @@ export default function ModalNuevoTurnoRecepcion({
 
           {/* DESGLOSE Y SWAP DE LA PROMO SELECCIONADA */}
           {tipoSeleccion === 'promo' && promoElegidaObj && (
-            <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-xl space-y-2">
-              <p className="text-xs font-bold text-blue-900 dark:text-blue-300">
+            <div className="p-3.5 bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-900/50 rounded-xl space-y-2">
+              <p className="text-xs font-bold text-purple-900 dark:text-purple-300">
                 Zonas incluidas en la promo (Podés hacer Swap 🔁):
               </p>
               <div className="space-y-1.5">
@@ -392,13 +393,13 @@ export default function ModalNuevoTurnoRecepcion({
                   return (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-2 bg-white dark:bg-zinc-800 rounded-lg border border-slate-200 dark:border-zinc-700 text-xs"
+                      className="flex items-center justify-between p-2.5 bg-white dark:bg-zinc-900 rounded-lg border border-slate-200/80 dark:border-zinc-800 text-xs"
                     >
                       <div>
                         <span className="font-bold text-slate-800 dark:text-zinc-200">{zona.nombre_zona}</span>
                         <span className="ml-2 text-[10px] text-slate-400 capitalize">({zona.categoria_zona})</span>
                         {fueCambiado && (
-                          <span className="ml-2 text-[10px] bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 px-1 py-0.5 rounded font-semibold">
+                          <span className="ml-2 text-[10px] bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 px-1.5 py-0.5 rounded font-semibold">
                             Intercambiado
                           </span>
                         )}
@@ -408,7 +409,7 @@ export default function ModalNuevoTurnoRecepcion({
                         <button
                           type="button"
                           onClick={() => setSwapTargetZona(originalZona)}
-                          className="p-1 bg-slate-100 hover:bg-blue-100 dark:bg-zinc-700 dark:hover:bg-blue-950 text-slate-600 dark:text-blue-300 rounded-md transition-all cursor-pointer flex items-center gap-1 text-[11px]"
+                          className="p-1.5 bg-slate-100 hover:bg-purple-100 dark:bg-zinc-800 dark:hover:bg-purple-950 text-slate-600 dark:text-purple-300 rounded-lg transition-all cursor-pointer flex items-center gap-1 text-[11px] border border-slate-200 dark:border-zinc-700"
                           title="Cambiar esta zona por otra equivalente"
                         >
                           <ArrowRightLeft className="h-3 w-3" />
@@ -422,14 +423,14 @@ export default function ModalNuevoTurnoRecepcion({
             </div>
           )}
 
-          <div className="bg-slate-50 dark:bg-zinc-800/50 p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 space-y-1">
-            <div className="flex justify-between text-xs text-slate-500">
+          <div className="bg-slate-50 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 space-y-1">
+            <div className="flex justify-between text-xs text-slate-500 dark:text-zinc-400">
               <span>Duración estimada:</span>
               <span className="font-semibold text-slate-700 dark:text-zinc-300">{duracionTotal} minutos</span>
             </div>
             <div className="flex justify-between text-sm font-bold text-slate-900 dark:text-zinc-100">
               <span>Total a cobrar:</span>
-              <span className="text-emerald-600 dark:text-emerald-400">${precioTotal.toLocaleString('es-AR')}</span>
+              <span className="text-emerald-700 dark:text-emerald-400">${precioTotal.toLocaleString('es-AR')}</span>
             </div>
             {detalleTexto && (
               <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate pt-0.5">
@@ -438,7 +439,7 @@ export default function ModalNuevoTurnoRecepcion({
             )}
           </div>
 
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-2.5 pt-2">
             <button
               type="button"
               onClick={onClose}
@@ -449,7 +450,7 @@ export default function ModalNuevoTurnoRecepcion({
             <button
               type="submit"
               disabled={guardando}
-              className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-semibold rounded-xl transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {guardando ? 'Guardando...' : turnoAEditar ? 'Guardar Cambios' : 'Crear Turno'}
             </button>
@@ -457,7 +458,7 @@ export default function ModalNuevoTurnoRecepcion({
         </form>
       </div>
 
-      {/* MODAL SWAP INTERNO (Reutiliza ModalSwapZona con filtro de género activo de calculos.ts) */}
+      {/* MODAL SWAP INTERNO */}
       {swapTargetZona && (
         <ModalSwapZona
           zonaOriginal={swapTargetZona}
