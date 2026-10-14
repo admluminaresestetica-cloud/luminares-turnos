@@ -178,7 +178,24 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
 export function useCarrito() {
   const context = useContext(CarritoContext);
   if (!context) {
-    throw new Error("useCarrito debe usarse dentro de un CarritoProvider");
+    return {
+      carrito: [],
+      items: [],
+      datosEnvio: {
+        nombreCliente: "",
+        telefonoCliente: "",
+        direccion: "",
+        metodoEnvio: "retiro",
+        notaAdicional: "",
+      },
+      setDatosEnvio: () => {},
+      agregarAlCarrito: () => {},
+      restarDelCarrito: () => {},
+      restarUnidad: () => {},
+      eliminarDelCarrito: () => {},
+      vaciarCarrito: () => {},
+      total: 0,
+    };
   }
   return context;
 }
