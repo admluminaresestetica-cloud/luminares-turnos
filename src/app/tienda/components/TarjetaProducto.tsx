@@ -4,6 +4,8 @@ import React from "react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 import { useFavoritos } from "@/context/FavoritosContext";
+import { useConfig } from "@/context/ConfigContext";
+import { calcularCuotas } from "@/lib/precios";
 import { Plus, Minus, Flame, ShoppingCart, Truck, Heart } from "lucide-react";
 
 interface TarjetaProductoProps {
@@ -22,6 +24,7 @@ export default function TarjetaProducto({
 }: TarjetaProductoProps) {
   const context = useCarrito();
   const { toggleFavorito, esFavorito } = useFavoritos();
+  const { config } = useConfig();
 
   const esFav = esFavorito(producto.id);
 
@@ -63,10 +66,26 @@ export default function TarjetaProducto({
     ? new Intl.NumberFormat("es-AR").format(precioBaseNum)
     : null;
 
-  // Cálculo de 3 cuotas fijas (+25% de recargo sobre el precio lista)
-  const totalConRecargoCuotas = Math.round((producto.precio || 0) * 1.25);
-  const montoCuota = Math.round(totalConRecargoCuotas / 3);
-  const cuotaFormateada = new Intl.NumberFormat("es-AR").format(montoCuota);
+  // --- LÓGICA DINÁMICA DE CUOTAS ---
+  const cuotasHabilitadas = config?.cuotas_habilitadas ?? true;
+  const cantidadCuotasConfig = config?.cantidad_cuotas ?? 3;
+  const porcentajeRecargoConfig = config?.porcentaje_recargo_cuotas ?? 25;
+  const montoMinimoCuotas = config?.monto_minimo_cuotas ?? 0;
+
+  const precioProducto = producto.precio || 0;
+  const aplicaCuotas = 
+    cuotasHabilitadas && 
+    producto.permite_cuotas !== false && 
+    !sinStock && 
+    precioProducto >= montoMinimoCuotas;
+
+  const datosCuotas = calcularCuotas(
+    precioProducto, 
+    cantidadCuotasConfig, 
+    porcentajeRecargoConfig
+  );
+  
+  const cuotaFormateada = new Intl.NumberFormat("es-AR").format(datosCuotas.montoCuota);
 
   const handleRestar = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -180,11 +199,11 @@ export default function TarjetaProducto({
             )}
           </div>
 
-          {/* Badge de 3 cuotas fijas */}
-          {!sinStock && producto.permite_cuotas !== false && (
+          {/* Badge dinámico de cuotas */}
+          {aplicaCuotas && (
             <div className="mt-1">
               <span className="inline-block rounded-md border border-purple-200 dark:border-purple-900/60 bg-purple-50 dark:bg-purple-950/40 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 dark:text-purple-300">
-                💳 3 cuotas fijas de ${cuotaFormateada}
+                💳 {cantidadCuotasConfig} cuotas fijas de ${cuotaFormateada}
               </span>
             </div>
           )}

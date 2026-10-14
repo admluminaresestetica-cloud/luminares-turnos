@@ -54,8 +54,12 @@ export interface ConfiguracionEmpresa {
   costo_envio_base?: number;
   envio_gratis_activo?: boolean;
   monto_envio_gratis?: number;
+  
+  // Campos de configuración de Cuotas / Financiación
   cuotas_habilitadas?: boolean;
   monto_minimo_cuotas?: number;
+  cantidad_cuotas?: number;              // Nuevo: ej. 3, 6, 12
+  porcentaje_recargo_cuotas?: number;    // Nuevo: ej. 25 (para 25%)
 
   // Personalización visual
   tema_colores?: TemaColores | null;
@@ -63,7 +67,7 @@ export interface ConfiguracionEmpresa {
   updated_at?: string;
 }
 
-// Obtener la configuración actual asegurando el tema de colores por defecto
+// Obtener la configuración actual asegurando valores por defecto seguros
 export async function obtenerConfiguracion(): Promise<ConfiguracionEmpresa | null> {
   try {
     const { data, error } = await supabase
@@ -79,6 +83,10 @@ export async function obtenerConfiguracion(): Promise<ConfiguracionEmpresa | nul
 
     return {
       ...data,
+      cuotas_habilitadas: data.cuotas_habilitadas ?? true,
+      cantidad_cuotas: data.cantidad_cuotas ?? 3,
+      porcentaje_recargo_cuotas: data.porcentaje_recargo_cuotas ?? 25,
+      monto_minimo_cuotas: data.monto_minimo_cuotas ?? 0,
       tema_colores: data.tema_colores
         ? { ...TEMA_COLORES_DEFAULT, ...data.tema_colores }
         : TEMA_COLORES_DEFAULT,
