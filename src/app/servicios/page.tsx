@@ -194,7 +194,7 @@ function ServiciosContent() {
             >
               <Link href="/" className="inline-flex items-center gap-2">
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Volver al inicio</span>
+                <span>Volver </span>
               </Link>
             </Button>
           ) : (

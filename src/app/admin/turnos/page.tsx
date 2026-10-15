@@ -56,14 +56,9 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href="/admin"
-              className="flex-1 sm:flex-none bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-95 select-none shadow-xs hover:shadow flex items-center justify-center gap-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700"
-            >
-              <ArrowLeft className="h-4 w-4 text-slate-500 dark:text-zinc-400" />
-              <span>Menú Admin</span>
-            </Link>
+    <div className="flex items-center gap-2 shrink-0">
+
+      
           </div>
         </div>
 

@@ -9,7 +9,8 @@ import {
   CheckCircle2, 
   Clock, 
   FolderClock, 
-  Sparkles 
+  Clipboard,
+  ArrowLeft
 } from 'lucide-react'
 import ModalHistorialCliente from '../recepcion/components/ModalHistorialCliente'
 import ModalCierreGabinete from './components/ModalCierreGabinete'
@@ -102,7 +103,7 @@ export default function GabinetePage() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-xs">
           <div className="flex items-center gap-3.5">
             <div className="p-3 bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 rounded-2xl border border-purple-200/60 dark:border-purple-800/40">
-              <Sparkles className="h-6 w-6" />
+              <Clipboard className="h-6 w-6" />
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">

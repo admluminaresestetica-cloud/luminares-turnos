@@ -340,22 +340,11 @@ export default function AgendaTab({
             />
           )}
 
-          <select
-            value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="pendiente_sena">⏳ Pendiente Seña</option>
-            <option value="confirmado">✅ Confirmado</option>
-            <option value="completado">🎉 Completado</option>
-            <option value="cancelado">❌ Cancelado</option>
-          </select>
-
+{/* Filtro Medio de Pago estilizado */}
           <select
             value={filtroMedioPago}
             onChange={(e) => setFiltroMedioPago(e.target.value)}
-            className="border border-blue-200 bg-blue-50/50 text-blue-900 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/30 transition-all dark:bg-blue-950/60 dark:border-blue-900 dark:text-blue-300"
+            className="border border-slate-200/80 dark:border-zinc-700/80 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 rounded-xl px-3 py-2 text-xs font-semibold outline-none focus:border-purple-500 transition-all cursor-pointer shadow-2xs"
           >
             <option value="todos">Todos los medios de pago</option>
             <option value="mercadopago">💳 Mercado Pago</option>
@@ -363,16 +352,17 @@ export default function AgendaTab({
             <option value="whatsapp">💬 WhatsApp</option>
           </select>
 
+          {/* Botón Nuevo Turno */}
           <button
+            type="button"
             onClick={onNuevoTurno}
-            className="min-h-[44px] px-4 py-3 sm:py-2.5 text-xs sm:text-sm bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 active:scale-95 select-none dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl transition-all active:scale-95 shadow-2xs cursor-pointer shrink-0"
           >
             <Plus className="w-4 h-4" />
-            Nuevo Turno
+            <span>Nuevo Turno</span>
           </button>
         </div>
       </div>
-
       <ResumenAgenda turnos={turnosAgendaResumen} esFechaPasada={esFechaAgendaPasada} />
 
       {loading ? (

@@ -252,13 +252,13 @@ export default function MetricasPage() {
         </div>
 
         <Link
-          href="/admin"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-700 transition-all shadow-xs"
-        >
-          <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
-          <span>Volver al Menú Admin</span>
-        </Link>
-      </div>
+            href="/admin"
+            className="p-2 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded-xl border border-slate-200/80 dark:border-zinc-700 transition-all active:scale-95 shadow-2xs shrink-0"
+            title="Volver al Menú Admin"
+          >
+            <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
+          </Link>
+        </div>
 
       {/* Selector de Rango de Fechas */}
       <DateRangePicker

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Sun, Moon } from 'lucide-react';
+import { ToggleRight, ToggleLeft } from 'lucide-react';
 
 export default function ThemeToggle() {
   const pathname = usePathname();
@@ -44,9 +44,9 @@ export default function ThemeToggle() {
       className="flex items-center justify-center w-9 h-9 rounded-2xl bg-white/10 hover:bg-white/20 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700/80 shadow-xs transition-all active:scale-95 cursor-pointer"
     >
       {isDark ? (
-        <Sun className="w-4 h-4 text-amber-400 transition-transform hover:rotate-45" />
+        <ToggleRight className="w-4 h-4 text-amber-400 transition-transform hover:rotate-45" />
       ) : (
-        <Moon className="w-4 h-4 text-slate-600 dark:text-zinc-300 transition-transform hover:-rotate-12" />
+        <ToggleLeft className="w-4 h-4 text-slate-600 dark:text-zinc-300 transition-transform hover:-rotate-12" />
       )}
     </button>
   );

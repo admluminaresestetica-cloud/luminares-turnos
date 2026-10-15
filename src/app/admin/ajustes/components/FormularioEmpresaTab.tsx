@@ -550,6 +550,22 @@ export default function FormularioEmpresaTab() {
           </div>
         </div>
 
+        <div>
+  <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+    Porcentaje Recargo Débito / 1 Pago (%)
+  </label>
+  <input
+    type="number"
+    name="porcentaje_recargo_debito"
+    value={form.porcentaje_recargo_debito ?? 10}
+    onChange={handleChange}
+    min="0"
+    step="0.1"
+    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
+  />
+  <p className="mt-1 text-[10px] text-slate-400">Ej. 10 para un 10% de recargo en débito.</p>
+</div>
+
         <div className="flex justify-end">
           <button
             type="submit"
@@ -559,6 +575,8 @@ export default function FormularioEmpresaTab() {
             {saving ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>
+
+
       </form>
     </div>
   );

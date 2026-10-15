@@ -59,7 +59,8 @@ export interface ConfiguracionEmpresa {
   cuotas_habilitadas?: boolean;
   monto_minimo_cuotas?: number;
   cantidad_cuotas?: number;              // Nuevo: ej. 3, 6, 12
-  porcentaje_recargo_cuotas?: number;    // Nuevo: ej. 25 (para 25%)
+  porcentaje_recargo_cuotas?: number;
+  porcentaje_recargo_debito?: number;    // Nuevo: ej. 25 (para 25%)
 
   // Personalización visual
   tema_colores?: TemaColores | null;
