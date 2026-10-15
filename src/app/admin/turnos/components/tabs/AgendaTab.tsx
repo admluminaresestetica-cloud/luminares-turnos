@@ -9,15 +9,12 @@ import {
   Gift, 
   CreditCard, 
   Trash2, 
-  ChevronDown, 
   Calendar, 
   Scissors, 
   Phone, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
   MessageCircle,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Edit3
 } from 'lucide-react'
 import ResumenAgenda from '@/app/admin/turnos/components/ResumenAgenda'
 import { Reserva, renderDetalle, renderFechaHora } from '@/app/admin/turnos/components/types'
@@ -43,193 +40,23 @@ interface AgendaTabProps {
   onEliminarTurno: (id: string) => Promise<void> | void
 }
 
-// Componente para renderizar la tarjeta expandible en Mobile
-function TarjetaTurnoMobile({
-  t,
-  onEditarTurno,
-  onActualizarEstado,
-  handleConfirmarEliminacion
-}: {
-  t: Reserva
-  onEditarTurno: (t: Reserva) => void
-  onActualizarEstado: (id: string, nuevoEstado: string) => void
-  handleConfirmarEliminacion: (id: string, cliente: string) => void
-}) {
-  const [expandido, setExpandido] = useState(false)
+// Helper para generar iniciales y color de avatar tipo "PR"
+function getAvatarInfo(nombre?: string) {
+  const limpio = (nombre || 'Cliente').trim()
+  const partes = limpio.split(' ')
+  const iniciales = partes.length > 1 
+    ? `${partes[0][0]}${partes[1][0]}`.toUpperCase() 
+    : limpio.slice(0, 2).toUpperCase()
 
-  const numCelularLimpio = t.cliente_celular ? t.cliente_celular.replace(/\D/g, '') : ''
-
-  return (
-    <div
-      onClick={() => setExpandido(!expandido)}
-      className="bg-white border border-gray-100 rounded-2xl p-4 shadow-xs transition-all active:scale-[0.99] cursor-pointer select-none dark:bg-zinc-800/80 dark:border-zinc-700/60"
-    >
-      {/* CABECERA RESUMIDA (Visible siempre) */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-col min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-md dark:bg-zinc-700 dark:text-zinc-400">
-              #{t.codigo_unico || '-'}
-            </span>
-            <h4 className="text-sm font-bold text-gray-900 truncate dark:text-zinc-100">
-              {t.cliente_nombre || 'Sin nombre'}
-            </h4>
-
-            {(t as any).codigo_referido_propio && (
-              <span className="bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.2 text-[10px] font-mono font-bold rounded dark:bg-zinc-700 dark:border-zinc-600 dark:text-zinc-300">
-                {(t as any).codigo_referido_propio}
-              </span>
-            )}
-
-            {t.codigo_referido_usado && (
-              <span className="inline-flex items-center gap-0.5 bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.2 rounded-full text-[10px] font-semibold dark:bg-purple-950/60 dark:border-purple-900 dark:text-purple-300">
-                <Gift className="w-2.5 h-2.5" />
-                {t.codigo_referido_usado}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-base font-extrabold text-gray-900 dark:text-zinc-100">
-            ${(Number(t.precio_total) || 0).toLocaleString('es-AR')}
-          </span>
-          <ChevronDown
-            className={`w-4 h-4 text-gray-400 transition-transform duration-200 dark:text-zinc-500 ${
-              expandido ? 'rotate-180' : ''
-            }`}
-          />
-        </div>
-      </div>
-
-      {/* ESTADO Y MEDIO DE PAGO (Visible siempre) */}
-      <div className="flex items-center gap-2 mt-2.5">
-        <span
-          className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize ${
-            t.estado === 'confirmado'
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300'
-              : t.estado === 'completado'
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'
-              : t.estado === 'cancelado'
-              ? 'bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300'
-              : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/80 dark:text-yellow-300'
-          }`}
-        >
-          {t.estado || 'pendiente'}
-        </span>
-
-        {(t.medio_pago || t.tipo_pago_elegido) && (
-          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300">
-            <CreditCard className="w-2.5 h-2.5" />
-            {t.medio_pago || t.tipo_pago_elegido}
-          </span>
-        )}
-      </div>
-
-      {/* DETALLE EXPANDIBLE (Visible solo al hacer tap) */}
-      {expandido && (
-        <div className="mt-3 pt-3 border-t border-gray-100 space-y-3 text-xs text-gray-600 dark:border-zinc-700/80 dark:text-zinc-300 animate-in fade-in duration-200">
-          {/* Fecha y Hora */}
-          <div className="flex items-center gap-2">
-            <Calendar className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-            <span className="font-semibold text-gray-800 dark:text-zinc-200">
-              {renderFechaHora(t.fecha_hora_inicio)}
-            </span>
-          </div>
-
-          {/* Detalle / Zonas */}
-          <div className="flex items-start gap-2">
-            <Scissors className="w-3.5 h-3.5 text-rose-500 mt-0.5 shrink-0" />
-            <p className="m-0 bg-gray-50 p-2 rounded-xl text-xs text-gray-700 font-medium leading-relaxed w-full border border-gray-100 dark:bg-zinc-900 dark:border-zinc-700/50 dark:text-zinc-300">
-              {renderDetalle(t)}
-            </p>
-          </div>
-
-          {/* Teléfono / WhatsApp */}
-          {t.cliente_celular && (
-            <div className="flex items-center justify-between bg-emerald-50/60 p-2 rounded-xl border border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/40">
-              <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-300">
-                <Phone className="w-3.5 h-3.5" />
-                <span className="font-semibold">{t.cliente_celular}</span>
-              </div>
-              {numCelularLimpio && (
-                <a
-                  href={`https://wa.me/${numCelularLimpio}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 text-[11px] bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-lg hover:bg-emerald-700 transition-colors"
-                >
-                  <MessageCircle className="w-3 h-3" />
-                  WhatsApp
-                </a>
-              )}
-            </div>
-          )}
-
-          {/* Botones de Acción Móviles */}
-          <div className="pt-2 flex flex-wrap items-center gap-1.5 justify-end border-t border-gray-100 dark:border-zinc-700/50">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onEditarTurno(t)
-              }}
-              className="text-xs bg-gray-100 text-gray-800 px-3 py-2 rounded-xl font-bold hover:bg-gray-200 transition-all active:scale-95 select-none dark:bg-zinc-700 dark:text-zinc-200"
-            >
-              Editar
-            </button>
-
-            {t.estado !== 'confirmado' && t.estado !== 'completado' && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onActualizarEstado(t.id, 'confirmado')
-                }}
-                className="text-xs bg-blue-50 text-blue-600 px-3 py-2 rounded-xl font-bold hover:bg-blue-100 transition-all active:scale-95 select-none dark:bg-blue-950/60 dark:text-blue-400"
-              >
-                Confirmar
-              </button>
-            )}
-
-            {t.estado !== 'completado' && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onActualizarEstado(t.id, 'completado')
-                }}
-                className="text-xs bg-emerald-50 text-emerald-600 px-3 py-2 rounded-xl font-bold hover:bg-emerald-100 transition-all active:scale-95 select-none dark:bg-emerald-950/60 dark:text-emerald-400"
-              >
-                Completar
-              </button>
-            )}
-
-            {t.estado !== 'cancelado' && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onActualizarEstado(t.id, 'cancelado')
-                }}
-                className="text-xs bg-red-50 text-red-600 px-3 py-2 rounded-xl font-bold hover:bg-red-100 transition-all active:scale-95 select-none dark:bg-red-950/60 dark:text-red-400"
-              >
-                Cancelar
-              </button>
-            )}
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleConfirmarEliminacion(t.id, t.cliente_nombre || '')
-              }}
-              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-95 select-none dark:text-zinc-500 dark:hover:text-red-400 dark:hover:bg-red-950/60"
-              title="Eliminar reserva permanentemente"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+  const colores = [
+    'bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300',
+    'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300',
+    'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300',
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300',
+    'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300',
+  ]
+  const index = limpio.charCodeAt(0) % colores.length
+  return { iniciales, colorClass: colores[index] }
 }
 
 export default function AgendaTab({
@@ -340,11 +167,22 @@ export default function AgendaTab({
             />
           )}
 
-{/* Filtro Medio de Pago estilizado */}
+          <select
+            value={filtroEstado}
+            onChange={(e) => setFiltroEstado(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
+          >
+            <option value="todos">Todos los estados</option>
+            <option value="pendiente_sena">⏳ Pendiente Seña</option>
+            <option value="confirmado">✅ Confirmado</option>
+            <option value="completado">🎉 Completado</option>
+            <option value="cancelado">❌ Cancelado</option>
+          </select>
+
           <select
             value={filtroMedioPago}
             onChange={(e) => setFiltroMedioPago(e.target.value)}
-            className="border border-slate-200/80 dark:border-zinc-700/80 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 rounded-xl px-3 py-2 text-xs font-semibold outline-none focus:border-purple-500 transition-all cursor-pointer shadow-2xs"
+            className="border border-blue-200 bg-blue-50/50 text-blue-900 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/30 transition-all dark:bg-blue-950/60 dark:border-blue-900 dark:text-blue-300"
           >
             <option value="todos">Todos los medios de pago</option>
             <option value="mercadopago">💳 Mercado Pago</option>
@@ -352,17 +190,16 @@ export default function AgendaTab({
             <option value="whatsapp">💬 WhatsApp</option>
           </select>
 
-          {/* Botón Nuevo Turno */}
           <button
-            type="button"
             onClick={onNuevoTurno}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl transition-all active:scale-95 shadow-2xs cursor-pointer shrink-0"
+            className="min-h-[44px] px-4 py-3 sm:py-2.5 text-xs sm:text-sm bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 active:scale-95 select-none dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             <Plus className="w-4 h-4" />
-            <span>Nuevo Turno</span>
+            Nuevo Turno
           </button>
         </div>
       </div>
+
       <ResumenAgenda turnos={turnosAgendaResumen} esFechaPasada={esFechaAgendaPasada} />
 
       {loading ? (
@@ -378,168 +215,167 @@ export default function AgendaTab({
         </div>
       ) : (
         <div className="p-4 sm:p-6">
-          {/* VISTA MÓVIL (TARJETAS EXPANDIBLES < lg) */}
-          <div className="flex flex-col gap-3 lg:hidden">
-            {turnosFinales.map((t) => (
-              <TarjetaTurnoMobile
-                key={t.id}
-                t={t}
-                onEditarTurno={onEditarTurno}
-                onActualizarEstado={onActualizarEstado}
-                handleConfirmarEliminacion={handleConfirmarEliminacion}
-              />
-            ))}
-          </div>
+          {/* LISTA DE TARJETAS FLOTANTES MODERNAS */}
+          <div className="flex flex-col gap-3.5">
+            {turnosFinales.map((t) => {
+              const { iniciales, colorClass } = getAvatarInfo(t.cliente_nombre)
+              const detalleTexto = renderDetalle(t)
+              const numCelularLimpio = t.cliente_celular ? t.cliente_celular.replace(/\D/g, '') : ''
 
-          {/* VISTA ESCRITORIO / PC (TABLA COMPLETA >= lg) */}
-          <div className="hidden lg:block w-full max-h-[70vh] overflow-auto scroll-smooth rounded-2xl border border-gray-100 dark:border-zinc-800 relative">
-            <table className="w-full min-w-[1050px] text-left text-sm border-collapse">
-              <thead className="bg-gray-50/90 border-b border-gray-100 text-gray-400 uppercase text-[11px] font-semibold tracking-wider sticky top-0 z-10 backdrop-blur-md dark:bg-zinc-900/90 dark:border-zinc-800 dark:text-zinc-500">
-                <tr>
-                  <th className="px-4 py-3.5 rounded-l-xl w-24">Código</th>
-                  <th className="px-4 py-3.5 min-w-[200px]">Cliente</th>
-                  <th className="px-4 py-3.5 min-w-[180px]">Fecha y Hora</th>
-                  <th className="px-4 py-3.5 min-w-[220px]">Detalle / Zonas</th>
-                  <th className="px-4 py-3.5 w-28">Monto</th>
-                  <th className="px-4 py-3.5 min-w-[160px]">Estado / Medio Pago</th>
-                  <th className="px-4 py-3.5 text-right rounded-r-xl min-w-[220px]">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-zinc-800">
-                {turnosFinales.map((t) => (
-                  <tr key={t.id} className="hover:bg-gray-50/60 transition-colors dark:hover:bg-zinc-800/50">
-                    <td className="px-4 py-4 font-mono text-xs text-gray-400 whitespace-nowrap dark:text-zinc-500">
-                      #{t.codigo_unico || '-'}
-                    </td>
-                    <td className="px-4 py-4 font-medium">
+              const detalle = typeof t.detalle_reserva === 'string' 
+                ? JSON.parse(t.detalle_reserva || '{}') 
+                : t.detalle_reserva || {}
+              
+              const fueModificado = (t as any).modificado_por_admin || detalle.hubo_cambios || (detalle.swaps && Object.keys(detalle.swaps).length > 0)
+
+              return (
+                <div
+                  key={t.id}
+                  className="bg-white dark:bg-zinc-800/80 border border-gray-100 dark:border-zinc-700/60 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  {/* IZQUIERDA: Avatar con iniciales, Nombre, Celular, Fecha y Zonas */}
+                  <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${colorClass}`}>
+                      {iniciales}
+                    </div>
+
+                    <div className="flex flex-col min-w-0 gap-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-gray-900 dark:text-zinc-100 font-bold">{t.cliente_nombre || 'Sin nombre'}</span>
-                         
-                         {(() => {
-      const detalle = typeof t.detalle_reserva === 'string' 
-        ? JSON.parse(t.detalle_reserva || '{}') 
-        : t.detalle_reserva || {}
-      
-      const fueModificado = (t as any).modificado_por_admin || detalle.hubo_cambios || (detalle.swaps && Object.keys(detalle.swaps).length > 0)
+                        <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md dark:bg-zinc-700 dark:text-zinc-400">
+                          #{t.codigo_unico || '-'}
+                        </span>
+                        <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate">
+                          {t.cliente_nombre || 'Sin nombre'}
+                        </h4>
 
-      if (!fueModificado) return null
-
-      return (
-        <span
-          className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-md text-[11px] font-semibold dark:bg-purple-950/60 dark:border-purple-900 dark:text-purple-300"
-          title="Este turno fue modificado (contiene swaps o ajustes de zonas)"
-        >
-          <SlidersHorizontal className="w-3 h-3" />
-          <span>Modificado</span>
-        </span>
-      )
-    })()}
-                        {(t as any).codigo_referido_propio && (
-                          <span
-                            className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
-                            title="Código de referido propio del cliente"
-                          >
-                            {(t as any).codigo_referido_propio}
+                        {fueModificado && (
+                          <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-md text-[10px] font-semibold dark:bg-purple-950/60 dark:border-purple-900 dark:text-purple-300">
+                            <SlidersHorizontal className="w-2.5 h-2.5" />
+                            <span>Modificado</span>
                           </span>
                         )}
 
                         {t.codigo_referido_usado && (
-                          <span
-                            className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-[11px] font-semibold dark:bg-purple-950/60 dark:border-purple-900 dark:text-purple-300"
-                            title="Descuento aplicado con código"
-                          >
-                            <Gift className="w-3 h-3" />
+                          <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-[10px] font-semibold dark:bg-purple-950/60 dark:border-purple-900 dark:text-purple-300">
+                            <Gift className="w-2.5 h-2.5" />
                             {t.codigo_referido_usado}
                           </span>
                         )}
                       </div>
-                      {t.cliente_celular && (
-                        <div className="text-xs text-gray-400 mt-0.5 dark:text-zinc-400 font-normal">
-                          {t.cliente_celular}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-xs text-gray-600 whitespace-nowrap dark:text-zinc-400">
-                      {renderFechaHora(t.fecha_hora_inicio)}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="text-xs bg-gray-100 px-2.5 py-1 rounded-lg text-gray-700 font-medium inline-block max-w-[280px] truncate dark:bg-zinc-800 dark:text-zinc-300">
-                        {renderDetalle(t)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 font-extrabold text-gray-900 whitespace-nowrap dark:text-zinc-100">
-                      ${(Number(t.precio_total) || 0).toLocaleString('es-AR')}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex flex-col items-start gap-1">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold capitalize ${
-                            t.estado === 'confirmado'
-                              ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300'
-                              : t.estado === 'completado'
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'
-                              : t.estado === 'cancelado'
-                              ? 'bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300'
-                              : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/80 dark:text-yellow-300'
-                          }`}
-                        >
-                          {t.estado || 'pendiente'}
-                        </span>
 
-                        {(t.medio_pago || t.tipo_pago_elegido) && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300">
-                            <CreditCard className="w-3 h-3" />
-                            {t.medio_pago || t.tipo_pago_elegido}
+                      {/* Teléfono y Fecha */}
+                      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-zinc-400 flex-wrap">
+                        {t.cliente_celular && (
+                          <span className="flex items-center gap-1 font-mono">
+                            <Phone className="w-3 h-3 text-gray-400" />
+                            {t.cliente_celular}
                           </span>
                         )}
+                        <span className="text-gray-300 dark:text-zinc-600">•</span>
+                        <span className="flex items-center gap-1 font-medium text-gray-700 dark:text-zinc-300">
+                          <Calendar className="w-3.5 h-3.5 text-rose-500" />
+                          {renderFechaHora(t.fecha_hora_inicio)}
+                        </span>
                       </div>
-                    </td>
-                    <td className="px-4 py-4 text-right whitespace-nowrap">
-                      <div className="inline-flex items-center justify-end gap-1.5 w-full">
-                        <button
-                          onClick={() => onEditarTurno(t)}
-                          className="text-xs bg-gray-100 text-gray-700 px-2.5 py-2 rounded-lg hover:bg-gray-200 font-bold transition-all active:scale-95 select-none dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                        >
-                          Editar
-                        </button>
-                        {t.estado !== 'confirmado' && t.estado !== 'completado' && (
-                          <button
-                            onClick={() => onActualizarEstado(t.id, 'confirmado')}
-                            className="text-xs bg-blue-50 text-blue-600 px-2.5 py-2 rounded-lg hover:bg-blue-100 font-bold transition-all active:scale-95 select-none dark:bg-blue-950/60 dark:text-blue-400 dark:hover:bg-blue-900/60"
-                          >
-                            Confirmar
-                          </button>
-                        )}
-                        {t.estado !== 'completado' && (
-                          <button
-                            onClick={() => onActualizarEstado(t.id, 'completado')}
-                            className="text-xs bg-emerald-50 text-emerald-600 px-2.5 py-2 rounded-lg hover:bg-emerald-100 font-bold transition-all active:scale-95 select-none dark:bg-emerald-950/60 dark:text-emerald-400 dark:hover:bg-emerald-900/60"
-                          >
-                            Completar
-                          </button>
-                        )}
-                        {t.estado !== 'cancelado' && (
-                          <button
-                            onClick={() => onActualizarEstado(t.id, 'cancelado')}
-                            className="text-xs bg-red-50 text-red-600 px-2.5 py-2 rounded-lg hover:bg-red-100 font-bold transition-all active:scale-95 select-none dark:bg-red-950/60 dark:text-red-400 dark:hover:bg-red-900/60"
-                          >
-                            Cancelar
-                          </button>
-                        )}
 
-                        <button
-                          onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all active:scale-95 select-none dark:text-zinc-500 dark:hover:text-red-400 dark:hover:bg-red-950/60"
-                          title="Eliminar reserva permanentemente"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      {/* Detalle y Monto */}
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="inline-flex items-center gap-1 text-xs bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-2.5 py-1 rounded-lg font-medium max-w-md truncate" title={detalleTexto}>
+                          <Scissors className="w-3 h-3 text-rose-500 shrink-0" />
+                          {detalleTexto}
+                        </span>
+                        <span className="text-xs font-extrabold text-gray-900 dark:text-zinc-100 ml-1">
+                          Monto: ${(Number(t.precio_total) || 0).toLocaleString('es-AR')}
+                        </span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+
+                  {/* DERECHA: Estado, Medio de pago y Botones (Editar, Confirmar, Completar, Cancelar, Eliminar) */}
+                  <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t border-gray-100 dark:border-zinc-700/50 md:border-t-0 shrink-0 flex-wrap">
+                    <div className="flex flex-col items-start md:items-end gap-1">
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-[11px] font-bold capitalize ${
+                          t.estado === 'confirmado'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300'
+                            : t.estado === 'completado'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'
+                            : t.estado === 'cancelado'
+                            ? 'bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300'
+                            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/80 dark:text-yellow-300'
+                        }`}
+                      >
+                        {t.estado || 'pendiente'}
+                      </span>
+
+                      {(t.medio_pago || t.tipo_pago_elegido) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300">
+                          <CreditCard className="w-2.5 h-2.5" />
+                          {t.medio_pago || t.tipo_pago_elegido}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Botones de acción completos */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {numCelularLimpio && (
+                        <a
+                          href={`https://wa.me/${numCelularLimpio}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1.5 rounded-xl font-bold hover:bg-emerald-100 transition-all flex items-center gap-1 dark:bg-emerald-950/60 dark:text-emerald-300"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          WhatsApp
+                        </a>
+                      )}
+
+                      <button
+                        onClick={() => onEditarTurno(t)}
+                        className="text-xs bg-gray-100 text-gray-800 px-3 py-1.5 rounded-xl font-bold hover:bg-gray-200 transition-all active:scale-95 dark:bg-zinc-700 dark:text-zinc-200"
+                      >
+                        Editar
+                      </button>
+
+                      {t.estado !== 'confirmado' && t.estado !== 'completado' && (
+                        <button
+                          onClick={() => onActualizarEstado(t.id, 'confirmado')}
+                          className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl font-bold hover:bg-blue-100 transition-all active:scale-95 dark:bg-blue-950/60 dark:text-blue-400"
+                        >
+                          Confirmar
+                        </button>
+                      )}
+
+                      {t.estado !== 'completado' && (
+                        <button
+                          onClick={() => onActualizarEstado(t.id, 'completado')}
+                          className="text-xs bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl font-bold hover:bg-emerald-100 transition-all active:scale-95 dark:bg-emerald-950/60 dark:text-emerald-400"
+                        >
+                          Completar
+                        </button>
+                      )}
+
+                      {t.estado !== 'cancelado' && (
+                        <button
+                          onClick={() => onActualizarEstado(t.id, 'cancelado')}
+                          className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-xl font-bold hover:bg-red-100 transition-all active:scale-95 dark:bg-red-950/60 dark:text-red-400"
+                        >
+                          Cancelar
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-95 dark:text-zinc-500 dark:hover:text-red-400 dark:hover:bg-red-950/60"
+                        title="Eliminar reserva permanentemente"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

@@ -1,3 +1,4 @@
+// src/app/admin/turnos/components/AgendaPanel.tsx
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -11,7 +12,10 @@ import {
   History, 
   Sparkles, 
   Scissors,
-  AlertCircle
+  AlertCircle,
+  CreditCard,
+  Phone,
+  MessageCircle
 } from 'lucide-react';
 import type { CierreJornada, ConfiguracionCalendario, Reserva } from '@/lib/types';
 import { matchBusqueda, renderDetalleReserva, renderFechaHora } from '@/lib/admin/helpers';
@@ -36,6 +40,25 @@ interface Props {
   configGeneral: ConfiguracionCalendario | null;
   onReservaUpdated: (r: Reserva) => void;
   onCierresChanged: () => void;
+}
+
+// Helper para generar iniciales y color de avatar estilo "PR"
+function getAvatarInfo(nombre?: string) {
+  const limpio = (nombre || 'Cliente').trim();
+  const partes = limpio.split(' ');
+  const iniciales = partes.length > 1 
+    ? `${partes[0][0]}${partes[1][0]}`.toUpperCase() 
+    : limpio.slice(0, 2).toUpperCase();
+
+  const colores = [
+    'bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300',
+    'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300',
+    'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300',
+    'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300',
+    'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300',
+  ];
+  const index = limpio.charCodeAt(0) % colores.length;
+  return { iniciales, colorClass: colores[index] };
 }
 
 export default function AgendaPanel({
@@ -238,104 +261,136 @@ export default function AgendaPanel({
             <p className="text-gray-500 dark:text-zinc-400 text-xs font-medium">No se encontraron reservas con los filtros seleccionados.</p>
           </div>
         ) : (
-          <div className="p-3 sm:p-0">
-            <p className="sm:hidden text-[11px] text-gray-400 dark:text-zinc-500 font-medium mb-2 px-1">
-              ↔ Deslizá la tabla hacia los costados para ver más columnas
-            </p>
-            <div className="overflow-x-auto scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <table className="w-full text-left text-xs min-w-[900px] sm:min-w-0">
-                <thead className="bg-gray-50/80 dark:bg-zinc-800/50 text-gray-500 dark:text-zinc-400 font-semibold uppercase tracking-wider text-[11px] border-b border-gray-100 dark:border-zinc-800">
-                  <tr>
-                    <th className="px-4 py-3 w-8" />
-                    <th className="px-4 py-3">Código</th>
-                    <th className="px-4 py-3">Cliente</th>
-                    <th className="px-4 py-3">Fecha / Hora</th>
-                    <th className="px-4 py-3">Servicio</th>
-                    <th className="px-4 py-3">Medio Pago</th>
-                    <th className="px-4 py-3">Asistencia</th>
-                    <th className="px-4 py-3">Estado</th>
-                    <th className="px-4 py-3 text-right">Acción</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-zinc-800/60">
-                  {filtradas.map((r) => {
-                    const cerrada = isJornadaCerrada(fechaDeReserva(r.fecha_hora_inicio), r.servicio_tipo, cierres);
-                    return (
-                      <tr 
-                        key={r.id} 
-                        className={`hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-colors ${cerrada ? 'bg-gray-50/50 dark:bg-zinc-800/30 opacity-75' : ''}`}
-                      >
-                        <td className="px-4 py-3">
-                          <span
-                            className={`inline-block w-2.5 h-2.5 rounded-full ${
-                              r.fue_modificado ? 'bg-amber-500' : 'bg-emerald-500'
-                            }`}
-                            title={r.fue_modificado ? 'Modificado por admin' : 'Reserva original'}
-                          />
-                        </td>
-                        <td className="px-4 py-3 font-mono font-bold text-gray-700 dark:text-zinc-300">{r.codigo_unico}</td>
-                        <td className="px-4 py-3">
-                          <div className="font-semibold text-gray-800 dark:text-zinc-100">{r.cliente_nombre}</div>
-                          <div className="text-[11px] text-gray-400 dark:text-zinc-500 font-mono">{r.cliente_celular}</div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-zinc-300 font-medium">
-                          {renderFechaHora(r.fecha_hora_inicio)}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600 dark:text-zinc-300 max-w-[150px] truncate" title={renderDetalleReserva(r)}>
-                          {renderDetalleReserva(r)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <select
-                            value={r.medio_pago || ''}
-                            onChange={(e) => handleCampo(r.id, { medio_pago: e.target.value || null })}
-                            disabled={cerrada}
-                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-2 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none max-w-[110px] transition-all"
+          <div className="p-4 sm:p-6">
+            {/* LISTA DE TARJETAS FLOTANTES MODERNAS */}
+            <div className="flex flex-col gap-3.5">
+              {filtradas.map((r) => {
+                const cerrada = isJornadaCerrada(fechaDeReserva(r.fecha_hora_inicio), r.servicio_tipo, cierres);
+                const { iniciales, colorClass } = getAvatarInfo(r.cliente_nombre);
+                const detalleTexto = renderDetalleReserva(r);
+                const numCelularLimpio = r.cliente_celular ? r.cliente_celular.replace(/\D/g, '') : '';
+
+                return (
+                  <div
+                    key={r.id}
+                    className={`bg-white dark:bg-zinc-800/80 border border-gray-100 dark:border-zinc-700/60 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                      cerrada ? 'opacity-75 bg-gray-50/50 dark:bg-zinc-800/30' : ''
+                    }`}
+                  >
+                    {/* IZQUIERDA: Avatar con iniciales, Código, Nombre, Celular, Fecha y Servicio */}
+                    <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${colorClass}`}>
+                        {iniciales}
+                      </div>
+
+                      <div className="flex flex-col min-w-0 gap-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`inline-block w-2.5 h-2.5 rounded-full ${r.fue_modificado ? 'bg-amber-500' : 'bg-emerald-500'}`} title={r.fue_modificado ? 'Modificado por admin' : 'Reserva original'} />
+                          <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md dark:bg-zinc-700 dark:text-zinc-400">
+                            #{r.codigo_unico || '-'}
+                          </span>
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate">
+                            {r.cliente_nombre || 'Sin nombre'}
+                          </h4>
+                        </div>
+
+                        {/* Teléfono y Fecha */}
+                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-zinc-400 flex-wrap">
+                          {r.cliente_celular && (
+                            <span className="flex items-center gap-1 font-mono">
+                              <Phone className="w-3 h-3 text-gray-400" />
+                              {r.cliente_celular}
+                            </span>
+                          )}
+                          <span className="text-gray-300 dark:text-zinc-600">•</span>
+                          <span className="flex items-center gap-1 font-medium text-gray-700 dark:text-zinc-300">
+                            <Calendar className="w-3.5 h-3.5 text-rose-500" />
+                            {renderFechaHora(r.fecha_hora_inicio)}
+                          </span>
+                        </div>
+
+                        {/* Detalle del servicio */}
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="inline-flex items-center gap-1 text-xs bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-2.5 py-1 rounded-lg font-medium max-w-md truncate" title={detalleTexto}>
+                            <Scissors className="w-3 h-3 text-rose-500 shrink-0" />
+                            {detalleTexto}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* DERECHA: Selectores de Medio de pago, Asistencia, Estado y Botón Editar */}
+                    <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t border-gray-100 dark:border-zinc-700/50 md:border-t-0 shrink-0 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Selector Medio de Pago */}
+                        <select
+                          value={r.medio_pago || ''}
+                          onChange={(e) => handleCampo(r.id, { medio_pago: e.target.value || null })}
+                          disabled={cerrada}
+                          className="text-xs border border-gray-200 dark:border-zinc-700 rounded-xl px-2.5 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:opacity-50 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none transition-all cursor-pointer font-medium"
+                          title="Medio de pago"
+                        >
+                          <option value="" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">— Pago —</option>
+                          {MEDIOS_PAGO.map((m) => (
+                            <option key={m.value} value={m.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{m.label}</option>
+                          ))}
+                        </select>
+
+                        {/* Selector Asistencia */}
+                        <select
+                          value={r.estado_asistencia || 'pendiente'}
+                          onChange={(e) => handleCampo(r.id, { estado_asistencia: e.target.value as typeof r.estado_asistencia })}
+                          disabled={cerrada}
+                          className="text-xs border border-gray-200 dark:border-zinc-700 rounded-xl px-2.5 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:opacity-50 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none transition-all cursor-pointer font-medium"
+                          title="Estado de asistencia"
+                        >
+                          {ESTADOS_ASISTENCIA.map((e) => (
+                            <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
+                          ))}
+                        </select>
+
+                        {/* Selector Estado */}
+                        <select
+                          value={r.estado}
+                          onChange={(e) => handleCampo(r.id, { estado: e.target.value as typeof r.estado })}
+                          disabled={cerrada}
+                          className="text-xs border border-gray-200 dark:border-zinc-700 rounded-xl px-2.5 py-1.5 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:opacity-50 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none transition-all cursor-pointer font-bold"
+                          title="Estado de reserva"
+                        >
+                          {ESTADOS_RESERVA.map((e) => (
+                            <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Botón WhatsApp & Editar */}
+                      <div className="flex items-center gap-1.5">
+                        {numCelularLimpio && (
+                          <a
+                            href={`https://wa.me/${numCelularLimpio}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-xl transition-all active:scale-90"
+                            title="Enviar WhatsApp"
                           >
-                            <option value="" className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">—</option>
-                            {MEDIOS_PAGO.map((m) => (
-                              <option key={m.value} value={m.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{m.label}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-4 py-3">
-                          <select
-                            value={r.estado_asistencia || 'pendiente'}
-                            onChange={(e) => handleCampo(r.id, { estado_asistencia: e.target.value as typeof r.estado_asistencia })}
-                            disabled={cerrada}
-                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-2 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none transition-all"
-                          >
-                            {ESTADOS_ASISTENCIA.map((e) => (
-                              <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-4 py-3">
-                          <select
-                            value={r.estado}
-                            onChange={(e) => handleCampo(r.id, { estado: e.target.value as typeof r.estado })}
-                            disabled={cerrada}
-                            className="text-xs border border-gray-200 dark:border-zinc-700 rounded-lg px-2 py-2 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 disabled:bg-gray-100 dark:disabled:bg-zinc-800/50 disabled:text-gray-400 dark:disabled:text-zinc-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900 focus:outline-none font-medium transition-all"
-                          >
-                            {ESTADOS_RESERVA.map((e) => (
-                              <option key={e.value} value={e.value} className="bg-white dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{e.label}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => setEditReserva(r)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-2.5 py-2 rounded-lg transition-all active:scale-95 select-none"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            Editar
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                            <MessageCircle className="w-4 h-4" />
+                          </a>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => setEditReserva(r)}
+                          className="text-xs bg-gray-100 text-gray-800 px-3 py-2 rounded-xl font-bold hover:bg-gray-200 transition-all active:scale-95 dark:bg-zinc-700 dark:text-zinc-200 flex items-center gap-1"
+                          title="Editar reserva"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Editar</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
