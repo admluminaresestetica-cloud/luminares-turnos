@@ -1,5 +1,5 @@
 "use client";
-
+import { Palette } from "lucide-react";
 interface ColorPickerProps {
   colorSeleccionado: string;
   onChangeColor: (color: string) => void;
@@ -18,28 +18,32 @@ export function ColorPicker({
   colorSeleccionado,
   onChangeColor,
 }: ColorPickerProps) {
-  return (
-    <div className="flex flex-col gap-2">
-      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+return (
+    <div className="flex flex-col gap-2.5">
+      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
         Color de Fondo
       </span>
 
       {/* Swatches de acceso rápido */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {PALETA_RAPIDA.map((item) => (
-          <button
-            key={item.hex}
-            type="button"
-            title={item.nombre}
-            onClick={() => onChangeColor(item.hex)}
-            className={`h-7 w-7 rounded-full border border-gray-300 transition-transform ${
-              colorSeleccionado.toLowerCase() === item.hex.toLowerCase()
-                ? "scale-110 ring-2 ring-emerald-500 ring-offset-1"
-                : "hover:scale-105"
-            }`}
-            style={{ backgroundColor: item.hex }}
-          />
-        ))}
+      <div className="flex items-center gap-2 flex-wrap">
+        {PALETA_RAPIDA.map((item: any) => {
+          const isSelected =
+            colorSeleccionado.toLowerCase() === item.hex.toLowerCase();
+          return (
+            <button
+              key={item.hex}
+              type="button"
+              title={item.nombre}
+              onClick={() => onChangeColor(item.hex)}
+              className={`h-7 w-7 rounded-full border border-slate-300 dark:border-zinc-700 transition-all cursor-pointer ${
+                isSelected
+                  ? "scale-110 ring-2 ring-emerald-500 dark:ring-emerald-400 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900"
+                  : "hover:scale-105 opacity-90 hover:opacity-100"
+              }`}
+              style={{ backgroundColor: item.hex }}
+            />
+          );
+        })}
 
         {/* Input Picker Personalizado */}
         <div className="relative flex items-center">
@@ -51,17 +55,18 @@ export function ColorPicker({
             title="Elegir color personalizado"
           />
           <div
-            className="h-7 w-7 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-[10px] font-bold text-gray-600 bg-white hover:bg-gray-50"
+            className="h-7 w-7 rounded-full border-2 border-dashed border-slate-300 dark:border-zinc-600 flex items-center justify-center text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 transition-all shadow-2xs"
             style={{ backgroundColor: colorSeleccionado }}
           >
-            🎨
+            <Palette className="w-3.5 h-3.5 mix-blend-difference text-white" />
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between text-[10px] font-mono text-gray-400">
-        <span>HEX:</span>
-        <span className="uppercase font-bold">{colorSeleccionado}</span>
+      {/* Indicador de Código HEX */}
+      <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-zinc-400 bg-slate-50 dark:bg-zinc-800/60 px-3 py-1.5 rounded-xl border border-slate-200/60 dark:border-zinc-800 mt-0.5">
+        <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500">HEX</span>
+        <span className="uppercase font-extrabold text-slate-800 dark:text-zinc-200">{colorSeleccionado}</span>
       </div>
     </div>
   );
