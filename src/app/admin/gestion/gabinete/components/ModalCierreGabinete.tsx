@@ -325,7 +325,7 @@ export default function ModalCierreGabinete({
       const { error: errorReserva } = await supabase
         .from('reservas')
         .update({
-          estado: 'completado',
+          estado: 'atendido',
           precio_total: nuevoPrecioTotal,
           detalle_reserva: detalleActualizado,
           modificado_por_admin: true

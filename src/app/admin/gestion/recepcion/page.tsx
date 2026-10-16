@@ -7,6 +7,8 @@ import { Search, RefreshCw, UserPlus, Edit3, MessageCircle, FileText, Check, Cli
 import ModalNuevoTurnoRecepcion from './components/ModalNuevoTurnoRecepcion'
 import ModalAnamnesisRecepcion from './components/ModalAnamnesisRecepcion'
 import ModalHistorialCliente from './components/ModalHistorialCliente'
+import ModalCobro from '@/app/admin/turnos/components/modals/ModalCobro'
+
 
 export default function RecepcionPage() {
   const [turnos, setTurnos] = useState<Reserva[]>([])
@@ -29,6 +31,11 @@ export default function RecepcionPage() {
   // Modal Historial
   const [modalHistorialOpen, setModalHistorialOpen] = useState<boolean>(false)
   const [clienteHistorial, setClienteHistorial] = useState<{ celular: string; nombre: string }>({ celular: '', nombre: '' })
+  
+  // Estados para Modal de Cobro
+  const [turnoCobro, setTurnoCobro] = useState<Reserva | null>(null)
+  const [medioPago, setMedioPago] = useState<string>('efectivo')
+  const [guardandoCobro, setGuardandoCobro] = useState<boolean>(false)
 
   const [notasLocales, setNotasLocales] = useState<{ [key: string]: string }>({})
 
@@ -114,6 +121,31 @@ export default function RecepcionPage() {
     }
     setClienteHistorial({ celular, nombre })
     setModalHistorialOpen(true)
+  }
+
+  const confirmarCobro = async () => {
+    if (!turnoCobro) return
+    setGuardandoCobro(true)
+    try {
+      const { error } = await supabase
+        .from('reservas')
+        .update({
+          estado: 'completado',
+          medio_pago: medioPago,
+          estado_pago: 'pagado',
+          modificado_por_admin: true
+        })
+        .eq('id', turnoCobro.id)
+
+      if (error) throw error
+
+      setTurnoCobro(null)
+      fetchTurnos()
+    } catch (err: any) {
+      alert('Error al registrar el cobro: ' + err.message)
+    } finally {
+      setGuardandoCobro(false)
+    }
   }
 
   const turnosFiltrados = useMemo(() => {
@@ -461,13 +493,19 @@ export default function RecepcionPage() {
                         )}
 
                         {t.estado === 'en_gabinete' && (
-                          <button
-                            type="button"
-                            onClick={() => cambiarEstado(t.id, 'completado')}
-                            className="w-full sm:w-auto text-xs font-bold px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all active:scale-95 shadow-2xs cursor-pointer"
-                          >
-                            Finalizar Atención
-                          </button>
+                          <span className="text-xs font-semibold text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/60 px-3 py-1.5 rounded-lg border border-sky-200/60 dark:border-sky-800/40">
+                            En atención clínica...
+                          </span>
+                        )}
+
+                        {(t.estado === 'atendido' || t.estado === 'completado') && (
+                        <button
+                        type="button"
+                        onClick={() => setTurnoCobro(t)}
+                        className="w-full sm:w-auto text-xs font-bold px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all active:scale-95 shadow-2xs cursor-pointer flex items-center justify-center gap-1.5"
+                        >
+                        <span>{t.estado === 'completado' ? 'Editar Cobro' : 'Cobrar y Completar'}</span>
+                        </button>
                         )}
 
                         {t.estado === 'completado' && (
@@ -507,6 +545,25 @@ export default function RecepcionPage() {
         celular={clienteHistorial.celular}
         nombreCliente={clienteHistorial.nombre}
       />
+
+<ModalHistorialCliente
+        isOpen={modalHistorialOpen}
+        onClose={() => setModalHistorialOpen(false)}
+        celular={clienteHistorial.celular}
+        nombreCliente={clienteHistorial.nombre}
+      />
+
+      {/* MODAL DE COBRO INTEGRADO */}
+      {turnoCobro && (
+        <ModalCobro
+          turnoACobrar={turnoCobro}
+          medioPagoSeleccionado={medioPago}
+          setMedioPagoSeleccionado={setMedioPago}
+          guardandoCobro={guardandoCobro}
+          onConfirm={confirmarCobro}
+          onClose={() => setTurnoCobro(null)}
+        />
+      )}
     </div>
   )
 }
