@@ -141,8 +141,13 @@ export default function ModalCierreGabinete({
 
     let itemsIniciales: ZonaItemSesion[] = []
 
-    // Verificar si es una promo o zonas individuales
-    const promoEncontrada = promos.find(p => p.nombre_promo === detalleObj.nombre || t.servicio_tipo?.includes('Promo'))
+// Búsqueda inteligente de promo por ID, por nombre_promo o texto guardado
+    const promoEncontrada = promos.find(p => 
+      p.id === detalleObj.promo_id || 
+      p.nombre_promo === detalleObj.nombre_promo || 
+      p.nombre_promo === detalleObj.nombre ||
+      (detalleObj.detalle_texto && detalleObj.detalle_texto.toLowerCase().includes(p.nombre_promo.toLowerCase()))
+    )
 
     if (promoEncontrada) {
       const zonasResueltas = getZonasPromoResueltas(promoEncontrada, servicios, detalleObj.swaps || {})
@@ -158,6 +163,8 @@ export default function ModalCierreGabinete({
     } else {
       // Zonas individuales o texto plano
       const idsZonas = detalleObj.zona_ids || detalleObj.zonas_ids || []
+      const textoDetalle = detalleObj.detalle_texto || ''
+
       if (idsZonas.length > 0) {
         idsZonas.forEach((id: string) => {
           const z = getZonaById(servicios, id)
@@ -173,11 +180,30 @@ export default function ModalCierreGabinete({
             })
           }
         })
-      } else {
-        // Fallback genérico si no hay IDs mapeados
+      } else if (textoDetalle.includes('+')) {
+        // Si el texto tiene partes separadas por '+', intentamos buscar cada zona individual en el catálogo
+        const partes = textoDetalle.split('+').map((p: string) => p.trim().toLowerCase())
+        partes.forEach((parte: string) => {
+          const zonaEncontrada = servicios.find(s => s.nombre_zona.toLowerCase() === parte)
+          if (zonaEncontrada) {
+            itemsIniciales.push({
+              id: zonaEncontrada.id,
+              nombre: zonaEncontrada.nombre_zona,
+              categoria: zonaEncontrada.categoria_zona,
+              precio: Number(zonaEncontrada.precio_lista),
+              frecuencia: '',
+              energia: '',
+              pasadas: ''
+            })
+          }
+        })
+      }
+
+      // Si aun así no se pudo desglosar nada, aplicamos el fallback genérico
+      if (itemsIniciales.length === 0) {
         itemsIniciales.push({
           id: 'generico',
-          nombre: detalleObj.detalle_texto || t.servicio_tipo || 'Tratamiento Láser',
+          nombre: textoDetalle || t.servicio_tipo || 'Tratamiento Láser',
           categoria: 'media',
           precio: Number(t.precio_total || 0),
           frecuencia: '',

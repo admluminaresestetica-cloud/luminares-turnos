@@ -168,12 +168,20 @@ export default function ModalNuevoTurnoRecepcion({
       modificado_por_admin: true
     }
 
-    if (detalleTexto) {
-      payload.detalle_reserva = { 
+   if (tipoSeleccion === 'promo' && promoElegidaObj) {
+      payload.detalle_reserva = {
+        modo: 'promo',
+        promo_id: promoElegidaObj.id,
+        nombre_promo: promoElegidaObj.nombre_promo,
         detalle_texto: detalleTexto,
-        nombre_promo: promoElegidaObj?.nombre_promo || null,
         swaps: swaps,
-        hubo_cambios: Object.keys(swaps).length > 0 // 👈 Bandera que indica si hubo algún swap en la promo
+        hubo_cambios: Object.keys(swaps).length > 0
+      }
+    } else if (detalleTexto) {
+      payload.detalle_reserva = {
+        modo: 'zonas',
+        detalle_texto: detalleTexto,
+        zonas_ids: zonasSeleccionadas
       }
     }
 
