@@ -494,6 +494,7 @@ export default function RecepcionPage() {
                         )}
 
                         {t.estado === 'en_gabinete' && (
+<<<<<<< Updated upstream
                           <span className="text-xs font-semibold text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/60 px-3 py-1.5 rounded-lg border border-sky-200/60 dark:border-sky-800/40">
                             En atención clínica...
                           </span>
@@ -507,6 +508,15 @@ export default function RecepcionPage() {
                         >
                         <span>{t.estado === 'completado' ? 'Editar Cobro' : 'Cobrar y Completar'}</span>
                         </button>
+=======
+                          <button
+                            type="button"
+                            onClick={() => cambiarEstado(t.id, 'completado')}
+                            className="w-full sm:w-auto text-xs font-bold px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all active:scale-95 shadow-2xs cursor-pointer"
+                          >
+                            Finalizar Atención
+                          </button>
+>>>>>>> Stashed changes
                         )}
 
                         {t.estado === 'completado' && (
