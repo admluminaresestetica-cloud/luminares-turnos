@@ -10,20 +10,16 @@ import {
   Save, 
   ArrowRightLeft, 
   Trash2, 
-  Plus, 
-  CheckCircle2, 
-  AlertCircle 
+  Plus 
 } from 'lucide-react'
 import { 
   getZonaById, 
   getZonasPromoResueltas, 
   getZonasSwapDisponibles, 
-  precioZonaExtraConDescuento,
-  SwapsMap 
+  precioZonaExtraConDescuento 
 } from '@/lib/laser/calculos'
 
 import RelojCronometroGabinete from './RelojCronometroGabinete'
-
 import ModalSwapZona from '@/components/laser/ModalSwapZona'
 
 interface ModalCierreGabineteProps {
@@ -53,7 +49,7 @@ export default function ModalCierreGabinete({
   turno,
   duracionSegundos = 0
 }: ModalCierreGabineteProps) {
-  // 👈 Instanciamos el cliente del navegador para leer cookies de sesión activas
+  // Instanciamos el cliente del navegador para leer cookies de sesión activas
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -76,8 +72,6 @@ export default function ModalCierreGabinete({
 
   // Estado local para los segundos del cronómetro integrado
   const [segundosSesion, setSegundosSesion] = useState<number>(duracionSegundos || 0)
-
-
   const [guardando, setGuardando] = useState<boolean>(false)
 
   // Cargar catálogo láser al abrir
@@ -97,7 +91,7 @@ export default function ModalCierreGabinete({
         setServiciosLaser(servicios)
         setPromosLaser(promos)
 
-                // Inicializar datos del turno
+        // Inicializar datos del turno
         let det = typeof turno.detalle_reserva === 'string'
           ? JSON.parse(turno.detalle_reserva || '{}')
           : turno.detalle_reserva || {}
@@ -147,8 +141,13 @@ export default function ModalCierreGabinete({
 
     let itemsIniciales: ZonaItemSesion[] = []
 
-    // Verificar si es una promo o zonas individuales
-    const promoEncontrada = promos.find(p => p.nombre_promo === detalleObj.nombre || t.servicio_tipo?.includes('Promo'))
+// Búsqueda inteligente de promo por ID, por nombre_promo o texto guardado
+    const promoEncontrada = promos.find(p => 
+      p.id === detalleObj.promo_id || 
+      p.nombre_promo === detalleObj.nombre_promo || 
+      p.nombre_promo === detalleObj.nombre ||
+      (detalleObj.detalle_texto && detalleObj.detalle_texto.toLowerCase().includes(p.nombre_promo.toLowerCase()))
+    )
 
     if (promoEncontrada) {
       const zonasResueltas = getZonasPromoResueltas(promoEncontrada, servicios, detalleObj.swaps || {})
@@ -164,6 +163,8 @@ export default function ModalCierreGabinete({
     } else {
       // Zonas individuales o texto plano
       const idsZonas = detalleObj.zona_ids || detalleObj.zonas_ids || []
+      const textoDetalle = detalleObj.detalle_texto || ''
+
       if (idsZonas.length > 0) {
         idsZonas.forEach((id: string) => {
           const z = getZonaById(servicios, id)
@@ -179,11 +180,30 @@ export default function ModalCierreGabinete({
             })
           }
         })
-      } else {
-        // Fallback genérico si no hay IDs mapeados
+      } else if (textoDetalle.includes('+')) {
+        // Si el texto tiene partes separadas por '+', intentamos buscar cada zona individual en el catálogo
+        const partes = textoDetalle.split('+').map((p: string) => p.trim().toLowerCase())
+        partes.forEach((parte: string) => {
+          const zonaEncontrada = servicios.find(s => s.nombre_zona.toLowerCase() === parte)
+          if (zonaEncontrada) {
+            itemsIniciales.push({
+              id: zonaEncontrada.id,
+              nombre: zonaEncontrada.nombre_zona,
+              categoria: zonaEncontrada.categoria_zona,
+              precio: Number(zonaEncontrada.precio_lista),
+              frecuencia: '',
+              energia: '',
+              pasadas: ''
+            })
+          }
+        })
+      }
+
+      // Si aun así no se pudo desglosar nada, aplicamos el fallback genérico
+      if (itemsIniciales.length === 0) {
         itemsIniciales.push({
           id: 'generico',
-          nombre: detalleObj.detalle_texto || t.servicio_tipo || 'Tratamiento Láser',
+          nombre: textoDetalle || t.servicio_tipo || 'Tratamiento Láser',
           categoria: 'media',
           precio: Number(t.precio_total || 0),
           frecuencia: '',
@@ -254,17 +274,15 @@ export default function ModalCierreGabinete({
     setSwapTargetIndex(null)
   }
 
-    const handleGuardar = async (e: React.FormEvent) => {
+  const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault()
     setGuardando(true)
 
-    // ⏱️ Calculamos el texto usando los segundos del cronómetro interno
     const mins = Math.floor(segundosSesion / 60)
     const segs = segundosSesion % 60
     const duracionTexto = mins > 0 ? `${mins} min ${segs} seg` : `${segs} seg`
 
     try {
-      // 1. Recalcular precio total actualizado según las zonas finales en la grilla
       const nuevoPrecioTotal = zonasSesion.reduce((acc, z) => acc + z.precio, 0)
       const nuevoDetalleTexto = zonasSesion.map(z => z.nombre).join(' + ')
 
@@ -281,12 +299,10 @@ export default function ModalCierreGabinete({
         fecha_atencion_gabinete: new Date().toISOString()
       }
 
-      // 2. Consolidar texto resumido de parámetros para el historial
       const resumenParametros = zonasSesion
         .map(z => `${z.nombre}: Frec: ${z.frecuencia || '--'} | En: ${z.energia || '--'} | Pas: ${z.pasadas || '--'}`)
         .join(' // ')
 
-      // 3. Insertar registro en historial_sesiones_laser
       const { error: errorHistorial } = await supabase
         .from('historial_sesiones_laser')
         .insert({
@@ -306,11 +322,10 @@ export default function ModalCierreGabinete({
 
       if (errorHistorial) throw errorHistorial
 
-      // 4. Actualizar la reserva principal (para que refleje cambios en Recepción y Turnos)
       const { error: errorReserva } = await supabase
         .from('reservas')
         .update({
-          estado: 'completado',
+          estado: 'atendido',
           precio_total: nuevoPrecioTotal,
           detalle_reserva: detalleActualizado,
           modificado_por_admin: true
@@ -330,251 +345,247 @@ export default function ModalCierreGabinete({
     }
   }
 
-  // Zona objetivo para el modal de swap interno
   const zonaOriginalSwap = swapTargetIndex !== null ? getZonaById(serviciosLaser, zonasSesion[swapTargetIndex]?.id) : null
   const idsOcupados = zonasSesion.map(z => z.id)
   const opcionesSwap = zonaOriginalSwap ? getZonasSwapDisponibles(zonaOriginalSwap, serviciosLaser, idsOcupados) : []
 
   return (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-md p-3 sm:p-6 overflow-y-auto">
-    <div className="bg-slate-900 border border-slate-800 w-full max-w-4xl rounded-[28px] shadow-2xl shadow-emerald-950/20 overflow-hidden my-auto flex flex-col max-h-[94vh] text-slate-100">
-      
-      {/* HEADER PREMIUM */}
-      <div className="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-slate-800/80 bg-slate-950/40 backdrop-blur-xl shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 text-emerald-400 rounded-2xl border border-emerald-500/30 shadow-inner">
-            <Zap className="h-5 w-5 animate-pulse" />
-          </div>
-          <div>
-            <h2 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
-              Cierre de Sesión Láser
-              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
-                Grilla Técnica
-              </span>
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Paciente: <span className="text-emerald-400 font-semibold">{turno.cliente_nombre}</span>
-            </p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-2 rounded-xl bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer border border-slate-700/50"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-
-      {/* BODY */}
-      <form onSubmit={handleGuardar} className="p-5 sm:p-8 overflow-y-auto space-y-6 flex-1 text-xs custom-scrollbar">
-
-        {/* CRONÓMETRO INTEGRADO */}
-        <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-inner">
-          <RelojCronometroGabinete
-            onTiempoActualizado={(seg) => setSegundosSesion(seg)}
-          />
-        </div>
-
-        {/* ZONAS Y PARÁMETROS */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <label className="font-bold text-white text-sm tracking-wide">
-                Zonas y Parámetros
-              </label>
-              <p className="text-[11px] text-slate-400">Configura la frecuencia, energía y pasadas por zona</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-xs p-3 sm:p-6 overflow-y-auto">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 w-full max-w-4xl rounded-2xl shadow-xl overflow-hidden my-auto flex flex-col max-h-[94vh] text-slate-900 dark:text-zinc-100">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/40 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 rounded-xl border border-purple-200/60 dark:border-purple-800/40">
+              <Zap className="h-5 w-5" />
             </div>
-            <button
-              type="button"
-              onClick={() => setMostrarSelectorExtra(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-emerald-900/30 active:scale-95 cursor-pointer"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Agregar Zona Extra</span>
-            </button>
+            <div>
+              <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-zinc-100 flex items-center gap-2">
+                Cierre de Sesión Láser
+                <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40 font-semibold">
+                  Grilla Técnica
+                </span>
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+                Paciente: <span className="text-purple-600 dark:text-purple-400 font-semibold">{turno.cliente_nombre}</span>
+              </p>
+            </div>
           </div>
-
-          {/* CONTENEDOR DE ZONAS (Responsive: Cards en mobile, Tabla elegante en Desktop) */}
-          <div className="space-y-3">
-            {zonasSesion.map((item, idx) => (
-              <div 
-                key={idx} 
-                className="bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 rounded-2xl p-4 transition-all space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-4 shadow-sm"
-              >
-                {/* Nombre de la zona */}
-                <div className="sm:w-1/4 flex items-center justify-between sm:justify-start gap-2">
-                  <span className="font-bold text-white text-sm flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    {item.nombre}
-                  </span>
-                  {item.esExtra && (
-                    <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-md font-bold">
-                      Extra
-                    </span>
-                  )}
-                </div>
-
-                {/* Inputs de parámetros (Grid interno) */}
-                <div className="grid grid-cols-3 gap-2 sm:flex-1">
-                  <div>
-                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Frecuencia</label>
-                    <input
-                      type="text"
-                      placeholder="Ej. 10 Hz"
-                      value={item.frecuencia}
-                      onChange={(e) => actualizarFila(idx, 'frecuencia', e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700/60 focus:border-emerald-500 rounded-xl px-3 py-2 text-center text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Energía</label>
-                    <input
-                      type="text"
-                      placeholder="Ej. 14 J"
-                      value={item.energia}
-                      onChange={(e) => actualizarFila(idx, 'energia', e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700/60 focus:border-emerald-500 rounded-xl px-3 py-2 text-center text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Pasadas</label>
-                    <input
-                      type="text"
-                      placeholder="Ej. 3"
-                      value={item.pasadas}
-                      onChange={(e) => actualizarFila(idx, 'pasadas', e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-700/60 focus:border-emerald-500 rounded-xl px-3 py-2 text-center text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Acciones por fila */}
-                <div className="flex items-center justify-end gap-2 pt-2 sm:pt-0 border-t border-slate-800/60 sm:border-t-0">
-                  {item.id !== 'generico' && (
-                    <button
-                      type="button"
-                      onClick={() => abrirSwap(idx)}
-                      className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 rounded-xl transition-all cursor-pointer border border-slate-800"
-                      title="Intercambiar zona"
-                    >
-                      <ArrowRightLeft className="h-4 w-4" />
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => eliminarZona(idx)}
-                    className="p-2 bg-slate-900 hover:bg-rose-950/40 text-slate-300 hover:text-rose-400 rounded-xl transition-all cursor-pointer border border-slate-800 hover:border-rose-900/50"
-                    title="Eliminar zona"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CAMPOS GENERALES */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-          <div className="space-y-1.5">
-            <label className="block font-semibold text-slate-300">
-              Especialista / Operadora <span className="text-emerald-400">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="Ej. Ana Belén"
-              value={operadora}
-              onChange={(e) => setOperadora(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-inner"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="block font-semibold text-slate-300">
-              Notas de Gabinete / Evolución Piel
-            </label>
-            <input
-              type="text"
-              placeholder="Ej. Buena tolerancia al tratamiento..."
-              value={notasGabinete}
-              onChange={(e) => setNotasGabinete(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-inner"
-            />
-          </div>
-        </div>
-
-        {/* FOOTER ACCIONES */}
-        <div className="pt-6 border-t border-slate-800 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition-all cursor-pointer"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 transition-all cursor-pointer border border-slate-200/60 dark:border-zinc-700"
           >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            disabled={guardando}
-            className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-emerald-950/50 active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
-          >
-            <Save className="h-4 w-4" />
-            <span>{guardando ? 'Guardando...' : 'Finalizar y Guardar Sesión'}</span>
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-      </form>
+        {/* BODY */}
+        <form onSubmit={handleGuardar} className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1 text-xs">
 
-      {/* MODAL SWAP INTERNO */}
-      {swapTargetIndex !== null && zonaOriginalSwap && (
-        <ModalSwapZona
-          zonaOriginal={zonaOriginalSwap}
-          opciones={opcionesSwap}
-          onSelect={ejecutarSwap}
-          onClose={() => setSwapTargetIndex(null)}
-        />
-      )}
+          {/* CRONÓMETRO INTEGRADO */}
+          <div className="bg-slate-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-slate-200/80 dark:border-zinc-800">
+            <RelojCronometroGabinete
+              onTiempoActualizado={(seg) => setSegundosSesion(seg)}
+            />
+          </div>
 
-      {/* MODAL SELECCIONAR ZONA EXTRA */}
-      {mostrarSelectorExtra && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-              <h3 className="font-bold text-sm text-white">Seleccionar Zona Extra</h3>
-              <button 
+          {/* ZONAS Y PARÁMETROS */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="font-bold text-slate-900 dark:text-zinc-100 text-sm">
+                  Zonas y Parámetros
+                </label>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400">Configura la frecuencia, energía y pasadas por zona</p>
+              </div>
+              <button
                 type="button"
-                onClick={() => setMostrarSelectorExtra(false)} 
-                className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                onClick={() => setMostrarSelectorExtra(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer"
               >
-                <X className="h-4 w-4" />
+                <Plus className="h-3.5 w-3.5" />
+                <span>Agregar Zona Extra</span>
               </button>
             </div>
-            <div className="max-h-64 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-              {serviciosLaser
-                .filter(s => !idsOcupados.includes(s.id))
-                .map(s => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => agregarZonaExtra(s)}
-                    className="w-full flex justify-between items-center p-3 rounded-2xl bg-slate-950 border border-slate-800 hover:border-emerald-500/60 text-left transition-all cursor-pointer group"
-                  >
-                    <div>
-                      <p className="font-bold text-xs text-white group-hover:text-emerald-400 transition-colors">{s.nombre_zona}</p>
-                      <p className="text-[11px] text-slate-400 capitalize mt-0.5">Categoría: {s.categoria_zona}</p>
-                    </div>
-                    <span className="font-bold text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                      ${Number(s.precio_lista).toLocaleString('es-AR')}
+
+            {/* CONTENEDOR DE ZONAS */}
+            <div className="space-y-2.5">
+              {zonasSesion.map((item, idx) => (
+                <div 
+                  key={idx} 
+                  className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 rounded-xl p-3.5 transition-all space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3"
+                >
+                  <div className="sm:w-1/4 flex items-center justify-between sm:justify-start gap-2">
+                    <span className="font-bold text-slate-800 dark:text-zinc-200 text-xs flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      {item.nombre}
                     </span>
-                  </button>
-                ))}
+                    {item.esExtra && (
+                      <span className="text-[10px] bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 px-2 py-0.5 rounded-md font-bold">
+                        Extra
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 sm:flex-1">
+                    <div>
+                      <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Frecuencia</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 10 Hz"
+                        value={item.frecuencia}
+                        onChange={(e) => actualizarFila(idx, 'frecuencia', e.target.value)}
+                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Energía</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 14 J"
+                        value={item.energia}
+                        onChange={(e) => actualizarFila(idx, 'energia', e.target.value)}
+                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Pasadas</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 3"
+                        value={item.pasadas}
+                        onChange={(e) => actualizarFila(idx, 'pasadas', e.target.value)}
+                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-1.5 pt-2 sm:pt-0 border-t border-slate-200/60 dark:border-zinc-700/60 sm:border-t-0">
+                    {item.id !== 'generico' && (
+                      <button
+                        type="button"
+                        onClick={() => abrirSwap(idx)}
+                        className="p-2 bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-lg transition-all cursor-pointer border border-slate-200 dark:border-zinc-700"
+                        title="Intercambiar zona"
+                      >
+                        <ArrowRightLeft className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => eliminarZona(idx)}
+                      className="p-2 bg-white dark:bg-zinc-900 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition-all cursor-pointer border border-slate-200 dark:border-zinc-700"
+                      title="Eliminar zona"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-      )}
 
+          {/* CAMPOS GENERALES */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="space-y-1">
+              <label className="block font-semibold text-slate-700 dark:text-zinc-300">
+                Especialista / Operadora <span className="text-purple-600 dark:text-purple-400">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Ej. Ana Belén"
+                value={operadora}
+                onChange={(e) => setOperadora(e.target.value)}
+                className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block font-semibold text-slate-700 dark:text-zinc-300">
+                Notas de Gabinete / Evolución Piel
+              </label>
+              <input
+                type="text"
+                placeholder="Ej. Buena tolerancia al tratamiento..."
+                value={notasGabinete}
+                onChange={(e) => setNotasGabinete(e.target.value)}
+                className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* FOOTER ACCIONES */}
+          <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-semibold rounded-xl transition-all cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={guardando}
+              className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-all shadow-xs active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            >
+              <Save className="h-4 w-4" />
+              <span>{guardando ? 'Guardando...' : 'Finalizar y Guardar Sesión'}</span>
+            </button>
+          </div>
+
+        </form>
+
+        {/* MODAL SWAP INTERNO */}
+        {swapTargetIndex !== null && zonaOriginalSwap && (
+          <ModalSwapZona
+            zonaOriginal={zonaOriginalSwap}
+            opciones={opcionesSwap}
+            onSelect={ejecutarSwap}
+            onClose={() => setSwapTargetIndex(null)}
+          />
+        )}
+
+        {/* MODAL SELECCIONAR ZONA EXTRA */}
+        {mostrarSelectorExtra && (
+          <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-xs p-4">
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 w-full max-w-md rounded-2xl p-5 space-y-4 shadow-xl text-xs">
+              <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-zinc-800">
+                <h3 className="font-bold text-sm text-slate-900 dark:text-zinc-100">Seleccionar Zona Extra</h3>
+                <button 
+                  type="button"
+                  onClick={() => setMostrarSelectorExtra(false)} 
+                  className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 transition-colors cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+                {serviciosLaser
+                  .filter(s => !idsOcupados.includes(s.id))
+                  .map(s => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => agregarZonaExtra(s)}
+                      className="w-full flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-800 hover:border-purple-500 text-left transition-all cursor-pointer group"
+                    >
+                      <div>
+                        <p className="font-bold text-xs text-slate-800 dark:text-zinc-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{s.nombre_zona}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-zinc-400 capitalize mt-0.5">Categoría: {s.categoria_zona}</p>
+                      </div>
+                      <span className="font-bold text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-1 rounded-md border border-emerald-200/60 dark:border-emerald-800/40">
+                        ${Number(s.precio_lista).toLocaleString('es-AR')}
+                      </span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
-  </div>
-)
+  )
 }

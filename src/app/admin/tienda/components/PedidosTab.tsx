@@ -4,6 +4,21 @@ import React, { useState, useEffect } from 'react';
 import ModalPinAutorizacion from '@/app/admin/components/ModalPinAutorizacion';
 import { createBrowserClient } from '@supabase/ssr';
 
+import { 
+  ClipboardList, 
+  Download, 
+  RotateCw, 
+  Search, 
+  X, 
+  Calendar, 
+  Trash2, 
+  CheckCircle2, 
+  MapPin, 
+  Truck, 
+  Store,
+  Loader2
+} from "lucide-react";
+
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -159,62 +174,82 @@ export default function PedidosTab({
     pendiente: "bg-[#FEF3C7] text-[#92400E]",
   };
 
-  return (
-    <div className="rounded-2xl border border-[#E7E5E0] bg-white p-4 shadow-sm sm:rounded-3xl sm:p-6">
+ return (
+    <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs transition-colors sm:rounded-3xl sm:p-6">
+      {/* Encabezado y Acciones */}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="m-0 text-base font-bold text-[#12151B] sm:text-lg">📋 Pedidos Recibidos</h2>
+        <div className="flex items-center gap-2.5">
+          <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50 rounded-xl text-emerald-600 dark:text-emerald-400">
+            <ClipboardList className="w-5 h-5" />
+          </div>
+          <h2 className="m-0 text-base font-extrabold text-slate-900 dark:text-zinc-100 sm:text-lg">
+            Pedidos Recibidos
+          </h2>
+        </div>
 
         <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <button
+            type="button"
             onClick={exportarACSV}
-            className="h-10 shrink-0 rounded-xl border border-[#0E6E55] bg-[#0E6E55]/10 px-4 text-xs font-semibold text-[#0E6E55] transition-colors hover:bg-[#0E6E55]/20 active:scale-95"
+            className="h-9 sm:h-10 shrink-0 inline-flex items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-950/40 px-3.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 transition-all hover:bg-emerald-100 dark:hover:bg-emerald-900/50 active:scale-95 cursor-pointer"
           >
-            📊 Exportar CSV
+            <Download className="w-4 h-4" />
+            <span>Exportar CSV</span>
           </button>
 
           <button
+            type="button"
             onClick={onFetchPedidos}
-            className="h-10 shrink-0 rounded-xl border border-[#E7E5E0] px-4 text-xs font-semibold text-[#12151B] transition-colors hover:bg-[#F7F7F5] active:scale-95"
+            className="h-9 sm:h-10 shrink-0 inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/80 px-3.5 text-xs font-bold text-slate-700 dark:text-zinc-200 transition-all hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer"
           >
-            🔄 Actualizar
+            <RotateCw className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
+            <span>Actualizar</span>
           </button>
         </div>
       </div>
 
       {/* Barra de Filtros */}
-      <div className="mb-5 flex flex-col gap-3 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3 sm:flex-row sm:flex-wrap">
-        <input
-          type="text"
-          placeholder="Buscar cliente o código..."
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          className="h-10 w-full min-w-0 flex-1 rounded-lg border border-[#E7E5E0] bg-white px-3 text-xs text-[#12151B] outline-none focus:border-[#0E6E55] sm:min-w-[180px]"
-        />
+      <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-800/50 p-3 sm:flex-row sm:flex-wrap sm:items-center">
+        {/* Buscador */}
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500" />
+          <input
+            type="text"
+            placeholder="Buscar cliente o código..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="h-10 w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800 pl-9 pr-3 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+          />
+        </div>
 
-        <div className="flex gap-3">
+        {/* Filtro Estado y Fecha */}
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5">
           <select
             value={filtroEstado}
             onChange={(e) => setFiltroEstado(e.target.value)}
-            className="h-10 flex-1 rounded-lg border border-[#E7E5E0] bg-white px-3 text-xs font-semibold text-[#12151B] outline-none focus:border-[#0E6E55] sm:flex-none"
+            className="h-10 flex-1 sm:flex-none rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-slate-800 dark:text-zinc-200 outline-none transition-all focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
           >
-            <option value="todos">Todos los Estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="completado">Completado</option>
-            <option value="cancelado">Cancelado</option>
-            <option value="aprobado">Aprobado</option>
+            <option value="todos" className="dark:bg-zinc-900">Todos los Estados</option>
+            <option value="pendiente" className="dark:bg-zinc-900">⏳ Pendiente</option>
+            <option value="aprobado" className="dark:bg-zinc-900">👍 Aprobado</option>
+            <option value="completado" className="dark:bg-zinc-900">✅ Completado</option>
+            <option value="cancelado" className="dark:bg-zinc-900">❌ Cancelado</option>
           </select>
 
-          <div className="flex items-center gap-1.5">
-            <input
-              type="date"
-              value={filtroFecha}
-              onChange={(e) => setFiltroFecha(e.target.value)}
-              className="h-10 rounded-lg border border-[#E7E5E0] bg-white px-3 text-xs text-[#12151B] outline-none focus:border-[#0E6E55]"
-            />
+          <div className="flex items-center gap-1.5 flex-1 sm:flex-none">
+            <div className="relative w-full">
+              <input
+                type="date"
+                value={filtroFecha}
+                onChange={(e) => setFiltroFecha(e.target.value)}
+                className="h-10 w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800 px-3 text-xs font-medium text-slate-800 dark:text-zinc-200 outline-none focus:border-emerald-500 dark:focus:border-emerald-500 [color-scheme:light] dark:[color-scheme:dark]"
+              />
+            </div>
             {filtroFecha && (
               <button
+                type="button"
                 onClick={() => setFiltroFecha('')}
-                className="text-[11px] font-bold text-[#C84343] hover:underline"
+                className="h-10 px-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors shrink-0"
               >
                 Limpiar
               </button>
@@ -223,72 +258,97 @@ export default function PedidosTab({
         </div>
       </div>
 
+      {/* Contenido de la Lista */}
       {cargandoPedidos ? (
-        <p className="text-sm text-[#6B675F]">Cargando pedidos...</p>
+        <div className="py-12 text-center text-sm font-medium text-slate-500 dark:text-zinc-400 flex items-center justify-center gap-2">
+          <Loader2 className="w-5 h-5 animate-spin text-emerald-600 dark:text-emerald-400" />
+          <span>Cargando pedidos...</span>
+        </div>
       ) : pedidosFiltrados.length === 0 ? (
-        <p className="text-sm text-[#6B675F]">
+        <div className="py-12 text-center text-sm font-medium text-slate-500 dark:text-zinc-400">
           {pedidos.length === 0
             ? "No hay pedidos registrados aún."
             : "No se encontraron pedidos con los filtros seleccionados."}
-        </p>
+        </div>
       ) : (
-        <div className="flex flex-col gap-3 sm:gap-4">
-          {pedidosFiltrados.map((pedido) => (
+        <div className="flex flex-col gap-3.5 sm:gap-4">
+          {pedidosFiltrados.map((pedido: any) => (
             <div
               key={pedido.id}
-              className="rounded-2xl border border-[#E7E5E0] bg-[#F7F7F5] p-4 transition-all sm:p-5"
+              className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/40 p-4 sm:p-5 transition-all hover:border-slate-300 dark:hover:border-zinc-700"
             >
+              {/* Header de la Tarjeta */}
               <div className="mb-3 flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <span className="rounded-md border border-[#E7E5E0] bg-white px-2 py-0.5 font-mono text-[11px] font-bold text-[#12151B] shadow-xs">
+                    <span className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-0.5 font-mono text-[11px] font-extrabold text-slate-900 dark:text-zinc-100 shadow-2xs">
                       #{pedido.id.slice(0, 6).toUpperCase()}
                     </span>
-                    <h3 className="m-0 truncate text-sm font-bold text-[#12151B] sm:text-base">
+                    <h3 className="m-0 truncate text-sm sm:text-base font-extrabold text-slate-900 dark:text-zinc-100">
                       {pedido.nombre_cliente}
                     </h3>
                   </div>
-                  <p className="m-0 mt-0.5 text-xs text-[#6B675F]">
-                    {new Date(pedido.created_at).toLocaleString("es-AR")}
+                  <p className="m-0 mt-0.5 text-xs font-medium text-slate-500 dark:text-zinc-400 flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />
+                    <span>{new Date(pedido.created_at).toLocaleString("es-AR")}</span>
                   </p>
                 </div>
 
                 {/* CONTENEDOR DE ESTADO + BOTÓN ELIMINAR */}
                 <div className="flex shrink-0 items-center gap-2">
                   <span
-                    className={`rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase sm:px-3 sm:text-xs ${
-                      estadoStyles[pedido.estado] || "bg-gray-100 text-gray-600"
+                    className={`rounded-xl border px-2.5 py-1 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider ${
+                      estadoStyles[pedido.estado] || "bg-slate-100 text-slate-600 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
                     }`}
                   >
                     {pedido.estado}
                   </span>
 
                   <button
+                    type="button"
                     onClick={() => solicitarAutorizacion('eliminar', pedido.id)}
                     title="Eliminar pedido"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E7E5E0] bg-white text-xs font-bold text-gray-400 transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-600 active:scale-95"
+                    className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-600 dark:hover:text-rose-400 active:scale-90 transition-all cursor-pointer"
                   >
-                    ✕
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              <div className="mb-3 rounded-lg bg-white/60 p-2.5 text-xs text-[#12151B]">
-                <strong>Método:</strong>{" "}
-                {pedido.metodo_envio === "envio" ? "Envío a domicilio" : "Retiro en local"}
+              {/* Información de Envío */}
+              <div className="mb-3 rounded-xl bg-white dark:bg-zinc-800/80 border border-slate-100 dark:border-zinc-700/60 p-3 text-xs text-slate-700 dark:text-zinc-300 space-y-1">
+                <div className="flex items-center gap-2 font-medium">
+                  {pedido.metodo_envio === "envio" ? (
+                    <Truck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  ) : (
+                    <Store className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                  )}
+                  <span>
+                    <strong>Método:</strong>{" "}
+                    {pedido.metodo_envio === "envio" ? "Envío a domicilio" : "Retiro en local"}
+                  </span>
+                </div>
+
                 {pedido.direccion && (
-                  <span> | <strong>Dirección:</strong> {pedido.direccion}</span>
+                  <div className="flex items-start gap-2 pt-1 text-slate-600 dark:text-zinc-400">
+                    <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                    <span><strong>Dirección:</strong> {pedido.direccion}</span>
+                  </div>
                 )}
+
                 {pedido.nota_adicional && (
-                  <p className="mt-1 italic text-[#6B675F]">
+                  <p className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-zinc-700/50 italic text-slate-500 dark:text-zinc-400">
                     Nota: "{pedido.nota_adicional}"
                   </p>
                 )}
               </div>
 
-              <div className="border-t border-[#E7E5E0] pt-3">
-                <p className="m-0 text-xs font-bold text-[#6B675F]">Detalle del pedido:</p>
-                <ul className="my-2 list-disc pl-5 text-xs text-[#12151B]">
+              {/* Detalle del Pedido */}
+              <div className="border-t border-slate-200/80 dark:border-zinc-800 pt-3">
+                <p className="m-0 text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-zinc-400">
+                  Detalle del pedido:
+                </p>
+                <ul className="my-2 space-y-1.5 pl-1 text-xs text-slate-800 dark:text-zinc-200">
                   {(pedido.pedido_items && pedido.pedido_items.length > 0
                     ? pedido.pedido_items
                     : (pedido.items || []).map((i: any) => ({
@@ -297,34 +357,55 @@ export default function PedidosTab({
                         cantidad: i.cantidad || 1,
                         precio_unitario: i.precio || i.unit_price || 0,
                       }))
-                  ).map((item, idx) => (
-                    <li key={item.id || idx}>
-                      {item.cantidad}x {item.nombre_producto} - ${item.precio_unitario} c/u
+                  ).map((item: any, idx: number) => (
+                    <li key={item.id || idx} className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800/50 pb-1 last:border-0">
+                      <span className="font-medium">
+                        <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold">{item.cantidad}x</strong> {item.nombre_producto}
+                      </span>
+                      <span className="font-mono text-slate-500 dark:text-zinc-400">
+                        ${item.precio_unitario.toLocaleString()} c/u
+                      </span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="mt-4 flex flex-col gap-3 border-t border-[#E7E5E0] pt-3 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-base font-bold text-[#12151B]">
-                  Total: ${pedido.total}
-                </span>
+              {/* Footer de la Tarjeta */}
+              <div className="mt-4 flex flex-col gap-3 border-t border-slate-200/80 dark:border-zinc-800 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Total:</span>
+                  <span className="text-lg font-extrabold text-slate-900 dark:text-zinc-100 font-mono">
+                    ${Number(pedido.total).toLocaleString()}
+                  </span>
+                </div>
 
                 {pedido.estado === "pendiente" && (
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={() => solicitarAutorizacion('cancelar', pedido.id)}
                       disabled={procesandoPedidoId === pedido.id}
-                      className="h-10 flex-1 rounded-lg border border-[#C84343] px-3 text-xs font-semibold text-[#C84343] transition-colors hover:bg-red-50 active:scale-95 disabled:opacity-50 sm:flex-none"
+                      className="h-10 flex-1 sm:flex-none rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/30 px-3.5 text-xs font-bold text-rose-600 dark:text-rose-400 transition-all hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                       Cancelar
                     </button>
                     <button
+                      type="button"
                       onClick={() => onAprobarPedido(pedido.id)}
                       disabled={procesandoPedidoId === pedido.id}
-                      className="h-10 flex-1 rounded-lg bg-[#0E6E55] px-4 text-xs font-semibold text-white transition-colors hover:bg-[#0A5340] active:scale-95 disabled:opacity-50 sm:flex-none"
+                      className="h-10 flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 px-4 text-xs font-bold text-white transition-all shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
-                      {procesandoPedidoId === pedido.id ? "Aprobando..." : "Aprobar Compra"}
+                      {procesandoPedidoId === pedido.id ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Aprobando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Aprobar Compra</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 )}

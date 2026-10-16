@@ -33,6 +33,10 @@ export default function FormularioEmpresaTab() {
     costo_envio_base: 0,
     envio_gratis_activo: false,
     monto_envio_gratis: 0,
+    cuotas_habilitadas: true,
+    monto_minimo_cuotas: 0,
+    cantidad_cuotas: 3,
+    porcentaje_recargo_cuotas: 25,
   });
 
   useEffect(() => {
@@ -59,6 +63,10 @@ export default function FormularioEmpresaTab() {
           costo_envio_base: data.costo_envio_base ?? 0,
           envio_gratis_activo: data.envio_gratis_activo ?? false,
           monto_envio_gratis: data.monto_envio_gratis ?? 0,
+          cuotas_habilitadas: data.cuotas_habilitadas ?? true,
+          monto_minimo_cuotas: data.monto_minimo_cuotas ?? 0,
+          cantidad_cuotas: data.cantidad_cuotas ?? 3,
+          porcentaje_recargo_cuotas: data.porcentaje_recargo_cuotas ?? 25,
         });
       }
       setLoading(false);
@@ -395,11 +403,12 @@ export default function FormularioEmpresaTab() {
           </div>
         </div>
 
-        {/* Pagos / Mercado Pago y Transferencia */}
+        {/* Pagos / Mercado Pago, Transferencia y Cuotas */}
         <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm space-y-4 transition-colors">
           <h2 className="text-lg font-semibold text-slate-800 dark:text-zinc-100 border-b border-slate-100 dark:border-zinc-800 pb-3">
-            Configuración de Pagos (Mercado Pago & Transferencia)
+            Configuración de Pagos (Mercado Pago, Transferencia y Cuotas)
           </h2>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
@@ -467,7 +476,95 @@ export default function FormularioEmpresaTab() {
               />
             </div>
           </div>
+
+          {/* Subsección: Configuración de Cuotas y Financiación Dinámica */}
+          <div className="mt-6 pt-6 border-t border-slate-100 dark:border-zinc-800 space-y-4">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200">
+              💳 Configuración de Cuotas en Tienda
+            </h3>
+
+            <div className="flex items-center justify-between p-3.5 border border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50 dark:bg-zinc-950">
+              <div>
+                <p className="text-sm font-medium text-slate-800 dark:text-zinc-200">Habilitar Cuotas en la Tienda</p>
+                <p className="text-xs text-slate-500 dark:text-zinc-400">Muestra u oculta los carteles y opciones de pago en cuotas en los productos.</p>
+              </div>
+              <input
+                type="checkbox"
+                name="cuotas_habilitadas"
+                checked={form.cuotas_habilitadas}
+                onChange={handleChange}
+                className="w-5 h-5 accent-indigo-600 dark:accent-indigo-500 cursor-pointer rounded"
+              />
+            </div>
+
+            {form.cuotas_habilitadas && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+                    Cantidad de Cuotas
+                  </label>
+                  <input
+                    type="number"
+                    name="cantidad_cuotas"
+                    value={form.cantidad_cuotas}
+                    onChange={handleChange}
+                    min="1"
+                    max="24"
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
+                  />
+                  <p className="mt-1 text-[10px] text-slate-400">Ej. 3, 6 o 12 cuotas.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+                    Porcentaje de Recargo (%)
+                  </label>
+                  <input
+                    type="number"
+                    name="porcentaje_recargo_cuotas"
+                    value={form.porcentaje_recargo_cuotas}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.1"
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
+                  />
+                  <p className="mt-1 text-[10px] text-slate-400">Ej. 25 para un 25% de recargo.</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+                    Monto Mínimo para Cuotas ($)
+                  </label>
+                  <input
+                    type="number"
+                    name="monto_minimo_cuotas"
+                    value={form.monto_minimo_cuotas}
+                    onChange={handleChange}
+                    min="0"
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
+                  />
+                  <p className="mt-1 text-[10px] text-slate-400">0 para aplicar a cualquier precio.</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+
+        <div>
+  <label className="block text-xs font-semibold text-slate-600 dark:text-zinc-400 mb-1.5">
+    Porcentaje Recargo Débito / 1 Pago (%)
+  </label>
+  <input
+    type="number"
+    name="porcentaje_recargo_debito"
+    value={form.porcentaje_recargo_debito ?? 10}
+    onChange={handleChange}
+    min="0"
+    step="0.1"
+    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
+  />
+  <p className="mt-1 text-[10px] text-slate-400">Ej. 10 para un 10% de recargo en débito.</p>
+</div>
 
         <div className="flex justify-end">
           <button
@@ -478,6 +575,8 @@ export default function FormularioEmpresaTab() {
             {saving ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>
+
+
       </form>
     </div>
   );

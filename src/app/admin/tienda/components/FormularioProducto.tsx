@@ -5,6 +5,22 @@ import ScannerModal from "./ScannerModal";
 import SeccionEtiquetas from "./SeccionEtiquetas";
 import CargadorImagenes from "./CargadorImagenes";
 
+import { 
+  Plus, 
+  Minus, 
+  Search, 
+  Barcode, 
+  Camera, 
+  Package, 
+  Tag, 
+  DollarSign, 
+  Layers, 
+  FileText, 
+  Loader2,
+  Flame,
+  CreditCard
+} from "lucide-react";
+
 interface FormularioProductoProps {
   onProductoAgregado: () => void;
   supabase: any;
@@ -233,22 +249,22 @@ export default function FormularioProducto({
 
   const totalImagenes = imagenesExistentes.length + previewsNuevas.length;
 
-  return (
-    <div className="mb-6 overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white shadow-sm transition-all sm:mb-8 sm:rounded-3xl">
-      {/* Cabecera */}
+return (
+    <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs transition-all sm:mb-8 sm:rounded-3xl">
+      {/* Cabecera Desplegable */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="flex min-h-[56px] cursor-pointer items-center justify-between gap-3 p-4 transition-colors hover:bg-[#F7F7F5] active:bg-[#F0F0EC] sm:p-5"
+        className="flex min-h-[56px] cursor-pointer items-center justify-between gap-3 p-4 transition-colors hover:bg-slate-50 dark:hover:bg-zinc-800/50 active:bg-slate-100 dark:active:bg-zinc-800 sm:p-5"
       >
         <div className="flex min-w-0 items-center gap-3">
           <div
-            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white transition-colors ${
-              productoEditando ? "bg-amber-500" : "bg-[#0E6E55]"
+            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white font-bold transition-transform shadow-xs ${
+              productoEditando ? "bg-amber-500" : "bg-emerald-600 dark:bg-emerald-500"
             }`}
           >
-            {isOpen ? "−" : "+"}
+            {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           </div>
-          <h2 className="m-0 truncate text-sm font-bold text-[#12151B] sm:text-base">
+          <h2 className="m-0 truncate text-sm sm:text-base font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">
             {productoEditando ? "Editar Producto" : "Agregar Nuevo Producto"}
           </h2>
         </div>
@@ -261,42 +277,51 @@ export default function FormularioProducto({
                 e.stopPropagation();
                 onCancelarEdicion();
               }}
-              className="rounded-lg px-2 py-1 text-xs font-semibold text-[#C84343] transition-colors hover:bg-red-50 active:scale-95"
+              className="rounded-xl px-2.5 py-1 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 transition-all hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 cursor-pointer"
             >
               Cancelar
             </button>
           )}
-          <span className="hidden text-xs font-medium text-[#6B675F] sm:inline">
+          <span className="hidden text-xs font-medium text-slate-500 dark:text-zinc-400 sm:inline">
             {isOpen ? "Ocultar" : "Desplegar"}
           </span>
         </div>
       </div>
 
-      {/* Cuerpo */}
+      {/* Cuerpo del Formulario */}
       {isOpen && (
-        <form onSubmit={handleSubmit} className="border-t border-[#E7E5E0]">
+        <form onSubmit={handleSubmit} className="border-t border-slate-200/80 dark:border-zinc-800">
           <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:gap-5 sm:p-6">
+            
+            {/* Nombre */}
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-xs font-semibold text-[#6B675F]">Nombre</label>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+                <Package className="w-3.5 h-3.5 text-slate-400" />
+                Nombre del Producto
+              </label>
               <input
                 type="text"
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Ej: Zapatillas Running Pro"
-                className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3.5 text-sm font-medium text-[#12151B] outline-none transition-colors focus:border-[#0E6E55] focus:bg-white focus:ring-2 focus:ring-[#0E6E55]/10"
+                className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-emerald-500/20"
                 required
               />
             </div>
 
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-[#6B675F]">Código de Barras</label>
+            {/* Código de Barras */}
+            <div className="sm:col-span-2">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-slate-400" />
+                Código de Barras
+              </label>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={codigoBarras}
                   onChange={(e) => {
                     setCodigoBarras(e.target.value);
-                    setProductoExistenteAviso(null); // Limpia el aviso si edita el código
+                    setProductoExistenteAviso(null);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -305,55 +330,63 @@ export default function FormularioProducto({
                     }
                   }}
                   placeholder="Ej: 779123456789"
-                  className="w-full min-w-0 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3.5 text-sm font-medium text-[#12151B] outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+                  className="w-full min-w-0 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800"
                 />
+                
                 <button
                   type="button"
                   onClick={() => verificarCodigoEnSupabase(codigoBarras)}
                   title="Buscar código en la base"
-                  className="shrink-0 rounded-xl bg-gray-100 px-3 text-xs font-bold text-[#12151B] transition-colors hover:bg-gray-200 active:scale-95 whitespace-nowrap"
+                  className="shrink-0 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800 px-3.5 text-slate-700 dark:text-zinc-200 transition-all hover:bg-slate-200 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer flex items-center justify-center"
                 >
-                  🔍
+                  <Search className="w-4 h-4" />
                 </button>
+
                 <button
                   type="button"
                   onClick={() => {
                     generarCodigoBarras();
                     setProductoExistenteAviso(null);
                   }}
-                  title="Generar código"
-                  className="shrink-0 rounded-xl bg-gray-100 px-3 text-xs font-bold text-[#12151B] transition-colors hover:bg-gray-200 active:scale-95 whitespace-nowrap"
+                  title="Generar código aleatorio"
+                  className="shrink-0 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800 px-3.5 text-slate-700 dark:text-zinc-200 transition-all hover:bg-slate-200 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer flex items-center justify-center"
                 >
-                  🎲
+                  <Barcode className="w-4 h-4 text-amber-500" />
                 </button>
+
                 <button
                   type="button"
                   onClick={() => setIsScannerOpen(true)}
-                  className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl bg-[#12151B] text-base text-white transition-colors hover:bg-[#2C323E] active:scale-95"
+                  title="Escanear con cámara"
+                  className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 transition-all hover:bg-slate-800 dark:hover:bg-zinc-200 active:scale-95 cursor-pointer shadow-xs"
                 >
-                  📷
+                  <Camera className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Aviso visual integrado y sutil debajo del campo */}
               {productoExistenteAviso && (
-                <div className="mt-2 flex items-center gap-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 p-3 text-xs font-medium text-amber-800 dark:text-amber-300 animate-fadeIn">
+                <div className="mt-2 flex items-center gap-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 p-3 text-xs font-medium text-amber-800 dark:text-amber-300">
                   <span>⚠️</span>
                   <p>{productoExistenteAviso}</p>
                 </div>
               )}
             </div>
 
+            {/* Categoría Principal */}
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-[#6B675F]">Categoría Principal</label>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-slate-400" />
+                Categoría Principal
+              </label>
               <select
                 value={categoria}
                 onChange={(e) => setCategoria(e.target.value)}
-                className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3.5 text-sm font-medium text-[#12151B] outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800 cursor-pointer"
               >
-                <option value="" className="text-[#12151B]">General</option>
-                {categorias.map((c) => (
-                  <option key={c.id} value={c.nombre} className="text-[#12151B]">
+                <option value="" className="bg-white dark:bg-zinc-900">General</option>
+                {categorias.map((c: any) => (
+                  <option key={c.id} value={c.nombre} className="bg-white dark:bg-zinc-900">
                     {c.nombre}
                   </option>
                 ))}
@@ -363,57 +396,74 @@ export default function FormularioProducto({
             {/* Subcomponente de Etiquetas */}
             <SeccionEtiquetas etiquetas={etiquetas} setEtiquetas={setEtiquetas} />
 
+            {/* Precio */}
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-[#6B675F]">Precio ($)</label>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+                <DollarSign className="w-3.5 h-3.5 text-slate-400" />
+                Precio ($)
+              </label>
               <input
                 type="number"
                 value={precio}
                 onChange={(e) => setPrecio(e.target.value)}
                 placeholder="0.00"
-                className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3.5 text-sm font-medium text-[#12151B] outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-extrabold text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800"
                 required
               />
             </div>
 
+            {/* Precio Anterior / Oferta */}
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-[#6B675F]">Precio Anterior / Oferta ($)</label>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+                <DollarSign className="w-3.5 h-3.5 text-slate-400" />
+                Precio Anterior / Oferta ($)
+              </label>
               <input
                 type="number"
                 value={precioOriginal}
                 onChange={(e) => setPrecioOriginal(e.target.value)}
                 placeholder="Opcional"
-                className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3.5 text-sm font-medium text-[#12151B] outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800"
               />
             </div>
 
+            {/* Stock Actual */}
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-[#6B675F]">Stock Actual</label>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+                <Package className="w-3.5 h-3.5 text-slate-400" />
+                Stock Actual
+              </label>
               <input
                 type="number"
                 value={stock}
                 onChange={(e) => setStock(e.target.value)}
                 placeholder="0"
-                className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3.5 text-sm font-medium text-[#12151B] outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800"
               />
             </div>
 
+            {/* Stock Mínimo */}
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-[#6B675F]">Stock Mínimo (Alerta)</label>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+                <Package className="w-3.5 h-3.5 text-slate-400" />
+                Stock Mínimo (Alerta)
+              </label>
               <input
                 type="number"
                 value={stockMinimo}
                 onChange={(e) => setStockMinimo(e.target.value)}
-                className="w-full rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3.5 text-sm font-medium text-[#12151B] outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+                className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800"
               />
             </div>
 
             {/* Toggle: últimas unidades */}
             <label
               htmlFor="mostrarUltimasUnidades"
-              className="sm:col-span-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3.5 transition-colors hover:border-amber-300"
+              className="sm:col-span-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/70 dark:bg-zinc-800/60 p-3.5 transition-colors hover:border-amber-300 dark:hover:border-amber-800"
             >
-              <span className="text-xs font-medium text-[#12151B]">
-                🔥 Mostrar distintivo <span className="font-bold text-[#D97706]">"¡Últimas unidades!"</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-2">
+                <Flame className="w-4 h-4 text-amber-500" />
+                <span>Mostrar distintivo <span className="font-extrabold text-amber-600 dark:text-amber-400">"¡Últimas unidades!"</span></span>
               </span>
               <span className="relative inline-flex h-6 w-11 shrink-0 items-center">
                 <input
@@ -423,7 +473,7 @@ export default function FormularioProducto({
                   onChange={(e) => setMostrarUltimasUnidades(e.target.checked)}
                   className="peer sr-only"
                 />
-                <span className="absolute inset-0 rounded-full bg-gray-300 transition-colors peer-checked:bg-amber-500" />
+                <span className="absolute inset-0 rounded-full bg-slate-300 dark:bg-zinc-700 transition-colors peer-checked:bg-amber-500" />
                 <span className="absolute left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
               </span>
             </label>
@@ -431,10 +481,11 @@ export default function FormularioProducto({
             {/* Toggle: cuotas */}
             <label
               htmlFor="permiteCuotas"
-              className="sm:col-span-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3.5 transition-colors hover:border-[#0E6E55]/40"
+              className="sm:col-span-2 flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50/70 dark:bg-zinc-800/60 p-3.5 transition-colors hover:border-emerald-500/40"
             >
-              <span className="text-xs font-medium text-[#12151B]">
-                💳 Permitir financiación en <span className="font-bold text-[#0E6E55]">cuotas</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Permitir financiación en <span className="font-extrabold text-emerald-600 dark:text-emerald-400">cuotas</span></span>
               </span>
               <span className="relative inline-flex h-6 w-11 shrink-0 items-center">
                 <input
@@ -444,41 +495,54 @@ export default function FormularioProducto({
                   onChange={(e) => setPermiteCuotas(e.target.checked)}
                   className="peer sr-only"
                 />
-                <span className="absolute inset-0 rounded-full bg-gray-300 transition-colors peer-checked:bg-[#0E6E55]" />
+                <span className="absolute inset-0 rounded-full bg-slate-300 dark:bg-zinc-700 transition-colors peer-checked:bg-emerald-600 dark:peer-checked:bg-emerald-500" />
                 <span className="absolute left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
               </span>
             </label>
 
             {/* Subcomponente de Galería de Imágenes */}
-            <CargadorImagenes
-              totalImagenes={totalImagenes}
-              imagenesExistentes={imagenesExistentes}
-              previewsNuevas={previewsNuevas}
-              handleFileChange={handleFileChange}
-              eliminarExistente={eliminarExistente}
-              eliminarNueva={eliminarNueva}
-            />
-
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-xs font-semibold text-[#6B675F]">Descripción</label>
+              <CargadorImagenes
+                totalImagenes={totalImagenes}
+                imagenesExistentes={imagenesExistentes}
+                previewsNuevas={previewsNuevas}
+                handleFileChange={handleFileChange}
+                eliminarExistente={eliminarExistente}
+                eliminarNueva={eliminarNueva}
+              />
+            </div>
+
+            {/* Descripción */}
+            <div className="sm:col-span-2">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-slate-400" />
+                Descripción
+              </label>
               <textarea
                 value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
                 rows={2}
                 placeholder="Detalles, materiales, talles..."
-                className="w-full resize-none rounded-xl border border-[#E7E5E0] bg-[#F7F7F5] p-3.5 text-sm font-medium text-[#12151B] outline-none transition-colors focus:border-[#0E6E55] focus:bg-white"
+                className="w-full resize-none rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800"
               />
             </div>
           </div>
 
-          {/* Botón: sticky en mobile para llegar cómodo con el pulgar */}
-          <div className="sticky bottom-0 border-t border-[#E7E5E0] bg-white/95 p-4 backdrop-blur-sm sm:static sm:border-t-0 sm:px-6 sm:pb-6 sm:pt-0">
+          {/* Botón Guardar / Actualizar */}
+          <div className="sticky bottom-0 border-t border-slate-200/80 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 p-4 backdrop-blur-sm sm:static sm:border-t-0 sm:px-6 sm:pb-6 sm:pt-0">
             <button
               type="submit"
               disabled={cargando}
-              className="w-full rounded-xl bg-[#0E6E55] py-3.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#0A5340] active:scale-[0.98] disabled:opacity-50"
+              className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-xs sm:text-sm font-bold text-white shadow-xs transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
             >
-              {cargando ? "Guardando..." : productoEditando ? "Actualizar Producto" : "Guardar Producto"}
+              {cargando ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Guardando...</span>
+                </>
+              ) : (
+                <span>{productoEditando ? "Actualizar Producto" : "Guardar Producto"}</span>
+              )}
             </button>
           </div>
         </form>
@@ -487,7 +551,7 @@ export default function FormularioProducto({
       <ScannerModal
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
-        onScan={(code) => {
+        onScan={(code: string) => {
           setCodigoBarras(code);
           verificarCodigoEnSupabase(code);
         }}

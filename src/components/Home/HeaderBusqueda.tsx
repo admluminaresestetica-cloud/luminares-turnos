@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface HeaderBusquedaProps {
   nombreEmpresa: string;
@@ -214,7 +215,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
 
   return (
     <div ref={containerRef} className="space-y-3 relative z-50">
-      {/* Saludo + Botón Mis Turnos */}
+      {/* Saludo + Botón Mis Turnos y ThemeToggle */}
       <div className="flex items-center justify-between px-1">
         <div>
           <p className="text-xs font-medium text-white/80">
@@ -225,13 +226,16 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           </h1>
         </div>
 
-        <Link
-          href="/mis-turnos"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
-        >
-          <Calendar className="h-3.5 w-3.5 text-white" />
-          <span>Mis Turnos</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Link
+            href="/mis-turnos"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
+          >
+            <Calendar className="h-3.5 w-3.5 text-white" />
+            <span>Mis Turnos</span>
+          </Link>
+        </div>
       </div>
 
       {/* Input de Búsqueda */}

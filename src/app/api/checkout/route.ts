@@ -22,10 +22,15 @@ export async function POST(request: Request) {
 
     const cuotasHabilitadas = configEmpresa?.cuotas_habilitadas ?? true;
     const montoMinimoCuotas = Number(configEmpresa?.monto_minimo_cuotas ?? 0);
+    
+    // 🟢 NUEVO: Obtenemos cantidad de cuotas y porcentaje configurados (con fallbacks seguros)
+    const cantidadCuotasConfig = Number(configEmpresa?.cantidad_cuotas ?? 3);
+    const porcentajeRecargoConfig = Number(configEmpresa?.porcentaje_recargo_cuotas ?? 25);
+    const factorRecargoDinamico = porcentajeRecargoConfig / 100; // Ej: 25 -> 0.25
 
     const client = new MercadoPagoConfig({ accessToken });
 
-    const { itemsCarrito, cliente, recargoPorcentaje = 0.10 } = await request.json();
+    const { itemsCarrito, cliente, recargoPorcentaje } = await request.json();
 
     if (!itemsCarrito || !Array.isArray(itemsCarrito) || itemsCarrito.length === 0) {
       return NextResponse.json(
@@ -34,7 +39,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const PORCENTAJE_RECARGO = Number(recargoPorcentaje) || 0;
+    // 🟢 Si el cliente manda un recargo explícito desde el front, lo usamos; si no, usamos el configurado en admin
+    const PORCENTAJE_RECARGO = recargoPorcentaje !== undefined ? Number(recargoPorcentaje) : factorRecargoDinamico;
+
     let totalPedido = 0;
     let subtotalSinRecargo = 0;
     let algunProductoBloqueaCuotas = false;
@@ -59,7 +66,6 @@ export async function POST(request: Request) {
       // Manejo del Envío por Cadetería
       if (productoId === "envio-cadeteria") {
         const precioOficial = Number(item.precio) || 0;
-        // 🟢 CORRECCIÓN: Aplicamos el recargo al envío de la misma forma que a los productos
         const precioUnitarioConRecargo = Math.round(precioOficial * (1 + PORCENTAJE_RECARGO));
 
         totalPedido += precioUnitarioConRecargo * cantidad;
@@ -73,7 +79,6 @@ export async function POST(request: Request) {
           currency_id: "ARS",
         });
 
-        // Estructura limpia para el JSONB del pedido
         itemsValidadosJSON.push({
           id: "envio-cadeteria",
           nombre_producto: String(item.nombre || "Costo de Cadetería / Envío"),
@@ -81,7 +86,6 @@ export async function POST(request: Request) {
           precio_unitario: precioUnitarioConRecargo,
         });
 
-        // Estructura para la tabla relacionada `pedido_items`
         itemsParaPedidoItems.push({
           nombre_producto: String(item.nombre || "Costo de Cadetería / Envío"),
           cantidad: cantidad,
@@ -142,7 +146,6 @@ export async function POST(request: Request) {
         precio_unitario: precioUnitarioConRecargo,
       });
 
-      // Validamos si el ID es numérico para respetar la Foreign Key (int8) de la tabla productos
       const esProductoNum = tablaOrigen === "productos" && !isNaN(Number(productoDb.id));
 
       itemsParaPedidoItems.push({
@@ -158,7 +161,7 @@ export async function POST(request: Request) {
       subtotalSinRecargo >= montoMinimoCuotas &&
       !algunProductoBloqueaCuotas;
 
-    // 1. Insert en la tabla `pedidos` con los nombres de columna EXACTOS
+    // 1. Insert en la tabla `pedidos`
     const { data: pedido, error: errorPedido } = await supabase
       .from("pedidos")
       .insert({
@@ -186,7 +189,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Insert en la tabla `pedido_items` vinculando `pedido_id`
+    // 2. Insert en la tabla `pedido_items`
     const relacionItems = itemsParaPedidoItems.map((item) => ({
       ...item,
       pedido_id: pedido.id,
@@ -197,7 +200,7 @@ export async function POST(request: Request) {
       console.error("Error al insertar items del pedido:", errorItems);
     }
 
-    // 3. Crear Preferencia de Mercado Pago
+    // 3. Crear Preferencia de Mercado Pago con cuotas dinámicas
     const preference = new Preference(client);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
 
@@ -213,7 +216,7 @@ export async function POST(request: Request) {
         auto_return: "approved",
         notification_url: `${baseUrl}/api/webhooks/mercadopago`,
         payment_methods: {
-          installments: permiteFinanciacion ? 3 : 1,
+          installments: permiteFinanciacion ? cantidadCuotasConfig : 1, // 🟢 Dinámico según admin
         },
       },
     });

@@ -13,12 +13,16 @@ import { useCarrito } from "@/context/CarritoContext";
 import { useConfig } from "@/context/ConfigContext";
 import { Producto } from "@/types/tienda";
 import BotonFlotanteCarrito from "./components/BotonFlotanteCarrito";
+import ThemeToggle from "@/components/ThemeToggle";
 import Fuse from "fuse.js";
 
 import BuscadorYCategorias from "./components/BuscadorYCategorias";
 import GridProductos from "./components/GridProductos";
 import ModalDetalleProducto from "./components/ModalDetalleProducto";
 import TagsFiltros from "./components/TagsFiltros";
+
+export const dynamic = 'force-dynamic';
+
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -190,8 +194,8 @@ function TiendaContenido() {
         return precioBase > p.precio;
       });
     } else if (categoriaFiltro !== "Todos") {
-  resultado = resultado.filter((p) => p.categoria?.toLowerCase() === categoriaFiltro.toLowerCase());
-}
+      resultado = resultado.filter((p) => p.categoria?.toLowerCase() === categoriaFiltro.toLowerCase());
+    }
 
     return resultado;
   }, [productos, busqueda, categoriaFiltro, tagSeleccionado]);
@@ -215,7 +219,7 @@ function TiendaContenido() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center font-sans">
+      <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center font-sans">
         <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#0E6E55] border-t-transparent" />
       </div>
     );
@@ -231,14 +235,14 @@ function TiendaContenido() {
   const hayTagActivo = Boolean(tagSeleccionado);
 
   return (
-    <div className="min-h-screen bg-white text-[#12151B] flex flex-col justify-between font-sans selection:bg-emerald-100 selection:text-emerald-900">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 text-[#12151B] dark:text-zinc-100 flex flex-col justify-between font-sans selection:bg-emerald-100 selection:text-emerald-900 transition-colors">
       <div>
         {/* Navbar / App Bar superior limpia */}
-        <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-4 py-3.5 backdrop-blur-md sm:px-10 sm:py-4 shadow-xs">
+        <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-slate-200/80 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-4 py-3.5 backdrop-blur-md sm:px-10 sm:py-4 shadow-xs">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-white hover:text-slate-900 px-3.5 py-2 rounded-xl transition-all active:scale-95 border border-slate-200/80 shadow-xs"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:text-slate-900 dark:hover:text-white px-3.5 py-2 rounded-xl transition-all active:scale-95 border border-slate-200/80 dark:border-zinc-700/80 shadow-xs"
               title="Volver a la selección principal"
             >
               <ArrowLeft className="w-4 h-4 stroke-[2.2]" />
@@ -250,7 +254,7 @@ function TiendaContenido() {
               onClick={resetearFiltros}
               className="flex min-w-0 items-center gap-3 cursor-pointer transition-opacity hover:opacity-85 active:scale-[0.98]"
             >
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center sm:h-11 sm:w-11 rounded-2xl bg-white border border-slate-200/80 shadow-xs p-1.5 overflow-hidden">
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center sm:h-11 sm:w-11 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700/80 shadow-xs p-1.5 overflow-hidden">
                 <Image
                   src={config?.logo_url || "/logodoradoo.svg"}
                   alt={config?.nombre_empresa || "Logo"}
@@ -262,31 +266,35 @@ function TiendaContenido() {
               </div>
 
               <div className="flex min-w-0 flex-col leading-tight">
-                <h2 className="m-0 truncate text-sm sm:text-base font-extrabold tracking-tight text-slate-900">
+                <h2 className="m-0 truncate text-sm sm:text-base font-extrabold tracking-tight text-slate-900 dark:text-zinc-100">
                   {config?.nombre_empresa || "Luminares"}
                 </h2>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#0E6E55] animate-pulse" />
-                  <span className="truncate text-[11px] font-semibold text-slate-500">
+                  <span className="truncate text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
                     {config?.subtitulo_tienda || "Tienda Oficial"}
                   </span>
                 </div>
               </div>
             </Link>
           </div>
-         <button
-            onClick={() => setModalAbierto(true)}
-            className="relative flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-800 transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 active:scale-95 cursor-pointer shadow-xs"
-          >
-            <ShoppingBag className="h-4 w-4 shrink-0 text-slate-700" strokeWidth={2.2} />
-            <span className="hidden sm:inline">Mi Carrito</span>
 
-            {totalItems > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white bg-[#0E6E55] px-1 text-[10px] font-extrabold leading-none text-white shadow-xs sm:static sm:ml-1 sm:h-5 sm:min-w-[20px] sm:border-0 sm:text-[11px]">
-                {totalItems}
-              </span>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={() => setModalAbierto(true)}
+              className="relative flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-800 px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-800 dark:text-zinc-200 transition-all duration-200 hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer shadow-xs"
+            >
+              <ShoppingBag className="h-4 w-4 shrink-0 text-slate-700 dark:text-zinc-300" strokeWidth={2.2} />
+              <span className="hidden sm:inline">Mi Carrito</span>
+
+              {totalItems > 0 && (
+                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 bg-[#0E6E55] px-1 text-[10px] font-extrabold leading-none text-white shadow-xs sm:static sm:ml-1 sm:h-5 sm:min-w-[20px] sm:border-0 sm:text-[11px]">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+          </div>
         </nav>
 
         <div className="mx-auto max-w-[1150px] px-4 pb-28 pt-4 sm:px-10 sm:pb-16">
@@ -302,9 +310,9 @@ function TiendaContenido() {
 
           {/* Indicador visual de etiqueta activa */}
           {hayTagActivo && (
-            <div className="mb-6 flex items-center justify-between bg-white border border-[#0E6E55]/30 rounded-[22px] px-4 sm:px-5 py-3.5 shadow-xs animate-in fade-in duration-300">
-              <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-[#0E6E55]">
-                <div className="w-7 h-7 rounded-xl bg-[#0E6E55]/10 flex items-center justify-center shrink-0">
+            <div className="mb-6 flex items-center justify-between bg-white dark:bg-zinc-900 border border-[#0E6E55]/30 rounded-[22px] px-4 sm:px-5 py-3.5 shadow-xs animate-in fade-in duration-300">
+              <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-[#0E6E55] dark:text-emerald-400">
+                <div className="w-7 h-7 rounded-xl bg-[#0E6E55]/10 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
                   <TagIcon className="w-3.5 h-3.5 stroke-[2.2]" />
                 </div>
                 <span>
@@ -314,7 +322,7 @@ function TiendaContenido() {
               </div>
               <button
                 onClick={() => setTagSeleccionado(null)}
-                className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-xl transition-all cursor-pointer active:scale-95 shadow-xs"
+                className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 border border-slate-200/80 dark:border-zinc-700 px-3 py-2 rounded-xl transition-all cursor-pointer active:scale-95 shadow-xs"
               >
                 <span>Limpiar</span>
                 <X className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -365,7 +373,7 @@ export default function TiendaPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-white flex items-center justify-center font-sans">
+        <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center font-sans">
           <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#0E6E55] border-t-transparent" />
         </div>
       }
