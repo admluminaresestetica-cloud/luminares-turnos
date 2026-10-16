@@ -8,7 +8,7 @@ import ModalNuevoTurnoRecepcion from './components/ModalNuevoTurnoRecepcion'
 import ModalAnamnesisRecepcion from './components/ModalAnamnesisRecepcion'
 import ModalHistorialCliente from './components/ModalHistorialCliente'
 import ModalCobro from '@/app/admin/turnos/components/modals/ModalCobro'
-
+import BotonAvisoGabinete from './components/BotonAvisoGabinete'
 
 export default function RecepcionPage() {
   const [turnos, setTurnos] = useState<Reserva[]>([])
@@ -395,6 +395,7 @@ export default function RecepcionPage() {
 
                       {/* BOTONES ACCESOS RÁPIDOS */}
                       <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                        <BotonAvisoGabinete gabineteId="1" nombreGabinete="Gabinete 1" />
                         <button
                           type="button"
                           onClick={() => abrirHistorial(t.cliente_celular || '', t.cliente_nombre || 'Cliente')}

@@ -1,6 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { 
+  Package, 
+  QrCode, 
+  Wallet, 
+  ClipboardList, 
+  Image as ImageIcon, 
+  Tag, 
+  ShoppingBag, 
+  ArrowLeft,
+  LucideIcon 
+} from "lucide-react";
 
 export type TabKey = "catalogo" | "pos" | "caja" | "pedidos" | "banners" | "tags";
 
@@ -8,7 +19,7 @@ interface TabOption {
   key: TabKey;
   label: string;
   badge?: number;
-  icon: (active: boolean) => JSX.Element;
+  icon: LucideIcon;
 }
 
 interface TiendaHeaderNavProps {
@@ -26,110 +37,46 @@ export default function TiendaHeaderNav({
     {
       key: "catalogo",
       label: "Catálogo",
-      icon: (active) => (
-        <svg
-          className={`h-5 w-5 transition-transform duration-200 ${active ? "scale-110" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={active ? "2.2" : "1.8"}
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-        </svg>
-      ),
+      icon: Package,
     },
     {
       key: "pos",
       label: "Escáner/POS",
-      icon: (active) => (
-        <svg
-          className={`h-5 w-5 transition-transform duration-200 ${active ? "scale-110" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={active ? "2.2" : "1.8"}
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1m0 14v1m8-8h-1M5 12H4m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
-        </svg>
-      ),
+      icon: QrCode,
     },
     {
       key: "caja",
       label: "Caja",
-      icon: (active) => (
-        <svg
-          className={`h-5 w-5 transition-transform duration-200 ${active ? "scale-110" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={active ? "2.2" : "1.8"}
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      ),
+      icon: Wallet,
     },
     {
       key: "pedidos",
       label: "Pedidos",
       badge: pedidosPendientes,
-      icon: (active) => (
-        <svg
-          className={`h-5 w-5 transition-transform duration-200 ${active ? "scale-110" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={active ? "2.2" : "1.8"}
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 022 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
-      ),
+      icon: ClipboardList,
     },
-    {
-      key: "banners",
-      label: "Banners",
-      icon: (active) => (
-        <svg
-          className={`h-5 w-5 transition-transform duration-200 ${active ? "scale-110" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={active ? "2.2" : "1.8"}
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-    },
+    
     {
       key: "tags",
       label: "Tags",
-      icon: (active) => (
-        <svg
-          className={`h-5 w-5 transition-transform duration-200 ${active ? "scale-110" : ""}`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={active ? "2.2" : "1.8"}
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-        </svg>
-      ),
+      icon: Tag,
     },
   ];
 
   return (
     <>
       {/* HEADER SUPERIOR */}
-      <header className="sticky top-0 z-30 border-b border-gray-200/80 bg-white/80 backdrop-blur-md px-4 py-3.5 sm:px-10 sm:py-5">
+      <header className="sticky top-0 z-30 border-b border-slate-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md px-4 py-3.5 sm:px-10 sm:py-4 transition-colors">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#12151B] text-base text-white shadow-sm sm:h-11 sm:w-11 sm:text-lg">
-              🛍️
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-600/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 shadow-xs sm:h-11 sm:w-11">
+              <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
             </span>
             <div>
-              <p className="m-0 text-[10px] font-semibold uppercase tracking-wider text-[#0E6E55] sm:text-xs">
+              <p className="m-0 text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 sm:text-xs">
                 Panel Admin
               </p>
-              <h1 className="m-0 text-base font-bold tracking-tight text-[#12151B] sm:text-2xl">
+              <h1 className="m-0 text-base font-extrabold tracking-tight text-slate-900 dark:text-zinc-100 sm:text-2xl">
                 Gestión de Tienda
               </h1>
             </div>
@@ -137,9 +84,10 @@ export default function TiendaHeaderNav({
 
           <Link
             href="/admin"
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-gray-200 bg-gray-50/80 px-3 text-xs font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-100 active:scale-95 sm:h-10 sm:px-4 sm:text-sm"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/80 px-3 text-xs font-bold text-slate-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 sm:h-10 sm:px-4 sm:text-sm"
           >
-            ← <span className="hidden sm:inline">Menú Admin</span>
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Menú Admin</span>
           </Link>
         </div>
       </header>
@@ -149,21 +97,22 @@ export default function TiendaHeaderNav({
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;
+            const Icon = tab.icon;
             return (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex h-11 shrink-0 items-center gap-2.5 rounded-2xl px-4 text-sm font-semibold transition-all active:scale-95 ${
+                className={`flex h-11 shrink-0 items-center gap-2.5 rounded-2xl px-4 text-sm font-bold transition-all active:scale-95 cursor-pointer ${
                   isActive
-                    ? "bg-[#0E6E55] text-white shadow-lg shadow-[#0E6E55]/25"
-                    : "bg-white text-gray-600 border border-gray-200/80 hover:border-[#0E6E55]/30 hover:text-gray-900"
+                    ? "bg-emerald-600 dark:bg-emerald-500 text-white shadow-lg shadow-emerald-600/25 dark:shadow-emerald-500/20"
+                    : "bg-white dark:bg-zinc-900/80 text-slate-600 dark:text-zinc-400 border border-slate-200/80 dark:border-zinc-800 hover:border-emerald-500/40 hover:text-slate-900 dark:hover:text-zinc-200"
                 }`}
               >
-                {tab.icon(isActive)}
+                <Icon className={`w-4 h-4 transition-transform duration-200 ${isActive ? "scale-110" : ""}`} />
                 <span>{tab.label}</span>
                 {!!tab.badge && tab.badge > 0 && (
                   <span
-                    className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${
+                    className={`flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-black ${
                       isActive ? "bg-white/25 text-white" : "bg-red-500 text-white animate-pulse"
                     }`}
                   >
@@ -176,32 +125,33 @@ export default function TiendaHeaderNav({
         </div>
       </div>
 
-      {/* BOTTOM NAVIGATION BAR NATIVA (Para Móviles - z-[9999] garante que siempre flote por encima) */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 backdrop-blur-lg border-t border-gray-200/80 px-2 py-1.5 shadow-2xl">
+      {/* BOTTOM NAVIGATION BAR NATIVA (Para Móviles) */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-zinc-800 px-2 py-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] shadow-2xl transition-colors">
         <div className="grid grid-cols-6 gap-1 items-center max-w-md mx-auto">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key;
+            const Icon = tab.icon;
             return (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`relative flex flex-col items-center justify-center py-1.5 rounded-xl transition-all active:scale-90 ${
-                  isActive ? "text-[#0E6E55]" : "text-gray-400 hover:text-gray-600"
+                className={`relative flex flex-col items-center justify-center py-1.5 rounded-xl transition-all active:scale-90 cursor-pointer ${
+                  isActive ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300"
                 }`}
               >
                 <div className="relative">
-                  {tab.icon(isActive)}
+                  <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? "scale-110" : ""}`} />
                   {!!tab.badge && tab.badge > 0 && (
-                    <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white ring-2 ring-white animate-pulse">
+                    <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white ring-2 ring-white dark:ring-zinc-900 animate-pulse">
                       {tab.badge}
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] mt-1 font-medium tracking-tight ${isActive ? "font-bold text-[#0E6E55]" : ""}`}>
+                <span className={`text-[10px] mt-1 font-medium tracking-tight ${isActive ? "font-extrabold text-emerald-600 dark:text-emerald-400" : ""}`}>
                   {tab.label.split("/")[0]}
                 </span>
                 {isActive && (
-                  <span className="absolute bottom-0 h-1 w-5 rounded-full bg-[#0E6E55]" />
+                  <span className="absolute bottom-0 h-1 w-5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
                 )}
               </button>
             );

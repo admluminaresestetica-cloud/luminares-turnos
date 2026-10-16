@@ -11,7 +11,6 @@ import FormularioProducto from "./components/FormularioProducto";
 import ListaProductos from "./components/ListaProductos";
 import PedidosTab, { Pedido } from "./components/PedidosTab";
 import CategoriasTab from "./components/CategoriasTab";
-import BannersTab from "../ajustes/components/BannersTab";
 import TagsTab from "./components/TagsTab";
 import PuntoVentaTab from "./components/pos/PuntoVentaTab";
 import ControlCajaTab from "./components/ControlCajaTab";
@@ -359,7 +358,6 @@ export default function AdminTiendaPage() {
             />
           )}
 
-          {activeTab === "banners" && <BannersTab />}
           {activeTab === "tags" && <TagsTab />}
         </div>
       </div>
