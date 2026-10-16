@@ -84,7 +84,13 @@ export function FavoritosProvider({ children }: { children: React.ReactNode }) {
 export function useFavoritos() {
   const context = useContext(FavoritosContext);
   if (!context) {
-    throw new Error("useFavoritos debe usarse dentro de FavoritosProvider");
+    return {
+      favoritos: [],
+      toggleFavorito: () => {},
+      quitarFavorito: () => {},
+      esFavorito: () => false,
+      limpiarFavoritos: () => {},
+    };
   }
   return context;
 }

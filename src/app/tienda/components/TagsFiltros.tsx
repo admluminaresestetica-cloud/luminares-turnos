@@ -25,12 +25,12 @@ export default function TagsFiltros({ tags, tagSeleccionado, onSelectTag }: Tags
     `flex flex-col items-center justify-center min-w-[76px] h-[76px] p-2 rounded-2xl transition-all duration-200 shrink-0 cursor-pointer border active:scale-95 snap-start select-none ${
       activo
         ? 'bg-[#0E6E55] text-white border-[#0E6E55] shadow-md scale-105'
-        : 'bg-white text-slate-700 border-[#E7E5E0] hover:border-[#0E6E55]/40 hover:bg-slate-50/80 shadow-2xs'
+        : 'bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border-[#E7E5E0] dark:border-zinc-800 hover:border-[#0E6E55]/40 dark:hover:border-emerald-500/40 hover:bg-slate-50/80 dark:hover:bg-zinc-800/80 shadow-2xs'
     }`;
 
   const getIconWrapperStyles = (activo: boolean) =>
     `relative w-8 h-8 rounded-full flex items-center justify-center mb-1 overflow-hidden transition-colors ${
-      activo ? 'bg-white/20 text-white' : 'bg-[#F7F7F5] text-[#0E6E55]'
+      activo ? 'bg-white/20 text-white' : 'bg-[#F7F7F5] dark:bg-zinc-800 text-[#0E6E55] dark:text-emerald-400'
     }`;
 
   return (

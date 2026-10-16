@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useCarrito } from "@/context/CarritoContext";
 import { useConfig } from "@/context/ConfigContext";
 import { supabase } from "@/lib/supabase";
-import { X, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
+import { X, Trash2, ShoppingBag, ArrowRight, Lock, ShieldCheck, CheckCircle2 } from "lucide-react";
 import FormularioEnvio from "./carrito/FormularioEnvio";
 
 interface CarritoDrawerProps {
@@ -30,8 +30,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     "whatsapp" | "mercadopago_debito" | "mercadopago_cuotas"
   >("whatsapp");
 
-  const [cuotasHabilitadas] = useState(true);
-  const [montoMinimoCuotas] = useState(0);
   const [costoEnvioFijo, setCostoEnvioFijo] = useState(0);
   const [whatsappNumeroDB, setWhatsappNumeroDB] = useState<string>("");
 
@@ -84,6 +82,16 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const costoEnvioAplicado =
     esEnvioADomicilio && !tieneEnvioGratis ? costoEnvioFijo : 0;
 
+  // --- 🟢 LÓGICA DINÁMICA DE CONFIGURACIÓN ---
+  const cuotasHabilitadas = config?.cuotas_habilitadas ?? true;
+  const montoMinimoCuotas = Number(config?.monto_minimo_cuotas ?? 0);
+  const cantidadCuotasConfig = Number(config?.cantidad_cuotas ?? 3);
+  const porcentajeRecargoCuotasConfig = Number(config?.porcentaje_recargo_cuotas ?? 25);
+  const porcentajeRecargoDebitoConfig = Number(config?.porcentaje_recargo_debito ?? 10);
+
+  const PORCENTAJE_DEBITO = porcentajeRecargoDebitoConfig / 100; 
+  const PORCENTAJE_CUOTAS = porcentajeRecargoCuotasConfig / 100; 
+
   const productoNoAptoCuotas = carritoSeguro.find(
     (item) => item.permite_cuotas === false
   );
@@ -97,14 +105,11 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     }
   }, [aptoParaCuotas, metodoPago]);  
 
-  const PORCENTAJE_DEBITO = 0.10;
-  const PORCENTAJE_CUOTAS = 0.25;
   const totalBaseConEnvio = subtotalProductos + costoEnvioAplicado;
-
   const totalTransferencia = totalBaseConEnvio;
   const totalDebitoOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_DEBITO));
   const totalCuotasOp = Math.round(totalBaseConEnvio * (1 + PORCENTAJE_CUOTAS));
-  const valorCuotaOp = Math.round(totalCuotasOp / 3);
+  const valorCuotaOp = cantidadCuotasConfig > 0 ? Math.round(totalCuotasOp / cantidadCuotasConfig) : totalCuotasOp;
 
   let totalFinalAbonar = totalTransferencia;
   let recargoMonto = 0;
@@ -142,7 +147,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     medioPagoStr: string
   ) => {
     try {
-      // Tomamos la dirección directamente de datosEnvio
       const direccionReal =
         datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion?.trim()
           ? datosEnvio.direccion.trim()
@@ -227,7 +231,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       mensaje
     )}`;
     
-    // Al pedir por WhatsApp SÍ vaciamos el carrito porque ya fue enviado la solicitud
     vaciarCarrito();
     onClose();
     window.open(whatsappUrl, "_blank");
@@ -238,7 +241,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
     setCargandoMP(true);
     try {
-
       const recargoPorcentaje = metodoPago === "mercadopago_cuotas" ? PORCENTAJE_CUOTAS : PORCENTAJE_DEBITO;
 
       const itemsParaApi = carritoSeguro.map((item) => ({
@@ -275,7 +277,6 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
       const data = await response.json();
 
       if (response.ok && data.init_point) {
-        // 🔴 NO LLAMAMOS vaciarCarrito() AQUÍ PARA NO BORRAR EL CARRITO SI VUELVE ATRÁS
         onClose();
         window.location.href = data.init_point;
       } else {
@@ -304,9 +305,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     <div className="fixed inset-0 z-[60] overflow-hidden bg-black/60 backdrop-blur-xs transition-opacity">
       <div className="absolute inset-y-0 right-0 flex max-w-full pl-4 sm:pl-10">
         <div className="w-screen max-w-md bg-card border-l border-border shadow-2xl flex flex-col text-foreground transition-colors">
+          
           {/* Header */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border">
-            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border bg-muted/20">
+            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               {paso === "carrito" ? "Tu Carrito" : "Finalizar Compra"}
             </h2>
@@ -318,8 +320,28 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             </button>
           </div>
 
+          {/* Stepper / Barra de Progreso (Solo en Checkout) */}
+          {paso === "checkout" && carritoSeguro.length > 0 && (
+            <div className="px-6 py-3 bg-muted/40 border-b border-border flex items-center justify-between text-xs font-semibold">
+              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>1. Datos</span>
+              </div>
+              <div className="w-8 h-px bg-border"></div>
+              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>2. Envío</span>
+              </div>
+              <div className="w-8 h-px bg-border"></div>
+              <div className="flex items-center gap-1.5 text-foreground font-bold">
+                <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">3</span>
+                <span>Pago</span>
+              </div>
+            </div>
+          )}
+
           {/* Contenido */}
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-6 pb-20 sm:pb-6 space-y-6">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-5 pb-20 sm:pb-6 space-y-5">
             {carritoSeguro.length === 0 ? (
               <div className="text-center py-12 space-y-4">
                 <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground/50" />
@@ -413,8 +435,25 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             ) : (
               /* Paso Checkout */
               <form id="checkout-form" onSubmit={manejarSubmit} className="space-y-5">
+                
+                {/* Resumen Superior Estilizado */}
+                <div className="p-4 bg-muted/30 border border-border rounded-2xl flex items-center justify-between shadow-2xs">
+                  <div>
+                    <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold">Total a Pagar</span>
+                    <div className="text-xl font-black text-foreground">
+                      ${totalFinalAbonar.toLocaleString("es-AR")}
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/20">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Pago Seguro
+                  </span>
+                </div>
+
                 <FormularioEnvio
-                  datosEnvio={datosEnvio}
+                  datosEnvio={{
+                    ...datosEnvio,
+                    metodoEnvio: (datosEnvio.metodoEnvio === "envio" ? "envio" : "retiro") as "retiro" | "envio"
+                  }}
                   setDatosEnvio={setDatosEnvio}
                   costoEnvio={costoEnvioFijo}
                   metodoPago={metodoPago === "whatsapp" ? "whatsapp" : "mercadopago"}
@@ -426,23 +465,23 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                 />
 
                 {/* Métodos de Pago */}
-                <div className="space-y-2 pt-2">
-                  <label className="block text-xs font-semibold text-foreground mb-2">
+                <div className="space-y-2.5 pt-2">
+                  <label className="block text-xs font-bold text-foreground mb-1">
                     Seleccionar Método de Pago:
                   </label>
 
                   <button
                     type="button"
                     onClick={() => setMetodoPago("whatsapp")}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer ${
+                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left text-xs transition-all active:scale-[0.98] cursor-pointer ${
                       metodoPago === "whatsapp"
-                        ? "border-emerald-600 dark:border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-2xs"
-                        : "border-border bg-card text-foreground hover:bg-muted/60"
+                        ? "border-emerald-600 dark:border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 shadow-xs ring-1 ring-emerald-600/20"
+                        : "border-border bg-card text-foreground hover:bg-muted/50"
                     }`}
                   >
                     <div>
                       <div className="font-bold text-sm">💬 Transferencia / Efectivo</div>
-                      <div className="text-[11px] font-normal text-muted-foreground">
+                      <div className="text-[11px] text-muted-foreground mt-0.5">
                         Pago directo de contado
                       </div>
                     </div>
@@ -454,18 +493,19 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   <button
                     type="button"
                     onClick={() => setMetodoPago("mercadopago_debito")}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left text-xs font-semibold transition-all active:scale-[0.98] cursor-pointer ${
+                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left text-xs transition-all active:scale-[0.98] cursor-pointer ${
                       metodoPago === "mercadopago_debito"
-                        ? "border-sky-600 dark:border-sky-500 bg-sky-500/10 text-sky-700 dark:text-sky-400 shadow-2xs"
-                        : "border-border bg-card text-foreground hover:bg-muted/60"
+                        ? "border-sky-600 dark:border-sky-500 bg-sky-500/10 text-sky-700 dark:text-sky-300 shadow-xs ring-1 ring-sky-600/20"
+                        : "border-border bg-card text-foreground hover:bg-muted/50"
                     }`}
                   >
                     <div>
-                      <div className="font-bold text-sm">
+                      <div className="font-bold text-sm flex items-center gap-1.5">
                         💳 Mercado Pago (Débito / 1 Pago)
+                        <span className="text-[9px] bg-sky-500/20 text-sky-700 dark:text-sky-300 px-1.5 py-0.5 rounded font-bold">RECOMENDADO</span>
                       </div>
-                      <div className="text-[11px] font-normal text-muted-foreground">
-                        Tarjeta de débito o saldo en cuenta
+                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                        Tarjeta de débito o saldo • Acreditación inmediata
                       </div>
                     </div>
                     <span className="font-bold text-sky-700 dark:text-sky-400 text-sm">
@@ -477,25 +517,25 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     type="button"
                     disabled={!aptoParaCuotas}
                     onClick={() => aptoParaCuotas && setMetodoPago("mercadopago_cuotas")}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl border text-left text-xs font-semibold transition-all ${
+                    className={`w-full flex items-center justify-between p-3.5 rounded-2xl border text-left text-xs transition-all ${
                       !aptoParaCuotas
                         ? "border-border bg-muted/40 text-muted-foreground opacity-60 cursor-not-allowed"
                         : metodoPago === "mercadopago_cuotas"
-                        ? "border-purple-600 dark:border-purple-500 bg-purple-500/10 text-purple-700 dark:text-purple-300 shadow-2xs active:scale-[0.98] cursor-pointer"
-                        : "border-border bg-card text-foreground hover:bg-muted/60 active:scale-[0.98] cursor-pointer"
+                        ? "border-purple-600 dark:border-purple-500 bg-purple-500/10 text-purple-700 dark:text-purple-300 shadow-xs ring-1 ring-purple-600/20 active:scale-[0.98] cursor-pointer"
+                        : "border-border bg-card text-foreground hover:bg-muted/50 active:scale-[0.98] cursor-pointer"
                     }`}
                   >
                     <div>
                       <div className="font-bold text-sm flex items-center gap-1.5">
-                        💳 3 Cuotas Fijas
+                        💳 {cantidadCuotasConfig} Cuotas Fijas
                         {!aptoParaCuotas && (
                           <span className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded font-normal">
                             No disponible
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] font-normal text-muted-foreground">
-                        3 pagos de ${valorCuotaOp.toLocaleString("es-AR")}
+                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                        {cantidadCuotasConfig} pagos de ${valorCuotaOp.toLocaleString("es-AR")}
                       </div>
                     </div>
                     <span className="font-bold text-purple-700 dark:text-purple-300 text-sm">
@@ -533,22 +573,22 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   <div className="flex justify-between text-muted-foreground/80">
                     <span>
                       {metodoPago === "mercadopago_cuotas"
-                        ? `Recargo cuotas (${PORCENTAJE_CUOTAS * 100}%)`
-                        : `Recargo débito (${PORCENTAJE_DEBITO * 100}%)`}
+                        ? `Recargo cuotas (${porcentajeRecargoCuotasConfig}%)`
+                        : `Recargo débito (${porcentajeRecargoDebitoConfig}%)`}
                     </span>
                     <span>+${recargoMonto.toLocaleString("es-AR")}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-base font-bold text-foreground pt-2 border-t border-border">
                   <span>Total final:</span>
-                  <span>${totalFinalAbonar.toLocaleString("es-AR")}</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">${totalFinalAbonar.toLocaleString("es-AR")}</span>
                 </div>
               </div>
 
               {paso === "carrito" ? (
                 <button
                   onClick={() => setPaso("checkout")}
-                  className="w-full bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-2xs cursor-pointer"
+                  className="w-full bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] cursor-pointer"
                 >
                   Continuar compra
                   <ArrowRight className="w-4 h-4" />
@@ -558,7 +598,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                   <button
                     type="button"
                     onClick={() => setPaso("carrito")}
-                    className="w-1/3 border border-border bg-card hover:bg-muted text-foreground py-3 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
+                    className="w-1/3 border border-border bg-card hover:bg-muted text-foreground py-3.5 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
                   >
                     Volver
                   </button>
@@ -566,13 +606,16 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
                     form="checkout-form"
                     type="submit"
                     disabled={cargandoMP}
-                    className="w-2/3 bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors shadow-2xs disabled:opacity-50 cursor-pointer"
+                    className="w-2/3 bg-gradient-to-r from-emerald-700 to-emerald-600 hover:from-emerald-800 hover:to-emerald-700 text-white py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                   >
-                    {cargandoMP
-                      ? "Procesando..."
-                      : metodoPago === "whatsapp"
-                      ? "Pedir por WhatsApp"
-                      : "Pagar con Mercado Pago"}
+                    {cargandoMP ? (
+                      "Procesando..."
+                    ) : (
+                      <>
+                        <Lock className="w-3.5 h-3.5" />
+                        {metodoPago === "whatsapp" ? "Confirmar por WhatsApp" : `Pagar $${totalFinalAbonar.toLocaleString("es-AR")}`}
+                      </>
+                    )}
                   </button>
                 </div>
               )}

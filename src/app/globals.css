@@ -82,3 +82,28 @@
 .touch-pan-x {
   touch-action: pan-x pan-y !important;
 }
+
+/* Estilo global elegante para todas las barras de desplazamiento (verticales y horizontales) */
+::-webkit-scrollbar {
+  width: 6px;  /* Ancho para barras verticales */
+  height: 6px; /* Altura para barras horizontales */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(150, 150, 150, 0.3);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(150, 150, 150, 0.5);
+}
+
+/* Soporte global para Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 150, 150, 0.3) transparent;
+}

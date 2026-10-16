@@ -4,6 +4,8 @@ import React from "react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 import { useFavoritos } from "@/context/FavoritosContext";
+import { useConfig } from "@/context/ConfigContext";
+import { calcularCuotas } from "@/lib/precios";
 import { Plus, Minus, Flame, ShoppingCart, Truck, Heart } from "lucide-react";
 
 interface TarjetaProductoProps {
@@ -22,6 +24,7 @@ export default function TarjetaProducto({
 }: TarjetaProductoProps) {
   const context = useCarrito();
   const { toggleFavorito, esFavorito } = useFavoritos();
+  const { config } = useConfig();
 
   const esFav = esFavorito(producto.id);
 
@@ -63,10 +66,26 @@ export default function TarjetaProducto({
     ? new Intl.NumberFormat("es-AR").format(precioBaseNum)
     : null;
 
-  // Cálculo de 3 cuotas fijas (+25% de recargo sobre el precio lista)
-  const totalConRecargoCuotas = Math.round((producto.precio || 0) * 1.25);
-  const montoCuota = Math.round(totalConRecargoCuotas / 3);
-  const cuotaFormateada = new Intl.NumberFormat("es-AR").format(montoCuota);
+  // --- LÓGICA DINÁMICA DE CUOTAS ---
+  const cuotasHabilitadas = config?.cuotas_habilitadas ?? true;
+  const cantidadCuotasConfig = config?.cantidad_cuotas ?? 3;
+  const porcentajeRecargoConfig = config?.porcentaje_recargo_cuotas ?? 25;
+  const montoMinimoCuotas = config?.monto_minimo_cuotas ?? 0;
+
+  const precioProducto = producto.precio || 0;
+  const aplicaCuotas = 
+    cuotasHabilitadas && 
+    producto.permite_cuotas !== false && 
+    !sinStock && 
+    precioProducto >= montoMinimoCuotas;
+
+  const datosCuotas = calcularCuotas(
+    precioProducto, 
+    cantidadCuotasConfig, 
+    porcentajeRecargoConfig
+  );
+  
+  const cuotaFormateada = new Intl.NumberFormat("es-AR").format(datosCuotas.montoCuota);
 
   const handleRestar = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -101,18 +120,18 @@ export default function TarjetaProducto({
   return (
     <div
       onClick={() => onVerDetalle && onVerDetalle(producto)}
-      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] bg-white p-2.5 sm:p-3.5 shadow-sm transition-transform duration-150 active:scale-[0.97] hover:shadow-md cursor-pointer select-none"
+      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 sm:p-3.5 shadow-xs transition-transform duration-150 active:scale-[0.97] hover:shadow-md cursor-pointer select-none"
     >
       {/* Botón Flotante de Favoritos (Esquina Superior Izquierda) */}
       <button
         type="button"
         onClick={handleToggleFavorito}
-        className="absolute top-3 left-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-md shadow-sm transition-transform active:scale-90 hover:bg-white"
+        className="absolute top-3 left-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-white dark:hover:bg-zinc-800"
         title={esFav ? "Quitar de favoritos" : "Guardar en favoritos"}
       >
         <Heart
           className={`h-4 w-4 transition-colors ${
-            esFav ? "fill-red-500 text-red-500" : "text-slate-400 hover:text-slate-600"
+            esFav ? "fill-red-500 text-red-500" : "text-slate-400 dark:text-zinc-400 hover:text-slate-600 dark:hover:text-zinc-200"
           }`}
         />
       </button>
@@ -120,12 +139,12 @@ export default function TarjetaProducto({
       {/* Badges superiores derechos (% OFF / Últimas Unidades) */}
       <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1 pointer-events-none">
         {tieneOferta && !sinStock && (
-          <span className="rounded-md bg-[#0E6E55] px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm">
+          <span className="rounded-md bg-[#0E6E55] dark:bg-emerald-600 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-xs">
             {porcentajeDescuento}% OFF
           </span>
         )}
         {esUltimasUnidades && (
-          <span className="flex items-center gap-1 rounded-md bg-amber-500 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-sm animate-pulse">
+          <span className="flex items-center gap-1 rounded-md bg-amber-500 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-xs animate-pulse">
             <Flame className="h-3 w-3" /> Últimas unidades
           </span>
         )}
@@ -133,13 +152,13 @@ export default function TarjetaProducto({
 
       {/* Badge de Envío Gratis (Alineado debajo del botón favorito) */}
       {esEnvioGratis && !sinStock && (
-        <span className="absolute top-12 left-3 z-10 flex items-center gap-1 rounded-md bg-[#12151B] px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-white shadow-sm">
+        <span className="absolute top-12 left-3 z-10 flex items-center gap-1 rounded-md bg-[#12151B] dark:bg-zinc-800 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-white shadow-xs">
           <Truck className="h-3 w-3" /> Envío gratis
         </span>
       )}
 
       {/* Imagen del Producto */}
-      <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[#F7F7F5] flex items-center justify-center">
+      <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[#F7F7F5] dark:bg-zinc-800 flex items-center justify-center">
         {producto.imagen_url ? (
           <img
             src={producto.imagen_url}
@@ -151,8 +170,8 @@ export default function TarjetaProducto({
         )}
 
         {sinStock && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
-            <span className="rounded-md bg-white/90 px-2 py-1 text-[10px] sm:text-[11px] font-bold text-[#12151B]">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 dark:bg-zinc-950/60 backdrop-blur-[1px]">
+            <span className="rounded-md bg-white/90 dark:bg-zinc-900 px-2 py-1 text-[10px] sm:text-[11px] font-bold text-[#12151B] dark:text-zinc-100">
               Sin Stock
             </span>
           </div>
@@ -162,7 +181,7 @@ export default function TarjetaProducto({
       {/* Información del Producto */}
       <div className="flex flex-1 flex-col justify-between">
         <div>
-          <h3 className="line-clamp-2 text-xs sm:text-sm font-semibold text-[#12151B] leading-snug">
+          <h3 className="line-clamp-2 text-xs sm:text-sm font-semibold text-[#12151B] dark:text-zinc-100 leading-snug">
             {producto.nombre}
           </h3>
         </div>
@@ -170,26 +189,26 @@ export default function TarjetaProducto({
         {/* Precios, Cuotas y Stock */}
         <div className="mt-2 mb-2">
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-base sm:text-lg font-extrabold text-[#12151B] tracking-tight">
+            <span className="text-base sm:text-lg font-extrabold text-[#12151B] dark:text-zinc-100 tracking-tight">
               ${precioFormateado}
             </span>
             {tieneOferta && (
-              <span className="text-[11px] text-[#A6A29B] line-through">
+              <span className="text-[11px] text-[#A6A29B] dark:text-zinc-500 line-through">
                 ${precioOriginalFormateado}
               </span>
             )}
           </div>
 
-          {/* Badge de 3 cuotas fijas */}
-          {!sinStock && producto.permite_cuotas !== false && (
+          {/* Badge dinámico de cuotas */}
+          {aplicaCuotas && (
             <div className="mt-1">
-              <span className="inline-block rounded-md border border-purple-200 bg-purple-50 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700">
-                💳 3 cuotas fijas de ${cuotaFormateada}
+              <span className="inline-block rounded-md border border-purple-200 dark:border-purple-900/60 bg-purple-50 dark:bg-purple-950/40 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 dark:text-purple-300">
+                💳 {cantidadCuotasConfig} cuotas fijas de ${cuotaFormateada}
               </span>
             </div>
           )}
 
-          <p className="text-[10px] text-[#A6A29B] mt-1">
+          <p className="text-[10px] text-[#A6A29B] dark:text-zinc-500 mt-1">
             Stock: {producto.stock}
           </p>
         </div>
@@ -198,14 +217,14 @@ export default function TarjetaProducto({
         {sinStock ? (
           <button
             disabled
-            className="w-full py-2 px-2 rounded-xl text-xs font-bold bg-[#E7E5E0] text-[#6B675F] cursor-not-allowed opacity-80"
+            className="w-full py-2 px-2 rounded-xl text-xs font-bold bg-[#E7E5E0] dark:bg-zinc-800 text-[#6B675F] dark:text-zinc-500 cursor-not-allowed opacity-80"
           >
             Agotado
           </button>
         ) : cantidadEnCarrito === 0 ? (
           <button
             onClick={handleSumar}
-            className="w-full py-2.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-[#12151B] text-white hover:bg-[#0E6E55] active:scale-[0.95]"
+            className="w-full py-2.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-[#12151B] dark:bg-zinc-800 text-white hover:bg-[#0E6E55] dark:hover:bg-emerald-600 active:scale-[0.95]"
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             <span>Agregar</span>
@@ -213,17 +232,17 @@ export default function TarjetaProducto({
         ) : (
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center justify-between w-full rounded-xl border border-[#0E6E55]/30 bg-[#0E6E55]/5 p-1"
+            className="flex items-center justify-between w-full rounded-xl border border-[#0E6E55]/30 dark:border-emerald-800/60 bg-[#0E6E55]/5 dark:bg-emerald-950/40 p-1"
           >
             <button
               onClick={handleRestar}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-[#0E6E55] shadow-sm hover:bg-[#0E6E55] hover:text-white transition-all active:scale-90 cursor-pointer"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white dark:bg-zinc-800 text-[#0E6E55] dark:text-emerald-400 shadow-xs hover:bg-[#0E6E55] dark:hover:bg-emerald-600 hover:text-white dark:hover:text-white transition-all active:scale-90 cursor-pointer"
               title="Restar una unidad"
             >
               <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
             </button>
 
-            <span className="text-xs font-extrabold text-[#0E6E55] px-1">
+            <span className="text-xs font-extrabold text-[#0E6E55] dark:text-emerald-400 px-1">
               {cantidadEnCarrito} en carrito
             </span>
 
@@ -232,8 +251,8 @@ export default function TarjetaProducto({
               disabled={limiteAlcanzado}
               className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
                 limiteAlcanzado
-                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  : "bg-[#0E6E55] text-white hover:bg-[#0b5944] cursor-pointer shadow-sm"
+                  ? "bg-slate-200 dark:bg-zinc-800 text-slate-400 dark:text-zinc-600 cursor-not-allowed"
+                  : "bg-[#0E6E55] dark:bg-emerald-600 text-white hover:bg-[#0b5944] dark:hover:bg-emerald-500 cursor-pointer shadow-xs"
               }`}
               title={limiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
             >
