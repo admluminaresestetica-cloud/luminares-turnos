@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { 
   UserCheck, 
-  Sparkles, 
+  TvMinimal, 
   CalendarDays, 
   ShoppingBag, 
   BarChart3, 
@@ -89,7 +89,7 @@ export default function AdminHubPage() {
     {
       titulo: 'Gabinete',
       subtitulo: 'Atención & Sesiones',
-      icono: Sparkles,
+      icono: TvMinimal,
       ruta: '/admin/gestion/gabinete',
       requierePin: false,
       cardBg: 'bg-gradient-to-b from-emerald-50/40 via-white to-white dark:from-emerald-950/20 dark:via-zinc-900 dark:to-zinc-900 hover:border-emerald-200 dark:hover:border-emerald-800/60 shadow-xs hover:shadow-emerald-500/10',
