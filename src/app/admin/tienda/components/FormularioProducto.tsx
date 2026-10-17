@@ -6,21 +6,19 @@ import SeccionEtiquetas from "./SeccionEtiquetas";
 import CargadorImagenes from "./CargadorImagenes";
 
 import { 
-  Package,
-  Tag,
-  Search,
-  Barcode,
-  Camera,
-  Layers,
-  DollarSign,
-  Flame,
-  CreditCard,
-  FileText,
+  Plus, 
+  Minus, 
+  Search, 
+  Barcode, 
+  Camera, 
+  Package, 
+  Tag, 
+  DollarSign, 
+  Layers, 
+  FileText, 
   Loader2,
-  Plus,
-  Minus,
-  Edit3,
-  Percent,
+  Flame,
+  CreditCard
 } from "lucide-react";
 
 interface FormularioProductoProps {
@@ -251,9 +249,8 @@ export default function FormularioProducto({
 
   const totalImagenes = imagenesExistentes.length + previewsNuevas.length;
 
-
-  return (
-       <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs transition-all sm:mb-8 sm:rounded-3xl">
+return (
+    <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs transition-all sm:mb-8 sm:rounded-3xl">
       {/* Cabecera Desplegable */}
       <div
         onClick={() => setIsOpen(!isOpen)}
@@ -304,7 +301,7 @@ export default function FormularioProducto({
               </label>
               <input
                 type="text"
-                value={nombre || ""}
+                value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Ej: Zapatillas Running Pro"
                 className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800 focus:ring-2 focus:ring-emerald-500/20"
@@ -321,15 +318,15 @@ export default function FormularioProducto({
               <div className="flex gap-2">
                 <input
                   type="text"
-                  value={codigoBarras || ""}
+                  value={codigoBarras}
                   onChange={(e) => {
                     setCodigoBarras(e.target.value);
-                    if (setProductoExistenteAviso) setProductoExistenteAviso(null);
+                    setProductoExistenteAviso(null);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      if (verificarCodigoEnSupabase) verificarCodigoEnSupabase(codigoBarras);
+                      verificarCodigoEnSupabase(codigoBarras);
                     }
                   }}
                   placeholder="Ej: 779123456789"
@@ -338,7 +335,7 @@ export default function FormularioProducto({
 
                 <button
                   type="button"
-                  onClick={() => verificarCodigoEnSupabase && verificarCodigoEnSupabase(codigoBarras)}
+                  onClick={() => verificarCodigoEnSupabase(codigoBarras)}
                   title="Buscar código en la base"
                   className="shrink-0 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800 px-3.5 text-slate-700 dark:text-zinc-200 transition-all hover:bg-slate-200 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer flex items-center justify-center"
                 >
@@ -348,8 +345,8 @@ export default function FormularioProducto({
                 <button
                   type="button"
                   onClick={() => {
-                    if (generarCodigoBarras) generarCodigoBarras();
-                    if (setProductoExistenteAviso) setProductoExistenteAviso(null);
+                    generarCodigoBarras();
+                    setProductoExistenteAviso(null);
                   }}
                   title="Generar código aleatorio"
                   className="shrink-0 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800 px-3.5 text-slate-700 dark:text-zinc-200 transition-all hover:bg-slate-200 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer flex items-center justify-center"
@@ -359,7 +356,7 @@ export default function FormularioProducto({
 
                 <button
                   type="button"
-                  onClick={() => setIsScannerOpen && setIsScannerOpen(true)}
+                  onClick={() => setIsScannerOpen(true)}
                   title="Escanear con cámara"
                   className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 transition-all hover:bg-slate-800 dark:hover:bg-zinc-200 active:scale-95 cursor-pointer shadow-xs"
                 >
@@ -383,12 +380,12 @@ export default function FormularioProducto({
                 Categoría Principal
               </label>
               <select
-                value={categoria || ""}
+                value={categoria}
                 onChange={(e) => setCategoria(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800 cursor-pointer"
               >
                 <option value="" className="bg-white dark:bg-zinc-900">General</option>
-                {Array.isArray(categorias) && categorias.map((c: any) => (
+                {categorias.map((c: any) => (
                   <option key={c.id} value={c.nombre} className="bg-white dark:bg-zinc-900">
                     {c.nombre}
                   </option>
@@ -407,7 +404,7 @@ export default function FormularioProducto({
               </label>
               <input
                 type="number"
-                value={precio || ""}
+                value={precio}
                 onChange={(e) => setPrecio(e.target.value)}
                 placeholder="0.00"
                 className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-extrabold text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800"
@@ -423,7 +420,7 @@ export default function FormularioProducto({
               </label>
               <input
                 type="number"
-                value={precioOriginal || ""}
+                value={precioOriginal}
                 onChange={(e) => setPrecioOriginal(e.target.value)}
                 placeholder="Opcional"
                 className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800"
@@ -438,14 +435,14 @@ export default function FormularioProducto({
               </label>
               <input
                 type="number"
-                value={stock || ""}
+                value={stock}
                 onChange={(e) => setStock(e.target.value)}
                 placeholder="0"
                 className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800"
               />
             </div>
 
-            {/* Stock Mínimo */}
+{/* Stock Mínimo */}
             <div>
               <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 flex items-center gap-1.5">
                 <Package className="w-3.5 h-3.5 text-slate-400" />
@@ -453,7 +450,7 @@ export default function FormularioProducto({
               </label>
               <input
                 type="number"
-                value={stockMinimo || ""}
+                value={stockMinimo}
                 onChange={(e) => setStockMinimo(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-slate-50 dark:bg-zinc-800 p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 outline-none transition-all focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800"
               />
@@ -472,7 +469,7 @@ export default function FormularioProducto({
                 <input
                   type="checkbox"
                   id="mostrarUltimasUnidades"
-                  checked={!!mostrarUltimasUnidades}
+                  checked={mostrarUltimasUnidades}
                   onChange={(e) => setMostrarUltimasUnidades(e.target.checked)}
                   className="peer sr-only"
                 />
@@ -494,7 +491,7 @@ export default function FormularioProducto({
                 <input
                   type="checkbox"
                   id="permiteCuotas"
-                  checked={!!permiteCuotas}
+                  checked={permiteCuotas}
                   onChange={(e) => setPermiteCuotas(e.target.checked)}
                   className="peer sr-only"
                 />
@@ -522,7 +519,7 @@ export default function FormularioProducto({
                 Descripción
               </label>
               <textarea
-                value={descripcion || ""}
+                value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
                 rows={2}
                 placeholder="Detalles, materiales, talles..."
@@ -561,3 +558,4 @@ export default function FormularioProducto({
       />
     </div>
   );
+}
