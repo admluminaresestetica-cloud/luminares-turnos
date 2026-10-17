@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { SquarePlus } from "lucide-react";
 import { FONDOS_FESTIVOS } from "../presets/festivosPresets";
 
 interface FestivePickerProps {
@@ -15,7 +15,7 @@ export function FestivePicker({
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center gap-1.5">
-        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+        <SquarePlus className="w-3.5 h-3.5 text-amber-500" />
         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
           Fondos Festivos & Temporada
         </span>
