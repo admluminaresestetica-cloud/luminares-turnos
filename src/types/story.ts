@@ -32,6 +32,8 @@ export interface OpcionesStory {
   fitImagen: FitImagen;
   colorFondo: string;
   usarColorPersonalizado: boolean;
+  colorTexto?: string;
+  imagenFondo?: string; // NUEVO: URL o Base64 para fondo personalizado/festivo
   fuenteTipografica: TipoFuente;
   alineacionTexto: AlineacionTexto;
   badge: BadgeTipo;
