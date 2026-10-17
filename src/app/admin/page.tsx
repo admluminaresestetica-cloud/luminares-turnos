@@ -1,5 +1,8 @@
 'use client';
 
+import { Smartphone } from 'lucide-react';
+import { dispararInstalacionAdmin } from './components/InstallPromptAdmin';
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
