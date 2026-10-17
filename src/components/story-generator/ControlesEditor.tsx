@@ -10,6 +10,7 @@ import {
 } from "@/types/story";
 import { ColorPicker } from "./ColorPicker";
 import { BadgesSelector } from "./BadgesSelector";
+import { ProductEffectsControl } from "./subcomponents/ProductEffectsControl";
 import {
   Smartphone,
   Square,
@@ -524,6 +525,22 @@ export function ControlesEditor({
               onChangeOpciones({ ...opciones, badge })
             }
           />
+
+          {/* Efectos de Producto: Sombras, Marcos e Insignias */}
+<ProductEffectsControl
+  sombra={opciones.sombraProducto || "ninguna"}
+  borde={opciones.bordeProducto || "ninguno"}
+  sticker={opciones.stickerDecorativo || "ninguno"}
+  onChangeSombra={(sombra) =>
+    onChangeOpciones({ ...opciones, sombraProducto: sombra })
+  }
+  onChangeBorde={(borde) =>
+    onChangeOpciones({ ...opciones, bordeProducto: borde })
+  }
+  onChangeSticker={(sticker) =>
+    onChangeOpciones({ ...opciones, stickerDecorativo: sticker })
+  }
+/>
 
           <hr className="border-slate-100 dark:border-zinc-800" />
 

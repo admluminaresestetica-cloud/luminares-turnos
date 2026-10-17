@@ -47,6 +47,28 @@ const BADGE_MAP: Record<
   descuento_50: { texto: "🔥 50% OFF", bg: "bg-rose-600 text-white font-black" },
 };
 
+// MAPAS DE ESTILOS PARA ETAPA 3
+const SOMBRA_CLASES: Record<string, string> = {
+  ninguna: "",
+  suave: "shadow-xl shadow-black/30",
+  profunda: "shadow-2xl shadow-black/60 scale-[1.01]",
+  neon: "shadow-[0_0_20px_rgba(52,211,153,0.7)] border border-emerald-400/50",
+};
+
+const BORDE_CLASES: Record<string, string> = {
+  ninguno: "border border-black/5",
+  blanco: "border-4 border-white shadow-md",
+  dorado: "border-4 border-amber-400/90 shadow-md",
+  fino_sutil: "border border-white/50 backdrop-blur-xs",
+};
+
+const STICKERS_MAP: Record<string, string> = {
+  oferta_estrella: "🌟",
+  copo_nieve: "❄️",
+  lazo_regalo: "🎁",
+  corona_oro: "👑",
+};
+
 const MAPA_FUENTES: Record<string, string> = {
   modern: "font-sans",
   bold: "font-black tracking-tight",
@@ -149,6 +171,10 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
     const claseFuente = MAPA_FUENTES[opciones.fuenteTipografica || "modern"];
     const claseAlineacion = MAPA_ALINEACION[opciones.alineacionTexto || "left"];
 
+    // Clases dinámicas de la Etapa 3
+    const claseSombraProducto = SOMBRA_CLASES[opciones.sombraProducto || "ninguna"];
+    const claseBordeProducto = BORDE_CLASES[opciones.bordeProducto || "ninguno"];
+
     return (
       <div
         ref={ref}
@@ -185,9 +211,9 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
           </div>
         </div>
 
-        {/* CONTENEDOR DE IMAGEN / COLLAGE */}
+        {/* CONTENEDOR DE IMAGEN / COLLAGE (Con Efectos de Etapa 3) */}
         <div
-          className={`relative my-auto flex w-full items-center justify-center overflow-hidden rounded-xl bg-gray-50/90 dark:bg-zinc-900/90 shadow-inner border border-black/5 z-10 ${
+          className={`relative my-auto flex w-full items-center justify-center overflow-hidden rounded-xl bg-gray-50/90 dark:bg-zinc-900/90 z-10 transition-all ${claseSombraProducto} ${claseBordeProducto} ${
             opciones.formato === "feed"
               ? "h-44 my-1"
               : opciones.formato === "banner"
@@ -213,7 +239,7 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
                 {imagenSecundaria ? (
                   <img
                     src={imagenSecundaria}
-                    alt={`${producto.nombre} - 2`}
+                    alt={`${producto.nombre} 2`}
                     style={estiloFiltroImagen}
                     className="h-full w-full object-cover"
                   />
@@ -241,6 +267,7 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
             </>
           )}
 
+          {/* Badge Tipo Oferta / Cyber, etc */}
           {opciones.badge !== "ninguno" && BADGE_MAP[opciones.badge] && (
             <span
               className={`absolute top-2 left-2 px-2 py-0.5 text-[9px] font-black rounded-md shadow-md uppercase tracking-wider z-20 ${
@@ -248,6 +275,13 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
               }`}
             >
               {BADGE_MAP[opciones.badge].texto}
+            </span>
+          )}
+
+          {/* Sticker Decorativo Flotante (Etapa 3) */}
+          {opciones.stickerDecorativo && opciones.stickerDecorativo !== "ninguno" && (
+            <span className="absolute top-2 right-2 text-xl drop-shadow-md z-30 animate-bounce">
+              {STICKERS_MAP[opciones.stickerDecorativo]}
             </span>
           )}
         </div>

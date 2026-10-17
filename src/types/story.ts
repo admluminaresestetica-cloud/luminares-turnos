@@ -19,6 +19,13 @@ export type BadgeTipo =
   | "descuento_20"
   | "descuento_50";
 
+// --- NUEVOS TIPOS PARA ETAPA 3 ---
+export type SombraProducto = "ninguna" | "suave" | "profunda" | "neon";
+
+export type BordeProducto = "ninguno" | "blanco" | "dorado" | "fino_sutil";
+
+export type StickerDecorativo = "ninguno" | "oferta_estrella" | "copo_nieve" | "lazo_regalo" | "corona_oro";
+
 export interface FiltrosImagen {
   brillo: number; // 50 a 150 (por defecto 100)
   contraste: number; // 50 a 150 (por defecto 100)
@@ -33,7 +40,7 @@ export interface OpcionesStory {
   colorFondo: string;
   usarColorPersonalizado: boolean;
   colorTexto?: string;
-  imagenFondo?: string; // NUEVO: URL o Base64 para fondo personalizado/festivo
+  imagenFondo?: string; // URL o Base64 para fondo personalizado/festivo
   fuenteTipografica: TipoFuente;
   alineacionTexto: AlineacionTexto;
   badge: BadgeTipo;
@@ -41,4 +48,9 @@ export interface OpcionesStory {
   mostrarDireccion: boolean;
   mostrarCategoria: boolean;
   filtrosImagen: FiltrosImagen;
+
+  // --- PROPIEDADES AÑADIDAS ETAPA 3 ---
+  sombraProducto?: SombraProducto;
+  bordeProducto?: BordeProducto;
+  stickerDecorativo?: StickerDecorativo;
 }
