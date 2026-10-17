@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import InstallPromptAdmin from '@/app/admin/components/InstallPromptAdmin';
 
 export default function AdminLayout({
   children,
@@ -26,6 +27,8 @@ export default function AdminLayout({
     <div className={isAdminDark ? 'dark' : ''}>
       <div className="relative min-h-screen bg-slate-50/80 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors">
         {children}
+        {/* Banner de instalación PWA para el personal */}
+        <InstallPromptAdmin />
       </div>
     </div>
   );

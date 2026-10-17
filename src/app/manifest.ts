@@ -32,8 +32,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     description: `Panel y turnos de ${nombreEmpresa}`,
     start_url: '/',
     display: 'standalone',
-    background_color: '#024128',
-    theme_color: '#024128',
+    background_color: '#ffffff',
+    theme_color: '#ffffff',
     icons: [
       {
         src: logoUrl,
