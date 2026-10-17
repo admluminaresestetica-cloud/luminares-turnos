@@ -122,12 +122,14 @@ export function ModalGeneradorStory({
 
         {/* Cuerpo: Panel Lateral de Controles + Vista Previa en Vivo */}
         <div className="flex flex-1 flex-col sm:flex-row p-3 sm:p-6 gap-3 sm:gap-6 items-stretch sm:items-center justify-start sm:justify-center bg-slate-50 dark:bg-zinc-950/50 overflow-y-auto">
-          {/* Editor de controles */}
-          <div className="w-full sm:w-auto shrink-0">
-            <ControlesEditor
-              opciones={opciones}
-              onChangeOpciones={setOpciones}
-            />
+          {/* Editor de controles con altura fija y scroll interno para PC */}
+          <div className="w-full sm:w-[380px] lg:w-[420px] shrink-0 h-full max-h-[75vh] sm:max-h-[80vh] flex flex-col overflow-hidden bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm">
+            <div className="flex-1 overflow-y-auto p-2 sm:p-3">
+              <ControlesEditor
+                opciones={opciones}
+                onChangeOpciones={setOpciones}
+              />
+            </div>
           </div>
 
           {/* Área de vista previa adaptativa y centrada */}

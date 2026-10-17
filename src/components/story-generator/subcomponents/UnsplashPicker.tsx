@@ -1,119 +1,105 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, Loader2, Sparkles, Image as ImageIcon } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, Image as ImageIcon } from "lucide-react";
 
 interface UnsplashPickerProps {
   onSeleccionarImagen: (url: string) => void;
 }
 
-const CATEGORIAS_RAPIDAS = [
-  { label: "🌿 Naturaleza / Hojas", query: "hojas" },
-  { label: "🎄 Navidad", query: "navidad" },
-  { label: "🪵 Madera", query: "madera" },
-  { label: "✨ Fiestas / Luces", query: "fiesta" },
-  { label: "🔮 Neón", query: "neon" },
-  { label: "👶 Bebé", query: "bebe" },
-];
-
-// Colección curada de fondos de stock HD 100% garantizados y clasificados
-const BANCO_FONDOS: Record<string, string[]> = {
-  hojas: [
-    "https://images.pexels.com/photos/1072179/pexels-photo-1072179.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/807598/pexels-photo-807598.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1423600/pexels-photo-1423600.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/113338/pexels-photo-113338.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1089440/pexels-photo-1089440.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/931177/pexels-photo-931177.jpeg?auto=compress&cs=tinysrgb&w=800",
-  ],
-  navidad: [
-    "https://images.pexels.com/photos/1303081/pexels-photo-1303081.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/5728292/pexels-photo-5728292.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/3303615/pexels-photo-3303615.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/713661/pexels-photo-713661.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/3303614/pexels-photo-3303614.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/5727928/pexels-photo-5727928.jpeg?auto=compress&cs=tinysrgb&w=800",
-  ],
-  madera: [
-    "https://images.pexels.com/photos/1297311/pexels-photo-1297311.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/172276/pexels-photo-172276.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/301703/pexels-photo-301703.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/207300/pexels-photo-207300.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/164005/pexels-photo-164005.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/235985/pexels-photo-235985.jpeg?auto=compress&cs=tinysrgb&w=800",
-  ],
-  fiesta: [
-    "https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/3171837/pexels-photo-3171837.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/949587/pexels-photo-949587.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/2034851/pexels-photo-2034851.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1540406/pexels-photo-1540406.jpeg?auto=compress&cs=tinysrgb&w=800",
-  ],
-  neon: [
-    "https://images.pexels.com/photos/2387793/pexels-photo-2387793.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1820770/pexels-photo-1820770.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/2603464/pexels-photo-2603464.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1089438/pexels-photo-1089438.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/2156881/pexels-photo-2156881.jpeg?auto=compress&cs=tinysrgb&w=800",
-  ],
-  bebe: [
-    "https://images.pexels.com/photos/459957/pexels-photo-459957.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1648377/pexels-photo-1648377.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/3875217/pexels-photo-3875217.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/3875225/pexels-photo-3875225.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/3875211/pexels-photo-3875211.jpeg?auto=compress&cs=tinysrgb&w=800",
-    "https://images.pexels.com/photos/1648387/pexels-photo-1648387.jpeg?auto=compress&cs=tinysrgb&w=800",
-  ],
+// Banco masivo con muchísima variedad y URLs garantizadas de alta calidad
+const BANCO_MASIVO: Record<string, { label: string; fotos: string[] }> = {
+  bebes: {
+    label: "👶 Bebés & Pañales",
+    fotos: [
+      "https://images.pexels.com/photos/459957/pexels-photo-459957.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/1648377/pexels-photo-1648377.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3875217/pexels-photo-3875217.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/1556706/pexels-photo-1556706.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3662828/pexels-photo-3662828.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/1720186/pexels-photo-1720186.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/159293/kids-baby-infant-children-159293.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3279203/pexels-photo-3279203.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/2253879/pexels-photo-2253879.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3875204/pexels-photo-3875204.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
+  },
+  perfumeria: {
+    label: "✨ Perfumería",
+    fotos: [
+      "https://images.pexels.com/photos/961794/pexels-photo-961794.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3059406/pexels-photo-3059406.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/1961795/pexels-photo-1961795.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3985331/pexels-photo-3985331.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/4202325/pexels-photo-4202325.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/843700/pexels-photo-843700.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/755992/pexels-photo-755992.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3059385/pexels-photo-3059385.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3985356/pexels-photo-3985356.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
+  },
+  skincare: {
+    label: "🧴 Skincare",
+    fotos: [
+      "https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/4465124/pexels-photo-4465124.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3865676/pexels-photo-3865676.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3737579/pexels-photo-3737579.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/5069412/pexels-photo-5069412.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/4465121/pexels-photo-4465121.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
+  },
+  regalos: {
+    label: "🎁 Regalos & Deco",
+    fotos: [
+      "https://images.pexels.com/photos/264787/pexels-photo-264787.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/1303081/pexels-photo-1303081.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/1687141/pexels-photo-1687141.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/5728292/pexels-photo-5728292.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/6269363/pexels-photo-6269363.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/5872364/pexels-photo-5872364.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
+  },
+  estetica: {
+    label: "💎 Estética",
+    fotos: [
+      "https://images.pexels.com/photos/3985326/pexels-photo-3985326.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/5069430/pexels-photo-5069430.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3985358/pexels-photo-3985358.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3997391/pexels-photo-3997391.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/5069357/pexels-photo-5069357.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
+  },
+  fitness: {
+    label: "💪 Fitness",
+    fotos: [
+      "https://images.pexels.com/photos/4162448/pexels-photo-4162448.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/4498606/pexels-photo-4498606.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3768916/pexels-photo-3768916.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/4164766/pexels-photo-4164766.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
+  },
+  navidad: {
+    label: "🎄 Navidad",
+    fotos: [
+      "https://images.pexels.com/photos/1303081/pexels-photo-1303081.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/5728292/pexels-photo-5728292.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/713661/pexels-photo-713661.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/3303615/pexels-photo-3303615.jpeg?auto=compress&cs=tinysrgb&w=800",
+      "https://images.pexels.com/photos/5727928/pexels-photo-5727928.jpeg?auto=compress&cs=tinysrgb&w=800",
+    ],
+  },
 };
 
 export function UnsplashPicker({ onSeleccionarImagen }: UnsplashPickerProps) {
-  const [query, setQuery] = useState("hojas");
-  const [fotos, setFotos] = useState<string[]>([]);
-  const [cargando, setCargando] = useState(false);
+  const [categoriaActiva, setCategoriaActiva] = useState<string>("bebes");
+  const [imagenesRotas, setImagenesRotas] = useState<Record<string, boolean>>({});
 
-  const buscarImagenes = (term: string) => {
-    if (!term.trim()) return;
-    setCargando(true);
+  const categoriaActual = BANCO_MASIVO[categoriaActiva] || BANCO_MASIVO["bebes"];
 
-    const termLimpio = term.trim().toLowerCase();
-
-    setTimeout(() => {
-      // Búsqueda inteligente por coincidencias de categoría
-      let claveEncontrada = Object.keys(BANCO_FONDOS).find((k) =>
-        termLimpio.includes(k) || k.includes(termLimpio)
-      );
-
-      // Mapeo especial para palabras comunes
-      if (!claveEncontrada) {
-        if (termLimpio.includes("green") || termLimpio.includes("leaf") || termLimpio.includes("planta") || termLimpio.includes("naturaleza")) {
-          claveEncontrada = "hojas";
-        } else if (termLimpio.includes("wood") || termLimpio.includes("tabla")) {
-          claveEncontrada = "madera";
-        } else if (termLimpio.includes("party") || termLimpio.includes("luz") || termLimpio.includes("sparkle")) {
-          claveEncontrada = "fiesta";
-        } else if (termLimpio.includes("christmas") || termLimpio.includes("pino") || termLimpio.includes("regalo")) {
-          claveEncontrada = "navidad";
-        } else if (termLimpio.includes("baby") || termLimpio.includes("pañal") || termLimpio.includes("nube")) {
-          claveEncontrada = "bebe";
-        } else {
-          claveEncontrada = "hojas"; // Categoria por defecto de alta calidad
-        }
-      }
-
-      setFotos(BANCO_FONDOS[claveEncontrada] || BANCO_FONDOS["hojas"]);
-      setCargando(false);
-    }, 150);
-  };
-
-  useEffect(() => {
-    buscarImagenes("hojas");
-  }, []);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    buscarImagenes(query);
+  const handleImageError = (url: string) => {
+    setImagenesRotas((prev) => ({ ...prev, [url]: true }));
   };
 
   return (
@@ -121,71 +107,58 @@ export function UnsplashPicker({ onSeleccionarImagen }: UnsplashPickerProps) {
       <div className="flex items-center gap-1.5">
         <ImageIcon className="w-3.5 h-3.5 text-emerald-500" />
         <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
-          Fondos de Stock (HD Confiable)
+          Galería de Fondos Seleccionados
         </span>
       </div>
 
-      {/* Buscador de fotos */}
-      <form onSubmit={handleSearchSubmit} className="relative">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar fotos (ej: hojas, bebe, madera, navidad)..."
-          className="w-full bg-slate-100 dark:bg-zinc-800 text-xs font-semibold px-3 py-2 pr-8 rounded-xl border border-slate-200 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-zinc-200 placeholder:text-slate-400"
-        />
-        <button
-          type="submit"
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-emerald-500 transition-colors cursor-pointer"
-        >
-          <Search className="w-3.5 h-3.5" />
-        </button>
-      </form>
-
-      {/* Chips Rápidos */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-none">
-        {CATEGORIAS_RAPIDAS.map((cat) => (
-          <button
-            key={cat.label}
-            type="button"
-            onClick={() => {
-              setQuery(cat.query);
-              buscarImagenes(cat.query);
-            }}
-            className="shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-800/80 text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-all cursor-pointer"
-          >
-            {cat.label}
-          </button>
-        ))}
+      {/* Pestañas de Categorías */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-1.5 scrollbar-none">
+        {Object.keys(BANCO_MASIVO).map((key) => {
+          const item = BANCO_MASIVO[key];
+          const isActive = categoriaActiva === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setCategoriaActiva(key)}
+              className={`shrink-0 text-[10px] font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                isActive
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-200 dark:hover:bg-zinc-700"
+              }`}
+            >
+              {item.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Grilla de Fotografías */}
-      {cargando ? (
-        <div className="flex items-center justify-center py-6 text-emerald-500">
-          <Loader2 className="w-5 h-5 animate-spin" />
-        </div>
-      ) : (
-        <div className="grid grid-cols-3 gap-1.5 max-h-40 overflow-y-auto pr-0.5">
-          {fotos.map((url, idx) => (
+      {/* Grilla Amplia con scroll propio que muestra todas las fotos sin cortes */}
+      <div className="grid grid-cols-3 gap-1.5 max-h-56 overflow-y-auto pr-1">
+        {categoriaActual.fotos.map((url, idx) => {
+          if (imagenesRotas[url]) return null; // Oculta automáticamente si alguna URL falla
+
+          return (
             <button
               key={`${url}-${idx}`}
               type="button"
               onClick={() => onSeleccionarImagen(url)}
-              className="relative h-14 rounded-lg overflow-hidden border border-slate-200 dark:border-zinc-700 hover:scale-102 transition-all cursor-pointer group bg-slate-100 dark:bg-zinc-800"
+              className="relative h-16 rounded-xl overflow-hidden border border-slate-200 dark:border-zinc-700 hover:scale-105 transition-all cursor-pointer group bg-slate-100 dark:bg-zinc-800 shadow-xs"
             >
               <img
                 src={url}
                 alt="Fondo de stock"
+                onError={() => handleImageError(url)}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-white" />
+              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white drop-shadow-md" />
               </div>
             </button>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 }
