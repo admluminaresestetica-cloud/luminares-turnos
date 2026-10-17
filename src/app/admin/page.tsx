@@ -13,11 +13,13 @@ import {
   Settings, 
   LogOut,
   Lock,
-  ChevronRight
+  ChevronRight,
+  Smartphone
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import AdminChatWidget from './components/AdminChatWidget';
 import ModalPinAutorizacion from './components/ModalPinAutorizacion';
+import { dispararInstalacionAdmin } from './components/InstallPromptAdmin';
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -153,15 +155,28 @@ export default function AdminHubPage() {
           </div>
         </div>
 
-        <button
-          onClick={handleLogout}
-          disabled={cerrandoSesion}
-          type="button"
-          className="flex items-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-rose-200/80 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-3.5 py-2 rounded-2xl shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          <span>{cerrandoSesion ? 'Saliendo...' : 'Salir'}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* BOTÓN MANUAL DE INSTALACIÓN PWA */}
+          <button
+            onClick={dispararInstalacionAdmin}
+            type="button"
+            className="flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 bg-purple-50/80 dark:bg-purple-950/40 backdrop-blur-md border border-purple-200/80 dark:border-purple-900/50 hover:bg-purple-100 dark:hover:bg-purple-900/40 px-3 py-2 rounded-2xl shadow-xs transition-all active:scale-95 cursor-pointer"
+            title="Instalar App Admin"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Instalar App</span>
+          </button>
+
+          <button
+            onClick={handleLogout}
+            disabled={cerrandoSesion}
+            type="button"
+            className="flex items-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-rose-200/80 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-3.5 py-2 rounded-2xl shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>{cerrandoSesion ? 'Saliendo...' : 'Salir'}</span>
+          </button>
+        </div>
       </header>
 
       {/* GRILLA DE MÓDULOS */}
