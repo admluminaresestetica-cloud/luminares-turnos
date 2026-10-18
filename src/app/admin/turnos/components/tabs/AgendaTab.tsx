@@ -196,14 +196,23 @@ export default function AgendaTab({
             <option value="whatsapp">💬 WhatsApp</option>
           </select>
 
+                  <button
+            type="button"
+            onClick={() => setModalBloqueosAbierto(true)}
+            className="min-h-[44px] px-4 py-3 sm:py-2.5 text-xs sm:text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95 select-none cursor-pointer"
+          >
+            <Lock className="w-4 h-4" />
+            Bloquear Slots / VIP
+          </button>
+
           <button
             onClick={onNuevoTurno}
-            className="min-h-[44px] px-4 py-3 sm:py-2.5 text-xs sm:text-sm bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 active:scale-95 select-none dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="min-h-[44px] px-4 py-3 sm:py-2.5 text-xs sm:text-sm bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 active:scale-95 select-none dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Nuevo Turno
           </button>
-        </div>
+      </div>
       </div>
 
       <ResumenAgenda turnos={turnosAgendaResumen} esFechaPasada={esFechaAgendaPasada} />
