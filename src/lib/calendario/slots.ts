@@ -91,7 +91,8 @@ export function calcularSlotsDisponibles(
   fecha: string,
   duracionMin: number,
   horarios: HorariosAtencion | any,
-  reservas: Pick<Reserva, 'fecha_hora_inicio' | 'duracion_total' | 'estado'>[]
+  reservas: Pick<Reserva, 'fecha_hora_inicio' | 'duracion_total' | 'estado'>[],
+  bufferMinimoRestante: number = 15
 ): string[] {
   if (!horarios) return [];
 
@@ -115,17 +116,31 @@ export function calcularSlotsDisponibles(
 
   if (bloquesAtencion.length === 0) return [];
 
-  const intervalo = horarios.intervalo_minutos || 30;
+  const intervalo = horarios.intervalo_minutos || 15;
   const slots: string[] = [];
   const now = new Date();
   const todayStr = formatDateISO(now);
 
+  // Obtener reservas activas en minutos desde la medianoche para el día seleccionado
+  const reservasDelDia = reservas
+    .filter((r) => r.estado !== 'cancelado')
+    .map((r) => {
+      const d = new Date(r.fecha_hora_inicio);
+      const startMin = d.getHours() * 60 + d.getMinutes();
+      return {
+        startMin,
+        endMin: startMin + r.duracion_total,
+      };
+    })
+    .sort((a, b) => a.startMin - b.startMin);
+
   const candidates = new Set<number>();
 
   for (const bloque of bloquesAtencion) {
-    let current = parseTime(bloque.inicio);
+    const bloqueStart = parseTime(bloque.inicio);
     const bloqueEnd = parseTime(bloque.fin);
 
+    let current = bloqueStart;
     while (current + duracionMin <= bloqueEnd) {
       candidates.add(current);
       current += intervalo;
@@ -137,9 +152,40 @@ export function calcularSlotsDisponibles(
     const slotDate = new Date(`${fecha}T${timeStr}:00`);
 
     if (fecha === todayStr && slotDate <= now) continue;
-    if (!hasOverlap(slotDate, duracionMin, reservas)) {
-      slots.push(timeStr);
+
+    // 1. Validar solape con reservas existentes
+    if (hasOverlap(slotDate, duracionMin, reservas)) continue;
+
+    // 2. Validación de "hueco basura"
+    const slotEndMin = startMin + duracionMin;
+
+    // Encontrar el bloque de atención correspondiente a este candidato
+    const bloqueCorrespondiente = bloquesAtencion.find((b) => {
+      const bStart = parseTime(b.inicio);
+      const bEnd = parseTime(b.fin);
+      return startMin >= bStart && slotEndMin <= bEnd;
+    });
+
+    if (!bloqueCorrespondiente) continue;
+
+    const bloqueEndMin = parseTime(bloqueCorrespondiente.fin);
+
+    // Buscar la siguiente reserva activa que comience después o al mismo tiempo que el fin de este slot
+    const siguienteReserva = reservasDelDia.find((r) => r.startMin >= slotEndMin);
+
+    // El próximo obstáculo es la hora de inicio de la siguiente reserva o el fin del bloque horario
+    const proximoObstaculoMin = siguienteReserva
+      ? Math.min(siguienteReserva.startMin, bloqueEndMin)
+      : bloqueEndMin;
+
+    const espacioLibreRestante = proximoObstaculoMin - slotEndMin;
+
+    // Si queda un bache inútil entre el fin del turno y el próximo obstáculo, descartamos el slot
+    if (espacioLibreRestante > 0 && espacioLibreRestante < bufferMinimoRestante) {
+      continue;
     }
+
+    slots.push(timeStr);
   }
 
   return slots;
