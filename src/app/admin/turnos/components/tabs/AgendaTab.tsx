@@ -14,7 +14,7 @@ import {
   Phone, 
   MessageCircle,
   SlidersHorizontal,
-  Edit3
+  Edit3,
   Lock 
 } from 'lucide-react'
 import ResumenAgenda from '@/app/admin/turnos/components/ResumenAgenda'
