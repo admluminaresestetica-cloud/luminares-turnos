@@ -394,6 +394,20 @@ export default function AgendaTab({
           </div>
         </div>
       )}
+
+
+      {modalBloqueosAbierto && (
+        <ModalBloqueoHorarios
+          onClose={() => setModalBloqueosAbierto(false)}
+          onExito={() => {
+            // Recargar datos si es necesario
+            if (typeof window !== 'undefined') {
+              window.location.reload()
+            }
+          }}
+        />
+      )}
+
     </div>
   )
 }
