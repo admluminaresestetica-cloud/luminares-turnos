@@ -357,6 +357,7 @@ export default function ModalNuevoTurno({
               >
                 <option value="pendiente_sena">⏳ Pendiente Seña</option>
                 <option value="confirmado">✅ Confirmado</option>
+                <option value="bloqueado">🔒 Bloqueado / Cliente VIP</option>
                 <option value="completado">🎉 Completado</option>
                 <option value="cancelado">❌ Cancelado</option>
               </select>

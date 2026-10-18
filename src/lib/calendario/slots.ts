@@ -21,6 +21,11 @@ export interface HorariosAtencion {
   intervalo_minutos?: number;
 }
 
+export interface SlotDisponibilidad {
+  hora: string;
+  estado: 'disponible' | 'en_proceso' | 'ocupado';
+}
+
 function parseTime(time: string): number {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;
@@ -39,11 +44,6 @@ export function formatDateISO(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-export function getIsoWeekday(date: Date): number {
-  const d = date.getDay();
-  return d === 0 ? 7 : d;
-}
-
 export function isDateEnabled(
   date: Date,
   tipo: 'laser' | 'general',
@@ -53,51 +53,37 @@ export function isDateEnabled(
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
-  // 1. Si la fecha es anterior a hoy, deshabilitar
   const checkDate = new Date(date);
   checkDate.setHours(0, 0, 0, 0);
   if (checkDate < hoy) return false;
 
-  // 2. Si es servicio Láser
   if (tipo === 'laser') {
     const iso = formatDateISO(date);
     return fechasLaser.includes(iso);
   }
 
-  // 3. Para servicio General (Verificación de Días Hábiles)
-  const jsDay = date.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
-  const isoDay = jsDay === 0 ? 7 : jsDay; // 1 = Lunes, ..., 7 = Domingo
+  const jsDay = date.getDay();
+  const isoDay = jsDay === 0 ? 7 : jsDay;
 
-  // Evaluamos si diasSemana contiene el día en formato JS (0-6) O en formato ISO (1-7)
   return diasSemana.includes(jsDay) || diasSemana.includes(isoDay);
 }
 
-function hasOverlap(
-  slotStart: Date,
-  durationMin: number,
-  reservas: Pick<Reserva, 'fecha_hora_inicio' | 'duracion_total' | 'estado'>[]
-): boolean {
-  const slotEnd = new Date(slotStart.getTime() + durationMin * 60_000);
-  for (const r of reservas) {
-    if (r.estado === 'cancelado') continue;
-    const resStart = new Date(r.fecha_hora_inicio);
-    const resEnd = new Date(resStart.getTime() + r.duracion_total * 60_000);
-    if (slotStart < resEnd && slotEnd > resStart) return true;
-  }
-  return false;
-}
-
-export function calcularSlotsDisponibles(
+/**
+ * Retorna todos los slots del día indicando su estado detallado:
+ * - 'disponible': Libre para reservar.
+ * - 'en_proceso': Ocupado temporalmente por hold de pago (ej. Mercado Pago activo).
+ * - 'ocupado': Ocupado por reserva confirmada, transferencia pendiente, o bloqueo admin.
+ */
+export function calcularSlotsConEstado(
   fecha: string,
   duracionMin: number,
   horarios: HorariosAtencion | any,
-  reservas: Pick<Reserva, 'fecha_hora_inicio' | 'duracion_total' | 'estado'>[],
+  reservas: Reserva[],
   bufferMinimoRestante: number = 15
-): string[] {
+): SlotDisponibilidad[] {
   if (!horarios) return [];
 
   let bloquesAtencion: { inicio: string; fin: string }[] = [];
-
   const diasNombres = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
   const [year, month, day] = fecha.split('-').map(Number);
   const fechaObj = new Date(year, month - 1, day);
@@ -117,22 +103,9 @@ export function calcularSlotsDisponibles(
   if (bloquesAtencion.length === 0) return [];
 
   const intervalo = horarios.intervalo_minutos || 15;
-  const slots: string[] = [];
+  const resultados: SlotDisponibilidad[] = [];
   const now = new Date();
   const todayStr = formatDateISO(now);
-
-  // Obtener reservas activas en minutos desde la medianoche para el día seleccionado
-  const reservasDelDia = reservas
-    .filter((r) => r.estado !== 'cancelado')
-    .map((r) => {
-      const d = new Date(r.fecha_hora_inicio);
-      const startMin = d.getHours() * 60 + d.getMinutes();
-      return {
-        startMin,
-        endMin: startMin + r.duracion_total,
-      };
-    })
-    .sort((a, b) => a.startMin - b.startMin);
 
   const candidates = new Set<number>();
 
@@ -153,42 +126,86 @@ export function calcularSlotsDisponibles(
 
     if (fecha === todayStr && slotDate <= now) continue;
 
-    // 1. Validar solape con reservas existentes
-    if (hasOverlap(slotDate, duracionMin, reservas)) continue;
-
-    // 2. Validación de "hueco basura"
+    const slotEnd = new Date(slotDate.getTime() + duracionMin * 60_000);
     const slotEndMin = startMin + duracionMin;
 
-    // Encontrar el bloque de atención correspondiente a este candidato
-    const bloqueCorrespondiente = bloquesAtencion.find((b) => {
-      const bStart = parseTime(b.inicio);
-      const bEnd = parseTime(b.fin);
-      return startMin >= bStart && slotEndMin <= bEnd;
-    });
+    let estadoSlot: 'disponible' | 'en_proceso' | 'ocupado' = 'disponible';
 
-    if (!bloqueCorrespondiente) continue;
+    for (const r of reservas) {
+      if (r.estado === 'cancelado') continue;
 
-    const bloqueEndMin = parseTime(bloqueCorrespondiente.fin);
+      const resStart = new Date(r.fecha_hora_inicio);
+      const resEnd = new Date(resStart.getTime() + r.duracion_total * 60_000);
 
-    // Buscar la siguiente reserva activa que comience después o al mismo tiempo que el fin de este slot
-    const siguienteReserva = reservasDelDia.find((r) => r.startMin >= slotEndMin);
-
-    // El próximo obstáculo es la hora de inicio de la siguiente reserva o el fin del bloque horario
-    const proximoObstaculoMin = siguienteReserva
-      ? Math.min(siguienteReserva.startMin, bloqueEndMin)
-      : bloqueEndMin;
-
-    const espacioLibreRestante = proximoObstaculoMin - slotEndMin;
-
-    // Si queda un bache inútil entre el fin del turno y el próximo obstáculo, descartamos el slot
-    if (espacioLibreRestante > 0 && espacioLibreRestante < bufferMinimoRestante) {
-      continue;
+      // Comprobar solape temporal
+      if (slotDate < resEnd && slotEnd > resStart) {
+        // Si está en proceso de pago por Mercado Pago y su expires_at sigue vigente
+        if (r.estado === 'pendiente_pago' && r.expires_at && new Date(r.expires_at) > now) {
+          estadoSlot = 'en_proceso';
+        } else {
+          // Confirmado, pendiente de seña, pendiente de transferencia o bloqueado admin
+          estadoSlot = 'ocupado';
+          break; 
+        }
+      }
     }
 
-    slots.push(timeStr);
+    if (estadoSlot === 'ocupado') continue;
+
+    // Validación de "hueco basura"
+    if (estadoSlot === 'disponible') {
+      const bloqueCorrespondiente = bloquesAtencion.find((b) => {
+        const bStart = parseTime(b.inicio);
+        const bEnd = parseTime(b.fin);
+        return startMin >= bStart && slotEndMin <= bEnd;
+      });
+
+      if (!bloqueCorrespondiente) continue;
+
+      const bloqueEndMin = parseTime(bloqueCorrespondiente.fin);
+      
+      const reservasDelDia = reservas
+        .filter((r) => {
+          if (r.estado === 'cancelado') return false;
+          if (r.estado === 'pendiente_pago' && r.expires_at && new Date(r.expires_at) <= now) {
+            return false;
+          }
+          return true;
+        })
+        .map((r) => {
+          const d = new Date(r.fecha_hora_inicio);
+          return { startMin: d.getHours() * 60 + d.getMinutes() };
+        });
+
+      const siguienteReserva = reservasDelDia.find((r) => r.startMin >= slotEndMin);
+      const proximoObstaculoMin = siguienteReserva
+        ? Math.min(siguienteReserva.startMin, bloqueEndMin)
+        : bloqueEndMin;
+
+      const espacioLibreRestante = proximoObstaculoMin - slotEndMin;
+      if (espacioLibreRestante > 0 && espacioLibreRestante < bufferMinimoRestante) {
+        continue;
+      }
+    }
+
+    resultados.push({
+      hora: timeStr,
+      estado: estadoSlot,
+    });
   }
 
-  return slots;
+  return resultados;
+}
+
+export function calcularSlotsDisponibles(
+  fecha: string,
+  duracionMin: number,
+  horarios: HorariosAtencion | any,
+  reservas: Reserva[],
+  bufferMinimoRestante: number = 15
+): string[] {
+  const conEstado = calcularSlotsConEstado(fecha, duracionMin, horarios, reservas, bufferMinimoRestante);
+  return conEstado.filter((s) => s.estado === 'disponible').map((s) => s.hora);
 }
 
 export function formatFechaDisplay(fecha: string): string {

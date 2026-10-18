@@ -5,7 +5,7 @@ export type CategoriaZona = 'chica' | 'media' | 'grande';
 export type CategoriaGeneral = string;
 export type TipoServicio = 'laser' | 'general';
 export type TipoJornada = 'laser' | 'general';
-export type EstadoReserva = 'pendiente_sena' | 'confirmado' | 'cancelado';
+export type EstadoReserva = 'pendiente_sena' | 'pendiente_pago' | 'pendiente_transferencia' | 'confirmado' | 'cancelado' | 'bloqueado';
 export type EstadoAsistencia = 'pendiente' | 'asistio' | 'no_asistio' | 'cancelado';
 export type MedioPago = 'efectivo' | 'transferencia' | 'qr' | 'tarjeta' | 'otro';
 
@@ -98,6 +98,7 @@ export interface Reserva {
   medio_pago?: MedioPago | string | null;
   estado_asistencia: EstadoAsistencia;
   fue_modificado: boolean;
+  expires_at?: string | null; 
 }
 
 export interface CierreJornada {
