@@ -138,7 +138,7 @@ export default function AgendaTab({
   const [modalBloqueosAbierto, setModalBloqueosAbierto] = useState<boolean>(false)
 
 
-  return (
+return (
     <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 overflow-hidden transition-all dark:bg-zinc-900 dark:border-zinc-800">
       {/* Barra de filtros */}
       <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between dark:border-zinc-800">
@@ -196,7 +196,7 @@ export default function AgendaTab({
             <option value="whatsapp">💬 WhatsApp</option>
           </select>
 
-                  <button
+          <button
             type="button"
             onClick={() => setModalBloqueosAbierto(true)}
             className="min-h-[44px] px-4 py-3 sm:py-2.5 text-xs sm:text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95 select-none cursor-pointer"
@@ -212,7 +212,7 @@ export default function AgendaTab({
             <Plus className="w-4 h-4" />
             Nuevo Turno
           </button>
-      </div>
+        </div>
       </div>
 
       <ResumenAgenda turnos={turnosAgendaResumen} esFechaPasada={esFechaAgendaPasada} />
@@ -243,10 +243,17 @@ export default function AgendaTab({
               
               const fueModificado = (t as any).modificado_por_admin || detalle.hubo_cambios || (detalle.swaps && Object.keys(detalle.swaps).length > 0)
 
+              // Identificar si es un Servicio General para personalizar colores
+              const esGeneral = t.servicio_tipo === 'general'
+
               return (
                 <div
                   key={t.id}
-                  className="bg-white dark:bg-zinc-800/80 border border-gray-100 dark:border-zinc-700/60 rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  className={`bg-white dark:bg-zinc-800/80 border rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                    esGeneral 
+                      ? 'border-purple-200/80 dark:border-purple-900/50 bg-gradient-to-r from-purple-50/30 to-transparent dark:from-purple-950/20' 
+                      : 'border-gray-100 dark:border-zinc-700/60'
+                  }`}
                 >
                   {/* IZQUIERDA: Avatar con iniciales, Nombre, Celular, Fecha y Zonas */}
                   <div className="flex items-start sm:items-center gap-3.5 min-w-0">
@@ -259,6 +266,16 @@ export default function AgendaTab({
                         <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md dark:bg-zinc-700 dark:text-zinc-400">
                           #{t.codigo_unico || '-'}
                         </span>
+
+                        {/* Distinctivo de Tipo de Servicio */}
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${
+                          esGeneral
+                            ? 'bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800'
+                            : 'bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800'
+                        }`}>
+                          {esGeneral ? '✂️ General' : '⚡ Láser'}
+                        </span>
+
                         <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate">
                           {t.cliente_nombre || 'Sin nombre'}
                         </h4>
@@ -295,8 +312,12 @@ export default function AgendaTab({
 
                       {/* Detalle y Monto */}
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="inline-flex items-center gap-1 text-xs bg-gray-100 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 px-2.5 py-1 rounded-lg font-medium max-w-md truncate" title={detalleTexto}>
-                          <Scissors className="w-3 h-3 text-rose-500 shrink-0" />
+                        <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-medium max-w-md truncate ${
+                          esGeneral
+                            ? 'bg-purple-50 text-purple-900 border border-purple-100 dark:bg-purple-950/40 dark:text-purple-200 dark:border-purple-900'
+                            : 'bg-gray-100 text-gray-700 dark:bg-zinc-900 dark:text-zinc-300'
+                        }`} title={detalleTexto}>
+                          <Scissors className={`w-3 h-3 shrink-0 ${esGeneral ? 'text-purple-600' : 'text-rose-500'}`} />
                           {detalleTexto}
                         </span>
                         <span className="text-xs font-extrabold text-gray-900 dark:text-zinc-100 ml-1">
@@ -306,7 +327,7 @@ export default function AgendaTab({
                     </div>
                   </div>
 
-                  {/* DERECHA: Estado, Medio de pago y Botones (Editar, Confirmar, Completar, Cancelar, Eliminar) */}
+                  {/* DERECHA: Estado, Medio de pago y Botones */}
                   <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t border-gray-100 dark:border-zinc-700/50 md:border-t-0 shrink-0 flex-wrap">
                     <div className="flex flex-col items-start md:items-end gap-1">
                       <span
@@ -395,19 +416,16 @@ export default function AgendaTab({
         </div>
       )}
 
-
       {modalBloqueosAbierto && (
         <ModalBloqueoHorarios
           onClose={() => setModalBloqueosAbierto(false)}
           onExito={() => {
-            // Recargar datos si es necesario
             if (typeof window !== 'undefined') {
               window.location.reload()
             }
           }}
         />
       )}
-
     </div>
   )
 }

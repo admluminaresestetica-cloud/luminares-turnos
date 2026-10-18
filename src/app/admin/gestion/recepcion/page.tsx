@@ -361,32 +361,47 @@ export default function RecepcionPage() {
 
                 return (
                   <div
-                    key={t.id}
-                    className="p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-800/40 hover:border-purple-300 dark:hover:border-purple-800/60 transition-all space-y-4 shadow-2xs"
-                  >
+                   key={t.id}
+                   className={`p-5 rounded-2xl border transition-all space-y-4 shadow-2xs ${
+                   t.servicio_tipo === 'general'
+                     ? 'border-purple-300/80 dark:border-purple-900/60 bg-gradient-to-r from-purple-50/30 to-transparent dark:from-purple-950/20'
+                     : 'border-slate-200/80 dark:border-zinc-700/80 bg-slate-50/50 dark:bg-zinc-800/40 hover:border-purple-300 dark:hover:border-purple-800/60'
+                     }`}
+                     >
                     {/* CABECERA TARJETA */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5 flex-wrap">
                         <span className="font-mono font-bold text-xs bg-white dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 px-2.5 py-1 rounded-lg text-slate-800 dark:text-zinc-100">
                           {horaStr} hs
                         </span>
-                        <span className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 uppercase tracking-wider border border-slate-200/80 dark:border-zinc-700">
-                          {t.estado || 'pendiente'}
+                     <span className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 uppercase tracking-wider border border-slate-200/80 dark:border-zinc-700">
+                         {t.estado || 'pendiente'}
                         </span>
-                        
-                        {/* BADGE ANAMNESIS */}
-                        <button
-                          type="button"
-                          onClick={() => { setTurnoAnamnesis(t); setModalAnamnesisOpen(true); }}
-                          className={`text-[11px] font-medium px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer border ${
-                            anamnesisLista
-                              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/40'
-                              : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/40'
-                          }`}
-                        >
-                          <ClipboardList className="h-3.5 w-3.5" />
-                          <span>{anamnesisLista ? 'Anamnesis ✔' : 'Anamnesis Pendiente'}</span>
+
+                        {/* DISTINTIVO DE TIPO DE SERVICIO */}
+                     <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider border ${
+                     t.servicio_tipo === 'general'
+                     ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950/80 dark:text-purple-300 dark:border-purple-800'
+                      : 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800'
+                      }`}>
+                      {t.servicio_tipo === 'general' ? '✂️ General' : '⚡ Láser'}
+                     </span>
+
+                      {/* BADGE ANAMNESIS (Solo visible para Láser) */}
+                     {t.servicio_tipo !== 'general' && (
+                     <button
+                      type="button"
+                      onClick={() => { setTurnoAnamnesis(t); setModalAnamnesisOpen(true); }}
+                      className={`text-[11px] font-medium px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer border ${
+                      anamnesisLista
+                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-800/40'
+                      : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/40'
+                      }`}
+                       >
+                      <ClipboardList className="h-3.5 w-3.5" />
+                       <span>{anamnesisLista ? 'Anamnesis ✔' : 'Anamnesis Pendiente'}</span>
                         </button>
+                        )}
 
                         {t.codigo_unico && (
                           <span className="text-[11px] text-slate-400 font-mono">#{t.codigo_unico}</span>
@@ -540,12 +555,6 @@ export default function RecepcionPage() {
         turno={turnoAnamnesis}
       />
 
-      <ModalHistorialCliente
-        isOpen={modalHistorialOpen}
-        onClose={() => setModalHistorialOpen(false)}
-        celular={clienteHistorial.celular}
-        nombreCliente={clienteHistorial.nombre}
-      />
 
 <ModalHistorialCliente
         isOpen={modalHistorialOpen}

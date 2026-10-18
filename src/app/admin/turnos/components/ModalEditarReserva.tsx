@@ -35,6 +35,12 @@ export default function ModalEditarReserva({
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
 
+  const detalleObj = typeof reserva.detalle_reserva === 'string'
+    ? (() => { try { return JSON.parse(reserva.detalle_reserva); } catch { return {}; } })()
+    : (reserva.detalle_reserva || {});
+
+  const [notaRecepcion, setNotaRecepcion] = useState<string>(detalleObj.nota_recepcion || '');
+  const [detalleGabinete, setDetalleGabinete] = useState<string>(detalleObj.detalle_gabinete || '');
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (readonly) return;
@@ -57,6 +63,12 @@ export default function ModalEditarReserva({
     setError(null);
 
     const fechaHoraInicio = new Date(`${fecha}T${hora}:00`).toISOString();
+    const nuevoDetalle = {
+      ...detalleObj,
+      nota_recepcion: notaRecepcion.trim(),
+      detalle_gabinete: detalleGabinete.trim(),
+    };
+
     const updated = await actualizarReservaAdmin({
       id: reserva.id,
       cliente_nombre: nombre.trim(),
@@ -66,7 +78,8 @@ export default function ModalEditarReserva({
       estado_asistencia: asistencia,
       medio_pago: medioPago || null,
       precio_total: precio,
-    });
+      detalle_reserva: nuevoDetalle,
+    } as any);
 
     setGuardando(false);
 
@@ -167,9 +180,53 @@ export default function ModalEditarReserva({
               </div>
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium bg-slate-50 dark:bg-zinc-800/50 px-3 py-2 rounded-lg">
-              Duración del turno: {reserva.duracion_total} min · Tipo: {reserva.servicio_tipo}
-            </p>
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 font-medium bg-slate-50 dark:bg-zinc-800/50 px-3 py-2 rounded-lg">
+              <span>Duración: {reserva.duracion_total} min</span>
+              <span className={`font-bold px-2 py-0.5 rounded ${
+                reserva.servicio_tipo === 'general'
+                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'
+                  : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+              }`}>
+                {reserva.servicio_tipo === 'general' ? '✂️ Servicio General' : '⚡ Jornada Láser'}
+              </span>
+            </div>
+
+            {reserva.servicio_tipo === 'general' && (
+              <p className="text-[11px] text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-900/50 p-2.5 rounded-xl font-medium">
+                ℹ️ Los servicios generales no requieren ficha de Anamnesis. Utiliza los campos de notas inferiores para registrar observaciones.
+              </p>
+            )}
+
+            {/* SECCIÓN DE NOTAS DE RECEPCIÓN Y GABINETE */}
+            <div className="space-y-3 pt-1 border-t border-slate-100 dark:border-zinc-800">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">
+                  📝 Nota de Recepción
+                </label>
+                <textarea
+                  rows={2}
+                  value={notaRecepcion}
+                  onChange={(e) => setNotaRecepcion(e.target.value)}
+                  disabled={readonly}
+                  placeholder="Observaciones de recepción (llegada, pagos, comentarios)..."
+                  className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 text-xs bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">
+                  🩺 Detalle / Evolución de Gabinete
+                </label>
+                <textarea
+                  rows={2}
+                  value={detalleGabinete}
+                  onChange={(e) => setDetalleGabinete(e.target.value)}
+                  disabled={readonly}
+                  placeholder="Anotaciones de gabinete (tonos, productos, observaciones del servicio)..."
+                  className="w-full border border-slate-200 dark:border-zinc-700 rounded-xl p-2.5 text-xs bg-white dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:focus:ring-purple-900 resize-none"
+                />
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
