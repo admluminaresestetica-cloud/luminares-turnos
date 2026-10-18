@@ -15,6 +15,7 @@ interface Banner {
 
 export default function BannerTab() {
   const [banners, setBanners] = useState<Banner[]>([])
+  const [cargando, setCargando] = useState(true)
   const [subiendo, setSubiendo] = useState(false)
   const [titulo, setTitulo] = useState('')
   const [archivo, setArchivo] = useState<File | null>(null)
