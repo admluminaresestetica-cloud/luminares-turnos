@@ -13,7 +13,6 @@ import {
   Clock,
   Sparkles,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { getConfiguracionCalendario } from '@/lib/supabase/configuracion';
 import { getReservasPorFecha } from '@/lib/supabase/reservas';
 import { generarSlotsIntervalo } from '@/lib/calendario/slots';
@@ -31,7 +30,7 @@ export default function ModalBloqueoHorarios({
 }: ModalBloqueoHorariosProps) {
   const hoy = new Date().toISOString().split('T')[0];
   const [fecha, setFecha] = useState<string>(hoy);
-  const [tipoServicio, setTipoServicio] = useState<'laser' | 'general'>('general');
+  const [tipoServicio, setTipoServicio] = useState<'laser' | 'general'>('laser');
 
   const [slotsGrid, setSlotsGrid] = useState<string[]>([]);
   const [reservasExistentes, setReservasExistentes] = useState<Reserva[]>([]);
@@ -58,37 +57,56 @@ export default function ModalBloqueoHorarios({
 
       setReservasExistentes((reservas as Reserva[]) || []);
 
-      // Generar grilla de 15 minutos según horario de atención
-      if (configCal && configCal.horarios_atencion) {
-        const [y, m, d] = fecha.split('-').map(Number);
-        const fechaObj = new Date(y, m - 1, d);
-        const diaSemanaIndex = fechaObj.getDay();
+      let slotsGenerados: string[] = [];
 
-        const diasClave = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-        const claveDia = diasClave[diaSemanaIndex];
-        const configDia = configCal.horarios_atencion[claveDia];
+      if (tipoServicio === 'laser') {
+        // Rango configurable o fallback estándar para jornada láser
+        let horaDesde = '08:30';
+        let horaHasta = '23:00';
 
-        let slotsGenerados: string[] = [];
+        if (configCal && configCal.horarios_atencion) {
+          const valores = Object.values(configCal.horarios_atencion) as any[];
+          const primerRangoValido = valores.find((v) => v && (v.desde || v.rangos));
+          
+          if (primerRangoValido) {
+            if (primerRangoValido.desde && primerRangoValido.hasta) {
+              horaDesde = primerRangoValido.desde;
+              horaHasta = primerRangoValido.hasta;
+            } else if (Array.isArray(primerRangoValido.rangos) && primerRangoValido.rangos.length > 0) {
+              horaDesde = primerRangoValido.rangos[0].desde;
+              horaHasta = primerRangoValido.rangos[primerRangoValido.rangos.length - 1].hasta;
+            }
+          }
+        }
+        slotsGenerados = generarSlotsIntervalo(horaDesde, horaHasta, 15);
+      } else {
+        // Servicios generales por día de la semana
+        if (configCal && configCal.horarios_atencion) {
+          const [y, m, d] = fecha.split('-').map(Number);
+          const fechaObj = new Date(y, m - 1, d);
+          const diaSemanaIndex = fechaObj.getDay();
 
-        if (configDia && typeof configDia === 'object' && 'abierto' in configDia && configDia.abierto) {
-          if ('rangos' in configDia && Array.isArray(configDia.rangos) && configDia.rangos.length > 0) {
-            configDia.rangos.forEach((rango: { desde: string; hasta: string }) => {
-              slotsGenerados = slotsGenerados.concat(generarSlotsIntervalo(rango.desde, rango.hasta, 15));
-            });
-          } else if ('desde' in configDia && 'hasta' in configDia && configDia.desde && configDia.hasta) {
-            slotsGenerados = generarSlotsIntervalo(String(configDia.desde), String(configDia.hasta), 15);
+          const diasClave = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+          const claveDia = diasClave[diaSemanaIndex];
+          const configDia = configCal.horarios_atencion[claveDia];
+
+          if (configDia && typeof configDia === 'object' && 'abierto' in configDia && configDia.abierto) {
+            if ('rangos' in configDia && Array.isArray(configDia.rangos) && configDia.rangos.length > 0) {
+              configDia.rangos.forEach((rango: { desde: string; hasta: string }) => {
+                slotsGenerados = slotsGenerados.concat(generarSlotsIntervalo(rango.desde, rango.hasta, 15));
+              });
+            } else if ('desde' in configDia && 'hasta' in configDia && configDia.desde && configDia.hasta) {
+              slotsGenerados = generarSlotsIntervalo(String(configDia.desde), String(configDia.hasta), 15);
+            }
           }
         }
 
-        // Fallback genérico de 08:00 a 20:00 si no hay rangos configurados para la fecha
         if (slotsGenerados.length === 0) {
           slotsGenerados = generarSlotsIntervalo('08:00', '20:00', 15);
         }
-
-        setSlotsGrid(slotsGenerados);
-      } else {
-        setSlotsGrid(generarSlotsIntervalo('08:00', '20:00', 15));
       }
+
+      setSlotsGrid(slotsGenerados);
     } catch (e) {
       console.error(e);
       setErrorMsg('No se pudieron cargar los horarios para la fecha.');
@@ -222,8 +240,8 @@ export default function ModalBloqueoHorarios({
                 onChange={(e) => setTipoServicio(e.target.value as 'laser' | 'general')}
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl bg-white dark:bg-zinc-800 dark:border-zinc-700 text-xs font-medium text-gray-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
-                <option value="general">✂️ Servicios Generales</option>
                 <option value="laser">⚡ Jornada Láser</option>
+                <option value="general">✂️ Servicios Generales</option>
               </select>
             </div>
           </div>
