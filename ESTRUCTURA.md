@@ -4,10 +4,10 @@
  ┃ ┃ ┣ 📂ajustes
  ┃ ┃ ┃ ┣ 📂components
  ┃ ┃ ┃ ┃ ┣ 📜AparienciaAjustesTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜BannerModalTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜BannersAjustesTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜BannersHomeTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜BannersTab.tsx
- ┃ ┃ ┃ ┃ ┣ 📜BannerTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜ConfiguracionAnamnesis.tsx
  ┃ ┃ ┃ ┃ ┣ 📜ConfiguracionPinTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜DestacadosAjustesTab.tsx
@@ -21,6 +21,7 @@
  ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂components
  ┃ ┃ ┃ ┣ 📜AdminChatWidget.tsx
+ ┃ ┃ ┃ ┣ 📜InstallPromptAdmin.tsx
  ┃ ┃ ┃ ┣ 📜ModalPinAutorizacion.tsx
  ┃ ┃ ┃ ┗ 📜SeccionSeguridad.tsx
  ┃ ┃ ┣ 📂empleados
@@ -30,10 +31,12 @@
  ┃ ┃ ┃ ┣ 📂gabinete
  ┃ ┃ ┃ ┃ ┣ 📂components
  ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalCierreGabinete.tsx
+ ┃ ┃ ┃ ┃ ┃ ┣ 📜NotificacionesGabinete.tsx
  ┃ ┃ ┃ ┃ ┃ ┗ 📜RelojCronometroGabinete.tsx
  ┃ ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┃ ┗ 📂recepcion
  ┃ ┃ ┃ ┃ ┣ 📂components
+ ┃ ┃ ┃ ┃ ┃ ┣ 📜BotonAvisoGabinete.tsx
  ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalAnamnesisRecepcion.tsx
  ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalHistorialCliente.tsx
  ┃ ┃ ┃ ┃ ┃ ┗ 📜ModalNuevoTurnoRecepcion.tsx
@@ -184,6 +187,7 @@
  ┃ ┃ ┗ 📜ModalExito.tsx
  ┃ ┣ 📂Home
  ┃ ┃ ┣ 📜AccionesRapidas.tsx
+ ┃ ┃ ┣ 📜BannerModal.tsx
  ┃ ┃ ┣ 📜BannersCarousel.tsx
  ┃ ┃ ┣ 📜BottomNav.tsx
  ┃ ┃ ┣ 📜CategoriasRapidas.tsx
@@ -202,6 +206,13 @@
  ┃ ┃ ┣ 📜SelectorGenero.tsx
  ┃ ┃ ┗ 📜SelectorModoLaser.tsx
  ┃ ┣ 📂story-generator
+ ┃ ┃ ┣ 📂presets
+ ┃ ┃ ┃ ┗ 📜festivosPresets.ts
+ ┃ ┃ ┣ 📂subcomponents
+ ┃ ┃ ┃ ┣ 📜CustomBackgroundUploader.tsx
+ ┃ ┃ ┃ ┣ 📜FestivePicker.tsx
+ ┃ ┃ ┃ ┣ 📜ProductEffectsControl.tsx
+ ┃ ┃ ┃ ┗ 📜UnsplashPicker.tsx
  ┃ ┃ ┣ 📜BadgesSelector.tsx
  ┃ ┃ ┣ 📜ColorPicker.tsx
  ┃ ┃ ┣ 📜ControlesEditor.tsx
@@ -214,7 +225,6 @@
  ┃ ┃ ┣ 📜card.tsx
  ┃ ┃ ┣ 📜dialog.tsx
  ┃ ┃ ┗ 📜sheet.tsx
- ┃ ┣ 📜BannerPrincipal.tsx
  ┃ ┣ 📜CarritoDrawer.tsx
  ┃ ┣ 📜footer.tsx
  ┃ ┣ 📜FooterTienda.tsx
