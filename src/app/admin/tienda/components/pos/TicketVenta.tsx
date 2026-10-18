@@ -122,7 +122,7 @@ export default function TicketVenta({
       mensaje += `Vuelto: $${vuelto.toLocaleString("es-AR")}\n`;
     }
     
-    mensaje += `\n${datosEmpresa.mensajeTicket || "¡Gracias por tu compra! ✨"}`;
+    mensaje += `\n${datosEmpresa.mensajeTicket || "¡Gracias por tu compra!"}`;
 
     const encoded = encodeURIComponent(mensaje);
     window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_blank");

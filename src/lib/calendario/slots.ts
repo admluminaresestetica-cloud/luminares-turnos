@@ -233,3 +233,30 @@ export function puedeCancelarReserva(
     (new Date(fechaHoraInicio).getTime() - Date.now()) / (1000 * 60 * 60);
   return horasRestantes >= ventanaHoras;
 }
+
+
+export function generarSlotsIntervalo(desde: string, hasta: string, intervaloMinutos: number = 15): string[] {
+  const slots: string[] = [];
+  const [hStart, mStart] = desde.split(':').map(Number);
+  const [hEnd, mEnd] = hasta.split(':').map(Number);
+
+  let actualMinutos = hStart * 60 + mStart;
+  const finMinutos = hEnd * 60 + mEnd;
+
+  while (actualMinutos < finMinutos) {
+    const hh = String(Math.floor(actualMinutos / 60)).padStart(2, '0');
+    const mm = String(actualMinutos % 60).padStart(2, '0');
+    slots.push(`${hh}:${mm}`);
+    actualMinutos += intervaloMinutos;
+  }
+
+  return slots;
+}
+
+/**
+ * Retorna el día de la semana en formato ISO (1 para Lunes, 7 para Domingo)
+ */
+export function getIsoWeekday(date: Date): number {
+  const day = date.getDay();
+  return day === 0 ? 7 : day;
+}

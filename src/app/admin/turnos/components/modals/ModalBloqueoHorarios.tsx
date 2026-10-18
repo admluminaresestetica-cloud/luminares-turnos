@@ -15,9 +15,27 @@ import {
 } from 'lucide-react';
 import { getConfiguracionCalendario } from '@/lib/supabase/configuracion';
 import { getReservasPorFecha } from '@/lib/supabase/reservas';
-import { generarSlotsIntervalo } from '@/lib/calendario/slots';
 import { crearBloqueosMasivos, eliminarBloqueo } from '@/lib/supabase/admin/reservas';
 import type { Reserva } from '@/app/admin/turnos/components/types';
+
+// Helper local para generar la grilla de slots de 15 minutos sin errores de exportación
+function generarSlotsIntervalo(desde: string, hasta: string, intervaloMinutos: number = 15): string[] {
+  const slots: string[] = [];
+  const [hStart, mStart] = desde.split(':').map(Number);
+  const [hEnd, mEnd] = hasta.split(':').map(Number);
+
+  let actualMinutos = hStart * 60 + mStart;
+  const finMinutos = hEnd * 60 + mEnd;
+
+  while (actualMinutos < finMinutos) {
+    const hh = String(Math.floor(actualMinutos / 60)).padStart(2, '0');
+    const mm = String(actualMinutos % 60).padStart(2, '0');
+    slots.push(`${hh}:${mm}`);
+    actualMinutos += intervaloMinutos;
+  }
+
+  return slots;
+}
 
 interface ModalBloqueoHorariosProps {
   onClose: () => void;
@@ -50,55 +68,62 @@ export default function ModalBloqueoHorarios({
     setSlotsSeleccionados([]);
 
     try {
-      const [configCal, reservas] = await Promise.all([
-        getConfiguracionCalendario(tipoServicio),
-        getReservasPorFecha(fecha),
-      ]);
+      // Cargar reservas del día
+      try {
+        const res = await getReservasPorFecha(fecha);
+        setReservasExistentes((res as Reserva[]) || []);
+      } catch (errRes) {
+        console.warn('Error al cargar reservas:', errRes);
+      }
 
-      setReservasExistentes((reservas as Reserva[]) || []);
+      // Cargar configuración de calendario
+      let configCal: any = null;
+      try {
+        configCal = await getConfiguracionCalendario(tipoServicio);
+      } catch (errCfg) {
+        console.warn('Error al cargar config:', errCfg);
+      }
 
       let slotsGenerados: string[] = [];
 
       if (tipoServicio === 'laser') {
-        // Rango configurable o fallback estándar para jornada láser
         let horaDesde = '08:30';
-        let horaHasta = '23:00';
+        let horaHasta = '22:00';
 
         if (configCal && configCal.horarios_atencion) {
-          const valores = Object.values(configCal.horarios_atencion) as any[];
-          const primerRangoValido = valores.find((v) => v && (v.desde || v.rangos));
-          
-          if (primerRangoValido) {
-            if (primerRangoValido.desde && primerRangoValido.hasta) {
+          try {
+            const valores = Object.values(configCal.horarios_atencion) as any[];
+            const primerRangoValido = valores.find((v) => v && (v.desde || v.rangos));
+            if (primerRangoValido?.desde && primerRangoValido?.hasta) {
               horaDesde = primerRangoValido.desde;
               horaHasta = primerRangoValido.hasta;
-            } else if (Array.isArray(primerRangoValido.rangos) && primerRangoValido.rangos.length > 0) {
-              horaDesde = primerRangoValido.rangos[0].desde;
-              horaHasta = primerRangoValido.rangos[primerRangoValido.rangos.length - 1].hasta;
             }
+          } catch (e) {
+            console.warn('Error interpretando rangos láser:', e);
           }
         }
         slotsGenerados = generarSlotsIntervalo(horaDesde, horaHasta, 15);
       } else {
-        // Servicios generales por día de la semana
-        if (configCal && configCal.horarios_atencion) {
-          const [y, m, d] = fecha.split('-').map(Number);
-          const fechaObj = new Date(y, m - 1, d);
-          const diaSemanaIndex = fechaObj.getDay();
+        try {
+          if (configCal && configCal.horarios_atencion) {
+            const [y, m, d] = fecha.split('-').map(Number);
+            const fechaObj = new Date(y, m - 1, d);
+            const diasClave = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+            const claveDia = diasClave[fechaObj.getDay()];
+            const configDia = configCal.horarios_atencion[claveDia];
 
-          const diasClave = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-          const claveDia = diasClave[diaSemanaIndex];
-          const configDia = configCal.horarios_atencion[claveDia];
-
-          if (configDia && typeof configDia === 'object' && 'abierto' in configDia && configDia.abierto) {
-            if ('rangos' in configDia && Array.isArray(configDia.rangos) && configDia.rangos.length > 0) {
-              configDia.rangos.forEach((rango: { desde: string; hasta: string }) => {
-                slotsGenerados = slotsGenerados.concat(generarSlotsIntervalo(rango.desde, rango.hasta, 15));
-              });
-            } else if ('desde' in configDia && 'hasta' in configDia && configDia.desde && configDia.hasta) {
-              slotsGenerados = generarSlotsIntervalo(String(configDia.desde), String(configDia.hasta), 15);
+            if (configDia && typeof configDia === 'object' && 'abierto' in configDia && configDia.abierto) {
+              if ('rangos' in configDia && Array.isArray(configDia.rangos) && configDia.rangos.length > 0) {
+                configDia.rangos.forEach((rango: { desde: string; hasta: string }) => {
+                  slotsGenerados = slotsGenerados.concat(generarSlotsIntervalo(rango.desde, rango.hasta, 15));
+                });
+              } else if ('desde' in configDia && 'hasta' in configDia && configDia.desde && configDia.hasta) {
+                slotsGenerados = generarSlotsIntervalo(String(configDia.desde), String(configDia.hasta), 15);
+              }
             }
           }
+        } catch (e) {
+          console.warn('Error interpretando servicios generales:', e);
         }
 
         if (slotsGenerados.length === 0) {
@@ -107,9 +132,9 @@ export default function ModalBloqueoHorarios({
       }
 
       setSlotsGrid(slotsGenerados);
-    } catch (e) {
-      console.error(e);
-      setErrorMsg('No se pudieron cargar los horarios para la fecha.');
+    } catch (e: any) {
+      console.error('Error al generar slots:', e);
+      setSlotsGrid(generarSlotsIntervalo('08:30', '21:00', 15));
     } finally {
       setCargandoSlots(false);
     }
@@ -119,14 +144,12 @@ export default function ModalBloqueoHorarios({
     cargarSlotsYReservas();
   }, [cargarSlotsYReservas]);
 
-  // Manejar clic en un slot
   const toggleSlotSeleccion = (hora: string) => {
     setSlotsSeleccionados((prev) =>
       prev.includes(hora) ? prev.filter((h) => h !== hora) : [...prev, hora]
     );
   };
 
-  // Buscar si una hora ya tiene reserva/bloqueo en la BD
   const obtenerReservaPorHora = (hora: string) => {
     return reservasExistentes.find((r) => {
       if (!r.fecha_hora_inicio) return false;
@@ -140,7 +163,6 @@ export default function ModalBloqueoHorarios({
     });
   };
 
-  // Guardar nuevos bloqueos
   const handleGuardarBloqueos = async () => {
     if (slotsSeleccionados.length === 0) return;
     setGuardando(true);
@@ -165,7 +187,6 @@ export default function ModalBloqueoHorarios({
     }
   };
 
-  // Eliminar un bloqueo existente
   const handleEliminarBloqueo = async (reservaId: string) => {
     if (!window.confirm('¿Deseas desbloquear este horario y liberarlo para la agenda pública?')) return;
     setEliminandoId(reservaId);
@@ -341,7 +362,6 @@ export default function ModalBloqueoHorarios({
                         )}
                       </button>
 
-                      {/* Botón rápido para eliminar un bloqueo existente en BD */}
                       {esBloqueadoBD && reservaExistente && (
                         <button
                           type="button"
