@@ -16,7 +16,7 @@ export default function AccionesRapidas() {
             Reserva Online
           </span>
           <h4 className="text-base sm:text-lg font-black tracking-tight text-[hsl(var(--primary-foreground))]">
-            Agendar un Turno
+            Agendar tu sesión lasér
           </h4>
           <p className="text-xs text-[hsl(var(--primary-foreground))/0.9] font-medium">
             Elegí tu tratamiento, fecha y horario.

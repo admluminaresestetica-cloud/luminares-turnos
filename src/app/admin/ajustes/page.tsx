@@ -168,8 +168,8 @@ export default function AjustesAdminPage() {
         },
         {
           id: 'banners',
-          titulo: 'Banners Secundarios',
-          descripcion: 'Imágenes promocionales adicionales para secciones internas.',
+          titulo: 'Banners Secundarios & Tienda',
+          descripcion: 'Banner modal emergente al entrar y banners para la Tienda / E-Commerce.',
           icono: ImageIcon,
           colorIcono: 'text-purple-500 bg-purple-500/10'
         }

@@ -13,6 +13,7 @@ import BannersCarousel from '@/components/Home/BannersCarousel';
 import GuiaReservaCard from '@/components/Home/GuiaReservaCard';
 import ServiciosDestacados from '@/components/Home/ServiciosDestacados';
 import InstallPrompt from '@/components/Home/InstallPrompt';
+import BannerModal from '@/components/Home/BannerModal'; // <--- 1. IMPORTAR EL MODAL
 
 interface Banner {
   id: string;
@@ -76,6 +77,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--primary))]/5 via-stone-50 to-stone-50 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950 transition-colors relative">
+      
+      {/* <--- 2. RENDERIZAR EL MODAL FLOTANTE AL ENTRAR */}
+      <BannerModal />
+
       <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-32 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
 
         {/* ENCABEZADO FIJO (Subimos z-index a z-40 para que flote sobre todo el contenido) */}
