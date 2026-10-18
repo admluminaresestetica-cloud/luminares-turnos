@@ -108,7 +108,7 @@ export default function TagsTab() {
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ej: ✨ Nuevos Ingresos"
+              placeholder="Ej: Nuevos Ingresos"
               className="h-11 w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 px-3.5 text-xs font-medium text-gray-900 dark:text-zinc-100 outline-none transition-colors focus:border-[#0E6E55]"
               required
             />
