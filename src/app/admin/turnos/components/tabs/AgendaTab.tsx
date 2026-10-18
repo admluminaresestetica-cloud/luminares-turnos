@@ -15,9 +15,12 @@ import {
   MessageCircle,
   SlidersHorizontal,
   Edit3
+  Lock 
 } from 'lucide-react'
 import ResumenAgenda from '@/app/admin/turnos/components/ResumenAgenda'
 import { Reserva, renderDetalle, renderFechaHora } from '@/app/admin/turnos/components/types'
+
+import ModalBloqueoHorarios from '@/app/admin/turnos/components/modals/ModalBloqueoHorarios'
 
 interface AgendaTabProps {
   loading: boolean
@@ -131,6 +134,9 @@ export default function AgendaTab({
       await onEliminarTurno(id)
     }
   }
+
+  const [modalBloqueosAbierto, setModalBloqueosAbierto] = useState<boolean>(false)
+
 
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 overflow-hidden transition-all dark:bg-zinc-900 dark:border-zinc-800">
