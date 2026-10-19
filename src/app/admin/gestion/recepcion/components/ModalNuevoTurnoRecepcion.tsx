@@ -12,20 +12,27 @@ import {
   SwapsMap 
 } from '@/lib/laser/calculos'
 import ModalSwapZona from '@/components/laser/ModalSwapZona'
+import { ServicioGeneral } from '@/lib/types'
 
 interface ModalNuevoTurnoRecepcionProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
   turnoAEditar?: Reserva | null
+  tipoServicioInicial?: 'laser' | 'general'
 }
 
 export default function ModalNuevoTurnoRecepcion({
   isOpen,
   onClose,
   onSuccess,
-  turnoAEditar
+  turnoAEditar,
+  tipoServicioInicial = 'laser'
 }: ModalNuevoTurnoRecepcionProps) {
+  // Estado para alternar entre láser y general en el modal
+  const [tipoServicioActivo, setTipoServicioActivo] = useState<'laser' | 'general'>(tipoServicioInicial)
+  const [serviciosGenerales, setServiciosGenerales] = useState<ServicioGeneral[]>([])
+  const [serviciosGeneralesSeleccionados, setServiciosGeneralesSeleccionados] = useState<string[]>([])
   const [nombre, setNombre] = useState('')
   const [celular, setCelular] = useState('')
   const [fechaHoraLocal, setFechaHoraLocal] = useState('')
@@ -52,16 +59,30 @@ export default function ModalNuevoTurnoRecepcion({
     const fetchData = async () => {
       setLoadingCatalogos(true)
       
-      const [resServicios, resPromos] = await Promise.all([
+      const [resServicios, resPromos, resGenerales] = await Promise.all([
         supabase.from('servicios_laser').select('*').eq('activo', true),
-        supabase.from('promos_laser').select('*').eq('activo', true)
+        supabase.from('promos_laser').select('*').eq('activo', true),
+        supabase.from('servicios_generales').select('*').eq('activo', true)
       ])
 
       const listServicios = (resServicios.data as ServicioLaser[]) || []
       const listPromos = (resPromos.data as PromoLaser[]) || []
+      const listGenerales = (resGenerales.data as ServicioGeneral[]) || []
       
       setServiciosLaser(listServicios)
       setPromosLaser(listPromos)
+      setServiciosGenerales(listGenerales)
+
+      if (turnoAEditar) {
+        setNombre(turnoAEditar.cliente_nombre || '')
+        setCelular(turnoAEditar.cliente_celular || '')
+        setFechaHoraLocal(isoToDatetimeLocal(turnoAEditar.fecha_hora_inicio))
+        setTipoServicioActivo((turnoAEditar.servicio_tipo as 'laser' | 'general') || 'laser')
+        // Si es general, puedes precargar los servicios seleccionados desde su detalle_reserva si lo deseas
+      } else {
+        setTipoServicioActivo(tipoServicioInicial)
+        // ... resto de reseteos
+      }
 
       if (turnoAEditar) {
         setNombre(turnoAEditar.cliente_nombre || '')
@@ -126,16 +147,23 @@ export default function ModalNuevoTurnoRecepcion({
   let duracionTotal = 30
   let detalleTexto = ''
 
-  if (tipoSeleccion === 'zonas') {
-    const zonasElegidasObj = serviciosLaser.filter((s) => zonasSeleccionadas.includes(s.id))
-    precioTotal = zonasElegidasObj.reduce((acc, z) => acc + (Number(z.precio_lista) || 0), 0)
-    duracionTotal = zonasElegidasObj.reduce((acc, z) => acc + (Number(z.duracion_minutos) || 0), 0) || 30
-    detalleTexto = zonasElegidasObj.map((z) => z.nombre_zona).filter(Boolean).join(' + ')
+  if (tipoServicioActivo === 'general') {
+    const elegidosGen = serviciosGenerales.filter((s) => serviciosGeneralesSeleccionados.includes(s.id))
+    precioTotal = elegidosGen.reduce((acc, s) => acc + (Number(s.precio) || 0), 0)
+    duracionTotal = elegidosGen.reduce((acc, s) => acc + (Number(s.duracion_minutos) || 0), 0) || 30
+    detalleTexto = elegidosGen.map((s) => s.subtipo).filter(Boolean).join(' + ')
   } else {
-    if (promoElegidaObj) {
-      precioTotal = Number(promoElegidaObj.precio_promo) || 0
-      duracionTotal = zonasPromoResueltas.reduce((acc, z) => acc + z.duracion_minutos, 0) || Number(promoElegidaObj.duracion_total_min) || 30
-      detalleTexto = zonasPromoResueltas.map((z) => z.nombre_zona).join(' + ') || `Promo: ${promoElegidaObj.nombre_promo}`
+    if (tipoSeleccion === 'zonas') {
+      const zonasElegidasObj = serviciosLaser.filter((s) => zonasSeleccionadas.includes(s.id))
+      precioTotal = zonasElegidasObj.reduce((acc, z) => acc + (Number(z.precio_lista) || 0), 0)
+      duracionTotal = zonasElegidasObj.reduce((acc, z) => acc + (Number(z.duracion_minutos) || 0), 0) || 30
+      detalleTexto = zonasElegidasObj.map((z) => z.nombre_zona).filter(Boolean).join(' + ')
+    } else {
+      if (promoElegidaObj) {
+        precioTotal = Number(promoElegidaObj.precio_promo) || 0
+        duracionTotal = zonasPromoResueltas.reduce((acc, z) => acc + z.duracion_minutos, 0) || Number(promoElegidaObj.duracion_total_min) || 30
+        detalleTexto = zonasPromoResueltas.map((z) => z.nombre_zona).join(' + ') || `Promo: ${promoElegidaObj.nombre_promo}`
+      }
     }
   }
 
@@ -159,29 +187,38 @@ export default function ModalNuevoTurnoRecepcion({
 
     setGuardando(true)
 
-    const payload: any = {
+   const payload: any = {
       cliente_nombre: nombre,
       cliente_celular: celular,
       fecha_hora_inicio: datetimeLocalToIso(fechaHoraLocal),
       duracion_total: duracionTotal,
       precio_total: Number(precioTotal),
+      servicio_tipo: tipoServicioActivo,
       modificado_por_admin: true
     }
 
-   if (tipoSeleccion === 'promo' && promoElegidaObj) {
+    if (tipoServicioActivo === 'general') {
+      const elegidosGen = serviciosGenerales.filter((s) => serviciosGeneralesSeleccionados.includes(s.id))
       payload.detalle_reserva = {
-        modo: 'promo',
-        promo_id: promoElegidaObj.id,
-        nombre_promo: promoElegidaObj.nombre_promo,
-        detalle_texto: detalleTexto,
-        swaps: swaps,
-        hubo_cambios: Object.keys(swaps).length > 0
+        servicios: elegidosGen.map(s => ({ id: s.id, subtipo: s.subtipo, precio: s.precio, duracion_minutos: s.duracion_minutos })),
+        detalle_texto: detalleTexto
       }
-    } else if (detalleTexto) {
-      payload.detalle_reserva = {
-        modo: 'zonas',
-        detalle_texto: detalleTexto,
-        zonas_ids: zonasSeleccionadas
+    } else {
+      if (tipoSeleccion === 'promo' && promoElegidaObj) {
+        payload.detalle_reserva = {
+          modo: 'promo',
+          promo_id: promoElegidaObj.id,
+          nombre_promo: promoElegidaObj.nombre_promo,
+          detalle_texto: detalleTexto,
+          swaps: swaps,
+          hubo_cambios: Object.keys(swaps).length > 0
+        }
+      } else if (detalleTexto) {
+        payload.detalle_reserva = {
+          modo: 'zonas',
+          detalle_texto: detalleTexto,
+          zonas_ids: zonasSeleccionadas
+        }
       }
     }
 
@@ -195,7 +232,7 @@ export default function ModalNuevoTurnoRecepcion({
       errorSupabase = error
     } else {
       payload.codigo_unico = `RECEPCION-${Date.now().toString(36).toUpperCase()}`
-      payload.servicio_tipo = 'laser'
+      payload.servicio_tipo = tipoServicioActivo
       payload.estado = 'pendiente_sena'
       payload.metodo_pago = 'efectivo'
 
@@ -240,6 +277,33 @@ export default function ModalNuevoTurnoRecepcion({
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
+
+{/* 📍 AQUÍ COLOCAS EL SELECTOR PRINCIPAL */}
+          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-200/60 dark:bg-zinc-800 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setTipoServicioActivo('laser')}
+              className={`py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                tipoServicioActivo === 'laser'
+                  ? 'bg-white dark:bg-zinc-900 text-amber-600 dark:text-amber-400 shadow-sm'
+                  : 'text-slate-600 dark:text-zinc-400'
+              }`}
+            >
+              <span>⚡ Jornada Láser</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTipoServicioActivo('general')}
+              className={`py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                tipoServicioActivo === 'general'
+                  ? 'bg-white dark:bg-zinc-900 text-purple-600 dark:text-purple-400 shadow-sm'
+                  : 'text-slate-600 dark:text-zinc-400'
+              }`}
+            >
+              <span>✂️ Servicio General</span>
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300 mb-1">
@@ -291,58 +355,95 @@ export default function ModalNuevoTurnoRecepcion({
             </div>
           </div>
 
-          <div className="flex bg-slate-100 dark:bg-zinc-800 p-1 rounded-xl">
-            <button
-              type="button"
-              onClick={() => { setTipoSeleccion('zonas'); setPromoSeleccionadaId(''); setSwaps({}); }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                tipoSeleccion === 'zonas'
-                  ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300'
-              }`}
-            >
-              <Layers className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-              <span>Zonas Individuales</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => { setTipoSeleccion('promo'); setZonasSeleccionadas([]); }}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                tipoSeleccion === 'promo'
-                  ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300'
-              }`}
-            >
-              <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-              <span>Promos y Combos</span>
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
-              {tipoSeleccion === 'zonas' ? 'Zonas Láser Disponibles' : 'Promociones Activas'}
-            </label>
-            <div className="flex bg-slate-100 dark:bg-zinc-800 p-0.5 rounded-lg text-[11px]">
-              {['todos', 'femenino', 'masculino'].map((g) => (
+          {/* SÓLO SE MUESTRA SI ES LÁSER */}
+          {tipoServicioActivo === 'laser' && (
+            <>
+              <div className="flex bg-slate-100 dark:bg-zinc-800 p-1 rounded-xl">
                 <button
-                  key={g}
                   type="button"
-                  onClick={() => setFiltroGenero(g)}
-                  className={`px-2.5 py-1 rounded-md capitalize transition-all cursor-pointer ${
-                    filtroGenero === g
-                      ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 font-bold shadow-2xs'
-                      : 'text-slate-500 dark:text-zinc-400'
+                  onClick={() => { setTipoSeleccion('zonas'); setPromoSeleccionadaId(''); setSwaps({}); }}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    tipoSeleccion === 'zonas'
+                      ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300'
                   }`}
                 >
-                  {g}
+                  <Layers className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                  <span>Zonas Individuales</span>
                 </button>
-              ))}
-            </div>
-          </div>
+                <button
+                  type="button"
+                  onClick={() => { setTipoSeleccion('promo'); setZonasSeleccionadas([]); }}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    tipoSeleccion === 'promo'
+                      ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-2xs'
+                      : 'text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300'
+                  }`}
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                  <span>Promos y Combos</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                  {tipoSeleccion === 'zonas' ? 'Zonas Láser Disponibles' : 'Promociones Activas'}
+                </label>
+                <div className="flex bg-slate-100 dark:bg-zinc-800 p-0.5 rounded-lg text-[11px]">
+                  {['todos', 'femenino', 'masculino'].map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setFiltroGenero(g)}
+                      className={`px-2.5 py-1 rounded-md capitalize transition-all cursor-pointer ${
+                        filtroGenero === g
+                          ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 font-bold shadow-2xs'
+                          : 'text-slate-500 dark:text-zinc-400'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {tipoServicioActivo === 'general' && (
+            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+              ✂️ Servicios Generales Disponibles
+            </label>
+          )}
 
           <div className="max-h-48 overflow-y-auto border border-slate-200/80 dark:border-zinc-800 rounded-xl p-2 space-y-1 bg-slate-50/50 dark:bg-zinc-800/30">
             {loadingCatalogos ? (
               <p className="text-xs text-slate-400 p-2 text-center">Cargando opciones...</p>
+            ) : tipoServicioActivo === 'general' ? (
+              serviciosGenerales.map((sg) => {
+                const checked = serviciosGeneralesSeleccionados.includes(sg.id)
+                return (
+                  <button
+                    type="button"
+                    key={sg.id}
+                    onClick={() => {
+                      setServiciosGeneralesSeleccionados((prev) =>
+                        prev.includes(sg.id) ? prev.filter((i) => i !== sg.id) : [...prev, sg.id]
+                      )
+                    }}
+                    className={`w-full flex items-center justify-between p-2.5 rounded-xl text-xs transition-all border cursor-pointer ${
+                      checked
+                        ? 'bg-purple-600 text-white font-semibold border-transparent shadow-2xs'
+                        : 'bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-800'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-bold">{sg.subtipo}</p>
+                      <p className="text-[10px] opacity-80 capitalize">{sg.categoria}</p>
+                    </div>
+                    <span className="font-bold">${Number(sg.precio).toLocaleString('es-AR')}</span>
+                  </button>
+                )
+              })
             ) : tipoSeleccion === 'zonas' ? (
               serviciosFiltrados.map((s) => {
                 const checked = zonasSeleccionadas.includes(s.id)

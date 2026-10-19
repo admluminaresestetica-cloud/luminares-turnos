@@ -322,17 +322,17 @@ export default function ModalCierreGabinete({
 
       if (errorHistorial) throw errorHistorial
 
-      const { error: errorReserva } = await supabase
-        .from('reservas')
-        .update({
-          estado: 'atendido',
-          precio_total: nuevoPrecioTotal,
-          detalle_reserva: detalleActualizado,
-          modificado_por_admin: true
-        })
-        .eq('id', turno.id)
+const { error: errorReserva } = await supabase
+      .from('reservas')
+      .update({
+        estado: 'completado', // 👈 ¡Acá está la clave exacta permitida por el CHECK!
+        precio_total: nuevoPrecioTotal,
+        detalle_reserva: detalleActualizado,
+        modificado_por_admin: true
+      })
+      .eq('id', turno.id)
 
-      if (errorReserva) throw errorReserva
+    if (errorReserva) throw errorReserva
 
       alert('Sesión finalizada y actualizada correctamente en reservas y gabinete.')
       onSuccess()

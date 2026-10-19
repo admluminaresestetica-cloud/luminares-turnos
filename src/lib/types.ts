@@ -145,3 +145,16 @@ export const TEMA_COLORES_DEFAULT: TemaColores = {
   foreground: '#020817',
   border: '#e2e8f0',
 };
+
+export interface HistorialSesionGeneral {
+  id: string;
+  reserva_id?: string | null;
+  cliente_nombre?: string | null;
+  cliente_celular: string;
+  fecha_sesion: string;
+  profesional?: string | null;
+  detalle_trabajo?: string | null;
+  notas_gabinete?: string | null;
+  notas_recepcion?: string | null;
+  created_at?: string;
+}

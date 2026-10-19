@@ -1,11 +1,13 @@
 // src/components/admin/ModalEditarReserva.tsx
 'use client';
 
-import { useState } from 'react';
-import type { ConfiguracionCalendario, Reserva } from '@/lib/types';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import type { ConfiguracionCalendario, Reserva, ServicioGeneral } from '@/lib/types';
 import { validarSlotDisponible, horaDeReserva, fechaDeReserva } from '@/lib/admin/validacion';
 import { actualizarReservaAdmin } from '@/lib/supabase/admin/reservas';
 import { ESTADOS_ASISTENCIA, ESTADOS_RESERVA, MEDIOS_PAGO } from '@/lib/admin/constants';
+import { Scissors } from 'lucide-react';
 
 interface Props {
   reserva: Reserva;
@@ -41,6 +43,54 @@ export default function ModalEditarReserva({
 
   const [notaRecepcion, setNotaRecepcion] = useState<string>(detalleObj.nota_recepcion || '');
   const [detalleGabinete, setDetalleGabinete] = useState<string>(detalleObj.detalle_gabinete || '');
+
+  // Estados para Servicios Generales (Etapa 3)
+  const esGeneral = reserva.servicio_tipo === 'general';
+  const [catGenerales, setCatGenerales] = useState<ServicioGeneral[]>([]);
+  const [serviciosSeleccionados, setServiciosSeleccionados] = useState<string[]>(() => {
+    if (!esGeneral) return [];
+    if (Array.isArray(detalleObj.servicios)) {
+      return detalleObj.servicios.map((s: any) => s.id);
+    }
+    return [];
+  });
+  const [duracionTotal, setDuracionTotal] = useState<number>(reserva.duracion_total || 30);
+
+  useEffect(() => {
+    if (!esGeneral) return;
+
+    const fetchGenerales = async () => {
+      const { data, error } = await supabase
+        .from('servicios_generales')
+        .select('*')
+        .eq('activo', true);
+
+      if (!error && data) {
+        setCatGenerales(data as ServicioGeneral[]);
+      }
+    };
+
+    fetchGenerales();
+  }, [esGeneral]);
+
+  const toggleServicioGeneral = (sg: ServicioGeneral) => {
+    if (readonly) return;
+
+    const yaSeleccionado = serviciosSeleccionados.includes(sg.id);
+    const nuevaSeleccion = yaSeleccionado
+      ? serviciosSeleccionados.filter((id) => id !== sg.id)
+      : [...serviciosSeleccionados, sg.id];
+
+    setServiciosSeleccionados(nuevaSeleccion);
+
+    const seleccionadosObj = catGenerales.filter((item) => nuevaSeleccion.includes(item.id));
+    const nuevoPrecio = seleccionadosObj.reduce((acc, item) => acc + Number(item.precio || 0), 0);
+    const nuevaDuracion = seleccionadosObj.reduce((acc, item) => acc + Number(item.duracion_minutos || 0), 0) || 30;
+
+    setPrecio(nuevoPrecio);
+    setDuracionTotal(nuevaDuracion);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (readonly) return;
@@ -48,7 +98,7 @@ export default function ModalEditarReserva({
     const validacion = validarSlotDisponible(
       fecha,
       hora,
-      reserva.duracion_total,
+      esGeneral ? duracionTotal : reserva.duracion_total,
       reserva.id,
       reservas,
       configCalendario
@@ -63,10 +113,25 @@ export default function ModalEditarReserva({
     setError(null);
 
     const fechaHoraInicio = new Date(`${fecha}T${hora}:00`).toISOString();
+    
+    const seleccionadosObj = catGenerales.filter((item) => serviciosSeleccionados.includes(item.id));
+    const nuevoDetalleTexto = esGeneral && seleccionadosObj.length > 0
+      ? seleccionadosObj.map((s) => s.subtipo).join(' + ')
+      : detalleObj.detalle_texto;
+
     const nuevoDetalle = {
       ...detalleObj,
       nota_recepcion: notaRecepcion.trim(),
       detalle_gabinete: detalleGabinete.trim(),
+      ...(esGeneral && {
+        servicios: seleccionadosObj.map((s) => ({
+          id: s.id,
+          subtipo: s.subtipo,
+          precio: s.precio,
+          duracion_minutos: s.duracion_minutos,
+        })),
+        detalle_texto: nuevoDetalleTexto,
+      }),
     };
 
     const updated = await actualizarReservaAdmin({
@@ -74,6 +139,7 @@ export default function ModalEditarReserva({
       cliente_nombre: nombre.trim(),
       cliente_celular: celular.trim(),
       fecha_hora_inicio: fechaHoraInicio,
+      duracion_total: esGeneral ? duracionTotal : reserva.duracion_total,
       estado,
       estado_asistencia: asistencia,
       medio_pago: medioPago || null,
@@ -94,17 +160,10 @@ export default function ModalEditarReserva({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 dark:bg-black/70 backdrop-blur-sm transition-all">
-      {/*
-        MOBILE: bottom sheet anclado abajo, entra deslizando desde el borde inferior.
-        DESKTOP (sm:): modal flotante centrado en pantalla.
-        Requiere el plugin "tailwindcss-animate" para las utilidades animate-in / slide-in-from-bottom
-        (si el proyecto ya usa shadcn/ui, ya debería estar instalado).
-      */}
       <div
         className="fixed inset-x-0 bottom-0 z-50 w-full bg-white dark:bg-zinc-900 rounded-t-[28px] shadow-xl border border-gray-100 dark:border-zinc-800 max-h-[92vh] overflow-y-auto transition-colors animate-in slide-in-from-bottom duration-300 pb-[env(safe-area-inset-bottom)]
           sm:inset-x-0 sm:mx-auto sm:max-w-lg sm:rounded-2xl sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:fade-in sm:zoom-in-95 sm:duration-200 sm:pb-0"
       >
-        {/* Handle de arrastre visual, solo mobile */}
         <div className="w-12 h-1.5 bg-slate-300 dark:bg-zinc-700 rounded-full mx-auto my-2 sm:hidden" />
 
         <div className="px-5 pb-5 pt-1 sm:p-6">
@@ -180,8 +239,45 @@ export default function ModalEditarReserva({
               </div>
             </div>
 
+            {/* SELECTOR DE SERVICIOS GENERALES */}
+            {esGeneral && (
+              <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-zinc-800">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                  ✂️ Servicios Generales Incluidos
+                </label>
+                <div className="max-h-40 overflow-y-auto border border-slate-200 dark:border-zinc-700 rounded-xl p-2 space-y-1.5 bg-slate-50/50 dark:bg-zinc-800/40">
+                  {catGenerales.length === 0 ? (
+                    <p className="text-xs text-slate-400 p-2 text-center">Cargando servicios...</p>
+                  ) : (
+                    catGenerales.map((sg) => {
+                      const checked = serviciosSeleccionados.includes(sg.id);
+                      return (
+                        <button
+                          type="button"
+                          key={sg.id}
+                          disabled={readonly}
+                          onClick={() => toggleServicioGeneral(sg)}
+                          className={`w-full flex items-center justify-between p-2 rounded-lg text-xs transition-all border cursor-pointer ${
+                            checked
+                              ? 'bg-purple-600 text-white font-semibold border-transparent'
+                              : 'bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700'
+                          }`}
+                        >
+                          <div className="text-left">
+                            <span className="font-bold">{sg.subtipo}</span>
+                            <span className="text-[10px] opacity-75 ml-2">({sg.categoria})</span>
+                          </div>
+                          <span className="font-bold">${Number(sg.precio).toLocaleString('es-AR')}</span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 font-medium bg-slate-50 dark:bg-zinc-800/50 px-3 py-2 rounded-lg">
-              <span>Duración: {reserva.duracion_total} min</span>
+              <span>Duración: {esGeneral ? duracionTotal : reserva.duracion_total} min</span>
               <span className={`font-bold px-2 py-0.5 rounded ${
                 reserva.servicio_tipo === 'general'
                   ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300'

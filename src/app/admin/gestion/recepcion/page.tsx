@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Reserva } from '@/app/admin/turnos/components/types'
-import { Search, RefreshCw, UserPlus, Edit3, MessageCircle, FileText, Check, ClipboardList, FolderClock, NotepadText, Clock, Phone, Calendar, ArrowLeft } from 'lucide-react'
+import { Search, RefreshCw, UserPlus, Edit3, MessageCircle, FileText, Check, ClipboardList, FolderClock, NotepadText, Clock, Phone, Calendar, ArrowLeft, Zap, Scissors } from 'lucide-react'
 import ModalNuevoTurnoRecepcion from './components/ModalNuevoTurnoRecepcion'
 import ModalAnamnesisRecepcion from './components/ModalAnamnesisRecepcion'
 import ModalHistorialCliente from './components/ModalHistorialCliente'
@@ -17,6 +17,9 @@ export default function RecepcionPage() {
     new Date().toISOString().split('T')[0]
   )
   const [busqueda, setBusqueda] = useState<string>('')
+
+  // Solapa activa: 'laser' | 'general'
+  const [tipoServicioTab, setTipoServicioTab] = useState<'laser' | 'general'>('laser')
   
   // Filtro de Estado activo desde las tarjetas superiores: 'todos' | 'espera' | 'gabinete' | 'completados'
   const [filtroEstado, setFiltroEstado] = useState<string>('todos')
@@ -148,8 +151,14 @@ export default function RecepcionPage() {
     }
   }
 
-  const turnosFiltrados = useMemo(() => {
+const turnosFiltrados = useMemo(() => {
     return turnos.filter((t) => {
+      // 0. Filtro por solapa de tipo de servicio (Láser vs General)
+      const tipoServicioReserva = t.servicio_tipo || 'laser'
+      if (tipoServicioReserva !== tipoServicioTab) {
+        return false
+      }
+
       // 1. Filtro por búsqueda de texto
       if (busqueda.trim()) {
         const q = busqueda.toLowerCase()
@@ -174,7 +183,7 @@ export default function RecepcionPage() {
 
       return true // 'todos'
     })
-  }, [turnos, busqueda, filtroEstado])
+  }, [turnos, busqueda, filtroEstado, tipoServicioTab])
 
   const kpis = useMemo(() => {
     return {
@@ -332,6 +341,36 @@ export default function RecepcionPage() {
 
         {/* LISTA DE TURNOS */}
         <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-700/80 rounded-2xl shadow-xl p-6 space-y-4">
+          
+          {/* PESTAÑAS DE NAVEGACIÓN PROFESIONALES (LÁSER VS GENERALES) */}
+        <div className="grid grid-cols-2 gap-2 bg-slate-200/60 dark:bg-zinc-900 p-1.5 rounded-2xl border border-slate-200/80 dark:border-zinc-800">
+          <button
+            type="button"
+            onClick={() => setTipoServicioTab('laser')}
+            className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-2xs ${
+              tipoServicioTab === 'laser'
+                ? 'bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 shadow-sm'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+            }`}
+          >
+            <Zap className="w-4 h-4 text-amber-500 fill-amber-500/20" />
+            <span>Jornada Láser</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTipoServicioTab('general')}
+            className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer shadow-2xs ${
+              tipoServicioTab === 'general'
+                ? 'bg-white dark:bg-zinc-800 text-purple-600 dark:text-purple-400 shadow-sm'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+            }`}
+          >
+            <Scissors className="w-4 h-4 text-purple-500" />
+            <span>Servicios Generales</span>
+          </button>
+        </div>
+          
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
             <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100">Agenda del Día</h2>
             {filtroEstado !== 'todos' && (
@@ -378,14 +417,24 @@ export default function RecepcionPage() {
                          {t.estado || 'pendiente'}
                         </span>
 
-                        {/* DISTINTIVO DE TIPO DE SERVICIO */}
-                     <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider border ${
-                     t.servicio_tipo === 'general'
-                     ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950/80 dark:text-purple-300 dark:border-purple-800'
-                      : 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800'
+                        {/* DISTINTIVO DE TIPO DE SERVICIO CON LUCIDE ICONS */}
+                      <span className={`inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider border ${
+                        t.servicio_tipo === 'general'
+                          ? 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950/80 dark:text-purple-300 dark:border-purple-800'
+                          : 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800'
                       }`}>
-                      {t.servicio_tipo === 'general' ? '✂️ General' : '⚡ Láser'}
-                     </span>
+                        {t.servicio_tipo === 'general' ? (
+                          <>
+                            <Scissors className="w-3.5 h-3.5" />
+                            <span>General</span>
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="w-3.5 h-3.5 fill-amber-500/20" />
+                            <span>Láser</span>
+                          </>
+                        )}
+                      </span>
 
                       {/* BADGE ANAMNESIS (Solo visible para Láser) */}
                      {t.servicio_tipo !== 'general' && (
@@ -541,11 +590,13 @@ export default function RecepcionPage() {
       </div>
 
       {/* MODALES */}
+
       <ModalNuevoTurnoRecepcion
         isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setTurnoAEditar(null); }}
         onSuccess={fetchTurnos}
         turnoAEditar={turnoAEditar}
+        tipoServicioInicial={tipoServicioTab}
       />
 
       <ModalAnamnesisRecepcion
