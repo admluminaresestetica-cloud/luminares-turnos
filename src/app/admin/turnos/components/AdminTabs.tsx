@@ -32,12 +32,12 @@ export default function AdminTabs({ activeTab, onChange, totalTurnos }: AdminTab
                   key={tab.key}
                   onClick={() => onChange(tab.key)}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 active:scale-95 whitespace-nowrap select-none ${
-                    isActive
-                      ? 'bg-white text-gray-900 shadow-sm border border-gray-200/50 font-semibold dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-white/50 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/50'
-                  }`}
+                 isActive
+                  ? 'bg-white text-slate-900 shadow-2xs border border-slate-200/80 font-semibold dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700'
+                 : 'text-slate-500 hover:text-slate-900 hover:bg-white/60 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/50'
+                 }`}
                 >
-                  <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-rose-500 dark:text-rose-400' : 'text-gray-400 dark:text-zinc-500'}`} />
+                 <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-slate-900 dark:text-zinc-100' : 'text-slate-400 dark:text-zinc-500'}`} />
                   <span>{tab.label}</span>
                 </button>
               )
@@ -64,8 +64,8 @@ export default function AdminTabs({ activeTab, onChange, totalTurnos }: AdminTab
                 role="tab"
                 aria-selected={isActive}
                 className={`relative flex-1 flex flex-col items-center justify-center gap-1 min-h-[56px] py-2 transition-all duration-150 active:scale-95 select-none ${
-                  isActive ? 'text-rose-500 dark:text-rose-400' : 'text-gray-400 dark:text-zinc-500'
-                }`}
+  isActive ? 'text-slate-900 dark:text-zinc-100' : 'text-slate-400 dark:text-zinc-500'
+}`}
               >
                 <Icon
                   className={`w-5 h-5 ${isActive ? 'text-rose-500 dark:text-rose-400' : 'text-gray-400 dark:text-zinc-500'}`}
@@ -75,8 +75,8 @@ export default function AdminTabs({ activeTab, onChange, totalTurnos }: AdminTab
                   {tab.short}
                 </span>
                 {isActive && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-rose-500 dark:bg-rose-400" />
-                )}
+  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-slate-900 dark:bg-zinc-100" />
+)}
               </button>
             )
           })}

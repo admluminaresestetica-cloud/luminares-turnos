@@ -80,7 +80,7 @@ export async function crearBloqueosMasivos(input: CrearBloqueoInput): Promise<bo
     const fechaHoraInicio = new Date(year, month - 1, day, hours, minutes, 0).toISOString();
     const codigoRandom = Math.random().toString(36).substring(2, 7).toUpperCase();
 
-    return {
+return {
       codigo_unico: `VIP-${codigoRandom}`,
       cliente_nombre: nota.trim() || 'Horario Bloqueado',
       cliente_celular: '0000000000',
@@ -89,10 +89,9 @@ export async function crearBloqueosMasivos(input: CrearBloqueoInput): Promise<bo
       precio_total: 0,
       duracion_total: duracionMinutos,
       fecha_hora_inicio: fechaHoraInicio,
-      estado: 'bloqueado',
+      estado: 'confirmado', // <--- CAMBIADO A UN ESTADO PERMITIDO POR TU DB
       estado_asistencia: 'pendiente',
       modificado_por_admin: true,
-      fue_modificado: true,
     };
   });
 

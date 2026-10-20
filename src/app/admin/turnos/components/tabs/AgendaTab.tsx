@@ -10,12 +10,16 @@ import {
   CreditCard, 
   Trash2, 
   Calendar, 
-  Scissors, 
-  Phone, 
-  MessageCircle,
+  Heart, 
+  MessageCircle, 
   SlidersHorizontal,
-  Edit3,
-  Lock 
+  SquarePen,
+  Lock,
+  Check,
+  X,
+  HandCoins,
+  Zap,
+  Filter
 } from 'lucide-react'
 import ResumenAgenda from '@/app/admin/turnos/components/ResumenAgenda'
 import { Reserva, renderDetalle, renderFechaHora } from '@/app/admin/turnos/components/types'
@@ -139,7 +143,7 @@ export default function AgendaTab({
 
 
 return (
-    <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 overflow-hidden transition-all dark:bg-zinc-900 dark:border-zinc-800">
+    <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xs border border-gray-100 overflow-hidden transition-all dark:bg-zinc-900 dark:border-zinc-800">
       {/* Barra de filtros */}
       <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between dark:border-zinc-800">
         <div className="relative w-full lg:w-64">
@@ -149,70 +153,75 @@ return (
             placeholder="Buscar cliente, tel o código..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-3 sm:py-2.5 text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
+            className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-3 sm:py-2.5 text-sm outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <select
-            value={filtroFechaTipo}
-            onChange={(e) => setFiltroFechaTipo(e.target.value as any)}
-            className="border border-gray-200 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
-          >
-            <option value="todos">Todas las fechas</option>
-            <option value="hoy">Ver solo Hoy</option>
-            <option value="especifica">Elegir fecha...</option>
-          </select>
+<div className="flex flex-wrap items-center gap-2 sm:gap-3">
+  {/* Selector de Fechas */}
+  <div className="relative flex items-center">
+    <Calendar className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
+    <select
+      value={filtroFechaTipo}
+      onChange={(e) => setFiltroFechaTipo(e.target.value as any)}
+      className="appearance-none border border-slate-200/80 rounded-xl pl-8 pr-8 py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300 transition-all bg-white hover:bg-slate-50 text-slate-700 shadow-2xs cursor-pointer dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
+    >
+      <option value="todos">Todas las fechas</option>
+      <option value="hoy">Ver solo Hoy</option>
+      <option value="especifica">Elegir fecha...</option>
+    </select>
+  </div>
 
-          {filtroFechaTipo === 'especifica' && (
-            <input
-              type="date"
-              value={fechaEspecifica}
-              onChange={(e) => setFechaEspecifica(e.target.value)}
-              className="border border-gray-200 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
-            />
-          )}
+  {filtroFechaTipo === 'especifica' && (
+    <input
+      type="date"
+      value={fechaEspecifica}
+      onChange={(e) => setFechaEspecifica(e.target.value)}
+      className="border border-slate-200/80 rounded-xl px-3 py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300 transition-all bg-white text-slate-700 shadow-2xs dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
+    />
+  )}
 
-          <select
-            value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500/30 focus:border-rose-300 transition-all bg-gray-50/50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="pendiente_sena">⏳ Pendiente Seña</option>
-            <option value="confirmado">✅ Confirmado</option>
-            <option value="completado">🎉 Completado</option>
-            <option value="cancelado">❌ Cancelado</option>
-          </select>
+  {/* Selector de Estados */}
+  <div className="relative flex items-center">
+    <Filter className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
+    <select
+      value={filtroEstado}
+      onChange={(e) => setFiltroEstado(e.target.value)}
+      className="appearance-none border border-slate-200/80 rounded-xl pl-8 pr-8 py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300 transition-all bg-white hover:bg-slate-50 text-slate-700 shadow-2xs cursor-pointer dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
+    >
+      <option value="todos">Todos los estados</option>
+      <option value="pendiente_sena">Pendiente Seña</option>
+      <option value="confirmado">Confirmado</option>
+      <option value="completado">Completado</option>
+      <option value="cancelado">Cancelado</option>
+    </select>
+  </div>
 
-          <select
-            value={filtroMedioPago}
-            onChange={(e) => setFiltroMedioPago(e.target.value)}
-            className="border border-blue-200 bg-blue-50/50 text-blue-900 rounded-xl px-3 py-3 sm:py-2.5 text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/30 transition-all dark:bg-blue-950/60 dark:border-blue-900 dark:text-blue-300"
-          >
-            <option value="todos">Todos los medios de pago</option>
-            <option value="mercadopago">💳 Mercado Pago</option>
-            <option value="efectivo">💵 Efectivo</option>
-            <option value="whatsapp">💬 WhatsApp</option>
-          </select>
+  {/* Selector de Medio de Pago */}
+  <div className="relative flex items-center">
+    <CreditCard className="w-3.5 h-3.5 text-slate-400 absolute left-3 pointer-events-none" />
+    <select
+      value={filtroMedioPago}
+      onChange={(e) => setFiltroMedioPago(e.target.value)}
+      className="appearance-none border border-slate-200/80 rounded-xl pl-8 pr-8 py-2.5 text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-300 transition-all bg-white hover:bg-slate-50 text-slate-700 shadow-2xs cursor-pointer dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200"
+    >
+      <option value="todos">Todos los medios de pago</option>
+      <option value="mercadopago">Mercado Pago</option>
+      <option value="efectivo">Efectivo</option>
+      <option value="whatsapp">WhatsApp</option>
+    </select>
+  </div>
 
-          <button
-            type="button"
-            onClick={() => setModalBloqueosAbierto(true)}
-            className="min-h-[44px] px-4 py-3 sm:py-2.5 text-xs sm:text-sm bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95 select-none cursor-pointer"
-          >
-            <Lock className="w-4 h-4" />
-            Bloquear Slots / VIP
-          </button>
+  {/* Botón Bloquear Slots / VIP (Estilo refinado y minimalista) */}
+  <button
+    type="button"
+    onClick={() => setModalBloqueosAbierto(true)}
+    className="px-3.5 py-2.5 text-xs sm:text-sm bg-amber-500/10 hover:bg-amber-500/15 text-amber-800 border border-amber-300/60 rounded-xl font-semibold transition-all shadow-2xs flex items-center gap-1.5 active:scale-95 select-none cursor-pointer dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300"
+  >
+    <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
 
-          <button
-            onClick={onNuevoTurno}
-            className="min-h-[44px] px-4 py-3 sm:py-2.5 text-xs sm:text-sm bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-sm flex items-center gap-1.5 active:scale-95 select-none dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Nuevo Turno
-          </button>
-        </div>
+  </button>
+</div>
       </div>
 
       <ResumenAgenda turnos={turnosAgendaResumen} esFechaPasada={esFechaAgendaPasada} />
@@ -230,7 +239,6 @@ return (
         </div>
       ) : (
         <div className="p-4 sm:p-6">
-          {/* LISTA DE TARJETAS FLOTANTES MODERNAS */}
           <div className="flex flex-col gap-3.5">
             {turnosFinales.map((t) => {
               const { iniciales, colorClass } = getAvatarInfo(t.cliente_nombre)
@@ -242,50 +250,54 @@ return (
                 : t.detalle_reserva || {}
               
               const fueModificado = (t as any).modificado_por_admin || detalle.hubo_cambios || (detalle.swaps && Object.keys(detalle.swaps).length > 0)
-
-              // Identificar si es un Servicio General para personalizar colores
               const esGeneral = t.servicio_tipo === 'general'
+
+              const fechaObj = t.fecha_hora_inicio ? new Date(t.fecha_hora_inicio) : null
+              const mesStr = fechaObj ? fechaObj.toLocaleDateString('es-AR', { month: 'short' }).replace('.', '').toUpperCase() : 'FECHA'
+              const diaStr = fechaObj ? fechaObj.getDate() : '--'
 
               return (
                 <div
                   key={t.id}
-                  className={`bg-white dark:bg-zinc-800/80 border rounded-2xl p-4 sm:p-5 shadow-2xs hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                  className={`bg-white dark:bg-zinc-900 border rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                     esGeneral 
-                      ? 'border-purple-200/80 dark:border-purple-900/50 bg-gradient-to-r from-purple-50/30 to-transparent dark:from-purple-950/20' 
-                      : 'border-gray-100 dark:border-zinc-700/60'
+                      ? 'border-purple-200/80 dark:border-purple-900/50 bg-gradient-to-r from-purple-50/20 to-transparent dark:from-purple-950/10' 
+                      : 'border-slate-200/80 dark:border-zinc-800'
                   }`}
                 >
-                  {/* IZQUIERDA: Avatar con iniciales, Nombre, Celular, Fecha y Zonas */}
-                  <div className="flex items-start sm:items-center gap-3.5 min-w-0">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${colorClass}`}>
-                      {iniciales}
+                  {/* IZQUIERDA: Bloque de Fecha Tipo Calendario + Información del Turno */}
+                  <div className="flex items-start sm:items-center gap-4 min-w-0 flex-1">
+                    
+                    {/* Tarjeta Visual de Fecha (Mes + Día) */}
+                    <div className="w-13 h-13 sm:w-14 sm:h-14 bg-slate-50 dark:bg-zinc-800/80 rounded-2xl border border-slate-200/60 dark:border-zinc-700/50 flex flex-col items-center justify-center shrink-0 shadow-2xs select-none">
+                      <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase leading-none">
+                        {mesStr}
+                      </span>
+                      <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-zinc-100 leading-none mt-1">
+                        {diaStr}
+                      </span>
                     </div>
 
-                    <div className="flex flex-col min-w-0 gap-1">
+                    {/* Información y Jerarquía Tipográfica */}
+                    <div className="flex flex-col min-w-0 gap-1 flex-1">
+                      
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md dark:bg-zinc-700 dark:text-zinc-400">
+                        <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
                           #{t.codigo_unico || '-'}
                         </span>
 
-                        {/* Distinctivo de Tipo de Servicio */}
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider ${
-                          esGeneral
-                            ? 'bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800'
-                            : 'bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800'
-                        }`}>
-                          {esGeneral ? '✂️ General' : '⚡ Láser'}
-                        </span>
+                        {/* Distintivo de Tipo de Servicio (Sin fondo, texto sutil) */}
+<span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-zinc-400">
+  {esGeneral ? <Heart className="w-3 h-3 text-slate-400" /> : <Zap className="w-3 h-3 text-amber-500" />}
+  <span>{esGeneral ? 'General' : 'Láser'}</span>
+</span>
 
-                        <h4 className="text-sm font-bold text-gray-900 dark:text-zinc-100 truncate">
-                          {t.cliente_nombre || 'Sin nombre'}
-                        </h4>
-
-                        {fueModificado && (
-                          <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-md text-[10px] font-semibold dark:bg-purple-950/60 dark:border-purple-900 dark:text-purple-300">
-                            <SlidersHorizontal className="w-2.5 h-2.5" />
-                            <span>Modificado</span>
-                          </span>
-                        )}
+{fueModificado && (
+  <span className="inline-flex items-center gap-1 text-[10px] text-slate-400 dark:text-zinc-500">
+    <SlidersHorizontal className="w-2.5 h-2.5" />
+    <span>Modificado</span>
+  </span>
+)}
 
                         {t.codigo_referido_usado && (
                           <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-[10px] font-semibold dark:bg-purple-950/60 dark:border-purple-900 dark:text-purple-300">
@@ -295,115 +307,121 @@ return (
                         )}
                       </div>
 
-                      {/* Teléfono y Fecha */}
-                      <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-zinc-400 flex-wrap">
-                        {t.cliente_celular && (
-                          <span className="flex items-center gap-1 font-mono">
-                            <Phone className="w-3 h-3 text-gray-400" />
-                            {t.cliente_celular}
-                          </span>
-                        )}
-                        <span className="text-gray-300 dark:text-zinc-600">•</span>
-                        <span className="flex items-center gap-1 font-medium text-gray-700 dark:text-zinc-300">
-                          <Calendar className="w-3.5 h-3.5 text-rose-500" />
+                      <h3 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200 capitalize tracking-normal truncate">
+                     {detalleTexto || 'Turno agendado'}
+                      </h3>
+
+                      <div className="flex items-center gap-2.5 text-xs text-slate-500 dark:text-zinc-400 flex-wrap">
+                        <span className="flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400">
+                          <Calendar className="w-3.5 h-3.5" />
                           {renderFechaHora(t.fecha_hora_inicio)}
                         </span>
-                      </div>
-
-                      {/* Detalle y Monto */}
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg font-medium max-w-md truncate ${
-                          esGeneral
-                            ? 'bg-purple-50 text-purple-900 border border-purple-100 dark:bg-purple-950/40 dark:text-purple-200 dark:border-purple-900'
-                            : 'bg-gray-100 text-gray-700 dark:bg-zinc-900 dark:text-zinc-300'
-                        }`} title={detalleTexto}>
-                          <Scissors className={`w-3 h-3 shrink-0 ${esGeneral ? 'text-purple-600' : 'text-rose-500'}`} />
-                          {detalleTexto}
+                        
+                        <span className="text-slate-300 dark:text-zinc-600">•</span>
+                        
+                        <span className="font-medium text-slate-800 dark:text-zinc-200">
+                          {t.cliente_nombre || 'Sin nombre'}
                         </span>
-                        <span className="text-xs font-extrabold text-gray-900 dark:text-zinc-100 ml-1">
-                          Monto: ${(Number(t.precio_total) || 0).toLocaleString('es-AR')}
+
+                        {t.cliente_celular && (
+                          <>
+                            <span className="text-slate-300 dark:text-zinc-600">•</span>
+                            <span className="flex items-center gap-1 font-mono text-slate-500">
+                              <MessageCircle className="w-3 h-3 text-slate-400" />
+                              {t.cliente_celular}
+                            </span>
+                          </>
+                        )}
+
+                        <span className="text-slate-300 dark:text-zinc-600">•</span>
+
+                        <span className="font-extrabold text-slate-900 dark:text-zinc-100">
+                          ${(Number(t.precio_total) || 0).toLocaleString('es-AR')}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* DERECHA: Estado, Medio de pago y Botones */}
-                  <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t border-gray-100 dark:border-zinc-700/50 md:border-t-0 shrink-0 flex-wrap">
+                  {/* DERECHA: Estado, Medio de Pago y Barra Minimalista de Iconos */}
+                  <div className="flex items-center justify-between md:justify-end gap-3 pt-3 md:pt-0 border-t border-slate-100 dark:border-zinc-800 md:border-t-0 shrink-0 flex-wrap">
                     <div className="flex flex-col items-start md:items-end gap-1">
                       <span
-                        className={`px-2.5 py-1 rounded-full text-[11px] font-bold capitalize ${
+                        className={`px-2.5 py-1 rounded-full text-[11px] font-medium capitalize ${
                           t.estado === 'confirmado'
-                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/80 dark:text-emerald-300'
                             : t.estado === 'completado'
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/80 dark:text-blue-300'
                             : t.estado === 'cancelado'
-                            ? 'bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300'
-                            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/80 dark:text-yellow-300'
+                            ? 'bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/80 dark:text-rose-300'
+                            : 'bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/80 dark:text-amber-300'
                         }`}
                       >
                         {t.estado || 'pendiente'}
                       </span>
 
                       {(t.medio_pago || t.tipo_pago_elegido) && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md capitalize dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 bg-slate-50 border border-slate-200/80 px-2 py-0.5 rounded-md capitalize dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400">
                           <CreditCard className="w-2.5 h-2.5" />
                           {t.medio_pago || t.tipo_pago_elegido}
                         </span>
                       )}
                     </div>
 
-                    {/* Botones de acción completos */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="flex items-center gap-1 bg-slate-50 dark:bg-zinc-800/80 p-1 rounded-xl border border-slate-200/60 dark:border-zinc-700/50">
                       {numCelularLimpio && (
                         <a
                           href={`https://wa.me/${numCelularLimpio}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1.5 rounded-xl font-bold hover:bg-emerald-100 transition-all flex items-center gap-1 dark:bg-emerald-950/60 dark:text-emerald-300"
+                          className="p-2 text-emerald-600 hover:bg-emerald-100/60 dark:hover:bg-emerald-950/50 rounded-lg transition-all"
+                          title="Enviar WhatsApp"
                         >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          WhatsApp
+                          <MessageCircle className="w-4 h-4" />
                         </a>
                       )}
 
                       <button
                         onClick={() => onEditarTurno(t)}
-                        className="text-xs bg-gray-100 text-gray-800 px-3 py-1.5 rounded-xl font-bold hover:bg-gray-200 transition-all active:scale-95 dark:bg-zinc-700 dark:text-zinc-200"
+                        className="p-2 text-slate-600 hover:bg-slate-200/60 dark:text-zinc-300 dark:hover:bg-zinc-700 rounded-lg transition-all"
+                        title="Editar Turno"
                       >
-                        Editar
+                        <SquarePen className="w-4 h-4" />
                       </button>
 
                       {t.estado !== 'confirmado' && t.estado !== 'completado' && (
                         <button
                           onClick={() => onActualizarEstado(t.id, 'confirmado')}
-                          className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl font-bold hover:bg-blue-100 transition-all active:scale-95 dark:bg-blue-950/60 dark:text-blue-400"
+                          className="p-2 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-950/50 rounded-lg transition-all"
+                          title="Confirmar"
                         >
-                          Confirmar
+                          <Check className="w-4 h-4" />
                         </button>
                       )}
 
                       {t.estado !== 'completado' && (
                         <button
                           onClick={() => onActualizarEstado(t.id, 'completado')}
-                          className="text-xs bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl font-bold hover:bg-emerald-100 transition-all active:scale-95 dark:bg-emerald-950/60 dark:text-emerald-400"
+                          className="p-2 text-emerald-600 hover:bg-emerald-100/60 dark:hover:bg-emerald-950/50 rounded-lg transition-all"
+                          title="Completar"
                         >
-                          Completar
+                          <HandCoins className="w-4 h-4" />
                         </button>
                       )}
 
                       {t.estado !== 'cancelado' && (
                         <button
                           onClick={() => onActualizarEstado(t.id, 'cancelado')}
-                          className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-xl font-bold hover:bg-red-100 transition-all active:scale-95 dark:bg-red-950/60 dark:text-red-400"
+                          className="p-2 text-orange-600 hover:bg-orange-100/60 dark:hover:bg-orange-950/50 rounded-lg transition-all"
+                          title="Cancelar"
                         >
-                          Cancelar
+                          <X className="w-4 h-4" />
                         </button>
                       )}
 
                       <button
                         onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all active:scale-95 dark:text-zinc-500 dark:hover:text-red-400 dark:hover:bg-red-950/60"
-                        title="Eliminar reserva permanentemente"
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition-all"
+                        title="Eliminar reserva"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

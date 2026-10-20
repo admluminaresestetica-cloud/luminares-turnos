@@ -60,16 +60,16 @@ export default function AdminHeader({
               alt="Luminares Logo"
               className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl object-cover ring-1 ring-slate-200/80 dark:ring-zinc-800 transition-transform duration-300 hover:scale-105"
             />
-          ) : (
-            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-purple-950/20 transition-transform duration-300 hover:scale-105">
-              L
-            </div>
-          )}
+             ) : (
+             <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-slate-900 dark:bg-zinc-100 flex items-center justify-center text-white dark:text-zinc-900 font-bold text-base shadow-2xs transition-transform duration-300 hover:scale-105 select-none">
+             L
+             </div>
+            )}
 
           <div className="min-w-0">
             <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-zinc-100 tracking-tight flex items-center gap-2">
               <span className="truncate">Luminares</span>
-              <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200/60 dark:border-purple-800/40 whitespace-nowrap">
+              <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-700 whitespace-nowrap">
                 Panel
               </span>
             </h1>
