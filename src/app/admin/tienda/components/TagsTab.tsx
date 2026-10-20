@@ -59,7 +59,8 @@ export default function TagsTab() {
       // 1. Si hay una imagen seleccionada, subirla al bucket 'tags-images'
       if (imagenFile) {
         const fileExt = imagenFile.name.split('.').pop();
-        const fileName = `tag-${Date.now()}-${Math.random().toString(36.substring(2, 7))}.${fileExt}`;
+        const randomStr = Math.random().toString(36).substring(2, 7);
+        const fileName = `tag-${Date.now()}-${randomStr}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from('tags-images')
