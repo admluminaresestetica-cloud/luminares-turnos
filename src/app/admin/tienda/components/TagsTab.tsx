@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Plus, Trash2, Tag, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Trash2, Tag, CheckCircle2, XCircle, Image as ImageIcon, Upload } from 'lucide-react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -14,6 +14,8 @@ export default function TagsTab() {
   const [nombre, setNombre] = useState('');
   const [slug, setSlug] = useState('');
   const [orden, setOrden] = useState('0');
+  const [imagenFile, setImagenFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
 
   // Cargar tags desde Supabase
@@ -36,31 +38,76 @@ export default function TagsTab() {
     fetchTags();
   }, []);
 
-  // Crear un nuevo tag
+  // Manejar selección de imagen
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImagenFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  // Crear un nuevo tag con imagen opcional
   const handleCrearTag = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nombre.trim() || !slug.trim()) return;
 
     setGuardando(true);
-    const { error } = await supabase.from('tags_busqueda').insert([
-      {
-        nombre: nombre.trim(),
-        slug: slug.trim().toLowerCase(),
-        orden: parseInt(orden) || 0,
-        activo: true,
-      },
-    ]);
+    let publicImageUrl = null;
 
-    if (error) {
-      console.error('Error al crear tag:', error);
-      alert('Hubo un error al crear el tag');
-    } else {
-      setNombre('');
-      setSlug('');
-      setOrden('0');
-      fetchTags();
+    try {
+      // 1. Si hay una imagen seleccionada, subirla al bucket 'tags-images'
+      if (imagenFile) {
+        const fileExt = imagenFile.name.split('.').pop();
+        const fileName = `tag-${Date.now()}-${Math.random().toString(36.substring(2, 7))}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('tags-images')
+          .upload(fileName, imagenFile);
+
+        if (uploadError) {
+          console.error('Error al subir imagen:', uploadError);
+          alert('Hubo un error al subir la imagen del tag');
+          setGuardando(false);
+          return;
+        }
+
+        // Obtener URL pública de la imagen
+        const { data: urlData } = supabase.storage
+          .from('tags-images')
+          .getPublicUrl(fileName);
+
+        publicImageUrl = urlData.publicUrl;
+      }
+
+      // 2. Insertar el registro en la tabla 'tags_busqueda'
+      const { error } = await supabase.from('tags_busqueda').insert([
+        {
+          nombre: nombre.trim(),
+          slug: slug.trim().toLowerCase(),
+          orden: parseInt(orden) || 0,
+          activo: true,
+          imagen_url: publicImageUrl,
+        },
+      ]);
+
+      if (error) {
+        console.error('Error al crear tag:', error);
+        alert('Hubo un error al guardar el tag en la base de datos');
+      } else {
+        // Limpiar formulario
+        setNombre('');
+        setSlug('');
+        setOrden('0');
+        setImagenFile(null);
+        setPreviewUrl(null);
+        fetchTags();
+      }
+    } catch (err) {
+      console.error('Error inesperado:', err);
+    } finally {
+      setGuardando(false);
     }
-    setGuardando(false);
   };
 
   // Alternar estado activo/inactivo
@@ -91,14 +138,14 @@ export default function TagsTab() {
       <div>
         <h2 className="text-base font-bold text-gray-900 dark:text-zinc-100 sm:text-lg">Tags de Búsqueda Inteligente</h2>
         <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
-          Administrá los accesos directos que aparecen arriba en la tienda para filtrar productos al instante.
+          Administrá los accesos directos y categorías visuales que aparecen arriba en la tienda.
         </p>
       </div>
 
       {/* Formulario para agregar nuevo Tag */}
       <form onSubmit={handleCrearTag} className="space-y-4 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs sm:rounded-3xl sm:p-6">
         <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-zinc-100">
-          <Tag className="h-4 w-4 text-[#0E6E55] dark:text-emerald-400" /> Agregar Nuevo Tag
+          <Tag className="h-4 w-4 text-[#0E6E55] dark:text-emerald-400" /> Agregar Nuevo Tag o Categoría Visual
         </h3>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -108,7 +155,7 @@ export default function TagsTab() {
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ej: Nuevos Ingresos"
+              placeholder="Ej: Huggies o Nuevos"
               className="h-11 w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 px-3.5 text-xs font-medium text-gray-900 dark:text-zinc-100 outline-none transition-colors focus:border-[#0E6E55]"
               required
             />
@@ -120,7 +167,7 @@ export default function TagsTab() {
               type="text"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              placeholder="Ej: nuevo"
+              placeholder="Ej: huggies"
               className="h-11 w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 px-3.5 text-xs font-medium text-gray-900 dark:text-zinc-100 outline-none transition-colors focus:border-[#0E6E55]"
               required
             />
@@ -134,6 +181,25 @@ export default function TagsTab() {
               onChange={(e) => setOrden(e.target.value)}
               className="h-11 w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 px-3.5 text-xs font-bold text-gray-900 dark:text-zinc-100 outline-none transition-colors focus:border-[#0E6E55]"
             />
+          </div>
+        </div>
+
+        {/* Selector de Imagen Opcional */}
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-zinc-300">
+            Imagen / Icono representativo (Opcional)
+          </label>
+          <div className="flex items-center gap-4">
+            <label className="flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-dashed border-gray-300 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 px-4 text-xs font-semibold text-gray-600 dark:text-zinc-300 hover:border-[#0E6E55] transition-colors">
+              <Upload className="h-4 w-4" />
+              <span>{imagenFile ? 'Cambiar imagen' : 'Seleccionar archivo'}</span>
+              <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+            </label>
+            {previewUrl && (
+              <div className="relative h-11 w-11 overflow-hidden rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800">
+                <img src={previewUrl} alt="Vista previa" className="h-full w-full object-cover" />
+              </div>
+            )}
           </div>
         </div>
 
@@ -164,6 +230,16 @@ export default function TagsTab() {
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 dark:bg-zinc-800 text-xs font-black text-gray-700 dark:text-zinc-300">
                     {tag.orden}
                   </span>
+
+                  {/* Miniatura de imagen si la tiene */}
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800">
+                    {tag.imagen_url ? (
+                      <img src={tag.imagen_url} alt={tag.nombre} className="h-full w-full object-cover" />
+                    ) : (
+                      <ImageIcon className="h-4 w-4 text-gray-400 dark:text-zinc-500" />
+                    )}
+                  </div>
+
                   <div className="min-w-0">
                     <h4 className="truncate text-xs font-bold text-gray-900 dark:text-zinc-100 sm:text-sm">{tag.nombre}</h4>
                     <span className="font-mono text-[11px] text-gray-400 dark:text-zinc-500">Filtro: {tag.slug}</span>
