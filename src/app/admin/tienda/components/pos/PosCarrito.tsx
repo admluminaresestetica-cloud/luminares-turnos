@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PosCartItem } from "./types";
-import { ShoppingBag, Trash2, Plus, Minus, ChevronUp, ChevronDown } from "lucide-react";
+import { ShoppingCart, Trash2, Plus, Minus, ChevronUp, ChevronDown } from "lucide-react";
 
 interface PosCarritoProps {
   carrito: PosCartItem[];
@@ -40,7 +40,7 @@ export default function PosCarrito({
               className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
             >
               <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0E6E55] text-white font-bold">
-                <ShoppingBag className="h-5 w-5" />
+                <ShoppingCart className="h-5 w-5" />
                 {totalItems > 0 && (
                   <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
                     {totalItems}
@@ -112,7 +112,7 @@ export default function PosCarrito({
         <div>
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-3">
             <h2 className="text-base font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
-              <ShoppingBag className="h-5 w-5 text-[#0E6E55]" />
+              <ShoppingCart className="h-5 w-5 text-[#0E6E55]" />
               Orden Actual
             </h2>
             {carrito.length > 0 && (

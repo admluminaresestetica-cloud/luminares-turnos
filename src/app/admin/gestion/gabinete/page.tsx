@@ -109,7 +109,7 @@ export default function GabinetePage() {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
-                Gabinete - Control de Tratamientos
+                Gabinete - Control 
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
                 Registro técnico de disparos, potencias e historial clínico

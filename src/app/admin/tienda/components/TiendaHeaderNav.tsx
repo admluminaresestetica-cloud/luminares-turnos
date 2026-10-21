@@ -87,7 +87,6 @@ export default function TiendaHeaderNav({
             className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/80 px-3 text-xs font-bold text-slate-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 sm:h-10 sm:px-4 sm:text-sm"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Menú Admin</span>
           </Link>
         </div>
       </header>

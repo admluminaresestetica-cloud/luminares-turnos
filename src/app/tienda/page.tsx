@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { ShoppingBag, ArrowLeft, Tag as TagIcon, X } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Tag as TagIcon, X } from "lucide-react";
 import CarritoDrawer from "@/components/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
 import BeneficiosTienda from "./components/BeneficiosTienda";
@@ -246,7 +246,6 @@ function TiendaContenido() {
               title="Volver a la selección principal"
             >
               <ArrowLeft className="w-4 h-4 stroke-[2.2]" />
-              <span className="hidden md:inline">Inicio</span>
             </Link>
 
             <Link
@@ -285,7 +284,7 @@ function TiendaContenido() {
               onClick={() => setModalAbierto(true)}
               className="relative flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-800 px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-800 dark:text-zinc-200 transition-all duration-200 hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer shadow-xs"
             >
-              <ShoppingBag className="h-4 w-4 shrink-0 text-slate-700 dark:text-zinc-300" strokeWidth={2.2} />
+              <ShoppingCart className="h-4 w-4 shrink-0 text-slate-700 dark:text-zinc-300" strokeWidth={2.2} />
               <span className="hidden sm:inline">Mi Carrito</span>
 
               {totalItems > 0 && (

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useCarrito } from "@/context/CarritoContext";
 import { useConfig } from "@/context/ConfigContext";
 import { supabase } from "@/lib/supabase";
-import { X, Trash2, ShoppingBag, ArrowRight, Lock, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { X, Trash2, ShoppingCart, ArrowRight, Lock, ShieldCheck, CheckCircle2 } from "lucide-react";
 import FormularioEnvio from "./carrito/FormularioEnvio";
 
 interface CarritoDrawerProps {
@@ -309,7 +309,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           {/* Header */}
           <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border bg-muted/20">
             <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <ShoppingCart className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               {paso === "carrito" ? "Tu Carrito" : "Finalizar Compra"}
             </h2>
             <button
@@ -344,7 +344,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
           <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-5 pb-20 sm:pb-6 space-y-5">
             {carritoSeguro.length === 0 ? (
               <div className="text-center py-12 space-y-4">
-                <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground/50" />
+                <ShoppingCart className="w-16 h-16 mx-auto text-muted-foreground/50" />
                 <p className="text-muted-foreground font-medium">El carrito está vacío</p>
               </div>
             ) : paso === "carrito" ? (
