@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Reserva, datetimeLocalToIso, isoToDatetimeLocal } from '@/app/admin/turnos/components/types'
 import { ServicioLaser, PromoLaser } from '@/lib/types'
-import { X, Clock, DollarSign, User, Phone, Calendar, Sparkles, Layers, ArrowRightLeft } from 'lucide-react'
+import { X, User, Phone, Calendar, Layers, ClipboardList, ArrowRightLeft, Zap, Heart } from "lucide-react";
 import { 
   getZonaById, 
   getZonasPromoResueltas, 
@@ -259,12 +259,13 @@ export default function ModalNuevoTurnoRecepcion({
     ? getZonasSwapDisponibles(swapTargetZona, serviciosLaser, idsOcupadosSwap)
     : []
 
-  return (
+return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 w-full max-w-lg rounded-2xl shadow-xl overflow-hidden my-8 text-slate-900 dark:text-zinc-100">
+      {/* Contenedor principal con altura máxima y diseño flex para evitar cortes arriba */}
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 w-full max-w-lg rounded-2xl shadow-xl flex flex-col max-h-[90vh] text-slate-900 dark:text-zinc-100 my-auto overflow-hidden">
         
         {/* HEADER */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/40">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/40 shrink-0">
           <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
             {turnoAEditar ? 'Editar Turno' : 'Nuevo Turno - Mostrador'}
           </h2>
@@ -276,9 +277,10 @@ export default function ModalNuevoTurnoRecepcion({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
+        {/* FORMULARIO CON SCROLL INTERNO */}
+        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs overflow-y-auto flex-1">
 
-{/* 📍 AQUÍ COLOCAS EL SELECTOR PRINCIPAL */}
+          {/* SELECTOR PRINCIPAL (Láser / General con iconos de Lucide) */}
           <div className="grid grid-cols-2 gap-2 p-1 bg-slate-200/60 dark:bg-zinc-800 rounded-xl">
             <button
               type="button"
@@ -289,18 +291,20 @@ export default function ModalNuevoTurnoRecepcion({
                   : 'text-slate-600 dark:text-zinc-400'
               }`}
             >
-              <span>⚡ Jornada Láser</span>
+              <Zap className="w-4 h-4 text-amber-500 shrink-0" />
+              <span>Jornada Láser</span>
             </button>
             <button
               type="button"
               onClick={() => setTipoServicioActivo('general')}
               className={`py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 tipoServicioActivo === 'general'
-                  ? 'bg-white dark:bg-zinc-900 text-purple-600 dark:text-purple-400 shadow-sm'
+                  ? 'bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 shadow-sm'
                   : 'text-slate-600 dark:text-zinc-400'
               }`}
             >
-              <span>✂️ Servicio General</span>
+              <Heart className="w-4 h-4 text-rose-500 fill-rose-500 shrink-0" />
+              <span>Servicio General</span>
             </button>
           </div>
 
@@ -380,7 +384,7 @@ export default function ModalNuevoTurnoRecepcion({
                       : 'text-slate-500 hover:text-slate-800 dark:hover:text-zinc-300'
                   }`}
                 >
-                  <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                  <ClipboardList className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
                   <span>Promos y Combos</span>
                 </button>
               </div>
@@ -410,8 +414,9 @@ export default function ModalNuevoTurnoRecepcion({
           )}
 
           {tipoServicioActivo === 'general' && (
-            <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
-              ✂️ Servicios Generales Disponibles
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-zinc-300">
+              <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 shrink-0" />
+              Servicios Generales Disponibles
             </label>
           )}
 
@@ -532,7 +537,7 @@ export default function ModalNuevoTurnoRecepcion({
             </div>
           )}
 
-          <div className="bg-slate-50 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 space-y-1">
+          <div className="bg-slate-50 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-slate-200/80 dark:border-zinc-800 space-y-1 shrink-0">
             <div className="flex justify-between text-xs text-slate-500 dark:text-zinc-400">
               <span>Duración estimada:</span>
               <span className="font-semibold text-slate-700 dark:text-zinc-300">{duracionTotal} minutos</span>
@@ -548,7 +553,7 @@ export default function ModalNuevoTurnoRecepcion({
             )}
           </div>
 
-          <div className="flex gap-2.5 pt-2">
+          <div className="flex gap-2.5 pt-2 shrink-0">
             <button
               type="button"
               onClick={onClose}

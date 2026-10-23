@@ -17,12 +17,12 @@ export default function AdminTabs({ activeTab, onChange, totalTurnos }: AdminTab
     { key: 'agenda' as TabKey, short: `Agenda (${totalTurnos})`, label: `Agenda de Turnos (${totalTurnos})`, icon: Calendar },
   ]
 
-  return (
+return (
     <>
-      {/* ===== DESKTOP (>= sm): barra de pestañas superior, cómoda para mouse ===== */}
+      {/* ===== DESKTOP (>= sm): barra de pestañas superior translúcida fintech ===== */}
       <div className="hidden sm:block relative mb-6">
-        <div className="bg-gray-100/80 dark:bg-zinc-900/80 p-1.5 rounded-2xl overflow-x-auto border border-gray-200/60 dark:border-zinc-800 shadow-inner [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-colors">
-          <div className="flex gap-1 min-w-max">
+        <div className="bg-white/10 backdrop-blur-md p-1.5 rounded-2xl overflow-x-auto border border-white/20 shadow-inner [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-colors">
+          <div className="flex gap-1.5 min-w-max">
             {tabs.map((tab) => {
               const Icon = tab.icon
               const isActive = activeTab === tab.key
@@ -30,14 +30,15 @@ export default function AdminTabs({ activeTab, onChange, totalTurnos }: AdminTab
               return (
                 <button
                   key={tab.key}
+                  type="button"
                   onClick={() => onChange(tab.key)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 active:scale-95 whitespace-nowrap select-none ${
-                 isActive
-                  ? 'bg-white text-slate-900 shadow-2xs border border-slate-200/80 font-semibold dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700'
-                 : 'text-slate-500 hover:text-slate-900 hover:bg-white/60 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-800/50'
-                 }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 active:scale-95 whitespace-nowrap select-none cursor-pointer ${
+                    isActive
+                      ? 'bg-white text-blue-700 shadow-md border border-white dark:bg-zinc-900 dark:text-blue-400 dark:border-zinc-800'
+                      : 'text-white/80 hover:text-white hover:bg-white/15'
+                  }`}
                 >
-                 <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-slate-900 dark:text-zinc-100' : 'text-slate-400 dark:text-zinc-500'}`} />
+                  <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-blue-700 dark:text-blue-400' : 'text-white/80'}`} />
                   <span>{tab.label}</span>
                 </button>
               )
@@ -50,7 +51,7 @@ export default function AdminTabs({ activeTab, onChange, totalTurnos }: AdminTab
       <nav
         role="tablist"
         aria-label="Navegación principal"
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-t border-gray-200/70 dark:border-zinc-800 pb-[env(safe-area-inset-bottom)]"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-zinc-800/80 pb-[env(safe-area-inset-bottom)] shadow-2xl"
       >
         <div className="flex items-stretch">
           {tabs.map((tab) => {
@@ -60,23 +61,24 @@ export default function AdminTabs({ activeTab, onChange, totalTurnos }: AdminTab
             return (
               <button
                 key={tab.key}
+                type="button"
                 onClick={() => onChange(tab.key)}
                 role="tab"
                 aria-selected={isActive}
-                className={`relative flex-1 flex flex-col items-center justify-center gap-1 min-h-[56px] py-2 transition-all duration-150 active:scale-95 select-none ${
-  isActive ? 'text-slate-900 dark:text-zinc-100' : 'text-slate-400 dark:text-zinc-500'
-}`}
+                className={`relative flex-1 flex flex-col items-center justify-center gap-1 min-h-[56px] py-2 transition-all duration-150 active:scale-95 select-none cursor-pointer ${
+                  isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-zinc-500'
+                }`}
               >
                 <Icon
-                  className={`w-5 h-5 ${isActive ? 'text-rose-500 dark:text-rose-400' : 'text-gray-400 dark:text-zinc-500'}`}
-                  strokeWidth={isActive ? 2.4 : 2}
+                  className={`w-5 h-5 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-zinc-500'}`}
+                  strokeWidth={isActive ? 2.5 : 2}
                 />
-                <span className={`text-[11px] leading-none ${isActive ? 'font-bold' : 'font-medium'}`}>
+                <span className={`text-[11px] leading-none ${isActive ? 'font-black' : 'font-semibold'}`}>
                   {tab.short}
                 </span>
                 {isActive && (
-  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-slate-900 dark:bg-zinc-100" />
-)}
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-blue-600 dark:bg-blue-400 shadow-xs" />
+                )}
               </button>
             )
           })}

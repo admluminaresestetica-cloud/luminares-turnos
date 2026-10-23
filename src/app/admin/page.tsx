@@ -138,51 +138,52 @@ export default function AdminHubPage() {
     },
   ];
 
-  return (
-    <div className="min-h-screen bg-slate-50/80 dark:bg-zinc-950 flex flex-col justify-center p-4 sm:p-8 select-none transition-colors duration-200 relative">
+ return (
+    <div className="min-h-screen bg-slate-100 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 font-sans transition-colors pb-12 flex flex-col">
 
-      {/* ENCABEZADO SUPERIOR */}
-      <header className="w-full max-w-lg mx-auto flex items-center justify-between pt-2 pb-4">
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-          <div>
-            <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-zinc-100 flex items-center gap-1.5">
-              Luminares
-              <span className="w-2 h-2 rounded-full bg-rose-500 inline-block animate-pulse" />
-            </h1>
-            <p className="text-[11px] sm:text-xs text-slate-400 dark:text-zinc-500 font-medium tracking-wide">
-              Centro de Gestión
-            </p>
+      {/* 🟦 HERO SECTION CON DEGRADADO AZUL FINTECH */}
+      <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 dark:from-blue-950 dark:via-blue-900 dark:to-zinc-900 pt-6 pb-20 px-4 sm:px-6 lg:px-8 text-white shadow-lg">
+        <header className="w-full max-w-2xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                Luminares
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block animate-pulse shadow-xs" />
+              </h1>
+              <p className="text-xs text-blue-100/80 font-medium tracking-wide mt-0.5">
+                Centro de Gestión
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* CONTENEDOR PARA LOS DOS BOTONES (Instalar y Salir) */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={dispararInstalacionAdmin}
-            type="button"
-            className="flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 bg-purple-50/80 dark:bg-purple-950/40 backdrop-blur-md border border-purple-200/80 dark:border-purple-900/50 hover:bg-purple-100 dark:hover:bg-purple-900/40 px-3.5 py-2 rounded-2xl shadow-xs transition-all active:scale-95 cursor-pointer"
-            title="Instalar App Admin"
-          >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Instalar App</span>
-          </button>
+          {/* CONTENEDOR PARA LOS DOS BOTONES (Instalar y Salir) */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={dispararInstalacionAdmin}
+              type="button"
+              className="flex items-center gap-1.5 text-xs font-bold text-white bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 px-3.5 py-2 rounded-2xl shadow-xs transition-all active:scale-95 cursor-pointer"
+              title="Instalar App Admin"
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Instalar App</span>
+            </button>
 
-          <button
-            onClick={handleLogout}
-            disabled={cerrandoSesion}
-            type="button"
-            className="flex items-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-rose-200/80 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 px-3.5 py-2 rounded-2xl shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>{cerrandoSesion ? 'Saliendo...' : 'Salir'}</span>
-          </button>
-        </div>
-      </header>
+            <button
+              onClick={handleLogout}
+              disabled={cerrandoSesion}
+              type="button"
+              className="flex items-center gap-1.5 text-xs font-bold text-rose-200 hover:text-white bg-rose-500/20 hover:bg-rose-500/30 backdrop-blur-md border border-rose-300/30 px-3.5 py-2 rounded-2xl shadow-xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>{cerrandoSesion ? 'Saliendo...' : 'Salir'}</span>
+            </button>
+          </div>
+        </header>
+      </div>
 
-
-      {/* GRILLA DE MÓDULOS */}
-      <main className="w-full max-w-lg mx-auto py-4">
+      {/* ⬜ GRILLA DE MÓDULOS (TARJETAS FLOTANTES) */}
+      <main className="w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 flex-1 pb-6">
         <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
           {modulos.map((modulo, index) => {
             const IconoComponente = modulo.icono;
@@ -193,35 +194,35 @@ export default function AdminHubPage() {
                 key={modulo.ruta}
                 href={modulo.ruta}
                 onClick={(e) => handleNavegacion(e, modulo.ruta, modulo.requierePin)}
-                className={`group relative flex flex-col justify-between p-4 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-zinc-800/80 transition-all duration-200 active:scale-95 ${
-                  modulo.cardBg
-                } ${esUltimoImpar ? 'col-span-2 sm:col-span-1 sm:col-start-1' : ''}`}
+                className={`group relative flex flex-col justify-between p-5 rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-200 active:scale-95 hover:-translate-y-1 ${
+                  esUltimoImpar ? 'col-span-2 sm:col-span-1 sm:col-start-1' : ''
+                }`}
               >
                 {/* Cabecera de la tarjeta: Icono + Badge PIN */}
-                <div className="flex items-start justify-between w-full mb-3">
+                <div className="flex items-start justify-between w-full mb-4">
                   <div
-                    className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105 shadow-md ${modulo.iconBg}`}
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-md ${modulo.iconBg}`}
                   >
-                    <IconoComponente className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2.2} />
+                    <IconoComponente className="w-6 h-6" strokeWidth={2.2} />
                   </div>
 
                   {modulo.requierePin ? (
-                    <span className="flex items-center gap-1 rounded-full border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/90 dark:bg-amber-950/70 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                    <span className="flex items-center gap-1 rounded-full border border-amber-200/80 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/70 px-2.5 py-1 text-[10px] font-extrabold text-amber-700 dark:text-amber-400 shadow-2xs">
                       <Lock className="w-2.5 h-2.5" /> PIN
                     </span>
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-slate-100/60 dark:bg-zinc-800/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />
+                    <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-2xs">
+                      <ChevronRight className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
                     </div>
                   )}
                 </div>
 
                 {/* Pie de la tarjeta: Título + Subtítulo */}
                 <div className="flex flex-col">
-                  <span className={`text-sm sm:text-base font-extrabold text-slate-800 dark:text-zinc-100 tracking-tight group-hover:translate-x-0.5 transition-transform ${modulo.accentColor}`}>
+                  <span className={`text-base font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight group-hover:translate-x-0.5 transition-transform ${modulo.accentColor}`}>
                     {modulo.titulo}
                   </span>
-                  <span className="text-[11px] font-medium text-slate-400 dark:text-zinc-500 leading-tight mt-0.5">
+                  <span className="text-xs font-medium text-slate-400 dark:text-zinc-500 leading-tight mt-1">
                     {modulo.subtitulo}
                   </span>
                 </div>

@@ -39,29 +39,32 @@ export default function AdminDashboard() {
     setTurnos: agenda.setTurnos
   })
 
-  return (
-    <div className="min-h-screen bg-slate-50/60 dark:bg-zinc-950 font-sans text-gray-900 dark:text-zinc-100 transition-colors">
+return (
+    <div className="min-h-screen bg-slate-100 dark:bg-zinc-950 font-sans text-gray-900 dark:text-zinc-100 transition-colors">
       
-      {/* Header Unificado con el Panel de Control, Refrescar y Nuevo Turno */}
-      <AdminHeader 
-        onLogout={handleLogout} 
-        onRefrescar={() => agenda.fetchTurnos && agenda.fetchTurnos()}
-        onNuevoTurno={nuevoTurno.abrirModalNuevoTurno}
-        cargandoRefresco={agenda.loading}
-      />
-
-      {/* pb-24 + safe-area en mobile: evita que la Bottom Navigation Bar tape el contenido */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-12">
-        
-        {/* NAVEGACIÓN POR PESTAÑAS */}
-        <AdminTabs
-          activeTab={activeTab}
-          onChange={setActiveTab}
-          totalTurnos={agenda.turnos.length}
-          totalGenerales={generales.serviciosGenerales.length}
+      {/* 🟦 HERO CONTINUO SUPERIOR CON DEGRADADO AZUL FINTECH */}
+      <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 dark:from-blue-950 dark:via-blue-900 dark:to-zinc-900 pb-20 shadow-lg">
+        {/* Header Unificado */}
+        <AdminHeader 
+          onLogout={handleLogout} 
+          onRefrescar={() => agenda.fetchTurnos && agenda.fetchTurnos()}
+          onNuevoTurno={nuevoTurno.abrirModalNuevoTurno}
+          cargandoRefresco={agenda.loading}
         />
 
-        {/* CONTENIDO DE PESTAÑAS */}
+        {/* NAVEGACIÓN POR PESTAÑAS DENTRO DEL BLOQUE AZUL */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 sm:pt-6">
+          <AdminTabs
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            totalTurnos={agenda.turnos.length}
+            totalGenerales={generales.serviciosGenerales.length}
+          />
+        </div>
+      </div>
+
+      {/* ⬜ CONTENIDO FLOTANTE (Sobresale por encima del degradado con -mt-12) */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 -mt-12 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-12">
         <div className="mt-4">
           {activeTab === 'overview' && (
             <OverviewTab

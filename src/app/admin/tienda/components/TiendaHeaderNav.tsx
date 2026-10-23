@@ -69,6 +69,12 @@ export default function TiendaHeaderNav({
       <header className="sticky top-0 z-30 border-b border-slate-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md px-4 py-3.5 sm:px-10 sm:py-4 transition-colors">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between">
           <div className="flex items-center gap-3">
+           <Link
+            href="/admin"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/80 px-3 text-xs font-bold text-slate-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 sm:h-10 sm:px-4 sm:text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-600/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 shadow-xs sm:h-11 sm:w-11">
               <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
             </span>
@@ -81,13 +87,6 @@ export default function TiendaHeaderNav({
               </h1>
             </div>
           </div>
-
-          <Link
-            href="/admin"
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/80 px-3 text-xs font-bold text-slate-700 dark:text-zinc-200 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 sm:h-10 sm:px-4 sm:text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
         </div>
       </header>
 

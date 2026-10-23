@@ -96,60 +96,69 @@ export default function GabinetePage() {
   const enEspera = useMemo(() => turnos.filter((t) => t.estado === 'en_espera' || t.estado === 'pendiente_sena' || t.estado === 'pendiente'), [turnos])
   const completados = useMemo(() => turnos.filter((t) => t.estado === 'completado'), [turnos])
 
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 p-4 sm:p-6 lg:p-8 text-slate-900 dark:text-zinc-100 font-sans">
+return (
+    <div className="min-h-screen bg-slate-100 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 font-sans transition-colors pb-12">
       <NotificacionesGabinete gabineteId="1" />
-      <div className="max-w-7xl mx-auto space-y-6">
-        
-        {/* HEADER PRINCIPAL */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-xs">
-          <div className="flex items-center gap-3.5">
-            <div className="p-3 bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 rounded-2xl border border-purple-200/60 dark:border-purple-800/40">
-              <Clipboard className="h-6 w-6" />
+      
+      {/* 🟦 HERO SECTION CON DEGRADADO AZUL FINTECH */}
+      <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 dark:from-blue-950 dark:via-blue-900 dark:to-zinc-900 pt-6 pb-20 px-4 sm:px-6 lg:px-8 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto space-y-5">
+          
+          {/* HEADER PRINCIPAL */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 bg-white/15 backdrop-blur-md border border-white/20 text-white rounded-2xl shadow-inner">
+                <Clipboard className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                  Gabinete · Control
+                </h1>
+                <p className="text-xs sm:text-sm text-blue-100/80 mt-0.5">
+                  Registro técnico de disparos, potencias e historial clínico
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
-                Gabinete - Control 
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-0.5">
-                Registro técnico de disparos, potencias e historial clínico
-              </p>
-            </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <input
+            <div className="flex flex-wrap items-center gap-3">
+              <input
               type="date"
               value={fechaSeleccionada}
               onChange={(e) => setFechaSeleccionada(e.target.value)}
-              className="bg-slate-50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 text-xs sm:text-sm rounded-xl px-3.5 py-2 font-medium text-slate-700 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-purple-400 dark:focus:ring-purple-600 transition-all"
-            />
-            <button
-              type="button"
-              onClick={fetchTurnosGabinete}
-              disabled={loading}
-              className="p-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-xl border border-slate-200 dark:border-zinc-700 transition-all active:scale-95 cursor-pointer"
-              title="Refrescar datos"
-            >
-              <RefreshCw className={`h-4 w-4 text-slate-600 dark:text-zinc-300 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+              className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-xs sm:text-sm rounded-2xl px-3.5 py-2 font-medium text-white focus:outline-none focus:ring-2 focus:ring-white/40 cursor-pointer [color-scheme:dark]"
+              />
+              <button
+                type="button"
+                onClick={fetchTurnosGabinete}
+                disabled={loading}
+                className="p-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-2xl border border-white/20 transition-all active:scale-95 cursor-pointer text-white"
+                title="Refrescar datos"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+
+            <div className="w-full lg:w-auto">
+              <RelojCronometroGabinete 
+                onTiempoActualizado={(seg) => setDuracionSegundos(seg)} 
+              />
+            </div>
           </div>
 
-          <div className="w-full lg:w-auto">
-            <RelojCronometroGabinete 
-              onTiempoActualizado={(seg) => setDuracionSegundos(seg)} 
-            />
-          </div>
         </div>
+      </div>
+
+      {/* ⬜ CONTENEDOR PRINCIPAL FLOTANTE */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 space-y-6">
 
         {/* SECCIÓN 1: PACIENTES EN GABINETE */}
-        <div className="bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-xs space-y-4">
+        <div className="bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-xl space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
             <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-              <Zap className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <Zap className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <span>En Atención Ahora ({enGabinete.length})</span>
             </h2>
-            <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+            <span className="text-xs font-bold px-3 py-1 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
               Listo para registrar
             </span>
           </div>
@@ -172,18 +181,18 @@ export default function GabinetePage() {
                 return (
                   <div
                     key={t.id}
-                    className="p-4 sm:p-5 rounded-xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/30 space-y-3.5 flex flex-col justify-between"
+                    className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/30 space-y-3.5 flex flex-col justify-between shadow-2xs hover:shadow-md transition-all"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-xs sm:text-sm bg-purple-600 text-white dark:bg-purple-500 px-3 py-1 rounded-xl shadow-2xs">
+                        <span className="font-bold text-xs sm:text-sm bg-blue-600 text-white dark:bg-blue-500 px-3 py-1 rounded-xl shadow-2xs">
                           {horaStr} hs
                         </span>
                         
                         <button
                           type="button"
                           onClick={() => abrirHistorial(t.cliente_celular || '', t.cliente_nombre || 'Cliente')}
-                          className="p-2 bg-slate-100 hover:bg-purple-50 dark:bg-zinc-800 dark:hover:bg-purple-950/50 text-slate-600 dark:text-zinc-300 hover:text-purple-600 dark:hover:text-purple-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border border-slate-200/60 dark:border-zinc-700/60"
+                          className="p-2 bg-white hover:bg-blue-50 dark:bg-zinc-800 dark:hover:bg-blue-950/50 text-slate-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer border border-slate-200/80 dark:border-zinc-700"
                           title="Ver Historial Clínico Completo"
                         >
                           <FolderClock className="h-4 w-4" />
@@ -191,11 +200,11 @@ export default function GabinetePage() {
                         </button>
                       </div>
 
-                      <div className="bg-white dark:bg-zinc-900 p-3.5 rounded-xl border border-slate-200/60 dark:border-zinc-800 space-y-1">
+                      <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-slate-200/80 dark:border-zinc-800 space-y-1 shadow-2xs">
                         <p className="font-bold text-sm text-slate-900 dark:text-zinc-100">
                           {t.cliente_nombre || 'Cliente sin nombre'}
                         </p>
-                        <p className="text-xs text-slate-500 dark:text-zinc-400">
+                        <p className="text-xs text-slate-500 dark:text-zinc-400 font-mono">
                           📱 {t.cliente_celular || 'Sin celular'}
                         </p>
                         <div className="pt-2 mt-2 border-t border-slate-100 dark:border-zinc-800 flex justify-between items-center text-xs">
@@ -205,7 +214,7 @@ export default function GabinetePage() {
                       </div>
 
                       {notaRecep && (
-                        <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/50 text-xs text-amber-900 dark:text-amber-300">
+                        <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/50 text-xs text-amber-900 dark:text-amber-300">
                           <strong className="block font-semibold">Nota de Recepción:</strong> 
                           <span>{notaRecep}</span>
                         </div>
@@ -228,7 +237,7 @@ export default function GabinetePage() {
         </div>
 
         {/* SECCIÓN 2: SALA DE ESPERA */}
-        <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-xs space-y-3">
+        <div className="bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-xl space-y-3">
           <h2 className="text-sm font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-2">
             <Clock className="h-4 w-4 text-amber-500" />
             <span>En Sala de Espera ({enEspera.length})</span>
@@ -241,7 +250,7 @@ export default function GabinetePage() {
               {enEspera.map((t) => (
                 <div
                   key={t.id}
-                  className="p-3.5 rounded-xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/20 flex items-center justify-between gap-2"
+                  className="p-4 rounded-2xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/20 flex items-center justify-between gap-2 shadow-2xs"
                 >
                   <div>
                     <p className="font-bold text-xs text-slate-800 dark:text-zinc-200">{t.cliente_nombre}</p>
@@ -250,7 +259,7 @@ export default function GabinetePage() {
                   <button
                     type="button"
                     onClick={() => abrirModalCierre(t)}
-                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-[11px] rounded-lg transition-all shrink-0 cursor-pointer shadow-2xs active:scale-95"
+                    className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl transition-all shrink-0 cursor-pointer shadow-2xs active:scale-95"
                   >
                     Atender
                   </button>
@@ -261,7 +270,7 @@ export default function GabinetePage() {
         </div>
 
         {/* SECCIÓN 3: ATENDIDOS HOY */}
-        <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-xs space-y-3">
+        <div className="bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-xl space-y-3">
           <h2 className="text-sm font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
             <span>Sesiones Finalizadas Hoy ({completados.length})</span>
@@ -274,13 +283,13 @@ export default function GabinetePage() {
               {completados.map((t) => (
                 <div
                   key={t.id}
-                  className="p-3.5 rounded-xl border border-emerald-200/80 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/20 flex items-center justify-between gap-2 text-xs"
+                  className="p-4 rounded-2xl border border-emerald-200/80 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/20 flex items-center justify-between gap-2 text-xs shadow-2xs"
                 >
                   <div>
                     <p className="font-bold text-slate-800 dark:text-zinc-200">{t.cliente_nombre}</p>
                     <p className="text-[11px] text-slate-500 dark:text-zinc-400">{obtenerDetalleTexto(t)}</p>
                   </div>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-400 px-2.5 py-1 rounded-md shrink-0 border border-emerald-200/60 dark:border-emerald-800/40">
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-400 px-3 py-1.5 rounded-xl shrink-0 border border-emerald-200/60 dark:border-emerald-800/40">
                     Atendido ✔
                   </span>
                 </div>

@@ -52,20 +52,24 @@ export default function OverviewTab({
     },
   ]
 
-  return (
+return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {stats.map((stat) => {
         const Icon = stat.icon
         return (
           <div
             key={stat.label}
-            className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all duration-200 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
+            className="bg-white dark:bg-zinc-900 p-5 sm:p-6 rounded-3xl shadow-xl border border-slate-200/80 dark:border-zinc-800 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200"
           >
-            <div className={`w-10 h-10 rounded-xl ${stat.iconBg} flex items-center justify-center mb-4`}>
-              <Icon className={`w-5 h-5 ${stat.iconColor}`} />
+            <div className={`w-12 h-12 rounded-2xl ${stat.iconBg} flex items-center justify-center mb-4 shadow-2xs`}>
+              <Icon className={`w-5 h-5 ${stat.iconColor}`} strokeWidth={2.2} />
             </div>
-            <span className="text-sm font-medium text-gray-500 dark:text-zinc-400">{stat.label}</span>
-            <p className={`text-3xl font-extrabold mt-1 tracking-tight ${stat.valueColor}`}>{stat.value}</p>
+            <span className="text-xs sm:text-sm font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+              {stat.label}
+            </span>
+            <p className={`text-3xl sm:text-4xl font-black mt-1.5 tracking-tight ${stat.valueColor}`}>
+              {stat.value}
+            </p>
           </div>
         )
       })}

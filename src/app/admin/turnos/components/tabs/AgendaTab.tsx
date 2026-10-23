@@ -167,181 +167,192 @@ export default function AgendaTab({
   })
 
 return (
-    <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xs border border-gray-100 overflow-hidden transition-all dark:bg-zinc-900 dark:border-zinc-800 p-3 sm:p-5 flex flex-col gap-4">
-      
-      {/* 1. RESUMEN DE RECAUDACIÓN MOVIDO ARRIBA DE TODO */}
-      <ResumenAgenda turnos={turnosAgendaResumen} esFechaPasada={esFechaAgendaPasada} />
+  <div className="space-y-5">
+    {/* 1. RESUMEN DE RECAUDACIÓN (TARJETAS FLOTANTES) */}
+    <ResumenAgenda turnos={turnosAgendaResumen} esFechaPasada={esFechaAgendaPasada} />
 
-      {/* 2. BARRA DE FILTROS COMPACTA + TIRA DE DÍAS MENSUAL */}
-      <div className="border border-slate-100 dark:border-zinc-800 rounded-2xl p-3 sm:p-4 bg-slate-50/40 dark:bg-zinc-900/60 flex flex-col gap-3">
-        
-        {/* Lanza Superior: Buscador + Filtros de Iconos Compactos */}
-        <div className="flex items-center gap-2">
-          {/* Buscador de Texto */}
-          <div className="relative flex-1">
-            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 dark:text-zinc-500" />
-            <input
-              type="text"
-              placeholder="Buscar cliente, numero o código..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-2 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-purple-500/35 transition-all bg-white dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500 shadow-2xs"
-            />
-          </div>
+    {/* 2. BARRA DE FILTROS COMPACTA + TIRA DE DÍAS MENSUAL */}
+    <div className="border border-slate-200/80 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 bg-white dark:bg-zinc-900 shadow-xl flex flex-col gap-4">
+        <div className="max-w-7xl mx-auto space-y-4">
 
-          {/* Filtro Compacto de Estado (Solo Icono) */}
-          <div className="relative flex items-center p-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl bg-white hover:bg-gray-50 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 shrink-0 cursor-pointer transition-colors shadow-2xs">
-            <Filter className={`w-4 h-4 ${filtroEstado !== 'todos' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-500 dark:text-zinc-400'}`} />
-            <select
-              value={filtroEstado}
-              onChange={(e) => setFiltroEstado(e.target.value)}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              title="Filtrar por Estado"
-            >
-              <option value="todos">Todos los estados</option>
-              <option value="pendiente_sena">Pendiente Seña</option>
-              <option value="confirmado">Confirmado</option>
-              <option value="completado">Completado</option>
-              <option value="cancelado">Cancelado</option>
-            </select>
-          </div>
-
-          {/* Filtro Compacto de Medio de Pago (Solo Icono) */}
-          <div className="relative flex items-center p-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl bg-white hover:bg-gray-50 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 shrink-0 cursor-pointer transition-colors shadow-2xs">
-            <CreditCard className={`w-4 h-4 ${filtroMedioPago !== 'todos' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-500 dark:text-zinc-400'}`} />
-            <select
-              value={filtroMedioPago}
-              onChange={(e) => setFiltroMedioPago(e.target.value)}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              title="Filtrar por Medio de Pago"
-            >
-              <option value="todos">Todos los medios de pago</option>
-              <option value="mercadopago">Mercado Pago</option>
-              <option value="efectivo">Efectivo</option>
-              <option value="whatsapp">WhatsApp</option>
-            </select>
-          </div>
-
-          {/* Calendario de Selección Fecha Puntual (Solo Icono) */}
-          <div className="relative flex items-center p-2.5 border border-gray-200 dark:border-zinc-700 rounded-xl bg-white hover:bg-gray-50 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 shrink-0 cursor-pointer transition-colors shadow-2xs">
-            <Calendar className={`w-4 h-4 ${filtroFechaTipo === 'especifica' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-500 dark:text-zinc-400'}`} />
-            <input
-              type="date"
-              value={fechaEspecifica}
-              onChange={(e) => {
-                setFechaEspecifica(e.target.value)
-                setFiltroFechaTipo('especifica')
-                setDiaSeleccionado(e.target.value)
-              }}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              title="Elegir fecha especifica"
-            />
-          </div>
-
-          {/* Botón Bloquear Horarios */}
-          <button
-            type="button"
-            onClick={() => setModalBloqueosAbierto(true)}
-            className="p-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 border border-amber-300/60 rounded-xl shrink-0 transition-colors dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300 cursor-pointer shadow-2xs"
-            title="Bloquear Horarios"
-          >
-            <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          </button>
         </div>
+      </div>
 
-        {/* TIRA DE DÍAS MENSUAL DESLIZABLE + NAVEGADOR DE MESES */}
-        <div className="flex flex-col gap-2 pt-2 pb-1 border-t border-slate-200/60 dark:border-zinc-800">
+      {/* ⬜ CONTENEDOR PRINCIPAL FLOTANTE */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 space-y-5">
+
+        {/* 1. RESUMEN DE RECAUDACIÓN (TARJETAS FLOTANTES) */}
+        <ResumenAgenda turnos={turnosAgendaResumen} esFechaPasada={esFechaAgendaPasada} />
+
+        {/* 2. BARRA DE FILTROS COMPACTA + TIRA DE DÍAS MENSUAL */}
+        <div className="border border-slate-200/80 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 bg-white dark:bg-zinc-900 shadow-xl flex flex-col gap-4">
           
-          {/* Encabezado de la barra: Mes actual y controles para cambiar de mes/año */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wide">
-               {nombreMesAnioCapitalizado}
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setMesActualIndex((prev) => prev - 1)}
-                className="px-2 py-1 text-[11px] font-semibold bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 cursor-pointer shadow-2xs"
-                title="Mes anterior"
+          {/* Lanza Superior: Buscador + Filtros de Iconos Compactos */}
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+            {/* Buscador de Texto */}
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 dark:text-zinc-500" />
+              <input
+                type="text"
+                placeholder="Buscar cliente, número o código..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="w-full border border-slate-200 dark:border-zinc-700 rounded-2xl pl-10 pr-4 py-2.5 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-blue-500/35 transition-all bg-slate-50/50 dark:bg-zinc-800/80 dark:text-zinc-100 dark:placeholder-zinc-500 shadow-2xs font-medium"
+              />
+            </div>
+
+            {/* Filtro Compacto de Estado (Solo Icono) */}
+            <div className="relative flex items-center p-3 border border-slate-200 dark:border-zinc-700 rounded-2xl bg-slate-50/50 hover:bg-slate-100 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 shrink-0 cursor-pointer transition-colors shadow-2xs">
+              <Filter className={`w-4 h-4 ${filtroEstado !== 'todos' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-zinc-400'}`} />
+              <select
+                value={filtroEstado}
+                onChange={(e) => setFiltroEstado(e.target.value)}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                title="Filtrar por Estado"
               >
-                ← Mes anterior
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMesActualIndex(0)
-                  const hoyIso = new Date().toISOString().split('T')[0]
-                  setDiaSeleccionado(hoyIso)
-                  setFechaEspecifica(hoyIso)
+                <option value="todos">Todos los estados</option>
+                <option value="pendiente_sena">Pendiente Seña</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="completado">Completado</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </div>
+
+            {/* Filtro Compacto de Medio de Pago (Solo Icono) */}
+            <div className="relative flex items-center p-3 border border-slate-200 dark:border-zinc-700 rounded-2xl bg-slate-50/50 hover:bg-slate-100 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 shrink-0 cursor-pointer transition-colors shadow-2xs">
+              <CreditCard className={`w-4 h-4 ${filtroMedioPago !== 'todos' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-zinc-400'}`} />
+              <select
+                value={filtroMedioPago}
+                onChange={(e) => setFiltroMedioPago(e.target.value)}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                title="Filtrar por Medio de Pago"
+              >
+                <option value="todos">Todos los medios de pago</option>
+                <option value="mercadopago">Mercado Pago</option>
+                <option value="efectivo">Efectivo</option>
+                <option value="whatsapp">WhatsApp</option>
+              </select>
+            </div>
+
+            {/* Calendario de Selección Fecha Puntual (Solo Icono) [color-scheme:dark] agregado para evitar fondo negro */}
+            <div className="relative flex items-center p-3 border border-slate-200 dark:border-zinc-700 rounded-2xl bg-slate-50/50 hover:bg-slate-100 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 shrink-0 cursor-pointer transition-colors shadow-2xs">
+              <Calendar className={`w-4 h-4 ${filtroFechaTipo === 'especifica' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-zinc-400'}`} />
+              <input
+                type="date"
+                value={fechaEspecifica}
+                onChange={(e) => {
+                  setFechaEspecifica(e.target.value)
                   setFiltroFechaTipo('especifica')
+                  setDiaSeleccionado(e.target.value)
                 }}
-                className="px-2 py-1 text-[11px] font-semibold bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 cursor-pointer shadow-2xs"
-                title="Ir al mes y día actual"
-              >
-                Hoy
-              </button>
-              <button
-                type="button"
-                onClick={() => setMesActualIndex((prev) => prev + 1)}
-                className="px-2 py-1 text-[11px] font-semibold bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 cursor-pointer shadow-2xs"
-                title="Mes siguiente"
-              >
-                Mes siguiente →
-              </button>
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full [color-scheme:dark]"
+                title="Elegir fecha específica"
+              />
+            </div>
+
+            {/* Botón Bloquear Horarios */}
+            <button
+              type="button"
+              onClick={() => setModalBloqueosAbierto(true)}
+              className="p-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 border border-amber-300/60 rounded-2xl shrink-0 transition-colors dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300 cursor-pointer shadow-2xs"
+              title="Bloquear Horarios"
+            >
+              <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            </button>
+          </div>
+
+          {/* TIRA DE DÍAS MENSUAL DESLIZABLE + NAVEGADOR DE MESES */}
+          <div className="flex flex-col gap-2.5 pt-2 border-t border-slate-100 dark:border-zinc-800">
+            
+            {/* Encabezado de la barra: Mes actual y controles */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold text-slate-800 dark:text-zinc-200 uppercase tracking-wide">
+                 {nombreMesAnioCapitalizado}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setMesActualIndex((prev) => prev - 1)}
+                  className="px-3 py-1.5 text-xs font-semibold bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 cursor-pointer shadow-2xs transition-all"
+                  title="Mes anterior"
+                >
+                  ← Anterior
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMesActualIndex(0)
+                    const hoyIso = new Date().toISOString().split('T')[0]
+                    setDiaSeleccionado(hoyIso)
+                    setFechaEspecifica(hoyIso)
+                    setFiltroFechaTipo('especifica')
+                  }}
+                  className="px-3 py-1.5 text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 text-blue-700 dark:text-blue-300 cursor-pointer shadow-2xs transition-all"
+                  title="Ir al mes y día actual"
+                >
+                  Hoy
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMesActualIndex((prev) => prev + 1)}
+                  className="px-3 py-1.5 text-xs font-semibold bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 cursor-pointer shadow-2xs transition-all"
+                  title="Mes siguiente"
+                >
+                  Siguiente →
+                </button>
+              </div>
+            </div>
+
+            {/* Contenedor Scrollable Horizontal */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar select-none scroll-smooth">
+              {diasDelMes.map((d) => {
+                const esActivo = diaSeleccionado === d.iso
+                return (
+                  <button
+                    key={d.iso}
+                    type="button"
+                    onClick={() => {
+                      setDiaSeleccionado(d.iso)
+                      setFechaEspecifica(d.iso)
+                      setFiltroFechaTipo('especifica')
+                    }}
+                    className={`flex flex-col items-center justify-center min-w-[50px] sm:min-w-[56px] py-2.5 px-2 rounded-2xl border transition-all cursor-pointer shrink-0 ${
+                      esActivo
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-md scale-105 font-bold'
+                        : 'bg-slate-50/60 border-slate-200/80 text-slate-600 hover:bg-slate-100 dark:bg-zinc-800/60 dark:border-zinc-700 dark:text-zinc-400'
+                    }`}
+                  >
+                    <span className={`text-[9px] font-bold tracking-wider uppercase ${esActivo ? 'text-white/90' : 'opacity-70'}`}>
+                      {d.diaNombre}
+                    </span>
+                    <span className="text-sm font-black mt-0.5">
+                      {d.diaNum}
+                    </span>
+                    {esActivo && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-white mt-1 shadow-xs" />
+                    )}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
-          {/* Contenedor Scrollable Horizontal */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar select-none scroll-smooth">
-            {diasDelMes.map((d) => {
-              const esActivo = diaSeleccionado === d.iso
-              return (
-                <button
-                  key={d.iso}
-                  type="button"
-                  onClick={() => {
-                    setDiaSeleccionado(d.iso)
-                    setFechaEspecifica(d.iso)
-                    setFiltroFechaTipo('especifica')
-                  }}
-                  className={`flex flex-col items-center justify-center min-w-[48px] sm:min-w-[52px] py-2 px-2 rounded-2xl border transition-all cursor-pointer shrink-0 ${
-                    esActivo
-                      ? 'bg-slate-900 border-slate-900 text-white shadow-xs dark:bg-zinc-100 dark:border-zinc-100 dark:text-zinc-900 scale-105 font-bold'
-                      : 'bg-white border-slate-200/80 text-slate-600 hover:bg-slate-100 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400'
-                  }`}
-                >
-                  <span className="text-[9px] font-bold tracking-wider opacity-80 uppercase">
-                    {d.diaNombre}
-                  </span>
-                  <span className="text-sm font-black mt-0.5">
-                    {d.diaNum}
-                  </span>
-                  {esActivo && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1" />
-                  )}
-                </button>
-              )
-            })}
+        </div>
+
+        {/* 3. LISTADO DE TURNOS O ESTADOS DE CARGA */}
+        {loading ? (
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl p-12 text-center text-slate-400 text-xs font-medium animate-pulse shadow-xl">
+            Cargando turnos...
           </div>
-        </div>
-
-      </div>
-
-      {/* 3. LISTADO DE TURNOS O ESTADOS DE CARGA */}
-      {loading ? (
-        <div className="p-12 text-center text-gray-400 text-xs font-medium animate-pulse dark:text-zinc-500">
-          Cargando turnos...
-        </div>
-      ) : turnosFinales.length === 0 ? (
-        <div className="p-12 text-center">
-          <CalendarDays className="w-8 h-8 text-gray-300 mx-auto mb-2 dark:text-zinc-700" />
-          <p className="text-gray-400 text-sm font-medium dark:text-zinc-400">
-            No se encontraron reservas con los filtros aplicados.
-          </p>
-        </div>
-      ) : (
-        <div className="pt-2">
-          <div className="flex flex-col gap-3.5">
+        ) : turnosFinales.length === 0 ? (
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl p-12 text-center shadow-xl">
+            <CalendarDays className="w-8 h-8 text-slate-300 mx-auto mb-2 dark:text-zinc-700" />
+            <p className="text-slate-400 text-sm font-medium dark:text-zinc-400">
+              No se encontraron reservas con los filtros aplicados.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
             {turnosFinales.map((t) => {
               const { iniciales, colorClass } = getAvatarInfo(t.cliente_nombre)
               const detalleTexto = renderDetalle(t)
@@ -364,11 +375,11 @@ return (
               return (
                 <div
                   key={t.id}
-                  className={`bg-white dark:bg-zinc-900 border rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                  className={`bg-white dark:bg-zinc-900 border rounded-3xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                     esCompletado
-                      ? 'border-emerald-300/80 bg-emerald-50/30 dark:border-emerald-900/50 dark:bg-emerald-950/20'
+                      ? 'border-emerald-300/80 bg-emerald-50/20 dark:border-emerald-900/50 dark:bg-emerald-950/20'
                       : esCancelado
-                      ? 'border-slate-200/60 bg-slate-50/50 opacity-75 dark:border-zinc-800 dark:bg-zinc-900/40'
+                      ? 'border-slate-200/60 bg-slate-50/40 opacity-75 dark:border-zinc-800 dark:bg-zinc-900/40'
                       : esGeneral 
                       ? 'border-purple-200/80 dark:border-purple-900/50 bg-gradient-to-r from-purple-50/20 to-transparent dark:from-purple-950/10' 
                       : 'border-slate-200/80 dark:border-zinc-800'
@@ -380,12 +391,12 @@ return (
                     
                     {/* Tarjeta Visual de Fecha con colores según estado */}
                     <div 
-                      className={`w-13 h-13 sm:w-14 sm:h-14 rounded-2xl border flex flex-col items-center justify-center shrink-0 shadow-2xs select-none transition-colors ${
+                      className={`w-14 h-14 rounded-2xl border flex flex-col items-center justify-center shrink-0 shadow-2xs select-none transition-colors ${
                         t.estado === 'completado'
                           ? 'bg-emerald-500 border-emerald-600 text-white dark:bg-emerald-600 dark:border-emerald-500'
                           : t.estado === 'cancelado'
                           ? 'bg-rose-500 border-rose-600 text-white dark:bg-rose-600 dark:border-rose-500'
-                          : 'bg-slate-50 border-slate-200/60 dark:bg-zinc-800/80 dark:border-zinc-700/50'
+                          : 'bg-slate-50 border-slate-200/80 dark:bg-zinc-800 dark:border-zinc-700'
                       }`}
                     >
                       <span 
@@ -412,19 +423,19 @@ return (
                     <div className="flex flex-col min-w-0 gap-1 flex-1">
                       
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] font-mono font-bold text-slate-400 bg-slate-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
+                        <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-100 dark:bg-zinc-800 px-2.5 py-0.5 rounded-lg border border-slate-200/60 dark:border-zinc-700">
                           #{t.codigo_unico || '-'}
                         </span>
 
                         {/* Distintivo de Tipo de Servicio */}
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-zinc-400">
-  {esGeneral ? (
-    <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
-  ) : (
-    <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
-  )}
-  <span>{esGeneral ? 'General' : 'Láser'}</span>
-</span>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 dark:text-zinc-300">
+                          {esGeneral ? (
+                            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+                          ) : (
+                            <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                          )}
+                          <span>{esGeneral ? 'General' : 'Láser'}</span>
+                        </span>
 
                         {fueModificado && (
                           <span className="inline-flex items-center gap-1 text-[10px] text-slate-400 dark:text-zinc-500">
@@ -434,26 +445,26 @@ return (
                         )}
 
                         {t.codigo_referido_usado && (
-                          <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-[10px] font-semibold dark:bg-purple-950/60 dark:border-purple-900 dark:text-purple-300">
+                          <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-0.5 rounded-xl text-[10px] font-semibold dark:bg-purple-950/60 dark:border-purple-900 dark:text-purple-300">
                             <Gift className="w-2.5 h-2.5" />
                             {t.codigo_referido_usado}
                           </span>
                         )}
                       </div>
 
-                      <h3 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-zinc-200 capitalize tracking-normal truncate">
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-zinc-100 capitalize tracking-normal truncate">
                         {detalleTexto || 'Turno agendado'}
                       </h3>
 
                       <div className="flex items-center gap-2.5 text-xs text-slate-500 dark:text-zinc-400 flex-wrap">
-                        <span className="flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400">
+                        <span className="flex items-center gap-1 font-semibold text-blue-600 dark:text-blue-400">
                           <Calendar className="w-3.5 h-3.5" />
                           {renderFechaHora(t.fecha_hora_inicio)}
                         </span>
                         
                         <span className="text-slate-300 dark:text-zinc-600">•</span>
                         
-                        <span className="font-medium text-slate-800 dark:text-zinc-200">
+                        <span className="font-semibold text-slate-800 dark:text-zinc-200">
                           {t.cliente_nombre || 'Sin nombre'}
                         </span>
 
@@ -469,7 +480,7 @@ return (
 
                         <span className="text-slate-300 dark:text-zinc-600">•</span>
 
-                        <span className="font-extrabold text-slate-900 dark:text-zinc-100">
+                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
                           ${(Number(t.precio_total) || 0).toLocaleString('es-AR')}
                         </span>
                       </div>
@@ -477,101 +488,107 @@ return (
                   </div>
 
                   {/* DERECHA: Estado, Medio de Pago y Botones */}
-<div className="flex items-center justify-between md:justify-end gap-4 pt-3 md:pt-0 border-t border-slate-100 dark:border-zinc-800 md:border-t-0 shrink-0">
-  
-  {/* Columna derecha centrada verticalmente */}
-  <div className="flex flex-col items-start md:items-end justify-center gap-1.5">
-    <span
-      className={`px-2.5 py-1 rounded-full text-[11px] font-medium capitalize ${
-        t.estado === 'confirmado'
-          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/80 dark:text-emerald-300'
-          : t.estado === 'completado'
-          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300/80 dark:bg-emerald-950/80 dark:text-emerald-300'
-          : t.estado === 'cancelado'
-          ? 'bg-rose-50 text-rose-700 border border-rose-200/60 dark:bg-rose-950/80 dark:text-rose-300'
-          : t.estado === 'en_gabinete' || t.estado === 'espera'
-          ? 'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse dark:bg-amber-950/90 dark:text-amber-200 font-bold shadow-xs'
-          : 'bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/80 dark:text-amber-300'
-      }`}
-    >
-      {t.estado ? t.estado.replace('_', ' ') : 'pendiente'}
-    </span>
+                  <div className="flex items-center justify-between md:justify-end gap-4 pt-3 md:pt-0 border-t border-slate-100 dark:border-zinc-800 md:border-t-0 shrink-0">
+                    
+                    <div className="flex flex-col items-start md:items-end justify-center gap-1.5">
+                      <span
+                        className={`px-3 py-1 rounded-xl text-[11px] font-bold capitalize border ${
+                          t.estado === 'confirmado'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/80 dark:text-emerald-300'
+                            : t.estado === 'completado'
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300/80 dark:bg-emerald-950/80 dark:text-emerald-300'
+                            : t.estado === 'cancelado'
+                            ? 'bg-rose-50 text-rose-700 border-rose-200/80 dark:bg-rose-950/80 dark:text-rose-300'
+                            : t.estado === 'en_gabinete' || t.estado === 'espera'
+                            ? 'bg-amber-100 text-amber-900 border-amber-300 animate-pulse dark:bg-amber-950/90 dark:text-amber-200 shadow-xs'
+                            : 'bg-amber-50 text-amber-700 border-amber-200/80 dark:bg-amber-950/80 dark:text-amber-300'
+                        }`}
+                      >
+                        {t.estado ? t.estado.replace('_', ' ') : 'pendiente'}
+                      </span>
 
-    {(t.medio_pago || t.tipo_pago_elegido) && (
-      <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 bg-slate-50 border border-slate-200/80 px-2 py-0.5 rounded-md capitalize dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400">
-        <CreditCard className="w-2.5 h-2.5" />
-        {t.medio_pago || t.tipo_pago_elegido}
-      </span>
-    )}
-  </div>
+                      {(t.medio_pago || t.tipo_pago_elegido) && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 bg-slate-100 border border-slate-200/80 px-2.5 py-0.5 rounded-lg capitalize dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-400">
+                          <CreditCard className="w-2.5 h-2.5" />
+                          {t.medio_pago || t.tipo_pago_elegido}
+                        </span>
+                      )}
+                    </div>
 
-  {/* Barra de Botones de Acción */}
-  <div className="flex items-center gap-1 bg-slate-50 dark:bg-zinc-800/80 p-1 rounded-xl border border-slate-200/60 dark:border-zinc-700/50">
-    {numCelularLimpio && (
-      <a
-        href={`https://wa.me/${numCelularLimpio}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="p-2 text-emerald-600 hover:bg-emerald-100/60 dark:hover:bg-emerald-950/50 rounded-lg transition-all"
-        title="Enviar WhatsApp"
-      >
-        <MessageCircle className="w-4 h-4" />
-      </a>
-    )}
+                    {/* Barra de Botones de Acción */}
+                    <div className="flex items-center gap-1 bg-slate-50 dark:bg-zinc-800/80 p-1 rounded-2xl border border-slate-200/80 dark:border-zinc-700/60 shadow-2xs">
+                      {numCelularLimpio && (
+                        <a
+                          href={`https://wa.me/${numCelularLimpio}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2.5 text-emerald-600 hover:bg-emerald-100/60 dark:hover:bg-emerald-950/50 rounded-xl transition-all cursor-pointer"
+                          title="Enviar WhatsApp"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </a>
+                      )}
 
-    <button
-      onClick={() => onEditarTurno(t)}
-      className="p-2 text-slate-600 hover:bg-slate-200/60 dark:text-zinc-300 dark:hover:bg-zinc-700 rounded-lg transition-all"
-      title="Editar Turno"
-    >
-      <SquarePen className="w-4 h-4" />
-    </button>
+                      <button
+                        type="button"
+                        onClick={() => onEditarTurno(t)}
+                        className="p-2.5 text-slate-600 hover:bg-slate-200/60 dark:text-zinc-300 dark:hover:bg-zinc-700 rounded-xl transition-all cursor-pointer"
+                        title="Editar Turno"
+                      >
+                        <SquarePen className="w-4 h-4" />
+                      </button>
 
-    {t.estado !== 'confirmado' && t.estado !== 'completado' && (
-      <button
-        onClick={() => onActualizarEstado(t.id, 'confirmado')}
-        className="p-2 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-950/50 rounded-lg transition-all"
-        title="Confirmar"
-      >
-        <Check className="w-4 h-4" />
-      </button>
-    )}
+                      {t.estado !== 'confirmado' && t.estado !== 'completado' && (
+                        <button
+                          type="button"
+                          onClick={() => onActualizarEstado(t.id, 'confirmado')}
+                          className="p-2.5 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-950/50 rounded-xl transition-all cursor-pointer"
+                          title="Confirmar"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                      )}
 
-    {t.estado !== 'completado' && (
-      <button
-        onClick={() => onActualizarEstado(t.id, 'completado')}
-        className="p-2 text-emerald-600 hover:bg-emerald-100/60 dark:hover:bg-emerald-950/50 rounded-lg transition-all"
-        title="Completar"
-      >
-        <HandCoins className="w-4 h-4" />
-      </button>
-    )}
+                      {t.estado !== 'completado' && (
+                        <button
+                          type="button"
+                          onClick={() => onActualizarEstado(t.id, 'completado')}
+                          className="p-2.5 text-emerald-600 hover:bg-emerald-100/60 dark:hover:bg-emerald-950/50 rounded-xl transition-all cursor-pointer"
+                          title="Completar"
+                        >
+                          <HandCoins className="w-4 h-4" />
+                        </button>
+                      )}
 
-    {t.estado !== 'cancelado' && (
-      <button
-        onClick={() => onActualizarEstado(t.id, 'cancelado')}
-        className="p-2 text-orange-600 hover:bg-orange-100/60 dark:hover:bg-orange-950/50 rounded-lg transition-all"
-        title="Cancelar"
-      >
-        <X className="w-4 h-4" />
-      </button>
-    )}
+                      {t.estado !== 'cancelado' && (
+                        <button
+                          type="button"
+                          onClick={() => onActualizarEstado(t.id, 'cancelado')}
+                          className="p-2.5 text-orange-600 hover:bg-orange-100/60 dark:hover:bg-orange-950/50 rounded-xl transition-all cursor-pointer"
+                          title="Cancelar"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
 
-    <button
-      onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
-      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition-all"
-      title="Eliminar reserva"
-    >
-      <Trash2 className="w-4 h-4" />
-    </button>
-  </div>
-</div>
+                      <button
+                        type="button"
+                        onClick={() => handleConfirmarEliminacion(t.id, t.cliente_nombre || '')}
+                        className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl transition-all cursor-pointer"
+                        title="Eliminar reserva"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                  </div>
                 </div>
               )
             })}
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
 
       {modalBloqueosAbierto && (
         <ModalBloqueoHorarios

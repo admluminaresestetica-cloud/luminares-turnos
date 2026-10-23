@@ -238,185 +238,204 @@ export default function MetricasPage() {
 
   if (!autenticado) return null;
 
-  return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Encabezado con Botón de Volver */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-zinc-100">
-            Métricas del Negocio
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-zinc-400">
-            Rendimiento en tiempo real sincronizado con tus reservas y turnos
-          </p>
+ return (
+    <div className="min-h-screen bg-slate-100 dark:bg-zinc-950 font-sans text-slate-900 dark:text-zinc-100 transition-colors pb-12">
+      
+      {/* 🟦 HERO CONTINUO SUPERIOR CON DEGRADADO AZUL FINTECH */}
+      <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 dark:from-blue-950 dark:via-blue-900 dark:to-zinc-900 pb-20 shadow-lg text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-4">
+          
+          {/* Encabezado con Botón de Volver al lado del Título */}
+          <div className="flex items-center gap-3.5">
+            <Link
+              href="/admin"
+              className="p-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-2xl border border-white/25 transition-all active:scale-95 shadow-xs shrink-0 cursor-pointer"
+              title="Volver al Menú Admin"
+            >
+              <ArrowLeft className="w-4 h-4 text-white" />
+            </Link>
+
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                Métricas del Negocio
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block animate-pulse shadow-xs" />
+              </h1>
+              <p className="text-xs text-blue-100/80 mt-0.5">
+                Rendimiento en tiempo real sincronizado con tus reservas y turnos
+              </p>
+            </div>
+          </div>
+
+          {/* Selector de Rango de Fechas */}
+          <div className="pt-2">
+            <DateRangePicker
+              rangoSeleccionado={rango}
+              setRangoSeleccionado={setRango}
+              fechaInicio={fechaInicio}
+              setFechaInicio={setFechaInicio}
+              fechaFin={fechaFin}
+              setFechaFin={setFechaFin}
+            />
+          </div>
+
+          {/* Navegación por Pestañas Translúcida (Estilo Fintech) */}
+          <div className="pt-2">
+            <div className="bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20 inline-flex items-center gap-1.5 shadow-inner overflow-x-auto max-w-full">
+              <button
+                type="button"
+                onClick={() => setTabActiva('general')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  tabActiva === 'general'
+                    ? 'bg-white text-blue-700 shadow-md dark:bg-zinc-900 dark:text-blue-400'
+                    : 'text-white/80 hover:text-white hover:bg-white/15'
+                }`}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                General
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTabActiva('ventas')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  tabActiva === 'ventas'
+                    ? 'bg-white text-blue-700 shadow-md dark:bg-zinc-900 dark:text-blue-400'
+                    : 'text-white/80 hover:text-white hover:bg-white/15'
+                }`}
+              >
+                <BarChart3 className="w-4 h-4" />
+                Servicios y Cobros
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTabActiva('agenda')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  tabActiva === 'agenda'
+                    ? 'bg-white text-blue-700 shadow-md dark:bg-zinc-900 dark:text-blue-400'
+                    : 'text-white/80 hover:text-white hover:bg-white/15'
+                }`}
+              >
+                <CalendarDays className="w-4 h-4" />
+                Rubros y Días
+              </button>
+            </div>
+          </div>
+
         </div>
-
-        <Link
-            href="/admin"
-            className="p-2 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded-xl border border-slate-200/80 dark:border-zinc-700 transition-all active:scale-95 shadow-2xs shrink-0"
-            title="Volver al Menú Admin"
-          >
-            <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
-          </Link>
-        </div>
-
-      {/* Selector de Rango de Fechas */}
-      <DateRangePicker
-        rangoSeleccionado={rango}
-        setRangoSeleccionado={setRango}
-        fechaInicio={fechaInicio}
-        setFechaInicio={setFechaInicio}
-        fechaFin={fechaFin}
-        setFechaFin={setFechaFin}
-      />
-
-      {/* Navegación por Pestañas */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-zinc-800 pb-1">
-        <button
-          onClick={() => setTabActiva('general')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all ${
-            tabActiva === 'general'
-              ? 'bg-violet-600 text-white shadow-sm shadow-violet-200 dark:shadow-none'
-              : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
-          }`}
-        >
-          <LayoutDashboard className="w-4 h-4" />
-          General
-        </button>
-
-        <button
-          onClick={() => setTabActiva('ventas')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all ${
-            tabActiva === 'ventas'
-              ? 'bg-violet-600 text-white shadow-sm shadow-violet-200 dark:shadow-none'
-              : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
-          }`}
-        >
-          <BarChart3 className="w-4 h-4" />
-          Servicios y Cobros
-        </button>
-
-        <button
-          onClick={() => setTabActiva('agenda')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all ${
-            tabActiva === 'agenda'
-              ? 'bg-violet-600 text-white shadow-sm shadow-violet-200 dark:shadow-none'
-              : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800'
-          }`}
-        >
-          <CalendarDays className="w-4 h-4" />
-          Rubros y Días
-        </button>
       </div>
 
-      {cargando ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
-          <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
-          <span className="text-sm font-medium">Cargando métricas de Supabase...</span>
-        </div>
-      ) : (
-        <>
-          {/* Pestaña 1: Visión General */}
-          {tabActiva === 'general' && (
-            <div className="space-y-6">
-              <KpiCards
-                data={{
-                  ingresosTotales: kpis.ingresosTotales,
-                  ingresosVariacion: kpis.ingresosVariacion,
-                  turnosTotales: kpis.totalTurnos,
-                  turnosVariacion: kpis.turnosVariacion,
-                  ticketPromedio: kpis.ticketPromedio,
-                  ticketVariacion: kpis.ticketVariacion,
-                  senasTotales: kpis.senasTotales,
-                  senasVariacion: kpis.senasVariacion,
-                }}
-                loading={cargando}
-              />
+      {/* ⬜ CONTENEDOR FLOTANTE PRINCIPAL (-mt-12) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 space-y-6">
+        {cargando ? (
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl p-16 flex flex-col items-center justify-center gap-3 text-slate-400 shadow-xl">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400" />
+            <span className="text-sm font-bold">Cargando métricas de Supabase...</span>
+          </div>
+        ) : (
+          <>
+            {/* Pestaña 1: Visión General */}
+            {tabActiva === 'general' && (
+              <div className="space-y-6">
+                <KpiCards
+                  data={{
+                    ingresosTotales: kpis.ingresosTotales,
+                    ingresosVariacion: kpis.ingresosVariacion,
+                    turnosTotales: kpis.totalTurnos,
+                    turnosVariacion: kpis.turnosVariacion,
+                    ticketPromedio: kpis.ticketPromedio,
+                    ticketVariacion: kpis.ticketVariacion,
+                    senasTotales: kpis.senasTotales,
+                    senasVariacion: kpis.senasVariacion,
+                  }}
+                  loading={cargando}
+                />
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  <RevenueChart data={serieIngresos} />
-                </div>
-                <div>
-                  <AppointmentsChart data={estadoTurnosChart} />
-                </div>
-              </div>
-
-              <OrigenFinanzasCard 
-                origen={origenReservas} 
-                mediosPago={impactoFinanciero} 
-                loading={cargando} 
-              />
-            </div>
-          )}
-
-          {/* Pestaña 2: Servicios y Cobros */}
-          {tabActiva === 'ventas' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div>
-                  <MediosPagoCard data={mediosPago} loading={cargando} />
-                </div>
-                <div className="lg:col-span-2">
-                  <GraficoTopServicios data={topServicios} />
-                </div>
-              </div>
-
-              <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-zinc-100 mb-4">
-                  Productos Más Vendidos
-                </h3>
-                {topProductos.length === 0 ? (
-                  <p className="text-sm text-slate-500 dark:text-zinc-400">
-                    No hay ventas de productos registradas en este período.
-                  </p>
-                ) : (
-                  <div className="divide-y divide-slate-100 dark:divide-zinc-800">
-                    {topProductos.map((prod, idx) => (
-                      <div key={idx} className="py-3 flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-3">
-                          <span className="flex items-center justify-center w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 font-bold text-xs">
-                            {idx + 1}
-                          </span>
-                          <span className="font-medium text-slate-700 dark:text-zinc-200">
-                            {prod.nombre}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="font-bold text-slate-800 dark:text-zinc-100 block">
-                            ${prod.total.toLocaleString()}
-                          </span>
-                          <span className="text-xs text-slate-400">
-                            {prod.cantidad} {prod.cantidad === 1 ? 'unidad' : 'unidades'}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <RevenueChart data={serieIngresos} />
                   </div>
-                )}
-              </div>
-
-              <CrossSellingCard data={crossSelling} loading={cargando} />
-            </div>
-          )}
-
-          {/* Pestaña 3: Rubros y Días */}
-          {tabActiva === 'agenda' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div>
-                  <CategoriasCard data={comparativaCat} loading={cargando} />
+                  <div>
+                    <AppointmentsChart data={estadoTurnosChart} />
+                  </div>
                 </div>
-                <div className="lg:col-span-2">
-                  <GraficoDiasSemana data={diasSemana} loading={cargando} />
-                </div>
-              </div>
 
-              <FranjasHorariasCard franjas={franjasHorarias} noShow={noShow} loading={cargando} />
-            </div>
-          )}
-        </>
-      )}
+                <OrigenFinanzasCard 
+                  origen={origenReservas} 
+                  mediosPago={impactoFinanciero} 
+                  loading={cargando} 
+                />
+              </div>
+            )}
+
+            {/* Pestaña 2: Servicios y Cobros */}
+            {tabActiva === 'ventas' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div>
+                    <MediosPagoCard data={mediosPago} loading={cargando} />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <GraficoTopServicios data={topServicios} />
+                  </div>
+                </div>
+
+                <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 rounded-3xl p-6 shadow-xl">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tight mb-4">
+                    Productos Más Vendidos
+                  </h3>
+                  {topProductos.length === 0 ? (
+                    <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-zinc-400">
+                      No hay ventas de productos registradas en este período.
+                    </p>
+                  ) : (
+                    <div className="divide-y divide-slate-100 dark:divide-zinc-800">
+                      {topProductos.map((prod, idx) => (
+                        <div key={idx} className="py-3.5 flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold text-xs border border-blue-200/60 dark:border-blue-800/40">
+                              {idx + 1}
+                            </span>
+                            <span className="font-bold text-slate-800 dark:text-zinc-200 text-xs sm:text-sm">
+                              {prod.nombre}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="font-black text-slate-900 dark:text-zinc-100 block font-mono text-xs sm:text-sm">
+                              ${prod.total.toLocaleString('es-AR')}
+                            </span>
+                            <span className="text-[11px] font-medium text-slate-400">
+                              {prod.cantidad} {prod.cantidad === 1 ? 'unidad' : 'unidades'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <CrossSellingCard data={crossSelling} loading={cargando} />
+              </div>
+            )}
+
+            {/* Pestaña 3: Rubros y Días */}
+            {tabActiva === 'agenda' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div>
+                    <CategoriasCard data={comparativaCat} loading={cargando} />
+                  </div>
+                  <div className="lg:col-span-2">
+                    <GraficoDiasSemana data={diasSemana} loading={cargando} />
+                  </div>
+                </div>
+
+                <FranjasHorariasCard franjas={franjasHorarias} noShow={noShow} loading={cargando} />
+              </div>
+            )}
+          </>
+        )}
+      </main>
     </div>
   );
 }
