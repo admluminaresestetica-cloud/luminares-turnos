@@ -295,7 +295,7 @@ function TiendaContenido() {
           </div>
         </nav>
 
-        <div className="mx-auto max-w-[1150px] px-4 pb-28 pt-4 sm:px-10 sm:pb-16 space-y-4">
+<div className="mx-auto max-w-[1150px] px-4 pb-28 pt-4 sm:px-10 sm:pb-16 space-y-5 sm:space-y-6">
           {/* 1. Buscador y Filtros Principales (Bien arriba para fácil acceso) */}
           <BuscadorYCategorias
             busqueda={busqueda}
@@ -308,7 +308,9 @@ function TiendaContenido() {
           />
 
           {/* 2. Banner de Promociones / Novedades */}
-          <BannerCarousel />
+          <div className="pt-1">
+            <BannerCarousel />
+          </div>
 
           {/* 3. Burbujas de Marcas / Etiquetas */}
           <TagsFiltros
@@ -339,15 +341,19 @@ function TiendaContenido() {
             </div>
           )}
 
-          {/* 4. Bloque compacto de Beneficios */}
-          <BeneficiosTienda />
+          {/* 4. Bloque compacto de Beneficios con un respiro superior */}
+          <div className="pt-2">
+            <BeneficiosTienda />
+          </div>
 
           {/* 5. Catálogo de Productos */}
-          <GridProductos
-            productos={productosOrdenados}
-            cargando={cargando}
-            onVerDetalle={(prod) => setProductoSeleccionado(prod)}
-          />
+          <div className="pt-2">
+            <GridProductos
+              productos={productosOrdenados}
+              cargando={cargando}
+              onVerDetalle={(prod) => setProductoSeleccionado(prod)}
+            />
+          </div>
         </div>
 
         <ModalDetalleProducto
