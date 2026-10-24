@@ -291,7 +291,6 @@ function TiendaContenido() {
   <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 bg-[#0E6E55] px-1.5 text-[10px] font-extrabold leading-none text-white shadow-md animate-in zoom-in-50 duration-200 sm:static sm:ml-1 sm:h-5 sm:min-w-[20px] sm:border-0 sm:text-[11px]">
     {totalItems}
   </span>
-)}
               )}
             </button>
           </div>
