@@ -162,3 +162,4 @@ export default function BuscadorYCategorias({
       </div>
     </div>
   );
+}
