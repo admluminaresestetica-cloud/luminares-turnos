@@ -288,9 +288,9 @@ function TiendaContenido() {
               <span className="hidden sm:inline">Mi Carrito</span>
 
               {totalItems > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 bg-[#0E6E55] px-1 text-[10px] font-extrabold leading-none text-white shadow-xs sm:static sm:ml-1 sm:h-5 sm:min-w-[20px] sm:border-0 sm:text-[11px]">
-                  {totalItems}
-                </span>
+  <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 bg-[#0E6E55] px-1.5 text-[10px] font-extrabold leading-none text-white shadow-md animate-in zoom-in-50 duration-200 sm:static sm:ml-1 sm:h-5 sm:min-w-[20px] sm:border-0 sm:text-[11px]">
+    {totalItems}
+  </span>
               )}
             </button>
           </div>
@@ -308,8 +308,9 @@ function TiendaContenido() {
           />
 
           {/* Indicador visual de etiqueta activa */}
-          {hayTagActivo && (
-            <div className="mb-6 flex items-center justify-between bg-white dark:bg-zinc-900 border border-[#0E6E55]/30 rounded-[22px] px-4 sm:px-5 py-3.5 shadow-xs animate-in fade-in duration-300">
+{hayTagActivo && (
+  <div className="mb-6 flex items-center justify-between bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-[#0E6E55]/25 rounded-[22px] px-4 sm:px-5 py-3.5 shadow-sm animate-in fade-in slide-in-from-top-1 duration-300">
+
               <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-[#0E6E55] dark:text-emerald-400">
                 <div className="w-7 h-7 rounded-xl bg-[#0E6E55]/10 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
                   <TagIcon className="w-3.5 h-3.5 stroke-[2.2]" />

@@ -230,12 +230,12 @@ export default function ModalDetalleProducto({
   const puedeSumar = cantidad < maximoPermitidoParaAgregar;
   const puedeRestar = cantidad > 1;
 
-  return (
+    return (
     <div
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 overscroll-none"
     >
-<div
+      <div
         ref={modalContainerRef}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
@@ -253,7 +253,7 @@ export default function ModalDetalleProducto({
           <span className="h-1.5 w-12 rounded-full bg-slate-300 dark:bg-zinc-700" />
         </div>
 
-{/* Botones Flotantes de Cierre / Compartir */}
+        {/* Botones Flotantes de Cierre / Compartir */}
         <div className="sticky top-0 float-right z-30 -mr-1 -mt-1 sm:-mr-4 sm:-mt-4 flex items-center gap-2">
           <button
             onClick={handleCompartir}
@@ -284,7 +284,7 @@ export default function ModalDetalleProducto({
             sinStock={sinStock}
           />
 
-{/* INFORMACIÓN DEL PRODUCTO */}
+          {/* INFORMACIÓN DEL PRODUCTO */}
           <div className="flex flex-col justify-between space-y-4">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#0E6E55] dark:text-emerald-400">
@@ -356,7 +356,7 @@ export default function ModalDetalleProducto({
               )}
             </div>
 
-{/* CONTROLES DE CANTIDAD (DESKTOP) */}
+            {/* CONTROLES DE CANTIDAD (DESKTOP) */}
             <div className="hidden sm:block pt-2 space-y-4">
               <div className="flex items-center justify-between rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/50 p-2">
                 <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300 pl-2">Cantidad a agregar:</span>
@@ -434,8 +434,8 @@ export default function ModalDetalleProducto({
           handleRestarRecomendado={handleRestarRecomendado}
         />
 
-{/* BARRA STICKY INFERIOR EXCLUSIVA PARA MOVILES */}
-        <div className="sticky bottom-0 -mx-4 -mb-4 mt-6 p-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-slate-200 dark:border-zinc-800 sm:hidden z-20 space-y-2 pb-safe">
+        {/* BARRA STICKY INFERIOR EXCLUSIVA PARA MOVILES (CON MARGEN PARA BOTTOM NAV) */}
+        <div className="sticky bottom-0 -mx-4 -mb-4 mt-6 p-3 pb-20 sm:pb-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-slate-200 dark:border-zinc-800 sm:hidden z-40 space-y-2">
           <div className="flex items-center justify-between gap-2 mb-2">
             <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">Cantidad:</span>
             <div className="flex items-center gap-3 bg-slate-100 dark:bg-zinc-800 rounded-xl p-1">

@@ -45,25 +45,25 @@ export default function BuscadorYCategorias({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  return (
+   return (
     <div className="relative mb-8 space-y-4">
       {/* Fila Superior: Buscador y Filtro de Orden */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         <div className="group relative flex-1 w-full transition-transform duration-150 active:scale-[0.99]">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-zinc-500 transition-colors duration-200 group-focus-within:text-slate-900 dark:group-focus-within:text-zinc-100" />
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-zinc-500 transition-colors duration-200 group-focus-within:text-[#0E6E55] dark:group-focus-within:text-emerald-400" />
           <input
             type="text"
             value={busqueda}
             onChange={(e) => onBusquedaChange(e.target.value)}
             placeholder="Buscar productos..."
-            className="w-full rounded-full border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 py-3.5 pl-11 pr-10 text-sm text-slate-800 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 shadow-xs outline-none transition-all duration-200 focus:border-slate-900 dark:focus:border-zinc-100 focus:bg-white dark:focus:bg-zinc-900 focus:shadow-md focus:ring-4 focus:ring-slate-900/[0.06] dark:focus:ring-zinc-100/[0.06]"
+            className="w-full rounded-full border border-slate-200/90 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/80 py-3.5 pl-11 pr-10 text-sm font-medium text-slate-800 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 shadow-2xs outline-none transition-all duration-200 focus:border-[#0E6E55]/60 dark:focus:border-emerald-500/60 focus:bg-white dark:focus:bg-zinc-900 focus:shadow-md focus:ring-4 focus:ring-[#0E6E55]/10 dark:focus:ring-emerald-500/10"
           />
           {busqueda && (
             <button
               type="button"
               onClick={() => onBusquedaChange("")}
               aria-label="Limpiar búsqueda"
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 rounded-full transition-all duration-200 active:scale-90 cursor-pointer"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 bg-slate-200/80 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 rounded-full transition-all duration-200 active:scale-90 cursor-pointer"
             >
               <X className="h-3 w-3" strokeWidth={2.5} />
             </button>
@@ -75,16 +75,16 @@ export default function BuscadorYCategorias({
           <button
             type="button"
             onClick={() => setMenuAbierto(!menuAbierto)}
-            className="flex w-full sm:w-auto items-center justify-between gap-2.5 rounded-full border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-3 sm:py-2.5 text-sm text-slate-700 dark:text-zinc-200 shadow-xs hover:border-slate-300 dark:hover:border-zinc-700 cursor-pointer transition-all active:scale-95"
+            className="flex w-full sm:w-auto items-center justify-between gap-2.5 rounded-full border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4.5 py-3 sm:py-3 text-sm text-slate-700 dark:text-zinc-200 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-700 cursor-pointer transition-all active:scale-[0.98]"
           >
             <span className="flex items-center gap-2">
               <ArrowUpDown className="h-4 w-4 text-slate-400 dark:text-zinc-500 shrink-0" />
-              <span className="font-medium text-xs sm:text-sm text-slate-800 dark:text-zinc-200">{opcionActual}</span>
+              <span className="font-semibold text-xs sm:text-sm text-slate-800 dark:text-zinc-200">{opcionActual}</span>
             </span>
           </button>
 
           {menuAbierto && (
-            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto mt-2 w-full sm:w-64 rounded-2xl border border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 shadow-xl shadow-slate-900/10 dark:shadow-zinc-950/50 z-50 animate-[fadeIn_0.15s_ease-out]">
+            <div className="absolute right-0 sm:right-0 left-0 sm:left-auto mt-2 w-full sm:w-64 rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2 shadow-xl shadow-slate-900/10 dark:shadow-zinc-950/50 z-50 animate-in fade-in zoom-in-95 duration-150">
               <div className="flex flex-col gap-1">
                 {OpcionesOrden.map((op) => {
                   const seleccionado = ordenarPor === op.id;
@@ -96,14 +96,14 @@ export default function BuscadorYCategorias({
                         onOrdenarChange(op.id);
                         setMenuAbierto(false);
                       }}
-                      className={`flex items-center justify-between rounded-xl px-3.5 py-3 text-left text-xs sm:text-sm font-medium transition-all cursor-pointer active:scale-[0.98] ${
+                      className={`flex items-center justify-between rounded-xl px-3.5 py-3 text-left text-xs sm:text-sm font-semibold transition-all cursor-pointer active:scale-[0.98] ${
                         seleccionado
-                          ? "bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold"
+                          ? "bg-[#0E6E55] text-white shadow-xs"
                           : "text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"
                       }`}
                     >
                       <span>{op.label}</span>
-                      {seleccionado && <Check className="h-4 w-4 text-white dark:text-zinc-900" strokeWidth={2.5} />}
+                      {seleccionado && <Check className="h-4 w-4 text-white" strokeWidth={2.5} />}
                     </button>
                   );
                 })}
@@ -113,15 +113,15 @@ export default function BuscadorYCategorias({
         </div>
       </div>
 
-      {/* Fila Inferior: Tira Horizontal de Categorías */}
+      {/* Fila Inferior: Tira Horizontal de Categorías (Scroll tipo App) */}
       <div className="no-scrollbar flex w-full items-center gap-2 overflow-x-auto scroll-smooth py-1 font-medium text-xs sm:text-sm">
         <button
           type="button"
           onClick={() => onCategoriaSelect("Todos")}
-          className={`shrink-0 rounded-full px-4 py-2.5 transition-all duration-150 cursor-pointer whitespace-nowrap active:scale-95 ${
+          className={`shrink-0 rounded-full px-4.5 py-2.5 text-xs font-bold transition-all duration-150 cursor-pointer whitespace-nowrap active:scale-95 ${
             categoriaSeleccionada === "Todos"
-              ? "bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold shadow-md shadow-slate-900/15 dark:shadow-zinc-950/30"
-              : "border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800"
+              ? "bg-[#0E6E55] text-white shadow-md shadow-[#0E6E55]/25"
+              : "border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800"
           }`}
         >
           Ver todo
@@ -130,9 +130,9 @@ export default function BuscadorYCategorias({
         <button
           type="button"
           onClick={() => onCategoriaSelect(esOfertasActivo ? "Todos" : "Ofertas")}
-          className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 font-bold transition-all duration-150 cursor-pointer whitespace-nowrap active:scale-95 ${
+          className={`flex shrink-0 items-center gap-1.5 rounded-full px-4.5 py-2.5 text-xs font-extrabold transition-all duration-150 cursor-pointer whitespace-nowrap active:scale-95 ${
             esOfertasActivo
-              ? "bg-[#0E6E55] text-white shadow-md shadow-[#0E6E55]/20 ring-2 ring-[#0E6E55]"
+              ? "bg-[#0E6E55] text-white shadow-md shadow-[#0E6E55]/25 ring-2 ring-[#0E6E55]/30"
               : "bg-[#E6F4EA] dark:bg-emerald-950/40 text-[#0E6E55] dark:text-emerald-400 border border-[#A3E0BF] dark:border-emerald-800/60 hover:bg-[#D1EBD9] dark:hover:bg-emerald-900/40"
           }`}
         >
@@ -149,10 +149,10 @@ export default function BuscadorYCategorias({
                 key={cat}
                 type="button"
                 onClick={() => onCategoriaSelect(cat)}
-                className={`shrink-0 rounded-full px-4 py-2.5 transition-all duration-150 cursor-pointer whitespace-nowrap active:scale-95 ${
+                className={`shrink-0 rounded-full px-4.5 py-2.5 text-xs font-bold transition-all duration-150 cursor-pointer whitespace-nowrap active:scale-95 ${
                   esSeleccionada
-                    ? "bg-slate-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold shadow-md shadow-slate-900/15 dark:shadow-zinc-950/30"
-                    : "border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800"
+                    ? "bg-[#0E6E55] text-white shadow-md shadow-[#0E6E55]/25"
+                    : "border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-800"
                 }`}
               >
                 {cat}

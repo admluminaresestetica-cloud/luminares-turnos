@@ -107,17 +107,17 @@ export default function DestacadosAjustesTab() {
     return item.tabla === filter;
   });
 
-  return (
+return (
     <div className="space-y-6">
       {/* Encabezado */}
-      <div className="rounded-2xl border border-amber-100 bg-amber-50/50 p-6">
+      <div className="rounded-2xl border border-gray-200/80 bg-white p-6 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-amber-500/10 p-2.5 text-amber-600">
+          <div className="rounded-xl bg-blue-500/10 p-2.5 text-blue-600">
             <Flame className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Gestión de "Lo más buscado"</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="text-lg font-bold text-gray-900">Gestión de &quot;Lo más buscado&quot;</h2>
+            <p className="text-xs text-gray-600 mt-0.5">
               Marcá los servicios o combos que querés que aparezcan destacados en el carrusel principal del inicio.
             </p>
           </div>
@@ -127,10 +127,11 @@ export default function DestacadosAjustesTab() {
       {/* Pestañas / Filtros */}
       <div className="flex flex-wrap gap-2">
         <button
+          type="button"
           onClick={() => setFilter('todos')}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
             filter === 'todos'
-              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
@@ -138,10 +139,11 @@ export default function DestacadosAjustesTab() {
         </button>
 
         <button
+          type="button"
           onClick={() => setFilter('promos_laser')}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
             filter === 'promos_laser'
-              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
@@ -150,10 +152,11 @@ export default function DestacadosAjustesTab() {
         </button>
 
         <button
+          type="button"
           onClick={() => setFilter('servicios_generales')}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
             filter === 'servicios_generales'
-              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
@@ -162,10 +165,11 @@ export default function DestacadosAjustesTab() {
         </button>
 
         <button
+          type="button"
           onClick={() => setFilter('servicios_laser')}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all cursor-pointer ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
             filter === 'servicios_laser'
-              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
@@ -176,11 +180,11 @@ export default function DestacadosAjustesTab() {
 
       {/* Lista de elementos */}
       {loading ? (
-        <div className="rounded-2xl border border-gray-100 p-12 text-center text-gray-400">
+        <div className="rounded-2xl border border-gray-100 p-12 text-center text-xs text-gray-400 shadow-xs">
           Cargando elementos...
         </div>
       ) : filteredItems.length === 0 ? (
-        <div className="rounded-2xl border border-gray-100 p-12 text-center text-gray-400">
+        <div className="rounded-2xl border border-gray-100 p-12 text-center text-xs text-gray-400 shadow-xs">
           No se encontraron elementos en esta sección.
         </div>
       ) : (
@@ -189,24 +193,24 @@ export default function DestacadosAjustesTab() {
             <div
               key={`${item.tabla}-${item.id}`}
               onClick={() => toggleDestacado(item)}
-              className={`group relative flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all ${
+              className={`group relative flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-all shadow-xs ${
                 item.es_destacado
-                  ? 'border-amber-400 bg-amber-50/30 shadow-sm'
+                  ? 'border-blue-500 bg-blue-50/40 shadow-sm'
                   : 'border-gray-200 bg-white hover:border-gray-300'
               } ${savingId === item.id ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <div className="pr-3">
-                <p className="font-semibold text-gray-800">{item.nombre}</p>
-                <p className="text-sm font-medium text-amber-600">
+                <p className="text-xs font-bold text-gray-800">{item.nombre}</p>
+                <p className="text-xs font-semibold text-blue-600 mt-0.5">
                   ${item.precio.toLocaleString('es-AR')}
                 </p>
               </div>
 
               <div>
                 {item.es_destacado ? (
-                  <CheckCircle className="h-6 w-6 text-amber-500" />
+                  <CheckCircle className="h-5 w-5 text-blue-600" />
                 ) : (
-                  <Circle className="h-6 w-6 text-gray-300 group-hover:text-gray-400" />
+                  <Circle className="h-5 w-5 text-gray-300 group-hover:text-gray-400" />
                 )}
               </div>
             </div>
