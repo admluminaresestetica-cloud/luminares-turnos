@@ -92,7 +92,7 @@ export default function ConfiguracionAnamnesisTab({ onClose }: ConfiguracionAnam
     <div className="mx-auto my-6 max-w-3xl rounded-2xl border border-slate-200/85 bg-white p-6 shadow-sm transition-all dark:border-zinc-800 dark:bg-zinc-900">
       <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4 dark:border-zinc-800">
         <div className="flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-teal-200 bg-teal-50 text-teal-600 dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-400">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-600 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-400">
             <Settings className="h-5 w-5" />
           </div>
           <div>
@@ -107,8 +107,9 @@ export default function ConfiguracionAnamnesisTab({ onClose }: ConfiguracionAnam
 
         {onClose && (
           <button
+            type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-zinc-800 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 cursor-pointer"
           >
             Volver
           </button>
@@ -123,12 +124,12 @@ export default function ConfiguracionAnamnesisTab({ onClose }: ConfiguracionAnam
             placeholder="Ej: ¿Toma alguna medicación habitual?"
             value={nuevaPregunta}
             onChange={(e) => setNuevaPregunta(e.target.value)}
-            className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-teal-400 dark:focus:ring-teal-400/20"
+            className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
           />
           <select
             value={categoria}
             onChange={(e) => setCategoria(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-teal-400 dark:focus:ring-teal-400/20"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:focus:border-blue-400 dark:focus:ring-blue-400/20 cursor-pointer"
           >
             <option value="Salud">Salud</option>
             <option value="Piel">Piel</option>
@@ -137,7 +138,7 @@ export default function ConfiguracionAnamnesisTab({ onClose }: ConfiguracionAnam
           </select>
           <button
             type="submit"
-            className="flex items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:from-emerald-500 hover:to-teal-500"
+            className="flex items-center justify-center space-x-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             <span>Añadir</span>
@@ -163,7 +164,7 @@ export default function ConfiguracionAnamnesisTab({ onClose }: ConfiguracionAnam
             >
               <div className="space-y-1">
                 <div className="flex items-center space-x-2">
-                  <span className="rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-xs font-semibold text-teal-600 dark:border-teal-900 dark:bg-teal-950/50 dark:text-teal-400">
+                  <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-600 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-400">
                     {item.categoria}
                   </span>
                   <span className="text-sm font-medium text-slate-800 dark:text-white">
@@ -174,10 +175,11 @@ export default function ConfiguracionAnamnesisTab({ onClose }: ConfiguracionAnam
 
               <div className="flex items-center space-x-2">
                 <button
+                  type="button"
                   onClick={() => toggleActivo(item.id, item.activo)}
-                  className={`flex items-center space-x-1 rounded-lg p-2 text-xs font-medium transition-colors ${
+                  className={`flex items-center space-x-1 rounded-lg p-2 text-xs font-medium transition-colors cursor-pointer ${
                     item.activo
-                      ? 'text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
+                      ? 'text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30'
                       : 'text-slate-400 hover:bg-slate-200 dark:hover:bg-zinc-800'
                   }`}
                   title={item.activo ? 'Desactivar pregunta' : 'Activar pregunta'}
@@ -185,8 +187,9 @@ export default function ConfiguracionAnamnesisTab({ onClose }: ConfiguracionAnam
                   {item.activo ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
                 </button>
                 <button
+                  type="button"
                   onClick={() => eliminarPregunta(item.id)}
-                  className="rounded-lg p-2 text-rose-500 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                  className="rounded-lg p-2 text-rose-500 transition-colors hover:bg-rose-50 dark:hover:bg-rose-950/30 cursor-pointer"
                   title="Eliminar pregunta"
                 >
                   <Trash2 className="h-4 w-4" />

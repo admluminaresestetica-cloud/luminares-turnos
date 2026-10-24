@@ -135,12 +135,12 @@ export default function BannerModalTab() {
     return url?.toLowerCase().endsWith('.mp4') || url?.toLowerCase().endsWith('.webm');
   };
 
-  return (
+ return (
     <div className="space-y-6">
       {/* Formulario de Carga */}
       <form onSubmit={handleSubirBanner} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 space-y-4">
         <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-          <ImagePlus className="w-5 h-5 text-rose-500" />
+          <ImagePlus className="w-5 h-5 text-blue-600" />
           Añadir Banner Modal Emergente (Pantalla Completa al Entrar)
         </h3>
 
@@ -153,7 +153,7 @@ export default function BannerModalTab() {
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             placeholder="Ej: ¡Aviso Importante / Nueva Promo!"
-            className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-medium dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            className="w-full rounded-xl border border-slate-200 p-2.5 text-sm font-medium dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
 
@@ -165,7 +165,7 @@ export default function BannerModalTab() {
             type="file"
             accept="image/*,video/mp4,video/webm"
             onChange={handleArchivoChange}
-            className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 dark:file:bg-zinc-800 dark:file:text-zinc-200"
+            className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-zinc-800 dark:file:text-zinc-200"
           />
           {previewUrl && (
             <div className="mt-3 relative h-40 w-full max-w-sm rounded-2xl overflow-hidden border">
@@ -177,7 +177,7 @@ export default function BannerModalTab() {
         <button
           type="submit"
           disabled={subiendo || !archivo}
-          className="rounded-xl bg-rose-500 px-5 py-2.5 text-xs font-bold text-white transition-all hover:bg-rose-600 disabled:opacity-50 flex items-center gap-2"
+          className="rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white transition-all hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-xs"
         >
           {subiendo ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImagePlus className="w-4 h-4" />}
           {subiendo ? 'Subiendo...' : 'Guardar Banner Modal'}
@@ -221,7 +221,7 @@ export default function BannerModalTab() {
 
                   <span
                     className={`absolute right-2 top-2 rounded-full px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm ${
-                      b.activo ? 'bg-emerald-500' : 'bg-slate-500'
+                      b.activo ? 'bg-blue-600' : 'bg-slate-500'
                     }`}
                   >
                     {b.activo ? 'ACTIVO' : 'PAUSADO'}
@@ -235,16 +235,18 @@ export default function BannerModalTab() {
 
                   <div className="flex gap-1.5 shrink-0">
                     <button
+                      type="button"
                       onClick={() => toggleEstado(b.id, b.activo)}
                       title={b.activo ? 'Pausar' : 'Activar'}
-                      className="p-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
+                      className="p-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 cursor-pointer"
                     >
                       {b.activo ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                     </button>
                     <button
+                      type="button"
                       onClick={() => eliminarBanner(b.id, b.imagen_url)}
                       title="Eliminar"
-                      className="p-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-400"
+                      className="p-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/60 dark:text-rose-400 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
