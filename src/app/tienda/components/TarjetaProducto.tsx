@@ -6,7 +6,7 @@ import { useCarrito } from "@/context/CarritoContext";
 import { useFavoritos } from "@/context/FavoritosContext";
 import { useConfig } from "@/context/ConfigContext";
 import { calcularCuotas } from "@/lib/precios";
-import { Heart, Flame, Truck, ShoppingCart, Minus, Plus, ShoppingBag, PackageX, CreditCard } from 'lucide-react';
+import { Plus, Minus, Flame, ShoppingCart, Truck, Heart } from "lucide-react";
 
 interface TarjetaProductoProps {
   producto: Producto & {
@@ -84,7 +84,7 @@ export default function TarjetaProducto({
     cantidadCuotasConfig, 
     porcentajeRecargoConfig
   );
-  
+
   const cuotaFormateada = new Intl.NumberFormat("es-AR").format(datosCuotas.montoCuota);
 
   const handleRestar = (e: React.MouseEvent) => {
@@ -117,7 +117,7 @@ export default function TarjetaProducto({
     toggleFavorito(producto as any);
   };
 
-return (
+    return (
     <div
       onClick={() => onVerDetalle && onVerDetalle(producto)}
       className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 sm:p-3.5 shadow-2xs transition-all duration-200 active:scale-[0.97] hover:shadow-md hover:border-slate-300 dark:hover:border-zinc-700 cursor-pointer select-none"
@@ -202,21 +202,22 @@ return (
             )}
           </div>
 
+          {/* Badge dinámico de cuotas con icono Lucide */}
           {aplicaCuotas && (
-  <div className="mt-1">
-    <span className="inline-flex items-center gap-1 rounded-lg border border-purple-200/80 dark:border-purple-900/60 bg-purple-50/80 dark:bg-purple-950/40 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:text-purple-300">
-      <CreditCard className="h-3 w-3 shrink-0 stroke-[2.2]" />
-      <span>{cantidadCuotasConfig} cuotas fijas de ${cuotaFormateada}</span>
-    </span>
-  </div>
-)}
+            <div className="mt-1">
+              <span className="inline-flex items-center gap-1 rounded-lg border border-purple-200/80 dark:border-purple-900/60 bg-purple-50/80 dark:bg-purple-950/40 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:text-purple-300">
+                <CreditCard className="h-3 w-3 shrink-0 stroke-[2.2]" />
+                <span>{cantidadCuotasConfig} cuotas fijas de ${cuotaFormateada}</span>
+              </span>
+            </div>
+          )}
 
           <p className="text-[10px] font-medium text-slate-400 dark:text-zinc-500 mt-1">
             Stock: {producto.stock}
           </p>
         </div>
 
-        {/* Botón Adaptativo estilo App */}
+        {/* Botón Adaptativo estilo App Nativa */}
         {sinStock ? (
           <button
             disabled
