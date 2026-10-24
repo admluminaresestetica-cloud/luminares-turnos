@@ -83,29 +83,54 @@ export default function HomePage() {
 
       <main className="relative z-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto min-h-screen pb-32 md:pb-12 pt-0 md:pt-4 px-0 sm:px-6 text-stone-800 dark:text-zinc-100 transition-all duration-300 space-y-6">
 
-        {/* ENCABEZADO FIJO (Subimos z-index a z-40 para que flote sobre todo el contenido) */}
-        <div className="sticky top-0 z-40 bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-md pt-2 pb-1 transition-all">
-          {/* Se quitó 'overflow-hidden' de este div para que el desplegable de búsqueda pueda sobrepasarlo libremente */}
-          <div className="shadow-xl shadow-stone-900/10 rounded-3xl bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))]/90 to-[hsl(var(--primary))]/80 dark:from-[hsl(var(--primary))]/90 dark:to-zinc-900 transition-all duration-300 relative">
+{/* ENCABEZADO FIJO (Subimos z-index a z-40 para que flote sobre todo el contenido) */}
+<div className="sticky top-0 z-40 bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-md pt-2 pb-1 transition-all">
+  <div
+    className={`shadow-xl shadow-stone-900/10 rounded-3xl transition-all duration-300 relative overflow-hidden ${
+      config?.banner_tipo === 'gradient'
+        ? `bg-gradient-to-r ${config.banner_degradado || 'from-emerald-700 via-teal-800 to-slate-950'}`
+        : config?.banner_tipo === 'solid' || !config?.banner_tipo
+        ? 'bg-primary'
+        : ''
+    }`}
+    style={
+      config?.banner_tipo === 'image' && config?.banner_imagen_url
+        ? {
+            backgroundImage: `url(${config.banner_imagen_url})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }
+        : undefined
+    }
+  >
+    {/* Capa de opacidad cuando hay una imagen de fondo subida */}
+    {config?.banner_tipo === 'image' && config?.banner_imagen_url && (
+      <div
+        className="absolute inset-0 bg-slate-950 pointer-events-none z-0"
+        style={{ opacity: config.banner_opacidad_overlay ?? 0.4 }}
+      />
+    )}
 
-            {/* 1. Buscador Fijo Superior */}
-            <div className="px-4 pt-4 pb-3 relative z-50">
-              <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
-            </div>
+    {/* Contenido superior envelope */}
+    <div className="relative z-10">
+      {/* 1. Buscador Fijo Superior */}
+      <div className="px-4 pt-4 pb-3 relative z-50">
+        <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
+      </div>
 
-            {/* 2. Acciones Rápidas */}
-            <div
-              className={`transition-all duration-300 ease-in-out px-4 overflow-hidden rounded-b-3xl origin-top ${
-                showSubHeader
-                  ? 'max-h-48 opacity-100 pb-5 pointer-events-auto'
-                  : 'max-h-0 opacity-0 pb-0 pointer-events-none'
-              }`}
-            >
-              <AccionesRapidas />
-            </div>
-
-          </div>
-        </div>
+      {/* 2. Acciones Rápidas */}
+      <div
+        className={`transition-all duration-300 ease-in-out px-4 overflow-hidden rounded-b-3xl origin-top ${
+          showSubHeader
+            ? 'max-h-48 opacity-100 pb-5 pointer-events-auto'
+            : 'max-h-0 opacity-0 pb-0 pointer-events-none'
+        }`}
+      >
+        <AccionesRapidas />
+      </div>
+    </div>
+  </div>
+</div>
 
         {/* CONTENIDO PRINCIPAL */}
         <div className="px-4 sm:px-0 space-y-6">

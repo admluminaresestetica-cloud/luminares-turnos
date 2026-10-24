@@ -58,12 +58,18 @@ export interface ConfiguracionEmpresa {
   // Campos de configuración de Cuotas / Financiación
   cuotas_habilitadas?: boolean;
   monto_minimo_cuotas?: number;
-  cantidad_cuotas?: number;              // Nuevo: ej. 3, 6, 12
+  cantidad_cuotas?: number;              // ej. 3, 6, 12
   porcentaje_recargo_cuotas?: number;
-  porcentaje_recargo_debito?: number;    // Nuevo: ej. 25 (para 25%)
+  porcentaje_recargo_debito?: number;    // ej. 25 (para 25%)
 
   // Personalización visual
   tema_colores?: TemaColores | null;
+
+  // Personalización de Banner / Hero Principal
+  banner_tipo?: 'solid' | 'gradient' | 'image';
+  banner_imagen_url?: string;
+  banner_degradado?: string;
+  banner_opacidad_overlay?: number;
 
   updated_at?: string;
 }
@@ -88,6 +94,8 @@ export async function obtenerConfiguracion(): Promise<ConfiguracionEmpresa | nul
       cantidad_cuotas: data.cantidad_cuotas ?? 3,
       porcentaje_recargo_cuotas: data.porcentaje_recargo_cuotas ?? 25,
       monto_minimo_cuotas: data.monto_minimo_cuotas ?? 0,
+      banner_tipo: data.banner_tipo ?? 'solid',
+      banner_opacidad_overlay: data.banner_opacidad_overlay ?? 0.4,
       tema_colores: data.tema_colores
         ? { ...TEMA_COLORES_DEFAULT, ...data.tema_colores }
         : TEMA_COLORES_DEFAULT,

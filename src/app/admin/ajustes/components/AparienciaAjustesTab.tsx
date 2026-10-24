@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useConfig } from '@/context/ConfigContext';
 import {
   TemaColores,
   TEMA_COLORES_DEFAULT,
   guardarTemaColores,
+  guardarConfiguracion,
 } from '@/lib/supabase/configuracion-empresa';
 import { obtenerColorTextoContraste } from '@/lib/utils/color';
-import { Palette, RefreshCw, Save, Check } from 'lucide-react';
+import { Palette, RefreshCw, Save, Check, Image as ImageIcon, Upload, Loader2, Sparkles } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 const PALETAS_PREDEFINIDAS: { nombre: string; colores: TemaColores }[] = [
   {
@@ -115,25 +117,44 @@ const PALETAS_PREDEFINIDAS: { nombre: string; colores: TemaColores }[] = [
   },
 ];
 
+const DEGRADADOS_PREDEFINIDOS = [
+  { nombre: 'Esmeralda Dinámico', value: 'from-emerald-700 via-teal-800 to-slate-900' },
+  { nombre: 'Azul FinTech Elegante', value: 'from-blue-600 via-indigo-700 to-slate-900' },
+  { nombre: 'Rosa & Fucsia Chic', value: 'from-rose-500 via-pink-600 to-slate-900' },
+  { nombre: 'Dorado & Lujo', value: 'from-amber-600 via-yellow-700 to-slate-900' },
+];
+
 export default function AparienciaAjustesTab() {
-  const { config, refetchConfig, actualizarTema } = useConfig();
+  const { config, refetchConfig, actualizarTema, actualizarBanner } = useConfig();
   const [colores, setColores] = useState<TemaColores>(
     config?.tema_colores || TEMA_COLORES_DEFAULT
   );
+
+  // Estados para el banner / hero
+  const [bannerTipo, setBannerTipo] = useState<'solid' | 'gradient' | 'image'>(config?.banner_tipo || 'solid');
+  const [bannerImagenUrl, setBannerImagenUrl] = useState(config?.banner_imagen_url || '');
+  const [bannerDegradado, setBannerDegradado] = useState(config?.banner_degradado || DEGRADADOS_PREDEFINIDOS[0].value);
+  const [bannerOpacidad, setBannerOpacidad] = useState(config?.banner_opacidad_overlay ?? 0.4);
+
   const [guardando, setGuardando] = useState(false);
   const [guardadoExito, setGuardadoExito] = useState(false);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (config?.tema_colores) {
       setColores(config.tema_colores);
     }
+    if (config?.banner_tipo) setBannerTipo(config.banner_tipo);
+    if (config?.banner_imagen_url) setBannerImagenUrl(config.banner_imagen_url);
+    if (config?.banner_degradado) setBannerDegradado(config.banner_degradado);
+    if (config?.banner_opacidad_overlay !== undefined) setBannerOpacidad(config.banner_opacidad_overlay);
   }, [config]);
 
   // Modificar un color individual y actualizar instantáneamente en la interfaz
   const handleChangeColor = (clave: keyof TemaColores, valorHex: string) => {
     const nuevosColores = { ...colores, [clave]: valorHex };
 
-    // Auto-calcular color de texto de contraste al cambiar colores de fondo clave
     if (clave === 'primary') {
       nuevosColores.primary_foreground = obtenerColorTextoContraste(valorHex);
     } else if (clave === 'secondary') {
@@ -143,7 +164,7 @@ export default function AparienciaAjustesTab() {
     }
 
     setColores(nuevosColores);
-    actualizarTema(nuevosColores); // Live preview instantáneo
+    actualizarTema(nuevosColores);
   };
 
   const aplicarPaletaPredefinida = (paleta: TemaColores) => {
@@ -151,8 +172,45 @@ export default function AparienciaAjustesTab() {
     actualizarTema(paleta);
   };
 
+  // Subir imagen al bucket config-assets
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSubiendoImagen(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `banner-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('config-assets')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('config-assets')
+        .getPublicUrl(filePath);
+
+      const urlFinal = publicUrlData.publicUrl;
+      setBannerImagenUrl(urlFinal);
+      setBannerTipo('image');
+      actualizarBanner({ banner_tipo: 'image', banner_imagen_url: urlFinal });
+    } catch (err) {
+      console.error('Error al subir imagen:', err);
+      alert('Error al subir la imagen al storage.');
+    } finally {
+      setSubiendoImagen(false);
+    }
+  };
+
   const handleRestablecer = () => {
     setColores(TEMA_COLORES_DEFAULT);
+    setBannerTipo('solid');
+    setBannerImagenUrl('');
+    setBannerDegradado(DEGRADADOS_PREDEFINIDOS[0].value);
+    setBannerOpacidad(0.4);
     actualizarTema(TEMA_COLORES_DEFAULT);
   };
 
@@ -160,13 +218,20 @@ export default function AparienciaAjustesTab() {
     setGuardando(true);
     setGuardadoExito(false);
 
-    const ok = await guardarTemaColores(colores);
-    if (ok) {
+    const okTema = await guardarTemaColores(colores);
+    const okConfig = await guardarConfiguracion({
+      banner_tipo: bannerTipo,
+      banner_imagen_url: bannerImagenUrl,
+      banner_degradado: bannerDegradado,
+      banner_opacidad_overlay: bannerOpacidad,
+    });
+
+    if (okTema && okConfig) {
       await refetchConfig();
       setGuardadoExito(true);
       setTimeout(() => setGuardadoExito(false), 3000);
     } else {
-      alert('Hubo un error al guardar los colores en Supabase.');
+      alert('Hubo un error al guardar los cambios en Supabase.');
     }
     setGuardando(false);
   };
@@ -178,10 +243,10 @@ export default function AparienciaAjustesTab() {
         <div>
           <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
             <Palette className="w-5 h-5 text-primary" />
-            Personalización de Colores de la App
+            Personalización de Apariencia y Banner
           </h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Ajusta los tonos principales de tu marca. Los cambios se muestran en vivo a medida que los seleccionas.
+            Ajusta los tonos y el diseño visual de la tienda pública y el encabezado principal.
           </p>
         </div>
 
@@ -216,10 +281,139 @@ export default function AparienciaAjustesTab() {
         </div>
       </div>
 
+      {/* SECCIÓN NUEVA: Configuración del Banner Principal (Hero) */}
+      <div className="bg-card border border-border p-5 rounded-2xl space-y-4 shadow-xs">
+        <h3 className="text-sm font-bold text-foreground flex items-center gap-2 pb-2 border-b border-border">
+          <ImageIcon className="w-4 h-4 text-primary" />
+          Estilo del Banner Principal (Hero Tienda)
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setBannerTipo('solid');
+              actualizarBanner({ banner_tipo: 'solid' });
+            }}
+            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+              bannerTipo === 'solid' ? 'border-primary bg-primary/5 shadow-2xs' : 'border-border hover:border-primary/40'
+            }`}
+          >
+            <span className="text-xs font-bold text-foreground">Color Sólido</span>
+            <span className="text-[11px] text-muted-foreground mt-1">Usa el color primario configurado.</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setBannerTipo('gradient');
+              actualizarBanner({ banner_tipo: 'gradient' });
+            }}
+            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+              bannerTipo === 'gradient' ? 'border-primary bg-primary/5 shadow-2xs' : 'border-border hover:border-primary/40'
+            }`}
+          >
+            <span className="text-xs font-bold text-foreground">Degradado FinTech</span>
+            <span className="text-[11px] text-muted-foreground mt-1">Combinaciones modernas con transiciones.</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setBannerTipo('image');
+              actualizarBanner({ banner_tipo: 'image' });
+            }}
+            className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+              bannerTipo === 'image' ? 'border-primary bg-primary/5 shadow-2xs' : 'border-border hover:border-primary/40'
+            }`}
+          >
+            <span className="text-xs font-bold text-foreground">Imagen de Portada</span>
+            <span className="text-[11px] text-muted-foreground mt-1">Sube una foto personalizada para el fondo.</span>
+          </button>
+        </div>
+
+        {/* Opciones según el tipo elegido */}
+        {bannerTipo === 'gradient' && (
+          <div className="p-4 rounded-xl border border-border bg-background/50 space-y-3">
+            <label className="text-xs font-bold text-foreground block">Seleccionar Estilo de Degradado:</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {DEGRADADOS_PREDEFINIDOS.map((deg) => (
+                <button
+                  key={deg.value}
+                  type="button"
+                  onClick={() => {
+                    setBannerDegradado(deg.value);
+                    actualizarBanner({ banner_degradado: deg.value });
+                  }}
+                  className={`h-12 rounded-lg bg-gradient-to-r ${deg.value} border-2 transition-all cursor-pointer flex items-center justify-center p-1 text-[10px] font-bold text-white text-center shadow-xs ${
+                    bannerDegradado === deg.value ? 'border-white scale-105' : 'border-transparent opacity-80 hover:opacity-100'
+                  }`}
+                >
+                  {deg.nombre}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {bannerTipo === 'image' && (
+          <div className="p-4 rounded-xl border border-border bg-background/50 space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-xs font-bold text-foreground block">Imagen de Fondo Actual</span>
+                <span className="text-[11px] text-muted-foreground">Sube una imagen horizontal de buena resolución.</span>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleUploadImage}
+                accept="image/*"
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={subiendoImagen}
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-secondary text-secondary-foreground border border-border hover:bg-accent transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {subiendoImagen ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                {subiendoImagen ? 'Subiendo...' : 'Subir Imagen'}
+              </button>
+            </div>
+
+            {bannerImagenUrl && (
+              <div className="space-y-3 pt-2 border-t border-border">
+                <div className="relative w-full h-32 rounded-xl overflow-hidden border border-border">
+                  <img src={bannerImagenUrl} alt="Banner Preview" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-foreground block mb-1">
+                    Opacidad / Capa de Contraste ({Math.round(bannerOpacidad * 100)}%)
+                  </label>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="0.8"
+                    step="0.05"
+                    value={bannerOpacidad}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setBannerOpacidad(val);
+                      actualizarBanner({ banner_opacidad_overlay: val });
+                    }}
+                    className="w-full accent-primary cursor-pointer"
+                  />
+                  <span className="text-[10px] text-muted-foreground">Ajusta la oscuridad para asegurar que las letras blancas resalten bien sobre la foto.</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Paletas de Colores Rápidas */}
       <div className="bg-card border border-border p-5 rounded-2xl space-y-3 shadow-xs">
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-    
           Plantillas de Marca Predefinidas
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">

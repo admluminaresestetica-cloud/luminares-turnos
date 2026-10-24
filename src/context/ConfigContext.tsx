@@ -14,6 +14,7 @@ interface ConfigContextType {
   loading: boolean;
   refetchConfig: () => Promise<void>;
   actualizarTema: (nuevoTema: TemaColores) => void;
+  actualizarBanner: (nuevosDatosBanner: Partial<ConfiguracionEmpresa>) => void;
 }
 
 const ConfigContext = createContext<ConfigContextType>({
@@ -21,6 +22,7 @@ const ConfigContext = createContext<ConfigContextType>({
   loading: true,
   refetchConfig: async () => {},
   actualizarTema: () => {},
+  actualizarBanner: () => {},
 });
 
 export const ConfigProvider = ({ children }: { children: React.ReactNode }) => {
@@ -44,6 +46,11 @@ export const ConfigProvider = ({ children }: { children: React.ReactNode }) => {
     setConfig((prev) => (prev ? { ...prev, tema_colores: nuevoTema } : null));
   };
 
+  // Permite actualizar visualmente las propiedades del banner en tiempo real
+  const actualizarBanner = (nuevosDatosBanner: Partial<ConfiguracionEmpresa>) => {
+    setConfig((prev) => (prev ? { ...prev, ...nuevosDatosBanner } : null));
+  };
+
   useEffect(() => {
     cargar();
   }, []);
@@ -55,6 +62,7 @@ export const ConfigProvider = ({ children }: { children: React.ReactNode }) => {
         loading,
         refetchConfig: cargar,
         actualizarTema,
+        actualizarBanner,
       }}
     >
       {children}
