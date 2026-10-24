@@ -440,8 +440,9 @@ export default function ModalDetalleProducto({
           handleRestarRecomendado={handleRestarRecomendado}
         />
 
-        {/* BARRA STICKY INFERIOR EXCLUSIVA PARA MOVILES (ESTILO APP BOTTOM BAR) */}
-        <div className="sticky bottom-0 -mx-4 -mb-4 mt-6 p-3.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-zinc-800 sm:hidden z-20 space-y-2.5 pb-safe">
+        {/* BARRA STICKY INFERIOR EXCLUSIVA PARA MOVILES (CON MARGEN PARA EL BOTTOM NAV) */}
+<div className="sticky bottom-0 -mx-4 -mb-4 mt-6 p-4 pb-20 sm:pb-4 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-zinc-800 sm:hidden z-30 space-y-2.5 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">Cantidad:</span>
             <div className="flex items-center gap-3 bg-slate-100 dark:bg-zinc-800 rounded-xl p-1 shadow-2xs">
