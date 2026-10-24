@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase'
 import { Reserva } from '@/app/admin/turnos/components/types'
 import NotificacionesGabinete from './components/NotificacionesGabinete'
@@ -105,20 +106,30 @@ return (
         <div className="max-w-7xl mx-auto space-y-5">
           
           {/* HEADER PRINCIPAL */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="p-3 bg-white/15 backdrop-blur-md border border-white/20 text-white rounded-2xl shadow-inner">
-                <Clipboard className="h-6 w-6" />
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                  Gabinete · Control
-                </h1>
-                <p className="text-xs sm:text-sm text-blue-100/80 mt-0.5">
-                  Registro técnico de disparos, potencias e historial clínico
-                </p>
-              </div>
-            </div>
+<div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+  <div className="flex items-center gap-3.5">
+    {/* Botón Volver Atrás */}
+    <Link
+      href="/admin"
+      className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white rounded-2xl transition-all active:scale-95 shadow-xs flex items-center justify-center shrink-0"
+      title="Volver al panel"
+    >
+      <ArrowLeft className="h-5 w-5" />
+    </Link>
+
+    <div className="p-3 bg-white/15 backdrop-blur-md border border-white/20 text-white rounded-2xl shadow-inner">
+      <Clipboard className="h-6 w-6" />
+    </div>
+    
+    <div>
+      <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+        Gabinete · Control
+      </h1>
+      <p className="text-xs sm:text-sm text-blue-100/80 mt-0.5 font-medium">
+        Registro técnico de disparos, potencias e historial clínico
+      </p>
+    </div>
+  </div>
 
             <div className="flex flex-wrap items-center gap-3">
               <input

@@ -350,242 +350,254 @@ const { error: errorReserva } = await supabase
   const opcionesSwap = zonaOriginalSwap ? getZonasSwapDisponibles(zonaOriginalSwap, serviciosLaser, idsOcupados) : []
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-xs p-3 sm:p-6 overflow-y-auto">
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 w-full max-w-4xl rounded-2xl shadow-xl overflow-hidden my-auto flex flex-col max-h-[94vh] text-slate-900 dark:text-zinc-100">
-        
-        {/* HEADER */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/40 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 rounded-xl border border-purple-200/60 dark:border-purple-800/40">
-              <Zap className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold tracking-tight text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-                Cierre de Sesión Láser
-                <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40 font-semibold">
-                  Grilla Técnica
-                </span>
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
-                Paciente: <span className="text-purple-600 dark:text-purple-400 font-semibold">{turno.cliente_nombre}</span>
-              </p>
-            </div>
+  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm p-0 sm:p-4 transition-all">
+    {/* Contenedor Principal Fintech */}
+    <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 w-full max-w-4xl rounded-t-[32px] sm:rounded-3xl shadow-2xl flex flex-col max-h-[94vh] sm:max-h-[90vh] text-slate-900 dark:text-zinc-100 my-0 sm:my-auto overflow-hidden animate-in slide-in-from-bottom duration-300 sm:duration-200 pb-[env(safe-area-inset-bottom)] sm:pb-0">
+      
+      {/* Handle visual solo mobile */}
+      <div className="w-12 h-1.5 bg-slate-200 dark:bg-zinc-700/80 rounded-full mx-auto my-2.5 sm:hidden" />
+
+      {/* HEADER */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50 shrink-0">
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 rounded-2xl shrink-0">
+            <Zap className="h-5 w-5" />
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 transition-all cursor-pointer border border-slate-200/60 dark:border-zinc-700"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div>
+            <h2 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-zinc-100 flex items-center gap-2">
+              Cierre de Sesión Láser
+              <span className="text-[10px] px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-bold">
+                Grilla Técnica
+              </span>
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium mt-0.5">
+              Paciente: <strong className="text-blue-600 dark:text-blue-400 font-bold">{turno.cliente_nombre}</strong>
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-all cursor-pointer active:scale-95"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* BODY */}
+      <form onSubmit={handleGuardar} className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+
+        {/* CRONÓMETRO INTEGRADO */}
+        <div className="bg-slate-50/80 dark:bg-zinc-800/40 p-4 rounded-2xl border border-slate-200/80 dark:border-zinc-700/60">
+          <RelojCronometroGabinete
+            onTiempoActualizado={(seg) => setSegundosSesion(seg)}
+          />
         </div>
 
-        {/* BODY */}
-        <form onSubmit={handleGuardar} className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+        {/* ZONAS Y PARÁMETROS */}
+        <div className="space-y-3.5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <label className="font-extrabold text-slate-900 dark:text-zinc-100 text-sm tracking-tight block">
+                Zonas y Parámetros
+              </label>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
+                Configura la frecuencia, energía y pasadas por zona
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMostrarSelectorExtra(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all shadow-md shadow-emerald-500/10 active:scale-95 cursor-pointer shrink-0"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Agregar Zona Extra</span>
+            </button>
+          </div>
 
-          {/* CRONÓMETRO INTEGRADO */}
-          <div className="bg-slate-50 dark:bg-zinc-800/40 p-4 rounded-xl border border-slate-200/80 dark:border-zinc-800">
-            <RelojCronometroGabinete
-              onTiempoActualizado={(seg) => setSegundosSesion(seg)}
+          {/* CONTENEDOR DE ZONAS */}
+          <div className="space-y-2.5">
+            {zonasSesion.map((item, idx) => (
+              <div 
+                key={idx} 
+                className="bg-slate-50/60 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 hover:border-slate-300 dark:hover:border-zinc-600 rounded-2xl p-3.5 transition-all space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3"
+              >
+                <div className="sm:w-1/4 flex items-center justify-between sm:justify-start gap-2 min-w-0">
+                  <span className="font-bold text-slate-800 dark:text-zinc-200 text-xs flex items-center gap-2 truncate">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                    <span className="truncate">{item.nombre}</span>
+                  </span>
+                  {item.esExtra && (
+                    <span className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-lg font-bold shrink-0">
+                      Extra
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 sm:flex-1">
+                  <div>
+                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1 font-semibold">Frecuencia</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. 10 Hz"
+                      value={item.frecuencia}
+                      onChange={(e) => actualizarFila(idx, 'frecuencia', e.target.value)}
+                      className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1 font-semibold">Energía</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. 14 J"
+                      value={item.energia}
+                      onChange={(e) => actualizarFila(idx, 'energia', e.target.value)}
+                      className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1 font-semibold">Pasadas</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. 3"
+                      value={item.pasadas}
+                      onChange={(e) => actualizarFila(idx, 'pasadas', e.target.value)}
+                      className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-1.5 pt-2 sm:pt-0 border-t border-slate-200/60 dark:border-zinc-700/60 sm:border-t-0 shrink-0">
+                  {item.id !== 'generico' && (
+                    <button
+                      type="button"
+                      onClick={() => abrirSwap(idx)}
+                      className="p-2 bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-zinc-700 active:scale-95"
+                      title="Intercambiar zona"
+                    >
+                      <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => eliminarZona(idx)}
+                    className="p-2 bg-white dark:bg-zinc-900 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-zinc-700 active:scale-95"
+                    title="Eliminar zona"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CAMPOS GENERALES */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+          <div className="space-y-1.5">
+            <label className="block font-semibold text-slate-700 dark:text-zinc-300">
+              Especialista / Operadora <span className="text-blue-600 dark:text-blue-400">*</span>
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="Ej. Ana Belén"
+              value={operadora}
+              onChange={(e) => setOperadora(e.target.value)}
+              className="w-full bg-slate-50/50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/80 focus:bg-white dark:focus:bg-zinc-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-2xl px-3.5 py-2.5 text-slate-800 dark:text-zinc-100 font-medium focus:outline-none transition-all shadow-xs"
             />
           </div>
 
-          {/* ZONAS Y PARÁMETROS */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <label className="font-bold text-slate-900 dark:text-zinc-100 text-sm">
-                  Zonas y Parámetros
-                </label>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-400">Configura la frecuencia, energía y pasadas por zona</p>
-              </div>
-              <button
+          <div className="space-y-1.5">
+            <label className="block font-semibold text-slate-700 dark:text-zinc-300">
+              Notas de Gabinete / Evolución Piel
+            </label>
+            <input
+              type="text"
+              placeholder="Ej. Buena tolerancia al tratamiento..."
+              value={notasGabinete}
+              onChange={(e) => setNotasGabinete(e.target.value)}
+              className="w-full bg-slate-50/50 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700/80 focus:bg-white dark:focus:bg-zinc-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-2xl px-3.5 py-2.5 text-slate-800 dark:text-zinc-100 font-medium focus:outline-none transition-all shadow-xs"
+            />
+          </div>
+        </div>
+
+        {/* FOOTER ACCIONES */}
+        <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2.5 min-h-[42px] bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-semibold rounded-2xl transition-all cursor-pointer active:scale-95"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={guardando}
+            className="px-5 py-2.5 min-h-[42px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-2xl transition-all shadow-md shadow-blue-500/10 active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+          >
+            <Save className="h-4 w-4" />
+            <span>{guardando ? 'Guardando...' : 'Finalizar y Guardar Sesión'}</span>
+          </button>
+        </div>
+
+      </form>
+
+      {/* MODAL SWAP INTERNO */}
+      {swapTargetIndex !== null && zonaOriginalSwap && (
+        <ModalSwapZona
+          zonaOriginal={zonaOriginalSwap}
+          opciones={opcionesSwap}
+          onSelect={ejecutarSwap}
+          onClose={() => setSwapTargetIndex(null)}
+        />
+      )}
+
+      {/* MODAL SELECCIONAR ZONA EXTRA */}
+      {mostrarSelectorExtra && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 w-full max-w-md rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl text-xs animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-zinc-800">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-zinc-100 tracking-tight">
+                Seleccionar Zona Extra
+              </h3>
+              <button 
                 type="button"
-                onClick={() => setMostrarSelectorExtra(true)}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer"
+                onClick={() => setMostrarSelectorExtra(false)} 
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-400 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors cursor-pointer active:scale-95"
               >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Agregar Zona Extra</span>
+                <X className="h-4 w-4" />
               </button>
             </div>
-
-            {/* CONTENEDOR DE ZONAS */}
-            <div className="space-y-2.5">
-              {zonasSesion.map((item, idx) => (
-                <div 
-                  key={idx} 
-                  className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 rounded-xl p-3.5 transition-all space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3"
-                >
-                  <div className="sm:w-1/4 flex items-center justify-between sm:justify-start gap-2">
-                    <span className="font-bold text-slate-800 dark:text-zinc-200 text-xs flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      {item.nombre}
+            <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
+              {serviciosLaser
+                .filter(s => !idsOcupados.includes(s.id))
+                .map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => agregarZonaExtra(s)}
+                    className="w-full flex justify-between items-center p-3 rounded-2xl bg-slate-50/80 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 hover:border-blue-500 text-left transition-all cursor-pointer active:scale-95 group"
+                  >
+                    <div>
+                      <p className="font-bold text-xs text-slate-800 dark:text-zinc-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {s.nombre_zona}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-zinc-400 capitalize mt-0.5 font-medium">
+                        Categoría: {s.categoria_zona}
+                      </p>
+                    </div>
+                    <span className="font-extrabold font-mono text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">
+                      ${Number(s.precio_lista).toLocaleString('es-AR')}
                     </span>
-                    {item.esExtra && (
-                      <span className="text-[10px] bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 px-2 py-0.5 rounded-md font-bold">
-                        Extra
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 sm:flex-1">
-                    <div>
-                      <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Frecuencia</label>
-                      <input
-                        type="text"
-                        placeholder="Ej. 10 Hz"
-                        value={item.frecuencia}
-                        onChange={(e) => actualizarFila(idx, 'frecuencia', e.target.value)}
-                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Energía</label>
-                      <input
-                        type="text"
-                        placeholder="Ej. 14 J"
-                        value={item.energia}
-                        onChange={(e) => actualizarFila(idx, 'energia', e.target.value)}
-                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="block sm:hidden text-[10px] text-slate-400 mb-1">Pasadas</label>
-                      <input
-                        type="text"
-                        placeholder="Ej. 3"
-                        value={item.pasadas}
-                        onChange={(e) => actualizarFila(idx, 'pasadas', e.target.value)}
-                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-end gap-1.5 pt-2 sm:pt-0 border-t border-slate-200/60 dark:border-zinc-700/60 sm:border-t-0">
-                    {item.id !== 'generico' && (
-                      <button
-                        type="button"
-                        onClick={() => abrirSwap(idx)}
-                        className="p-2 bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-lg transition-all cursor-pointer border border-slate-200 dark:border-zinc-700"
-                        title="Intercambiar zona"
-                      >
-                        <ArrowRightLeft className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => eliminarZona(idx)}
-                      className="p-2 bg-white dark:bg-zinc-900 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-600 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400 rounded-lg transition-all cursor-pointer border border-slate-200 dark:border-zinc-700"
-                      title="Eliminar zona"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                  </button>
+                ))}
             </div>
           </div>
+        </div>
+      )}
 
-          {/* CAMPOS GENERALES */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <div className="space-y-1">
-              <label className="block font-semibold text-slate-700 dark:text-zinc-300">
-                Especialista / Operadora <span className="text-purple-600 dark:text-purple-400">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="Ej. Ana Belén"
-                value={operadora}
-                onChange={(e) => setOperadora(e.target.value)}
-                className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block font-semibold text-slate-700 dark:text-zinc-300">
-                Notas de Gabinete / Evolución Piel
-              </label>
-              <input
-                type="text"
-                placeholder="Ej. Buena tolerancia al tratamiento..."
-                value={notasGabinete}
-                onChange={(e) => setNotasGabinete(e.target.value)}
-                className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* FOOTER ACCIONES */}
-          <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end gap-2.5">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-semibold rounded-xl transition-all cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={guardando}
-              className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl transition-all shadow-xs active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
-            >
-              <Save className="h-4 w-4" />
-              <span>{guardando ? 'Guardando...' : 'Finalizar y Guardar Sesión'}</span>
-            </button>
-          </div>
-
-        </form>
-
-        {/* MODAL SWAP INTERNO */}
-        {swapTargetIndex !== null && zonaOriginalSwap && (
-          <ModalSwapZona
-            zonaOriginal={zonaOriginalSwap}
-            opciones={opcionesSwap}
-            onSelect={ejecutarSwap}
-            onClose={() => setSwapTargetIndex(null)}
-          />
-        )}
-
-        {/* MODAL SELECCIONAR ZONA EXTRA */}
-        {mostrarSelectorExtra && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/50 dark:bg-slate-950/70 backdrop-blur-xs p-4">
-            <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 w-full max-w-md rounded-2xl p-5 space-y-4 shadow-xl text-xs">
-              <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-zinc-800">
-                <h3 className="font-bold text-sm text-slate-900 dark:text-zinc-100">Seleccionar Zona Extra</h3>
-                <button 
-                  type="button"
-                  onClick={() => setMostrarSelectorExtra(false)} 
-                  className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 transition-colors cursor-pointer"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
-                {serviciosLaser
-                  .filter(s => !idsOcupados.includes(s.id))
-                  .map(s => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => agregarZonaExtra(s)}
-                      className="w-full flex justify-between items-center p-3 rounded-xl bg-slate-50 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-800 hover:border-purple-500 text-left transition-all cursor-pointer group"
-                    >
-                      <div>
-                        <p className="font-bold text-xs text-slate-800 dark:text-zinc-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{s.nombre_zona}</p>
-                        <p className="text-[11px] text-slate-500 dark:text-zinc-400 capitalize mt-0.5">Categoría: {s.categoria_zona}</p>
-                      </div>
-                      <span className="font-bold text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-1 rounded-md border border-emerald-200/60 dark:border-emerald-800/40">
-                        ${Number(s.precio_lista).toLocaleString('es-AR')}
-                      </span>
-                    </button>
-                  ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-      </div>
     </div>
-  )
+  </div>
+);
 }

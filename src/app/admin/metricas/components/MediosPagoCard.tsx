@@ -42,13 +42,8 @@ export default function MediosPagoCard({ data, loading = false }: MediosPagoCard
   const totalRecaudado = data.reduce((acc, item) => acc + item.monto, 0);
 
 return (
-  <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 sm:p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-200">
-    <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tight mb-4">
-      Servicios Más Demandados
-    </h3>
-
-    {/* Aquí va el contenido del gráfico (Recharts o barras personalizadas) */}
-    <div className="space-y-4">
+    <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 sm:p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-200 flex flex-col justify-between">
+      <div>
         {/* Encabezado de la Tarjeta */}
         <div className="flex items-center justify-between gap-3 mb-5">
           <div>
