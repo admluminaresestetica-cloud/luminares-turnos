@@ -235,13 +235,13 @@ export default function ModalDetalleProducto({
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 overscroll-none"
     >
-<div
+      <div
         ref={modalContainerRef}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[88vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white dark:bg-zinc-900 p-4 sm:p-8 shadow-2xl dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)] flex flex-col justify-between"
+        className="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[88vh] overflow-y-auto overscroll-contain rounded-t-[32px] sm:rounded-3xl bg-white dark:bg-zinc-900 p-4 sm:p-8 shadow-2xl dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] flex flex-col justify-between"
         style={{
           overscrollBehaviorY: "contain",
           transform: `translateY(${currentOffsetY}px)`,
@@ -253,22 +253,24 @@ export default function ModalDetalleProducto({
           <span className="h-1.5 w-12 rounded-full bg-slate-300 dark:bg-zinc-700" />
         </div>
 
-{/* Botones Flotantes de Cierre / Compartir */}
+        {/* Botones Flotantes de Cierre / Compartir */}
         <div className="sticky top-0 float-right z-30 -mr-1 -mt-1 sm:-mr-4 sm:-mt-4 flex items-center gap-2">
           <button
+            type="button"
             onClick={handleCompartir}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 dark:bg-zinc-800/90 text-slate-600 dark:text-zinc-300 backdrop-blur-md border border-slate-100 dark:border-zinc-700 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-90 cursor-pointer"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 dark:bg-zinc-800/90 text-slate-600 dark:text-zinc-300 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-90 cursor-pointer"
             title="Compartir producto"
           >
             <Share2 className="h-4 w-4" />
           </button>
 
           <button
+            type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 dark:bg-zinc-800/90 text-slate-500 dark:text-zinc-400 backdrop-blur-md border border-slate-100 dark:border-zinc-700 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-90 cursor-pointer"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 dark:bg-zinc-800/90 text-slate-500 dark:text-zinc-400 backdrop-blur-md border border-slate-200/80 dark:border-zinc-700 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-90 cursor-pointer"
             title="Cerrar (Esc)"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 stroke-[2.2]" />
           </button>
         </div>
 
@@ -284,26 +286,26 @@ export default function ModalDetalleProducto({
             sinStock={sinStock}
           />
 
-{/* INFORMACIÓN DEL PRODUCTO */}
+          {/* INFORMACIÓN DEL PRODUCTO */}
           <div className="flex flex-col justify-between space-y-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#0E6E55] dark:text-emerald-400">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-[#0E6E55] dark:text-emerald-400 bg-[#0E6E55]/10 dark:bg-emerald-500/20 px-2.5 py-0.5 rounded-full">
                 {producto.categoria}
               </span>
 
-              <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 sm:text-2xl mt-1 leading-snug">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 sm:text-2xl mt-2 leading-snug tracking-tight">
                 {producto.nombre}
               </h2>
 
-              {/* ETIQUETAS / TAGS */}
+              {/* ETIQUETAS / TAGS ESTILO PÍLDORA */}
               {producto.etiquetas && producto.etiquetas.length > 0 && (
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
-                  {producto.etiquetas.map((tag, idx) => (
+                  {producto.etiquetas.map((tag: string, idx: number) => (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => setTagSeleccionadoCarrusel(tag)}
-                      className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-zinc-800 hover:bg-[#0E6E55]/10 dark:hover:bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-zinc-300 hover:text-[#0E6E55] dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-zinc-800/80 hover:bg-[#0E6E55]/10 dark:hover:bg-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:text-zinc-300 hover:text-[#0E6E55] dark:hover:text-emerald-400 transition-all cursor-pointer active:scale-95"
                       title={`Ver productos con #${tag}`}
                     >
                       <Tag className="h-3 w-3 text-slate-400 dark:text-zinc-500" />
@@ -315,7 +317,7 @@ export default function ModalDetalleProducto({
 
               {/* PRECIOS Y CUOTAS */}
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-slate-900 dark:text-zinc-100">
+                <span className="text-2xl font-black text-slate-900 dark:text-zinc-100 tracking-tight">
                   ${producto.precio.toLocaleString("es-AR")}
                 </span>
                 {tieneDescuento && (
@@ -328,40 +330,41 @@ export default function ModalDetalleProducto({
               {!sinStock && (
                 <div className="mt-2">
                   {permiteCuotas ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 dark:border-purple-900/60 bg-purple-50 dark:bg-purple-950/40 px-2.5 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300">
-                      <CreditCard className="h-3.5 w-3.5" />
-                      3 cuotas fijas de ${montoCuota.toLocaleString("es-AR")}
+                    <span className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200/80 dark:border-purple-900/60 bg-purple-50/80 dark:bg-purple-950/40 px-2.5 py-1 text-xs font-bold text-purple-700 dark:text-purple-300">
+                      <CreditCard className="h-3.5 w-3.5 shrink-0 stroke-[2.2]" />
+                      <span>3 cuotas fijas de ${montoCuota.toLocaleString("es-AR")}</span>
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-zinc-400">
+                    <span className="inline-flex items-center gap-1 rounded-xl border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:text-zinc-400">
                       Solo Contado / Débito
                     </span>
                   )}
                 </div>
               )}
 
-              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-2">
+              <p className="text-xs font-medium text-slate-500 dark:text-zinc-400 mt-2.5">
                 Stock disponible: <strong className="text-slate-800 dark:text-zinc-200">{stockDisponible}</strong>
                 {cantidadEnCarrito > 0 && (
-                  <span className="ml-1 text-emerald-700 dark:text-emerald-400 font-medium">
+                  <span className="ml-1 text-[#0E6E55] dark:text-emerald-400 font-bold">
                     ({cantidadEnCarrito} en el carrito)
                   </span>
                 )}
               </p>
 
               {producto.descripcion && (
-                <p className="mt-4 text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
+                <p className="mt-4 text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed font-medium">
                   {producto.descripcion}
                 </p>
               )}
             </div>
 
-{/* CONTROLES DE CANTIDAD (DESKTOP) */}
-            <div className="hidden sm:block pt-2 space-y-4">
-              <div className="flex items-center justify-between rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/50 p-2">
-                <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300 pl-2">Cantidad a agregar:</span>
-                <div className="flex items-center gap-3 bg-white dark:bg-zinc-800 rounded-xl border border-slate-200 dark:border-zinc-700 p-1">
+            {/* CONTROLES DE CANTIDAD (DESKTOP) */}
+            <div className="hidden sm:block pt-2 space-y-3">
+              <div className="flex items-center justify-between rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-800/50 p-2">
+                <span className="text-xs font-bold text-slate-700 dark:text-zinc-300 pl-2">Cantidad a agregar:</span>
+                <div className="flex items-center gap-3 bg-white dark:bg-zinc-800 rounded-xl border border-slate-200/80 dark:border-zinc-700 p-1 shadow-2xs">
                   <button
+                    type="button"
                     onClick={() => puedeRestar && setCantidad(cantidad - 1)}
                     disabled={!puedeRestar}
                     className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
@@ -370,14 +373,15 @@ export default function ModalDetalleProducto({
                         : "text-slate-300 dark:text-zinc-600 cursor-not-allowed"
                     }`}
                   >
-                    <Minus className="h-3.5 w-3.5" />
+                    <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
                   </button>
 
-                  <span className="w-6 text-center text-sm font-bold text-slate-900 dark:text-zinc-100">
+                  <span className="w-6 text-center text-sm font-black text-slate-900 dark:text-zinc-100">
                     {cantidad}
                   </span>
 
                   <button
+                    type="button"
                     onClick={() => puedeSumar && setCantidad(cantidad + 1)}
                     disabled={!puedeSumar}
                     className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
@@ -386,21 +390,22 @@ export default function ModalDetalleProducto({
                         : "text-slate-300 dark:text-zinc-600 cursor-not-allowed"
                     }`}
                   >
-                    <Plus className="h-3.5 w-3.5" />
+                    <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
                   </button>
                 </div>
               </div>
 
               <button
+                type="button"
                 onClick={handleAgregarPrincipal}
                 disabled={sinStock || maximoPermitidoParaAgregar <= 0}
                 className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all ${
                   sinStock || maximoPermitidoParaAgregar <= 0
-                    ? "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-500 cursor-not-allowed"
+                    ? "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-500 cursor-not-allowed opacity-80"
                     : "bg-[#0E6E55] dark:bg-emerald-600 text-white hover:bg-[#0b5944] dark:hover:bg-emerald-500 active:scale-[0.98] shadow-md shadow-[#0E6E55]/20 dark:shadow-emerald-950/40 cursor-pointer"
                 }`}
               >
-                <ShoppingCartPlus className="h-4 w-4" />
+                <ShoppingCart className="h-4 w-4 stroke-[2.2]" />
                 <span>
                   {sinStock
                     ? "Sin stock disponible"
@@ -411,9 +416,10 @@ export default function ModalDetalleProducto({
               </button>
 
               <button
+                type="button"
                 onClick={handleComprarAhora}
                 disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold transition-all border-2 border-[#0E6E55] dark:border-emerald-500 bg-transparent text-[#0E6E55] dark:text-emerald-400 hover:bg-[#0E6E55]/10 dark:hover:bg-emerald-500/10 cursor-pointer ${
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold transition-all border-2 border-[#0E6E55] dark:border-emerald-500 text-[#0E6E55] dark:text-emerald-400 hover:bg-[#0E6E55]/10 dark:hover:bg-emerald-500/10 cursor-pointer active:scale-[0.98] ${
                   sinStock || maximoPermitidoParaAgregar <= 0 ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -434,53 +440,57 @@ export default function ModalDetalleProducto({
           handleRestarRecomendado={handleRestarRecomendado}
         />
 
-{/* BARRA STICKY INFERIOR EXCLUSIVA PARA MOVILES */}
-        <div className="sticky bottom-0 -mx-4 -mb-4 mt-6 p-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-slate-200 dark:border-zinc-800 sm:hidden z-20 space-y-2 pb-safe">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">Cantidad:</span>
-            <div className="flex items-center gap-3 bg-slate-100 dark:bg-zinc-800 rounded-xl p-1">
+        {/* BARRA STICKY INFERIOR EXCLUSIVA PARA MOVILES (ESTILO APP BOTTOM BAR) */}
+        <div className="sticky bottom-0 -mx-4 -mb-4 mt-6 p-3.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-zinc-800 sm:hidden z-20 space-y-2.5 pb-safe">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">Cantidad:</span>
+            <div className="flex items-center gap-3 bg-slate-100 dark:bg-zinc-800 rounded-xl p-1 shadow-2xs">
               <button
+                type="button"
                 onClick={() => puedeRestar && setCantidad(cantidad - 1)}
                 disabled={!puedeRestar}
                 className={`flex h-7 w-7 items-center justify-center rounded-lg active:scale-90 ${
-                  puedeRestar ? "bg-white dark:bg-zinc-700 text-slate-700 dark:text-zinc-200 shadow-xs" : "text-slate-300 dark:text-zinc-600"
+                  puedeRestar ? "bg-white dark:bg-zinc-700 text-slate-700 dark:text-zinc-200 shadow-2xs cursor-pointer" : "text-slate-300 dark:text-zinc-600"
                 }`}
               >
-                <Minus className="h-3 w-3" />
+                <Minus className="h-3 w-3 stroke-[2.5]" />
               </button>
-              <span className="w-5 text-center text-xs font-bold text-slate-900 dark:text-zinc-100">{cantidad}</span>
+              <span className="w-5 text-center text-xs font-black text-slate-900 dark:text-zinc-100">{cantidad}</span>
               <button
+                type="button"
                 onClick={() => puedeSumar && setCantidad(cantidad + 1)}
                 disabled={!puedeSumar}
                 className={`flex h-7 w-7 items-center justify-center rounded-lg active:scale-90 ${
-                  puedeSumar ? "bg-white dark:bg-zinc-700 text-slate-700 dark:text-zinc-200 shadow-xs" : "text-slate-300 dark:text-zinc-600"
+                  puedeSumar ? "bg-white dark:bg-zinc-700 text-slate-700 dark:text-zinc-200 shadow-2xs cursor-pointer" : "text-slate-300 dark:text-zinc-600"
                 }`}
               >
-                <Plus className="h-3 w-3" />
+                <Plus className="h-3 w-3 stroke-[2.5]" />
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <button
+              type="button"
               onClick={handleAgregarPrincipal}
               disabled={sinStock || maximoPermitidoParaAgregar <= 0}
               className={`flex items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold transition-all ${
                 sinStock || maximoPermitidoParaAgregar <= 0
                   ? "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-500 cursor-not-allowed"
-                  : "bg-[#0E6E55] dark:bg-emerald-600 text-white active:scale-[0.98] shadow-xs"
+                  : "bg-[#0E6E55] dark:bg-emerald-600 text-white active:scale-[0.98] shadow-xs cursor-pointer"
               }`}
             >
-              <ShoppingCartPlus className="h-3.5 w-3.5" />
+              <ShoppingCart className="h-3.5 w-3.5 stroke-[2.2]" />
               <span>
                 {sinStock ? "Sin Stock" : `$${(producto.precio * cantidad).toLocaleString("es-AR")}`}
               </span>
             </button>
 
             <button
+              type="button"
               onClick={handleComprarAhora}
               disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-              className={`flex items-center justify-center rounded-xl py-3 text-xs font-bold border border-[#0E6E55] dark:border-emerald-500 text-[#0E6E55] dark:text-emerald-400 active:scale-[0.98] ${
+              className={`flex items-center justify-center rounded-xl py-3 text-xs font-bold border border-[#0E6E55] dark:border-emerald-500 text-[#0E6E55] dark:text-emerald-400 active:scale-[0.98] cursor-pointer ${
                 sinStock || maximoPermitidoParaAgregar <= 0 ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -499,11 +509,11 @@ export default function ModalDetalleProducto({
             handleSumarRecomendado={handleSumarRecomendado}
             handleRestarRecomendado={handleRestarRecomendado}
             onClose={() => setTagSeleccionadoCarrusel(null)}
-            onSeleccionarProducto={(prod) => {
+            onSeleccionarProducto={(prod: any) => {
               setTagSeleccionadoCarrusel(null);
               onSeleccionarProducto(prod);
             }}
-            onVerMasGlobal={(tag) => {
+            onVerMasGlobal={(tag: string) => {
               if (onFiltrarPorTag) onFiltrarPorTag(tag);
               onClose();
             }}
