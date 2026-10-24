@@ -23,7 +23,6 @@ import TagsFiltros from "./components/TagsFiltros";
 
 export const dynamic = 'force-dynamic';
 
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -56,7 +55,7 @@ function TiendaContenido() {
   // 1. Lectura de parámetros de la URL (Mercado Pago, Categoría, Etiqueta)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    
+
     // Si regresa de Mercado Pago con éxito
     const status = urlParams.get("status");
     if (status === "success" && typeof vaciarCarrito === "function") {
@@ -288,19 +287,30 @@ function TiendaContenido() {
               <span className="hidden sm:inline">Mi Carrito</span>
 
               {totalItems > 0 && (
-  <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 bg-[#0E6E55] px-1.5 text-[10px] font-extrabold leading-none text-white shadow-md animate-in zoom-in-50 duration-200 sm:static sm:ml-1 sm:h-5 sm:min-w-[20px] sm:border-0 sm:text-[11px]">
-    {totalItems}
-  </span>
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 bg-[#0E6E55] px-1.5 text-[10px] font-extrabold leading-none text-white shadow-md animate-in zoom-in-50 duration-200 sm:static sm:ml-1 sm:h-5 sm:min-w-[20px] sm:border-0 sm:text-[11px]">
+                  {totalItems}
+                </span>
               )}
             </button>
           </div>
         </nav>
 
-        <div className="mx-auto max-w-[1150px] px-4 pb-28 pt-4 sm:px-10 sm:pb-16">
+        <div className="mx-auto max-w-[1150px] px-4 pb-28 pt-4 sm:px-10 sm:pb-16 space-y-4">
+          {/* 1. Buscador y Filtros Principales (Bien arriba para fácil acceso) */}
+          <BuscadorYCategorias
+            busqueda={busqueda}
+            onBusquedaChange={setBusqueda}
+            categorias={categorias}
+            categoriaSeleccionada={categoriaFiltro}
+            onCategoriaSelect={setCategoriaFiltro}
+            ordenarPor={ordenarPor}
+            onOrdenarChange={setOrdenarPor}
+          />
+
+          {/* 2. Banner de Promociones / Novedades */}
           <BannerCarousel />
 
-          <BeneficiosTienda />
-
+          {/* 3. Burbujas de Marcas / Etiquetas */}
           <TagsFiltros
             tags={tags}
             tagSeleccionado={tagSeleccionado}
@@ -308,9 +318,8 @@ function TiendaContenido() {
           />
 
           {/* Indicador visual de etiqueta activa */}
-{hayTagActivo && (
-  <div className="mb-6 flex items-center justify-between bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-[#0E6E55]/25 rounded-[22px] px-4 sm:px-5 py-3.5 shadow-sm animate-in fade-in slide-in-from-top-1 duration-300">
-
+          {hayTagActivo && (
+            <div className="flex items-center justify-between bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-[#0E6E55]/25 rounded-[22px] px-4 sm:px-5 py-3.5 shadow-sm animate-in fade-in slide-in-from-top-1 duration-300">
               <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-[#0E6E55] dark:text-emerald-400">
                 <div className="w-7 h-7 rounded-xl bg-[#0E6E55]/10 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
                   <TagIcon className="w-3.5 h-3.5 stroke-[2.2]" />
@@ -330,16 +339,10 @@ function TiendaContenido() {
             </div>
           )}
 
-          <BuscadorYCategorias
-            busqueda={busqueda}
-            onBusquedaChange={setBusqueda}
-            categorias={categorias}
-            categoriaSeleccionada={categoriaFiltro}
-            onCategoriaSelect={setCategoriaFiltro}
-            ordenarPor={ordenarPor}
-            onOrdenarChange={setOrdenarPor}
-          />
+          {/* 4. Bloque compacto de Beneficios */}
+          <BeneficiosTienda />
 
+          {/* 5. Catálogo de Productos */}
           <GridProductos
             productos={productosOrdenados}
             cargando={cargando}
