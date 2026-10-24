@@ -20,16 +20,16 @@ interface TagsFiltrosProps {
 export default function TagsFiltros({ tags, tagSeleccionado, onSelectTag }: TagsFiltrosProps) {
   if (!tags || tags.length === 0) return null;
 
-  // Helper para mantener clases limpias y reutilizables
+  // Helper para mantener clases limpias y amplificadas en tamaño
   const getButtonStyles = (activo: boolean) =>
-    `flex flex-col items-center justify-center min-w-[76px] h-[76px] p-2 rounded-2xl transition-all duration-200 shrink-0 cursor-pointer border active:scale-95 snap-start select-none ${
+    `flex flex-col items-center justify-between min-w-[92px] h-[92px] p-2.5 rounded-2xl transition-all duration-200 shrink-0 cursor-pointer border active:scale-95 snap-start select-none ${
       activo
         ? 'bg-[#0E6E55] text-white border-[#0E6E55] shadow-md scale-105'
         : 'bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border-[#E7E5E0] dark:border-zinc-800 hover:border-[#0E6E55]/40 dark:hover:border-emerald-500/40 hover:bg-slate-50/80 dark:hover:bg-zinc-800/80 shadow-2xs'
     }`;
 
   const getIconWrapperStyles = (activo: boolean) =>
-    `relative w-8 h-8 rounded-full flex items-center justify-center mb-1 overflow-hidden transition-colors ${
+    `relative w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden transition-colors ${
       activo ? 'bg-white/20 text-white' : 'bg-[#F7F7F5] dark:bg-zinc-800 text-[#0E6E55] dark:text-emerald-400'
     }`;
 
@@ -44,9 +44,9 @@ export default function TagsFiltros({ tags, tagSeleccionado, onSelectTag }: Tags
           className={getButtonStyles(tagSeleccionado === null)}
         >
           <div className={getIconWrapperStyles(tagSeleccionado === null)}>
-            <Tag className="w-4 h-4 stroke-[2]" />
+            <Tag className="w-5 h-5 stroke-[2]" />
           </div>
-          <span className="text-[11px] font-bold tracking-tight text-center truncate w-full">
+          <span className="text-xs font-bold tracking-tight text-center truncate w-full">
             Todo
           </span>
         </button>
@@ -69,14 +69,14 @@ export default function TagsFiltros({ tags, tagSeleccionado, onSelectTag }: Tags
                     src={tag.imagen_url}
                     alt={tag.nombre}
                     fill
-                    sizes="32px"
-                    className="object-cover"
+                    sizes="48px"
+                    className="object-contain p-1"
                   />
                 ) : (
-                  <Tag className="w-4 h-4 stroke-[2]" />
+                  <Tag className="w-5 h-5 stroke-[2]" />
                 )}
               </div>
-              <span className="text-[11px] font-bold tracking-tight text-center truncate w-full">
+              <span className="text-xs font-bold tracking-tight text-center truncate w-full">
                 {tag.nombre}
               </span>
             </button>
