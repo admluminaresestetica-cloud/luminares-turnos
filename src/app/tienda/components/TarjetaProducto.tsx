@@ -84,7 +84,7 @@ export default function TarjetaProducto({
     cantidadCuotasConfig, 
     porcentajeRecargoConfig
   );
-  
+
   const cuotaFormateada = new Intl.NumberFormat("es-AR").format(datosCuotas.montoCuota);
 
   const handleRestar = (e: React.MouseEvent) => {
