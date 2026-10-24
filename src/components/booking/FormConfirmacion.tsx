@@ -124,6 +124,10 @@ export default function FormConfirmacion({
 
   const formValido = nombre.trim().length >= 3 && celular.replace(/\D/g, '').length >= 8;
 
+ // Evaluar horario comercial (09:00 hs a 20:00 hs)
+  const horaActual = new Date().getHours();
+  const esHorarioComercial = horaActual >= 9 && horaActual < 20;
+
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* TARJETA DE RESUMEN DEL TURNO */}
@@ -283,14 +287,17 @@ export default function FormConfirmacion({
             </button>
           )}
 
-          <button
+           <button
             type="button"
-            onClick={() => setMetodoPago('whatsapp')}
+            disabled={!esHorarioComercial}
+            onClick={() => esHorarioComercial && setMetodoPago('whatsapp')}
             aria-pressed={metodoPago === 'whatsapp'}
             className={`relative text-left p-3.5 rounded-2xl border-2 transition-all duration-150 ${
-              metodoPago === 'whatsapp'
-                ? 'border-emerald-500 bg-emerald-50/70 shadow-xs shadow-emerald-500/10'
-                : 'border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-slate-300 dark:hover:border-zinc-600'
+              !esHorarioComercial
+                ? 'opacity-60 cursor-not-allowed border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900'
+                : metodoPago === 'whatsapp'
+                ? 'border-emerald-500 bg-emerald-50/70 shadow-xs shadow-emerald-500/10 cursor-pointer'
+                : 'border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-slate-300 dark:hover:border-zinc-600 cursor-pointer'
             }`}
           >
             {metodoPago === 'whatsapp' && (
@@ -305,6 +312,11 @@ export default function FormConfirmacion({
               </div>
               <p className="text-xs font-bold text-slate-900 dark:text-zinc-100 leading-tight pr-5">Transferencia / WhatsApp</p>
               <p className="mt-1.5 text-[10px] font-medium text-slate-500 dark:text-zinc-400 leading-tight">
+              {!esHorarioComercial && (
+              <p className="mt-1.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 leading-tight">
+                ⚠️ Solo disponible de 09:00 a 20:00 hs. De noche utilizá Mercado Pago.
+              </p>
+            )}
               Abonás por transferencia y enviás comprobante
             </p>
           </button>

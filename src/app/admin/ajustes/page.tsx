@@ -217,152 +217,164 @@ export default function AjustesAdminPage() {
     }
   ]
 
-  return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
+return (
+    <div className="min-h-screen bg-slate-100 dark:bg-zinc-950 font-sans text-slate-900 dark:text-zinc-100 transition-colors pb-12">
       
-      {/* Encabezado Principal */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-zinc-800 pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-2">
-            Ajustes del Negocio
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 mt-1">
-            {moduloActivo 
-              ? 'Editá los valores del módulo seleccionado.' 
-              : 'Seleccioná la sección que querés configurar.'}
-          </p>
-        </div>
-
-{moduloActivo ? (
-          <button
-            onClick={() => setModuloActivo(null)}
-            className="p-2 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded-xl border border-slate-200/80 dark:border-zinc-700 transition-all active:scale-95 shadow-2xs shrink-0 cursor-pointer"
-            title="Volver al Menú de Ajustes"
-          >
-            <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
-          </button>
-        ) : (
-          <Link
-            href="/admin"
-            className="p-2 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded-xl border border-slate-200/80 dark:border-zinc-700 transition-all active:scale-95 shadow-2xs shrink-0"
-            title="Volver al Menú Admin"
-          >
-            <ArrowLeft className="w-4 h-4 text-slate-500 dark:text-zinc-400" />
-          </Link>
+      {/* 🟦 HERO CONTINUO SUPERIOR CON DEGRADADO AZUL FINTECH */}
+      <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 dark:from-blue-950 dark:via-blue-900 dark:to-zinc-900 pb-20 shadow-lg text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
           
-        )}
+          {/* Encabezado con Botón de Volver al lado del Título */}
+          <div className="flex items-center gap-3.5">
+            {moduloActivo ? (
+              <button
+                type="button"
+                onClick={() => setModuloActivo(null)}
+                className="p-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-2xl border border-white/25 transition-all active:scale-95 shadow-xs shrink-0 cursor-pointer"
+                title="Volver al Menú de Ajustes"
+              >
+                <ArrowLeft className="w-4 h-4 text-white" />
+              </button>
+            ) : (
+              <Link
+                href="/admin"
+                className="p-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-2xl border border-white/25 transition-all active:scale-95 shadow-xs shrink-0 cursor-pointer"
+                title="Volver al Menú Admin"
+              >
+                <ArrowLeft className="w-4 h-4 text-white" />
+              </Link>
+            )}
+
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                Ajustes del Negocio
+              </h1>
+              <p className="text-xs text-blue-100/80 mt-0.5">
+                {moduloActivo 
+                  ? 'Editá los valores del módulo seleccionado.' 
+                  : 'Seleccioná la sección que querés configurar.'}
+              </p>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      {/* VISTA 1: GRID HUB DE TARJETAS */}
-      {!moduloActivo && (
-        <div className="space-y-8">
-          {categorias.map((cat, idx) => (
-            <div key={idx} className="space-y-3">
-              <h2 className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-zinc-500 px-1">
-                {cat.titulo}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {cat.tarjetas.map((tarjeta) => {
-                  const Icono = tarjeta.icono
-                  return (
-                    <button
-                      key={tarjeta.id}
-                      onClick={() => setModuloActivo(tarjeta.id)}
-                      className="group text-left p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-md transition-all duration-200 flex flex-col justify-between cursor-pointer relative overflow-hidden"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <div className={`p-2.5 rounded-xl ${tarjeta.colorIcono} transition-transform group-hover:scale-105`}>
-                            <Icono className="w-5 h-5" />
+      {/* ⬜ CONTENEDOR FLOTANTE PRINCIPAL (-mt-10) */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 space-y-6">
+        {/* VISTA 1: GRID HUB DE TARJETAS */}
+        {!moduloActivo && (
+          <div className="space-y-8 pt-6"> {/* <--- Agregale pt-6 aquí */}
+            {categorias.map((cat, idx) => (
+              <div key={idx} className="space-y-3">
+                <h2 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400 px-1">
+                  {cat.titulo}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {cat.tarjetas.map((tarjeta) => {
+                    const Icono = tarjeta.icono
+                    return (
+                      <button
+                        key={tarjeta.id}
+                        type="button"
+                        onClick={() => setModuloActivo(tarjeta.id)}
+                        className="group text-left p-5 sm:p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-zinc-700 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between cursor-pointer relative overflow-hidden shadow-xl"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className={`p-3 rounded-2xl ${tarjeta.colorIcono} transition-transform group-hover:scale-110 shadow-2xs`}>
+                              <Icono className="w-5 h-5" />
+                            </div>
+                            {tarjeta.badge && (
+                              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                {tarjeta.badge}
+                              </span>
+                            )}
                           </div>
-                          {tarjeta.badge && (
-                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                              {tarjeta.badge}
-                            </span>
-                          )}
+                          <h3 className="text-base font-black text-slate-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors tracking-tight">
+                            {tarjeta.titulo}
+                          </h3>
+                          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1.5 leading-relaxed">
+                            {tarjeta.descripcion}
+                          </p>
                         </div>
-                        <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                          {tarjeta.titulo}
-                        </h3>
-                        <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                          {tarjeta.descripcion}
-                        </p>
-                      </div>
 
-                      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-[11px] font-bold text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                        <span>Gestionar</span>
-                        <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                      </div>
-                    </button>
-                  )
-                })}
+                        <div className="mt-5 pt-3.5 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          <span>Gestionar</span>
+                          <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
 
-      {/* VISTA 2: COMPONENTE SELECCIONADO A PANTALLA COMPLETA */}
-      {moduloActivo && (
-        <div className="animate-in fade-in duration-200">
-          {moduloActivo === 'empresa' && <FormularioEmpresaTab />}
-          {moduloActivo === 'apariencia' && <AparienciaAjustesTab />}
-          {moduloActivo === 'banners_home' && <BannersHomeTab />}
-          {moduloActivo === 'destacados' && <DestacadosAjustesTab />}
-          {moduloActivo === 'guias_app' && <GuiasAjustesTab />}
-          {moduloActivo === 'agenda' && <HorariosTab {...configAgendaProps} />}
+        {/* VISTA 2: COMPONENTE SELECCIONADO A PANTALLA COMPLETA */}
+        {moduloActivo && (
+          <div className="animate-in fade-in duration-200">
+            {moduloActivo === 'empresa' && <FormularioEmpresaTab />}
+            {moduloActivo === 'apariencia' && <AparienciaAjustesTab />}
+            {moduloActivo === 'banners_home' && <BannersHomeTab />}
+            {moduloActivo === 'destacados' && <DestacadosAjustesTab />}
+            {moduloActivo === 'guias_app' && <GuiasAjustesTab />}
+            {moduloActivo === 'agenda' && <HorariosTab {...configAgendaProps} />}
 
-          {moduloActivo === 'precios' && (
-            <PreciosTab
-              loadingPrecios={precios.loadingPrecios}
-              servicios={precios.servicios}
-              promos={precios.promos}
-              seccionPrecios={precios.seccionPrecios}
-              setSeccionPrecios={precios.setSeccionPrecios}
-              onNuevaZona={() => precios.abrirModalServicio()}
-              onEditarZona={(s) => precios.abrirModalServicio(s)}
-              onToggleActivoZona={precios.toggleActivoServicio}
-              onEliminarZona={precios.eliminarServicio}
-              onNuevaPromo={() => precios.abrirModalPromo()}
-              onEditarPromo={(p) => precios.abrirModalPromo(p)}
-              onToggleActivoPromo={precios.toggleActivoPromo}
-              onEliminarPromo={precios.eliminarPromo}
-            />
-          )}
+            {moduloActivo === 'precios' && (
+              <PreciosTab
+                loadingPrecios={precios.loadingPrecios}
+                servicios={precios.servicios}
+                promos={precios.promos}
+                seccionPrecios={precios.seccionPrecios}
+                setSeccionPrecios={precios.setSeccionPrecios}
+                onNuevaZona={() => precios.abrirModalServicio()}
+                onEditarZona={(s) => precios.abrirModalServicio(s)}
+                onToggleActivoZona={precios.toggleActivoServicio}
+                onEliminarZona={precios.eliminarServicio}
+                onNuevaPromo={() => precios.abrirModalPromo()}
+                onEditarPromo={(p) => precios.abrirModalPromo(p)}
+                onToggleActivoPromo={precios.toggleActivoPromo}
+                onEliminarPromo={precios.eliminarPromo}
+              />
+            )}
 
-          {moduloActivo === 'generales' && (
-            <GeneralesTab
-              loadingGenerales={generales.loadingGenerales}
-              serviciosGenerales={generales.serviciosGenerales}
-              onNuevoServicio={() => generales.abrirModalGeneral()}
-              onEditarServicio={(s) => generales.abrirModalGeneral(s)}
-              onToggleActivo={generales.toggleActivoGeneral}
-              onEliminarServicio={generales.eliminarServicioGeneral}
-              referidosActivo={referidos.referidosActivo}
-              setReferidosActivo={referidos.setReferidosActivo}
-              referidosTipoDescuento={referidos.referidosTipoDescuento}
-              setReferidosTipoDescuento={referidos.setReferidosTipoDescuento}
-              referidosValorDescuento={referidos.referidosValorDescuento}
-              setReferidosValorDescuento={referidos.setReferidosValorDescuento}
-            />
-          )}
+            {moduloActivo === 'generales' && (
+              <GeneralesTab
+                loadingGenerales={generales.loadingGenerales}
+                serviciosGenerales={generales.serviciosGenerales}
+                onNuevoServicio={() => generales.abrirModalGeneral()}
+                onEditarServicio={(s) => generales.abrirModalGeneral(s)}
+                onToggleActivo={generales.toggleActivoGeneral}
+                onEliminarServicio={generales.eliminarServicioGeneral}
+                referidosActivo={referidos.referidosActivo}
+                setReferidosActivo={referidos.setReferidosActivo}
+                referidosTipoDescuento={referidos.referidosTipoDescuento}
+                setReferidosTipoDescuento={referidos.setReferidosTipoDescuento}
+                referidosValorDescuento={referidos.referidosValorDescuento}
+                setReferidosValorDescuento={referidos.setReferidosValorDescuento}
+              />
+            )}
 
-          {moduloActivo === 'banners' && <BannersAjustesTab />}
-          {moduloActivo === 'referidos' && <ReferidosTab />}
-          {moduloActivo === 'anamnesis' && <ConfiguracionAnamnesisTab />}
+            {moduloActivo === 'banners' && <BannersAjustesTab />}
+            {moduloActivo === 'referidos' && <ReferidosTab />}
+            {moduloActivo === 'anamnesis' && <ConfiguracionAnamnesisTab />}
 
-          {moduloActivo === 'faqs' && (
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-xs transition-colors">
-              <h2 className="text-lg font-semibold text-slate-800 dark:text-zinc-100 mb-4">
-                Gestión de Preguntas Frecuentes
-              </h2>
-              <FaqTab />
-            </div>
-          )}
+            {moduloActivo === 'faqs' && (
+              <div className="bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-xl transition-colors">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tight mb-4">
+                  Gestión de Preguntas Frecuentes
+                </h2>
+                <FaqTab />
+              </div>
+            )}
 
-          {moduloActivo === 'seguridad' && <ConfiguracionPinTab />}
-        </div>
-      )}
+            {moduloActivo === 'seguridad' && <ConfiguracionPinTab />}
+          </div>
+        )}
+
+      </main>
 
       {/* MODALES DE EDICIÓN Y ALTA */}
       {precios.modalServicio && precios.servicioEdit && (

@@ -41,19 +41,20 @@ export default function MediosPagoCard({ data, loading = false }: MediosPagoCard
 
   const totalRecaudado = data.reduce((acc, item) => acc + item.monto, 0);
 
-  return (
-    <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+return (
+    <div className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 sm:p-6 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-200 flex flex-col justify-between">
       <div>
-        <div className="flex items-center justify-between mb-4">
+        {/* Encabezado de la Tarjeta */}
+        <div className="flex items-center justify-between gap-3 mb-5">
           <div>
-            <h3 className="text-base font-bold text-slate-800 dark:text-zinc-100">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tight">
               Desglose por Medio de Pago
             </h3>
-            <p className="text-xs text-slate-500 dark:text-zinc-400">
+            <p className="text-xs font-medium text-slate-500 dark:text-zinc-400 mt-0.5">
               Distribución del dinero ingresado en el período
             </p>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 bg-violet-50 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 rounded-lg">
+          <span className="text-xs font-black font-mono px-3 py-1.5 bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40 rounded-2xl shadow-2xs shrink-0">
             {formatCurrency(totalRecaudado)}
           </span>
         </div>
@@ -61,17 +62,17 @@ export default function MediosPagoCard({ data, loading = false }: MediosPagoCard
         {loading ? (
           <div className="space-y-3 py-4">
             <div className="h-3 w-full bg-slate-100 dark:bg-zinc-800 animate-pulse rounded-full" />
-            <div className="h-10 w-full bg-slate-100 dark:bg-zinc-800 animate-pulse rounded-xl" />
-            <div className="h-10 w-full bg-slate-100 dark:bg-zinc-800 animate-pulse rounded-xl" />
+            <div className="h-12 w-full bg-slate-100 dark:bg-zinc-800 animate-pulse rounded-2xl" />
+            <div className="h-12 w-full bg-slate-100 dark:bg-zinc-800 animate-pulse rounded-2xl" />
           </div>
         ) : data.length === 0 ? (
-          <div className="text-center py-8 text-xs text-slate-400">
+          <div className="text-center py-10 text-xs font-medium text-slate-400 dark:text-zinc-500">
             No se registraron cobros en el período seleccionado.
           </div>
         ) : (
           <div className="space-y-5">
             {/* Barra Proporcional Multinivel */}
-            <div className="w-full h-3 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
+            <div className="w-full h-3 bg-slate-100 dark:bg-zinc-800/80 rounded-full overflow-hidden flex shadow-inner">
               {data.map((item, index) => (
                 <div
                   key={index}
@@ -83,31 +84,31 @@ export default function MediosPagoCard({ data, loading = false }: MediosPagoCard
             </div>
 
             {/* Listado de Medios de Pago */}
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {data.map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800/80"
+                  className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/70 dark:bg-zinc-800/40 border border-slate-100 dark:border-zinc-800/80 hover:bg-slate-100/60 dark:hover:bg-zinc-800/70 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white dark:bg-zinc-900 rounded-lg border border-slate-200/60 dark:border-zinc-800">
+                    <div className="p-2.5 bg-white dark:bg-zinc-900 rounded-xl border border-slate-200/60 dark:border-zinc-800 shadow-2xs text-slate-700 dark:text-zinc-200">
                       {getIcon(item.medio)}
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-slate-700 dark:text-zinc-200">
+                      <p className="text-xs font-bold text-slate-900 dark:text-zinc-100">
                         {item.medio}
                       </p>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] font-medium text-slate-400 dark:text-zinc-500">
                         {item.cantidad} {item.cantidad === 1 ? 'operación' : 'operaciones'}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <p className="text-xs font-black text-slate-800 dark:text-zinc-100">
+                    <p className="text-xs sm:text-sm font-black font-mono text-slate-900 dark:text-zinc-100">
                       {formatCurrency(item.monto)}
                     </p>
-                    <p className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
+                    <p className="text-[11px] font-bold text-slate-500 dark:text-zinc-400">
                       {item.porcentaje}%
                     </p>
                   </div>

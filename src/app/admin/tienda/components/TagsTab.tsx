@@ -61,7 +61,7 @@ export default function TagsTab() {
         const fileExt = imagenFile.name.split('.').pop();
         const randomStr = Math.random().toString(36).substring(2, 7);
         const fileName = `tag-${Date.now()}-${randomStr}.${fileExt}`;
-
+        
         const { error: uploadError } = await supabase.storage
           .from('tags-images')
           .upload(fileName, imagenFile);
@@ -81,7 +81,7 @@ export default function TagsTab() {
         publicImageUrl = urlData.publicUrl;
       }
 
-      // 2. Insertar el registro en la tabla 'tags_busqueda'
+      // 2. Insertar el registro en la tabla 'tags_busqueda' con la URL de la imagen
       const { error } = await supabase.from('tags_busqueda').insert([
         {
           nombre: nombre.trim(),

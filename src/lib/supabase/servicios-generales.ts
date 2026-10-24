@@ -85,3 +85,45 @@ export const LABELS_CATEGORIA: Record<string, string> = {
   miradas: 'Miradas',
   ojos: 'Miradas',
 };
+
+import type { HistorialSesionGeneral } from '../types';
+
+// 6. Registrar una nueva sesión en el historial de Servicios Generales
+export async function crearHistorialSesionGeneral(
+  sesion: Partial<HistorialSesionGeneral>
+): Promise<HistorialSesionGeneral | null> {
+  const { data, error } = await supabase
+    .from('historial_sesiones_generales')
+    .insert([sesion])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error al registrar historial de sesión general:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+// 7. Obtener todas las sesiones pasadas de servicios generales de un cliente por celular
+export async function getHistorialClienteGeneral(
+  celular: string
+): Promise<HistorialSesionGeneral[]> {
+  if (!celular) return [];
+
+  const celularLimpio = celular.replace(/\D/g, '');
+
+  const { data, error } = await supabase
+    .from('historial_sesiones_generales')
+    .select('*')
+    .ilike('cliente_celular', `%${celularLimpio}%`)
+    .order('fecha_sesion', { ascending: false });
+
+  if (error) {
+    console.error('Error al obtener historial de servicios generales:', error);
+    return [];
+  }
+
+  return data ?? [];
+}

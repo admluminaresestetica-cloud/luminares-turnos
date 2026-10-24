@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { X, Plus, Minus, ShoppingBag, Share2, CreditCard, Tag } from "lucide-react";
+import { X, Plus, Minus, ShoppingCartPlus, Share2, CreditCard, Tag } from "lucide-react";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 import AcordeonFAQ from "./AcordeonFAQ";
@@ -400,7 +400,7 @@ export default function ModalDetalleProducto({
                     : "bg-[#0E6E55] dark:bg-emerald-600 text-white hover:bg-[#0b5944] dark:hover:bg-emerald-500 active:scale-[0.98] shadow-md shadow-[#0E6E55]/20 dark:shadow-emerald-950/40 cursor-pointer"
                 }`}
               >
-                <ShoppingBag className="h-4 w-4" />
+                <ShoppingCartPlus className="h-4 w-4" />
                 <span>
                   {sinStock
                     ? "Sin stock disponible"
@@ -471,7 +471,7 @@ export default function ModalDetalleProducto({
                   : "bg-[#0E6E55] dark:bg-emerald-600 text-white active:scale-[0.98] shadow-xs"
               }`}
             >
-              <ShoppingBag className="h-3.5 w-3.5" />
+              <ShoppingCartPlus className="h-3.5 w-3.5" />
               <span>
                 {sinStock ? "Sin Stock" : `$${(producto.precio * cantidad).toLocaleString("es-AR")}`}
               </span>

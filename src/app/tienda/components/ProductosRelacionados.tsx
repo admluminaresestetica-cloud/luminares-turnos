@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Plus, Minus, Sparkles } from "lucide-react";
+import { Plus, Minus, SoapDispenserDroplet } from "lucide-react";
 import { Producto } from "@/types/tienda";
 
 interface ProductosRelacionadosProps {
@@ -24,7 +24,7 @@ export default function ProductosRelacionados({
   return (
     <div className="mt-8 pt-6 border-t border-slate-100 dark:border-zinc-800">
       <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100 mb-3 flex items-center gap-1.5">
-        <Sparkles className="h-4 w-4 text-[#0E6E55] dark:text-emerald-400" />
+        <SoapDispenserDroplet className="h-4 w-4 text-[#0E6E55] dark:text-emerald-400" />
         También te puede interesar
       </h3>
 

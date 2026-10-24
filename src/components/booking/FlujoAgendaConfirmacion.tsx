@@ -9,7 +9,7 @@ import ModalReservaExitosa, { DatosReservaExitosa } from '@/components/booking/M
 import PasoSeleccionFechaHora from '@/components/booking/PasoSeleccionFechaHora';
 
 import { useReferidos } from '@/hooks/useReferidos';
-import { calcularSlotsDisponibles } from '@/lib/calendario/slots';
+import { calcularSlotsConEstado, type SlotDisponibilidad } from '@/lib/calendario/slots';
 import { getConfiguracionCalendario, getConfiguracionSistema } from '@/lib/supabase/configuracion';
 import { crearReserva, getReservasPorFecha } from '@/lib/supabase/reservas';
 import { supabase } from '@/lib/supabase';
@@ -81,7 +81,7 @@ export default function FlujoAgendaConfirmacion({
 
   const [fecha, setFecha] = useState<string | null>(null);
   const [hora, setHora] = useState<string | null>(null);
-  const [slots, setSlots] = useState<string[]>([]);
+  const [slots, setSlots] = useState<SlotDisponibilidad[]>([]);
   const [cargandoSlots, setCargandoSlots] = useState(false);
 
   const [nombre, setNombre] = useState('');
@@ -131,13 +131,13 @@ export default function FlujoAgendaConfirmacion({
     return () => window.removeEventListener('pageshow', handlePageShow);
   }, []);
 
-  const cargarSlots = useCallback(async (fechaSel: string) => {
+const cargarSlots = useCallback(async (fechaSel: string) => {
     if (!configCalendario) return;
     setCargandoSlots(true);
     setHora(null);
     const reservas = await getReservasPorFecha(fechaSel);
-    const disponibles = calcularSlotsDisponibles(fechaSel, duracionTotal, configCalendario.horarios_atencion, reservas);
-    setSlots(disponibles);
+    const slotsConEstado = calcularSlotsConEstado(fechaSel, duracionTotal, configCalendario.horarios_atencion, reservas);
+    setSlots(slotsConEstado);
     setCargandoSlots(false);
   }, [configCalendario, duracionTotal]);
 

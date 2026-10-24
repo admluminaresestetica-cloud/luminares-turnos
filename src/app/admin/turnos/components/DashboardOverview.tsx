@@ -32,9 +32,9 @@ return (
             <p className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
               Citas de hoy
             </p>
-            <div className="p-2.5 bg-rose-50 dark:bg-rose-950/50 rounded-2xl text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50 group-hover:scale-110 transition-transform">
-              <Calendar className="w-4 h-4" />
-            </div>
+            <div className="p-2.5 bg-slate-100/80 dark:bg-zinc-800 rounded-2xl text-slate-700 dark:text-zinc-300 border border-slate-200/60 dark:border-zinc-700/50 group-hover:scale-105 transition-transform">
+  <Calendar className="w-4 h-4 text-slate-600 dark:text-zinc-400" />
+</div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
             <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">
@@ -140,66 +140,72 @@ return (
           </span>
         </div>
 
-        {proximos.length === 0 ? (
-          <div className="p-10 text-center">
-            <CheckCircle2 className="w-8 h-8 text-slate-300 dark:text-zinc-700 mx-auto mb-2" />
-            <p className="text-xs font-medium text-slate-400 dark:text-zinc-500">
-              No hay turnos próximos agendados.
-            </p>
+{proximos.length === 0 ? (
+  <div className="p-10 text-center">
+    <CheckCircle2 className="w-8 h-8 text-slate-300 dark:text-zinc-700 mx-auto mb-2" />
+    <p className="text-xs font-medium text-slate-400 dark:text-zinc-500">
+      No hay turnos próximos agendados.
+    </p>
+  </div>
+) : (
+  <div className="p-3 sm:p-4 flex flex-col gap-2.5">
+    {proximos.map((r) => {
+      const fechaObj = r.fecha_hora_inicio ? new Date(r.fecha_hora_inicio) : null;
+      const mesStr = fechaObj ? fechaObj.toLocaleDateString('es-AR', { month: 'short' }).replace('.', '').toUpperCase() : 'FECHA';
+      const diaStr = fechaObj ? fechaObj.getDate() : '--';
+
+      return (
+        <div
+          key={r.id}
+          className="p-3 sm:p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800/80 hover:border-slate-200 dark:hover:border-zinc-700 hover:shadow-2xs transition-all flex items-center justify-between gap-3"
+        >
+          {/* IZQUIERDA: Bloque Fecha Calendario + Datos del Cliente y Servicio */}
+          <div className="flex items-center gap-3.5 min-w-0">
+            {/* Recuadro Estilo Calendario */}
+            <div className="w-11 h-11 bg-slate-50 dark:bg-zinc-800/80 rounded-xl border border-slate-200/60 dark:border-zinc-700/50 flex flex-col items-center justify-center shrink-0 select-none">
+              <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase leading-none">
+                {mesStr}
+              </span>
+              <span className="text-base font-black text-slate-900 dark:text-zinc-100 leading-none mt-0.5">
+                {diaStr}
+              </span>
+            </div>
+
+            <div className="min-w-0 flex flex-col gap-0.5">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-xs text-slate-800 dark:text-zinc-200 truncate">
+                  {r.cliente_nombre || 'Sin nombre'}
+                </p>
+                
+                <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">
+                  #{r.codigo_unico}
+                </span>
+
+                {r.fue_modificado && (
+                  <span className="text-[9px] text-slate-400 dark:text-zinc-500">
+                    • Modificado
+                  </span>
+                )}
+              </div>
+
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate capitalize">
+                {renderDetalleReserva(r)}
+              </p>
+            </div>
           </div>
-        ) : (
-          <div className="p-3 sm:p-4 divide-y divide-slate-100 dark:divide-zinc-800/60">
-            {proximos.map((r) => {
-              // Avatares de iniciales para mantener consistencia con la Agenda
-              const iniciales = (r.cliente_nombre || 'CL')
-                .trim()
-                .split(' ')
-                .map((n) => n[0])
-                .slice(0, 2)
-                .join('')
-                .toUpperCase();
 
-              return (
-                <div
-                  key={r.id}
-                  className="py-3 px-3 sm:px-4 rounded-xl flex items-center justify-between gap-3 hover:bg-slate-50/80 dark:hover:bg-zinc-800/40 transition-all"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0">
-                      {iniciales}
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`w-2 h-2 rounded-full shrink-0 ${
-                            r.fue_modificado ? 'bg-amber-500' : 'bg-emerald-500'
-                          }`}
-                          title={r.fue_modificado ? 'Modificado por admin' : 'Reserva original'}
-                        />
-                        <p className="font-bold text-xs text-slate-900 dark:text-zinc-100 truncate">
-                          {r.cliente_nombre}
-                        </p>
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate mt-0.5 font-medium">
-                        {renderDetalleReserva(r)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-right shrink-0">
-                    <p className="font-bold text-xs text-slate-800 dark:text-zinc-200">
-                      {renderFechaHora(r.fecha_hora_inicio)}
-                    </p>
-                    <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono mt-0.5">
-                      #{r.codigo_unico}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+          {/* DERECHA: Hora exacta */}
+          <div className="text-right shrink-0">
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-zinc-300 bg-slate-50 dark:bg-zinc-800 px-2.5 py-1 rounded-lg border border-slate-100 dark:border-zinc-700/50">
+              <Clock className="w-3 h-3 text-slate-400" />
+              {renderFechaHora(r.fecha_hora_inicio)}
+            </span>
           </div>
-        )}
+        </div>
+      );
+    })}
+  </div>
+)}
       </div>
     </div>
   );

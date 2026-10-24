@@ -60,67 +60,71 @@ export default function RelojCronometroGabinete({ onTiempoActualizado }: RelojCr
     if (onTiempoActualizado) onTiempoActualizado(0)
   }
 
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-zinc-700/60 p-3 rounded-xl text-xs">
-      {/* Reloj en Vivo */}
+return (
+  <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-100/80 dark:bg-zinc-800/80 border border-slate-200/80 dark:border-zinc-700/80 p-3.5 rounded-2xl text-xs text-slate-800 dark:text-zinc-100 shadow-xs transition-colors">
+    {/* Reloj en Vivo */}
+    <div className="flex items-center gap-2.5">
+      <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-600 dark:text-blue-400">
+        <Clock className="w-4 h-4" />
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+          Hora actual:
+        </span>
+        <span className="font-mono text-xs font-extrabold text-slate-900 dark:text-zinc-100 bg-white dark:bg-zinc-900 px-3 py-1 rounded-xl border border-slate-200/80 dark:border-zinc-700/80 shadow-xs">
+          {horaActual || '--:--:--'}
+        </span>
+      </div>
+    </div>
+
+    {/* Cronómetro de Sesión */}
+    <div className="flex items-center gap-4">
       <div className="flex items-center gap-2.5">
-        <div className="p-1.5 bg-white dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700 rounded-lg text-purple-600 dark:text-purple-400">
-          <Clock className="w-4 h-4" />
+        <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-600 dark:text-blue-400">
+          <Timer className="w-4 h-4" />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Hora actual:</span>
-          <span className="font-mono text-xs font-bold text-slate-800 dark:text-zinc-100 bg-white dark:bg-zinc-900 px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-zinc-700">
-            {horaActual || '--:--:--'}
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+            Sesión:
+          </span>
+          <span className="font-mono text-xs font-black text-blue-600 dark:text-blue-400 bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-700/80 px-3 py-1 rounded-xl min-w-16 text-center shadow-xs">
+            {formatearTiempo(segundos)}
           </span>
         </div>
       </div>
 
-      {/* Cronómetro de Sesión */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/40 rounded-lg text-emerald-600 dark:text-emerald-400">
-            <Timer className="w-4 h-4" />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Sesión:</span>
-            <span className="font-mono text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-200/60 dark:border-emerald-800/40 min-w-16 text-center">
-              {formatearTiempo(segundos)}
-            </span>
-          </div>
-        </div>
-
-        {/* Botones de Control */}
-        <div className="flex items-center gap-1.5">
-          {!activo ? (
-            <button
-              type="button"
-              onClick={() => setActivo(true)}
-              className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-all shadow-2xs active:scale-95 cursor-pointer"
-              title="Iniciar cronómetro de sesión"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setActivo(false)}
-              className="p-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all active:scale-95 cursor-pointer"
-              title="Pausar cronómetro"
-            >
-              <Pause className="w-3.5 h-3.5 fill-current" />
-            </button>
-          )}
-
+      {/* Botones de Control */}
+      <div className="flex items-center gap-1.5">
+        {!activo ? (
           <button
             type="button"
-            onClick={reiniciarCronometro}
-            className="p-1.5 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded-lg border border-slate-200/80 dark:border-zinc-700 transition-all active:scale-95 cursor-pointer"
-            title="Reiniciar cronómetro"
+            onClick={() => setActivo(true)}
+            className="p-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-md shadow-blue-500/10 active:scale-95 cursor-pointer"
+            title="Iniciar cronómetro de sesión"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
+            <Play className="w-3.5 h-3.5 fill-current" />
           </button>
-        </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setActivo(false)}
+            className="p-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-all shadow-md shadow-amber-500/10 active:scale-95 cursor-pointer"
+            title="Pausar cronómetro"
+          >
+            <Pause className="w-3.5 h-3.5 fill-current" />
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={reiniciarCronometro}
+          className="p-2 bg-white dark:bg-zinc-900 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded-xl border border-slate-200 dark:border-zinc-700 transition-all active:scale-95 cursor-pointer"
+          title="Reiniciar cronómetro"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
-  )
+  </div>
+);
 }

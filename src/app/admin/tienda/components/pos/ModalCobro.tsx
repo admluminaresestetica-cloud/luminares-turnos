@@ -124,7 +124,7 @@ export default function ModalCobro({
         ? montoEntregado
         : totalConAjuste;
 
-      const { data, error } = await supabase.rpc("registrar_venta_pos", {
+const { data, error } = await supabase.rpc("registrar_venta_pos", {
         p_items: itemsPayload,
         p_metodo_pago: metodoFinal,
         p_total: totalConAjuste,
@@ -133,6 +133,7 @@ export default function ModalCobro({
         p_cliente_nombre: nombreCliente.trim() || "Cliente Ocasional",
         p_descuento_monto: descuentoTotalMonto,
         p_recargo_monto: recargoMonto,
+        p_caja_id: null,
       });
 
       if (error) throw error;

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Heart, ShoppingBag, Trash2, ArrowLeft, Check, AlertCircle } from "lucide-react";
+import { Heart, ShoppingCartPlus, Trash2, ArrowLeft, Check, AlertCircle } from "lucide-react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { useFavoritos } from "@/context/FavoritosContext";
 import { useCarrito } from "@/context/CarritoContext";
@@ -111,7 +111,7 @@ function TarjetaFavorito({
             "Producto Agotado"
           ) : (
             <>
-              <ShoppingBag className="w-4 h-4" />
+              <ShoppingCartPlus className="w-4 h-4" />
               Agregar al Carrito
             </>
           )}
@@ -171,7 +171,7 @@ export default function FavoritosPage() {
               onClick={handleMoverTodos}
               className="bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-[#0E6E55] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-colors"
             >
-              <ShoppingBag className="w-3.5 h-3.5" />
+              <ShoppingCartPlus className="w-3.5 h-3.5" />
               {todoAgregado ? "¡Moviendo...!" : "Mover todo al carrito"}
             </button>
 
@@ -205,7 +205,7 @@ export default function FavoritosPage() {
               href="/tienda"
               className="inline-flex items-center gap-2 bg-[#0E6E55] dark:bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#0b5643] dark:hover:bg-emerald-500 transition-colors shadow-xs"
             >
-              <ShoppingBag className="w-4 h-4" />
+              <ShoppingCartPlus className="w-4 h-4" />
               Explorar Tienda
             </Link>
           </div>

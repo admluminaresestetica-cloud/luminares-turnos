@@ -60,3 +60,58 @@ export async function actualizarCampoReserva(
   }
   return true;
 }
+
+// Agregar al final de src/lib/supabase/admin/reservas.ts
+
+export interface CrearBloqueoInput {
+  fecha: string;
+  horas: string[];
+  duracionMinutos?: number;
+  nota: string;
+  servicioTipo?: 'laser' | 'general';
+}
+
+export async function crearBloqueosMasivos(input: CrearBloqueoInput): Promise<boolean> {
+  const { fecha, horas, duracionMinutos = 15, nota, servicioTipo = 'general' } = input;
+
+  const registros = horas.map((hora) => {
+    const [year, month, day] = fecha.split('-').map(Number);
+    const [hours, minutes] = hora.split(':').map(Number);
+    const fechaHoraInicio = new Date(year, month - 1, day, hours, minutes, 0).toISOString();
+    const codigoRandom = Math.random().toString(36).substring(2, 7).toUpperCase();
+
+return {
+      codigo_unico: `VIP-${codigoRandom}`,
+      cliente_nombre: nota.trim() || 'Horario Bloqueado',
+      cliente_celular: '0000000000',
+      servicio_tipo: servicioTipo,
+      detalle_reserva: { detalle_texto: `Bloqueo Manual Admin: ${nota}` },
+      precio_total: 0,
+      duracion_total: duracionMinutos,
+      fecha_hora_inicio: fechaHoraInicio,
+      estado: 'confirmado', // <--- CAMBIADO A UN ESTADO PERMITIDO POR TU DB
+      estado_asistencia: 'pendiente',
+      modificado_por_admin: true,
+    };
+  });
+
+  const { error } = await supabase.from('reservas').insert(registros);
+
+  if (error) {
+    console.error('Error al crear bloqueos masivos:', error);
+    return false;
+  }
+
+  return true;
+}
+
+export async function eliminarBloqueo(reservaId: string): Promise<boolean> {
+  const { error } = await supabase.from('reservas').delete().eq('id', reservaId);
+
+  if (error) {
+    console.error('Error al eliminar bloqueo:', error);
+    return false;
+  }
+
+  return true;
+}

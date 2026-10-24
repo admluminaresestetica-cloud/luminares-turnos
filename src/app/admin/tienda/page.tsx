@@ -229,147 +229,154 @@ export default function AdminTiendaPage() {
   const stockTotal = productos.reduce((acc, p) => acc + (Number(p.stock) || 0), 0);
   const pedidosPendientes = pedidos.filter((p) => p.estado === "pendiente").length;
 
-  return (
-    <div className="min-h-screen bg-[#F7F7F5] dark:bg-zinc-950 transition-colors pb-24 sm:pb-12">
-      {/* Header y Navegación Móvil/Desktop */}
-      <TiendaHeaderNav
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        pedidosPendientes={pedidosPendientes}
-      />
+return (
+  <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 transition-colors pb-24 sm:pb-12">
+    {/* HERO / CABECERA CON DEGRADADO VERDE FINTECH CONTINUO */}
+    <div className="bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-500 dark:from-emerald-950 dark:via-emerald-900 dark:to-zinc-900 pt-6 pb-20 px-4 sm:px-10 transition-colors">
+      <div className="max-w-[1200px] mx-auto">
+        <TiendaHeaderNav
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          pedidosPendientes={pedidosPendientes}
+        />
+      </div>
+    </div>
 
-      <div
-        className={`mx-auto transition-all ${
-          activeTab === "pos"
-            ? "max-w-full px-2 sm:px-6 sm:max-w-[1200px]"
-            : "max-w-[1200px] px-3 sm:px-10"
-        }`}
-      >
-        {/* Mostrar métricas resumidas en móvil excepto en vista POS */}
-        {activeTab !== "pos" && (
+    {/* CONTENIDO PRINCIPAL FLOTANTE (-mt-12 sobre el hero verde) */}
+    <div
+      className={`mx-auto -mt-12 transition-all ${
+        activeTab === "pos"
+          ? "max-w-full px-2 sm:px-6 sm:max-w-[1200px]"
+          : "max-w-[1200px] px-3 sm:px-10"
+      }`}
+    >
+      {/* Métricas resumidas flotantes (excepto en vista POS) */}
+      {activeTab !== "pos" && (
+        <div className="mb-6">
           <MetricasHeader
             totalProductos={totalProductos}
             stockTotal={stockTotal}
             pedidosPendientes={pedidosPendientes}
             totalCategorias={categorias.length}
           />
+        </div>
+      )}
+
+      {/* Contenido según Pestaña Activa */}
+      <div className="space-y-4 sm:space-y-6">
+        {activeTab === "catalogo" && (
+          <>
+            <CategoriasTab
+              categorias={categorias}
+              cargandoCat={cargandoCat}
+              onCrearCategoria={async (nombre) => {
+                setCargandoCat(true);
+                await supabase.from("categorias").insert([{ nombre }]);
+                fetchCategorias();
+                setCargandoCat(false);
+              }}
+              onEliminarCategoria={async (cat) => {
+                await supabase.from("categorias").delete().eq("id", cat.id);
+                fetchCategorias();
+              }}
+            />
+
+            <FormularioProducto
+              onProductoAgregado={fetchProductos}
+              supabase={supabase}
+              categorias={categorias}
+              productoEditando={productoEditando}
+              onCancelarEdicion={() => setProductoEditando(null)}
+            />
+
+            <ListaProductos
+              productos={productos}
+              config={configEmpresa}
+              onEliminar={async (id) => {
+                if (confirm("¿Eliminar producto?")) {
+                  await supabase.from("productos").delete().eq("id", id);
+                  fetchProductos();
+                }
+              }}
+              onEditar={(prod) => {
+                setProductoEditando(prod);
+                window.scrollTo({ top: 180, behavior: "smooth" });
+              }}
+              onRestock={async (id, cantidadASumar) => {
+                const prod = productos.find((p) => p.id === id);
+                if (!prod) return;
+
+                const nuevoStock = (Number(prod.stock) || 0) + cantidadASumar;
+
+                const { error } = await supabase
+                  .from("productos")
+                  .update({ stock: nuevoStock })
+                  .eq("id", id);
+
+                if (!error) {
+                  fetchProductos();
+                }
+              }}
+            />
+          </>
         )}
 
-        {/* Contenido según Pestaña Activa */}
-        <div className="space-y-4 sm:space-y-6">
-          {activeTab === "catalogo" && (
-            <>
-              <CategoriasTab
-                categorias={categorias}
-                cargandoCat={cargandoCat}
-                onCrearCategoria={async (nombre) => {
-                  setCargandoCat(true);
-                  await supabase.from("categorias").insert([{ nombre }]);
-                  fetchCategorias();
-                  setCargandoCat(false);
-                }}
-                onEliminarCategoria={async (cat) => {
-                  await supabase.from("categorias").delete().eq("id", cat.id);
-                  fetchCategorias();
-                }}
-              />
+        {activeTab === "pos" && (
+          <PuntoVentaTab
+            productos={productos}
+            supabase={supabase}
+            onActualizarProductos={() => {
+              fetchProductos();
+              fetchPedidos();
+            }}
+          />
+        )}
 
-              <FormularioProducto
-                onProductoAgregado={fetchProductos}
-                supabase={supabase}
-                categorias={categorias}
-                productoEditando={productoEditando}
-                onCancelarEdicion={() => setProductoEditando(null)}
-              />
+        {activeTab === "caja" && <ControlCajaTab supabase={supabase} />}
 
-              <ListaProductos
-                productos={productos}
-                config={configEmpresa}
-                onEliminar={async (id) => {
-                  if (confirm("¿Eliminar producto?")) {
-                    await supabase.from("productos").delete().eq("id", id);
-                    fetchProductos();
-                  }
-                }}
-                onEditar={(prod) => {
-                  setProductoEditando(prod);
-                  window.scrollTo({ top: 180, behavior: "smooth" });
-                }}
-                onRestock={async (id, cantidadASumar) => {
-                  const prod = productos.find((p) => p.id === id);
-                  if (!prod) return;
+        {activeTab === "pedidos" && (
+          <PedidosTab
+            pedidos={pedidos}
+            cargandoPedidos={cargandoPedidos}
+            procesandoPedidoId={procesandoPedidoId}
+            onFetchPedidos={fetchPedidos}
+            onAprobarPedido={async (id) => {
+              setProcesandoPedidoId(id);
+              const { error } = await supabase.rpc(
+                "aprobar_pedido_y_descontar_stock",
+                { p_pedido_id: id }
+              );
 
-                  const nuevoStock = (Number(prod.stock) || 0) + cantidadASumar;
+              if (error) {
+                alert("Error al aprobar pedido: " + error.message);
+              } else {
+                await Promise.all([fetchPedidos(), fetchProductos()]);
+              }
+              setProcesandoPedidoId(null);
+            }}
+            onCancelarPedido={(id) => {
+              const ped = pedidos.find((p) => p.id === id);
+              if (ped) iniciarAnulacion(ped);
+            }}
+            onEliminarPedido={(id) => {
+              const ped = pedidos.find((p) => p.id === id);
+              if (ped) iniciarAnulacion(ped);
+            }}
+          />
+        )}
 
-                  const { error } = await supabase
-                    .from("productos")
-                    .update({ stock: nuevoStock })
-                    .eq("id", id);
-
-                  if (!error) {
-                    fetchProductos();
-                  }
-                }}
-              />
-            </>
-          )}
-
-          {activeTab === "pos" && (
-            <PuntoVentaTab
-              productos={productos}
-              supabase={supabase}
-              onActualizarProductos={() => {
-                fetchProductos();
-                fetchPedidos();
-              }}
-            />
-          )}
-
-          {activeTab === "caja" && <ControlCajaTab supabase={supabase} />}
-
-          {activeTab === "pedidos" && (
-            <PedidosTab
-              pedidos={pedidos}
-              cargandoPedidos={cargandoPedidos}
-              procesandoPedidoId={procesandoPedidoId}
-              onFetchPedidos={fetchPedidos}
-              onAprobarPedido={async (id) => {
-                setProcesandoPedidoId(id);
-                const { error } = await supabase.rpc(
-                  "aprobar_pedido_y_descontar_stock",
-                  { p_pedido_id: id }
-                );
-
-                if (error) {
-                  alert("Error al aprobar pedido: " + error.message);
-                } else {
-                  await Promise.all([fetchPedidos(), fetchProductos()]);
-                }
-                setProcesandoPedidoId(null);
-              }}
-              onCancelarPedido={(id) => {
-                const ped = pedidos.find((p) => p.id === id);
-                if (ped) iniciarAnulacion(ped);
-              }}
-              onEliminarPedido={(id) => {
-                const ped = pedidos.find((p) => p.id === id);
-                if (ped) iniciarAnulacion(ped);
-              }}
-            />
-          )}
-
-          {activeTab === "tags" && <TagsTab />}
-        </div>
+        {activeTab === "tags" && <TagsTab />}
       </div>
-
-      {/* Modal de Anulación */}
-      <ModalAnulacionPedido
-        pedidoAAnular={pedidoAAnular}
-        itemsAAnular={itemsAAnular}
-        setItemsAAnular={setItemsAAnular}
-        onCerrar={() => setPedidoAAnular(null)}
-        onConfirmar={procesarAnulacionConfirmada}
-      />
     </div>
-  );
+
+    {/* Modal de Anulación */}
+    <ModalAnulacionPedido
+      pedidoAAnular={pedidoAAnular}
+      itemsAAnular={itemsAAnular}
+      setItemsAAnular={setItemsAAnular}
+      onCerrar={() => setPedidoAAnular(null)}
+      onConfirmar={procesarAnulacionConfirmada}
+    />
+  </div>
+);
 }

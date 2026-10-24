@@ -79,11 +79,16 @@ export async function POST(request: Request) {
     });
 
     if (result.id) {
+      // Hold temporal de 15 minutos
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
       await supabase
         .from("reservas")
         .update({
           mp_preference_id: String(result.id),
           tipo_pago_elegido: "mercadopago",
+          estado: "pendiente_pago",
+          expires_at: expiresAt,
         })
         .eq("id", reservaId);
     }

@@ -82,32 +82,35 @@ export default function KpiCards({ data, loading = false }: KpiCardsProps) {
     },
   ];
 
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
       {cards.map((card, i) => (
         <div
           key={i}
-          className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 rounded-2xl shadow-sm flex flex-col justify-between space-y-3"
+          className="bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 p-5 sm:p-6 rounded-3xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between space-y-4"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 dark:text-zinc-400">
+            <span className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
               {card.titulo}
             </span>
-            <div className="p-2 bg-slate-50 dark:bg-zinc-800/60 rounded-xl">
+            <div className="p-2.5 bg-slate-50 dark:bg-zinc-800/80 rounded-2xl border border-slate-100 dark:border-zinc-700/60 shadow-2xs">
               {card.icono}
             </div>
           </div>
 
           {loading ? (
-            <div className="h-8 w-28 bg-slate-100 dark:bg-zinc-800 animate-pulse rounded-lg" />
+            <div className="space-y-2">
+              <div className="h-8 w-28 bg-slate-100 dark:bg-zinc-800 animate-pulse rounded-xl" />
+              <div className="h-4 w-20 bg-slate-100 dark:bg-zinc-800 animate-pulse rounded-lg" />
+            </div>
           ) : (
             <div>
-              <div className="text-2xl font-black text-slate-800 dark:text-zinc-100">
+              <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-zinc-100 tracking-tight">
                 {card.valor}
               </div>
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {renderBadge(card.variacion)}
-                <span className="text-[11px] text-slate-400 dark:text-zinc-500">
+                <span className="text-[11px] font-medium text-slate-400 dark:text-zinc-500">
                   {card.subtexto}
                 </span>
               </div>

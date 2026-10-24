@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useConfig } from '@/context/ConfigContext';
 
 interface HeaderBusquedaProps {
   nombreEmpresa: string;
@@ -39,6 +40,7 @@ interface TagBusqueda {
 
 export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
   const router = useRouter();
+  const { config } = useConfig();
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -213,9 +215,9 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
     setQuery(tag.nombre);
   };
 
-  return (
+return (
     <div ref={containerRef} className="space-y-3 relative z-50">
-      {/* Saludo + Botón Mis Turnos y ThemeToggle */}
+        {/* Saludo + Botón Mis Turnos y ThemeToggle */}
       <div className="flex items-center justify-between px-1">
         <div>
           <p className="text-xs font-medium text-white/80">
@@ -385,7 +387,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
               </div>
             )}
 
-            {/* SIN RESULTADOS */}
+{/* SIN RESULTADOS */}
             {query.trim().length >= 2 &&
               !loading &&
               productos.length === 0 &&

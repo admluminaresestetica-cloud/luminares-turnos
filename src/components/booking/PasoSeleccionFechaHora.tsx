@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { TipoServicio } from '@/lib/types';
+import type { SlotDisponibilidad } from '@/lib/calendario/slots';
 
 interface Props {
   tipo: TipoServicio;
@@ -14,7 +15,7 @@ interface Props {
   diasSemana: number[];
   fecha: string | null;
   hora: string | null;
-  slots: string[];
+  slots: SlotDisponibilidad[]; // <-- Actualizado con el tipo con estado
   cargandoSlots: boolean;
   precioTotal: number;
   duracionTotal: number;

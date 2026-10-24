@@ -1,6 +1,6 @@
 'use client';
 
-import { Zap, Flower2, ShoppingBag, Tag, LucideIcon } from 'lucide-react';
+import { Zap, EyeClosed, Store, Tag, LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 
 interface Categoria {
@@ -12,8 +12,8 @@ interface Categoria {
 
 const CATEGORIAS: Categoria[] = [
   { id: 'laser', titulo: 'Depilación Láser', href: '/laser', icon: Zap },
-  { id: 'estetica', titulo: 'Estética', href: '/servicios', icon: Flower2 },
-  { id: 'tienda', titulo: 'Tienda', href: '/tienda', icon: ShoppingBag },
+  { id: 'estetica', titulo: 'Estética', href: '/servicios', icon: EyeClosed },
+  { id: 'tienda', titulo: 'Tienda', href: '/tienda', icon: Store },
   { id: 'promos', titulo: 'Ofertas & Combos', href: '/servicios?categoria=promos', icon: Tag },
 ];
 
