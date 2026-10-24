@@ -6,17 +6,7 @@ import { useCarrito } from "@/context/CarritoContext";
 import { useFavoritos } from "@/context/FavoritosContext";
 import { useConfig } from "@/context/ConfigContext";
 import { calcularCuotas } from "@/lib/precios";
-import {
-  Heart,
-  Flame,
-  Truck,
-  ShoppingCart,
-  Minus,
-  Plus,
-  ShoppingBag,
-  PackageX,
-  CreditCard,
-} from 'lucide-react';
+import { Plus, Minus, Flame, ShoppingCart, Truck, Heart } from "lucide-react";
 
 interface TarjetaProductoProps {
   producto: Producto & {
@@ -127,50 +117,61 @@ export default function TarjetaProducto({
     toggleFavorito(producto as any);
   };
 
- return (
+  return (
     <div
       onClick={() => onVerDetalle && onVerDetalle(producto)}
-      className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 sm:p-3.5 shadow-2xs transition-all duration-200 active:scale-[0.97] hover:shadow-md hover:border-slate-300 dark:hover:border-zinc-700 cursor-pointer select-none"
+      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E7E5E0] dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 sm:p-3.5 shadow-xs transition-transform duration-150 active:scale-[0.97] hover:shadow-md cursor-pointer select-none"
     >
+      {/* Botón Flotante de Favoritos (Esquina Superior Izquierda) */}
+      <button
+        type="button"
+        onClick={handleToggleFavorito}
+        className="absolute top-3 left-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md shadow-xs transition-transform active:scale-90 hover:bg-white dark:hover:bg-zinc-800"
+        title={esFav ? "Quitar de favoritos" : "Guardar en favoritos"}
+      >
+        <Heart
+          className={`h-4 w-4 transition-colors ${
+            esFav ? "fill-red-500 text-red-500" : "text-slate-400 dark:text-zinc-400 hover:text-slate-600 dark:hover:text-zinc-200"
+          }`}
+        />
+      </button>
+
       {/* Badges superiores derechos (% OFF / Últimas Unidades) */}
       <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1 pointer-events-none">
         {tieneOferta && !sinStock && (
-          <span className="rounded-full bg-[#0E6E55] dark:bg-emerald-600 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-xs tracking-tight">
+          <span className="rounded-md bg-[#0E6E55] dark:bg-emerald-600 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-xs">
             {porcentajeDescuento}% OFF
           </span>
         )}
         {esUltimasUnidades && (
-          <span className="flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-xs animate-pulse">
+          <span className="flex items-center gap-1 rounded-md bg-amber-500 px-2 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-xs animate-pulse">
             <Flame className="h-3 w-3" /> Últimas unidades
           </span>
         )}
       </div>
 
-      {/* Badge de Envío Gratis */}
+      {/* Badge de Envío Gratis (Alineado debajo del botón favorito) */}
       {esEnvioGratis && !sinStock && (
-        <span className="absolute top-3 left-3 z-10 flex items-center gap-1 rounded-full bg-slate-900 dark:bg-zinc-800 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold text-white shadow-xs">
+        <span className="absolute top-12 left-3 z-10 flex items-center gap-1 rounded-md bg-[#12151B] dark:bg-zinc-800 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-white shadow-xs">
           <Truck className="h-3 w-3" /> Envío gratis
         </span>
       )}
 
       {/* Imagen del Producto */}
-      <div className="relative mb-2.5 aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 dark:bg-zinc-800/60 flex items-center justify-center">
-        {producto?.imagen_url ? (
+      <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[#F7F7F5] dark:bg-zinc-800 flex items-center justify-center">
+        {producto.imagen_url ? (
           <img
             src={producto.imagen_url}
-            alt={producto.nombre || 'Producto'}
+            alt={producto.nombre}
             className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="flex flex-col items-center justify-center text-slate-300 dark:text-zinc-600">
-            <ShoppingBag className="h-10 w-10 stroke-[1.5]" />
-          </div>
+          <span className="text-3xl">🛍️</span>
         )}
 
         {sinStock && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/40 dark:bg-zinc-950/60 backdrop-blur-[1px]">
-            <PackageX className="h-6 w-6 text-white mb-0.5" />
-            <span className="rounded-full bg-white/95 dark:bg-zinc-900 px-3 py-1 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-zinc-100 shadow-xs">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 dark:bg-zinc-950/60 backdrop-blur-[1px]">
+            <span className="rounded-md bg-white/90 dark:bg-zinc-900 px-2 py-1 text-[10px] sm:text-[11px] font-bold text-[#12151B] dark:text-zinc-100">
               Sin Stock
             </span>
           </div>
@@ -180,90 +181,80 @@ export default function TarjetaProducto({
       {/* Información del Producto */}
       <div className="flex flex-1 flex-col justify-between">
         <div>
-          <h3 className="line-clamp-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100 leading-snug tracking-tight">
-            {producto?.nombre}
+          <h3 className="line-clamp-2 text-xs sm:text-sm font-semibold text-[#12151B] dark:text-zinc-100 leading-snug">
+            {producto.nombre}
           </h3>
         </div>
 
         {/* Precios, Cuotas y Stock */}
-        <div className="mt-2 mb-2.5">
+        <div className="mt-2 mb-2">
           <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tight">
+            <span className="text-base sm:text-lg font-extrabold text-[#12151B] dark:text-zinc-100 tracking-tight">
               ${precioFormateado}
             </span>
             {tieneOferta && (
-              <span className="text-[11px] font-medium text-slate-400 dark:text-zinc-500 line-through">
+              <span className="text-[11px] text-[#A6A29B] dark:text-zinc-500 line-through">
                 ${precioOriginalFormateado}
               </span>
             )}
           </div>
 
-          {/* Badge dinámico de cuotas con icono Lucide */}
+          {/* Badge dinámico de cuotas */}
           {aplicaCuotas && (
             <div className="mt-1">
-              <span className="inline-flex items-center gap-1 rounded-lg border border-purple-200/80 dark:border-purple-900/60 bg-purple-50/80 dark:bg-purple-950/40 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:text-purple-300">
-                <CreditCard className="h-3 w-3 shrink-0 stroke-[2.2]" />
-                <span>
-                  {cantidadCuotasConfig} cuotas fijas de ${cuotaFormateada}
-                </span>
+              <span className="inline-block rounded-md border border-purple-200 dark:border-purple-900/60 bg-purple-50 dark:bg-purple-950/40 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 dark:text-purple-300">
+                💳 {cantidadCuotasConfig} cuotas fijas de ${cuotaFormateada}
               </span>
             </div>
           )}
 
-          <p className="text-[10px] font-medium text-slate-400 dark:text-zinc-500 mt-1">
-            Stock: {producto?.stock ?? 0}
+          <p className="text-[10px] text-[#A6A29B] dark:text-zinc-500 mt-1">
+            Stock: {producto.stock}
           </p>
         </div>
 
-        {/* Botón Adaptativo estilo App Nativa */}
+        {/* Botón Adaptativo */}
         {sinStock ? (
           <button
             disabled
-            className="w-full py-2.5 px-2 rounded-2xl text-xs font-bold bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 cursor-not-allowed opacity-80"
+            className="w-full py-2 px-2 rounded-xl text-xs font-bold bg-[#E7E5E0] dark:bg-zinc-800 text-[#6B675F] dark:text-zinc-500 cursor-not-allowed opacity-80"
           >
             Agotado
           </button>
         ) : cantidadEnCarrito === 0 ? (
           <button
-            type="button"
             onClick={handleSumar}
-            className="w-full py-2.5 px-2 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-[#0E6E55] dark:bg-emerald-600 text-white hover:bg-[#0b5944] dark:hover:bg-emerald-500 active:scale-[0.96] shadow-2xs cursor-pointer"
+            className="w-full py-2.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-[#12151B] dark:bg-zinc-800 text-white hover:bg-[#0E6E55] dark:hover:bg-emerald-600 active:scale-[0.95]"
           >
-            <ShoppingCart className="h-3.5 w-3.5 stroke-[2.2]" />
+            <ShoppingCart className="h-3.5 w-3.5" />
             <span>Agregar</span>
           </button>
         ) : (
           <div
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center justify-between w-full rounded-2xl border border-[#0E6E55]/30 dark:border-emerald-800/60 bg-[#0E6E55]/10 dark:bg-emerald-950/40 p-1"
+            className="flex items-center justify-between w-full rounded-xl border border-[#0E6E55]/30 dark:border-emerald-800/60 bg-[#0E6E55]/5 dark:bg-emerald-950/40 p-1"
           >
             <button
-              type="button"
               onClick={handleRestar}
-              className="flex h-7.5 w-7.5 items-center justify-center rounded-xl bg-white dark:bg-zinc-800 text-[#0E6E55] dark:text-emerald-400 shadow-2xs hover:bg-[#0E6E55] dark:hover:bg-emerald-600 hover:text-white transition-all active:scale-90 cursor-pointer"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white dark:bg-zinc-800 text-[#0E6E55] dark:text-emerald-400 shadow-xs hover:bg-[#0E6E55] dark:hover:bg-emerald-600 hover:text-white dark:hover:text-white transition-all active:scale-90 cursor-pointer"
               title="Restar una unidad"
             >
               <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
             </button>
 
-            <span className="text-xs font-black text-[#0E6E55] dark:text-emerald-400 px-1">
+            <span className="text-xs font-extrabold text-[#0E6E55] dark:text-emerald-400 px-1">
               {cantidadEnCarrito} en carrito
             </span>
 
             <button
-              type="button"
               onClick={handleSumar}
               disabled={limiteAlcanzado}
-              className={`flex h-7.5 w-7.5 items-center justify-center rounded-xl transition-all active:scale-90 ${
+              className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
                 limiteAlcanzado
-                  ? 'bg-slate-200 dark:bg-zinc-800 text-slate-400 dark:text-zinc-600 cursor-not-allowed'
-                  : 'bg-[#0E6E55] dark:bg-emerald-600 text-white hover:bg-[#0b5944] dark:hover:bg-emerald-500 cursor-pointer shadow-2xs'
+                  ? "bg-slate-200 dark:bg-zinc-800 text-slate-400 dark:text-zinc-600 cursor-not-allowed"
+                  : "bg-[#0E6E55] dark:bg-emerald-600 text-white hover:bg-[#0b5944] dark:hover:bg-emerald-500 cursor-pointer shadow-xs"
               }`}
-              title={
-                limiteAlcanzado
-                  ? 'Stock máximo alcanzado'
-                  : 'Sumar una unidad'
-              }
+              title={limiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
             >
               <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
             </button>
