@@ -46,7 +46,7 @@ export default function GridProductos({
 
   return (
     <div className="space-y-8">
-      {/* SECCIÓN 1: CARRUSEL HORIZONTAL DE OFERTAS (Se muestra solo si hay productos con descuento) */}
+      {/* SECCIÓN 1: CARRUSEL HORIZONTAL DE OFERTAS (Ancho idéntico a la grilla de 2 columnas) */}
       {productosOferta.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-center gap-2">
@@ -60,7 +60,10 @@ export default function GridProductos({
 
           <div className="no-scrollbar flex w-full items-stretch gap-3 overflow-x-auto scroll-smooth pb-2 pt-1">
             {productosOferta.map((producto) => (
-              <div key={`oferta-${producto.id}`} className="w-[180px] sm:w-[220px] shrink-0">
+              <div 
+                key={`oferta-${producto.id}`} 
+                className="w-[calc(50%-0.375rem)] sm:w-[220px] md:w-[240px] shrink-0"
+              >
                 <TarjetaProducto
                   producto={producto}
                   onVerDetalle={onVerDetalle}
