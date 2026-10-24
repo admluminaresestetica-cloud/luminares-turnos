@@ -6,7 +6,17 @@ import { useCarrito } from "@/context/CarritoContext";
 import { useFavoritos } from "@/context/FavoritosContext";
 import { useConfig } from "@/context/ConfigContext";
 import { calcularCuotas } from "@/lib/precios";
-import { Plus, Minus, Flame, ShoppingCart, Truck, Heart } from "lucide-react";
+import {
+  Heart,
+  Flame,
+  Truck,
+  ShoppingCart,
+  Minus,
+  Plus,
+  ShoppingBag,
+  PackageX,
+  CreditCard,
+} from 'lucide-react';
 
 interface TarjetaProductoProps {
   producto: Producto & {
