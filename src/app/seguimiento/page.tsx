@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, PackageSearch, CheckCircle2, Clock, Truck, Search, AlertCircle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, PackageSearch, CheckCircle2, Clock, Truck, Search, AlertCircle, ShieldCheck, RefreshCw, MessageCircle } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import { useConfig } from '@/context/ConfigContext';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,11 +21,20 @@ const ESTADOS_MAP = [
 ];
 
 export default function SeguimientoPage() {
+  const { config } = useConfig();
+
   const [codigo, setCodigo] = useState('');
   const [ultimos4Tel, setUltimos4Tel] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [actualizando, setActualizando] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [pedido, setPedido] = useState<any | null>(null);
+
+  // 📱 WhatsApp dinámico traído desde tu configuración de Admin
+  const rawNumber = config?.whatsapp_numero || '';
+  const numeroWhatsApp = rawNumber.replace(/[^0-9]/g, '');
+  const mensajeAyuda = encodeURIComponent("¡Hola! No recuerdo los datos de seguimiento de mi pedido o necesito asistencia. ¿Me podrán ayudar?");
+  const urlWhatsAppAyuda = numeroWhatsApp ? `https://wa.me/${numeroWhatsApp}?text=${mensajeAyuda}` : '#';
 
   // Función para enmascarar el nombre por privacidad (Ej: "Tamara Martinez" -> "Tamara M.")
   const enmascararNombre = (nombreCompleto?: string) => {
@@ -39,23 +49,28 @@ export default function SeguimientoPage() {
     return `${primerNombre} ${inicialApellido}.`;
   };
 
-  const buscarPedido = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setPedido(null);
+  const ejecutarBusqueda = async (codVal: string, tel4Val: string, esActualizacion = false) => {
+    if (esActualizacion) {
+      setActualizando(true);
+    } else {
+      setErrorMsg('');
+      setPedido(null);
+      setCargando(true);
+    }
 
-    const codLimpio = codigo.trim().toUpperCase();
-    const tel4Limpio = ultimos4Tel.trim().replace(/\D/g, '');
+    const codLimpio = codVal.trim().toUpperCase();
+    const tel4Limpio = tel4Val.trim().replace(/\D/g, '');
 
     if (!codLimpio || tel4Limpio.length !== 4) {
-      setErrorMsg('Por favor ingresa el código del pedido y los últimos 4 dígitos de tu teléfono.');
+      if (!esActualizacion) {
+        setErrorMsg('Por favor ingresa el código del pedido y los últimos 4 dígitos de tu teléfono.');
+      }
+      setCargando(false);
+      setActualizando(false);
       return;
     }
 
-    setCargando(true);
-
     try {
-      // Consultamos los pedidos para validar en cliente sin errores de filtro de Supabase
       const { data, error } = await supabase
         .from('pedidos')
         .select('*')
@@ -65,12 +80,10 @@ export default function SeguimientoPage() {
       if (error) throw error;
 
       if (!data || data.length === 0) {
-        setErrorMsg('No se encontraron pedidos registrados.');
-        setCargando(false);
+        if (!esActualizacion) setErrorMsg('No se encontraron pedidos registrados.');
         return;
       }
 
-      // Validar coincidencia del código (ID corto de 6 caracteres o completo) y los 4 dígitos del teléfono
       const pedidoEncontrado = data.find((p: any) => {
         if (!p.id || !p.telefono_cliente) return false;
 
@@ -85,17 +98,33 @@ export default function SeguimientoPage() {
       });
 
       if (!pedidoEncontrado) {
-        setErrorMsg('El código o los 4 dígitos de validación del teléfono no coinciden.');
-        setCargando(false);
+        if (!esActualizacion) {
+          setErrorMsg('El código o los 4 dígitos de validación del teléfono no coinciden.');
+        }
         return;
       }
 
       setPedido(pedidoEncontrado);
     } catch (err: any) {
       console.error("Error al consultar pedido:", err);
-      setErrorMsg('Ocurrió un error al consultar el pedido. Intenta nuevamente.');
+      if (!esActualizacion) {
+        setErrorMsg('Ocurrió un error al consultar el pedido. Intenta nuevamente.');
+      }
     } finally {
       setCargando(false);
+      setActualizando(false);
+    }
+  };
+
+  const buscarPedido = (e: React.FormEvent) => {
+    e.preventDefault();
+    ejecutarBusqueda(codigo, ultimos4Tel, false);
+  };
+
+  // 🔄 Botón para actualizar el estado sin reingresar datos
+  const handleActualizarEstado = () => {
+    if (codigo && ultimos4Tel) {
+      ejecutarBusqueda(codigo, ultimos4Tel, true);
     }
   };
 
@@ -185,11 +214,27 @@ export default function SeguimientoPage() {
           </form>
         </div>
 
+        {/* 💬 Opción B: Recuperación rápida por WhatsApp dinámico */}
+        <div className="text-center bg-card border border-border p-4 rounded-3xl space-y-2 shadow-xs">
+          <p className="text-xs text-muted-foreground font-medium">
+            ¿No recordás tu código o tenés dudas con tu pedido?
+          </p>
+          <a
+            href={urlWhatsAppAyuda}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3.5 py-2 rounded-xl hover:opacity-90 transition-all shadow-2xs"
+          >
+            <MessageCircle className="w-4 h-4 text-emerald-600 fill-current" />
+            <span>Escribinos por WhatsApp</span>
+          </a>
+        </div>
+
         {/* Resultado con Nombre Enmascarado y Timeline */}
         {pedido && (
           <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 shadow-xs space-y-6">
             
-            {/* Resumen del cliente */}
+            {/* Resumen del cliente + Botón de Actualizar Estado */}
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div>
                 <span className="inline-block bg-primary/10 text-primary font-mono text-xs font-extrabold px-2.5 py-1 rounded-lg">
@@ -199,9 +244,19 @@ export default function SeguimientoPage() {
                   Hola, {enmascararNombre(pedido.nombre_cliente)}
                 </h3>
               </div>
-              <div className="text-right">
-                <p className="text-[11px] text-muted-foreground">Método de entrega:</p>
-                <p className="text-xs font-bold text-foreground">
+
+              <div className="flex flex-col items-end gap-2">
+                <button
+                  type="button"
+                  onClick={handleActualizarEstado}
+                  disabled={actualizando}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-foreground bg-accent hover:bg-accent/80 rounded-xl transition-all cursor-pointer disabled:opacity-50 shadow-xs"
+                  title="Actualizar estado en tiempo real"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-primary ${actualizando ? 'animate-spin' : ''}`} />
+                  <span>{actualizando ? 'Actualizando...' : 'Actualizar'}</span>
+                </button>
+                <p className="text-[11px] text-muted-foreground">
                   {pedido.metodo_envio === 'envio' ? '📦 Envío a Domicilio' : '🏪 Retiro en Local'}
                 </p>
               </div>

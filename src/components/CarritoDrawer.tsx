@@ -145,7 +145,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const guardarPedidoEnDB = async (
     montoFinal: number,
     medioPagoStr: string
-  ) => {
+  ): Promise<string | null> => {
     try {
       const direccionReal =
         datosEnvio.metodoEnvio === "envio" && datosEnvio.direccion?.trim()
@@ -171,7 +171,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         ])
         .select();
 
-      if (pedidoError) console.error("Error al insertar pedido:", pedidoError);
+      if (pedidoError) {
+        console.error("Error al insertar pedido:", pedidoError);
+        return null;
+      }
 
       if (pedidoData && pedidoData.length > 0) {
         const idPedido = pedidoData[0].id;
@@ -184,18 +187,23 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
         }));
 
         await supabase.from("pedido_items").insert(itemsParaInsertar);
+        return idPedido; // 👈 Devolvemos el ID generado
       }
+      return null;
     } catch (err) {
       console.error("Excepción en DB:", err);
+      return null;
     }
   };
-
-  const procesarWhatsApp = async () => {
+const procesarWhatsApp = async () => {
     if (!validarCamposFormulario()) return;
 
-    await guardarPedidoEnDB(totalFinalAbonar, "Transferencia / Efectivo");
+    // Guardamos y obtenemos el ID real del pedido
+    const idPedidoReal = await guardarPedidoEnDB(totalFinalAbonar, "Transferencia / Efectivo");
+    const codigoCorto = idPedidoReal ? idPedidoReal.slice(0, 6).toUpperCase() : "REGISTRADO";
 
-    let mensaje = `¡Hola! Quisiera realizar el siguiente pedido:\n\n`;
+    let mensaje = `¡Hola! Quisiera confirmar el siguiente pedido:\n\n`;
+    mensaje += `📦 *Código de Pedido:* #${codigoCorto}\n`;
     mensaje += `👤 *Cliente:* ${datosEnvio.nombreCliente.trim()}\n`;
     if (datosEnvio.telefonoCliente) {
       mensaje += `📞 *Teléfono:* ${datosEnvio.telefonoCliente.trim()}\n`;
@@ -219,6 +227,10 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     }
 
     mensaje += `\n💰 *Total a abonar:* $${totalFinalAbonar.toLocaleString("es-AR")}\n`;
+    
+    // 🔗 Agregamos el enlace directo para hacer el seguimiento
+    mensaje += `\n🔍 Podés hacer el seguimiento de tu pedido en tiempo real ingresando aquí:\n`;
+    mensaje += `http://localhost:3000/seguimiento\n`; // (o tu dominio en producción)
 
     if (datosEnvio.notaAdicional?.trim()) {
       mensaje += `\n📝 *Nota:* ${datosEnvio.notaAdicional.trim()}\n`;

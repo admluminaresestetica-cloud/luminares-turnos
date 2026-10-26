@@ -204,19 +204,19 @@ export async function POST(request: Request) {
     const preference = new Preference(client);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
 
-    const result = await preference.create({
+const result = await preference.create({
       body: {
         items: itemsMP,
         external_reference: String(pedido.id),
         back_urls: {
-          success: `${baseUrl}/?status=success`,
-          failure: `${baseUrl}/?status=failure`,
-          pending: `${baseUrl}/?status=pending`,
+          success: `${baseUrl}/tienda?status=approved&external_reference=${pedido.id}`,
+          failure: `${baseUrl}/tienda?status=failure`,
+          pending: `${baseUrl}/tienda?status=pending`,
         },
         auto_return: "approved",
         notification_url: `${baseUrl}/api/webhooks/mercadopago`,
         payment_methods: {
-          installments: permiteFinanciacion ? cantidadCuotasConfig : 1, // 🟢 Dinámico según admin
+          installments: permiteFinanciacion ? cantidadCuotasConfig : 1,
         },
       },
     });
