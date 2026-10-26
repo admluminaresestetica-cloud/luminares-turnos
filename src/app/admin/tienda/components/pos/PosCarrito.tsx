@@ -1,8 +1,7 @@
 "use client";
-
 import { useState } from "react";
-import { PosCartItem } from "./types";
-import { ShoppingCart, Trash2, Plus, Minus, ChevronUp, ChevronDown } from "lucide-react";
+import { ShoppingCart, Trash2, Plus, Minus, ChevronDown, ChevronUp, Tag } from "lucide-react";
+import { PosCartItem, TipoDescuento } from "./types";
 
 interface PosCarritoProps {
   carrito: PosCartItem[];
@@ -10,6 +9,7 @@ interface PosCarritoProps {
   onEliminarItem: (productoId: number) => void;
   onVaciarCarrito: () => void;
   onIniciarCobro: (subtotal: number, descuentoCalculado: number, totalFinal: number) => void;
+  onAplicarDescuentoItem: (productoId: number, tipo: TipoDescuento, valor: number) => void;
 }
 
 export default function PosCarrito({
@@ -18,18 +18,41 @@ export default function PosCarrito({
   onEliminarItem,
   onVaciarCarrito,
   onIniciarCobro,
+  onAplicarDescuentoItem,
 }: PosCarritoProps) {
   const [expandidoMobile, setExpandidoMobile] = useState(false);
 
+  // Estados para el Modal Custom de Descuento
+  const [itemDescuentoActivo, setItemDescuentoActivo] = useState<PosCartItem | null>(null);
+  const [tipoDesc, setTipoDesc] = useState<TipoDescuento>("porcentaje");
+  const [valorDesc, setValorDesc] = useState<string>("");
+
+  // Función auxiliar para calcular el subtotal considerando descuento individual por ítem
+  const calcularSubtotalItem = (item: PosCartItem) => {
+    const bruto = item.precio_unitario * item.cantidad;
+    if (!item.descuento) return bruto;
+    if (item.descuento.tipo === "porcentaje") {
+      return bruto * (1 - item.descuento.valor / 100);
+    }
+    return Math.max(0, bruto - item.descuento.valor);
+  };
+
+  const subtotalBruto = carrito.reduce((acc, i) => acc + i.precio_unitario * i.cantidad, 0);
+  const subtotalNeto = carrito.reduce((acc, i) => acc + calcularSubtotalItem(i), 0);
+  const descuentoTotalCalculado = subtotalBruto - subtotalNeto;
   const totalItems = carrito.reduce((acc, i) => acc + i.cantidad, 0);
-  const subtotal = carrito.reduce((acc, i) => acc + i.precio_unitario * i.cantidad, 0);
 
   const handleCobrarClick = () => {
     if (carrito.length === 0) return;
-    onIniciarCobro(subtotal, 0, subtotal);
+    onIniciarCobro(subtotalBruto, descuentoTotalCalculado, subtotalNeto);
   };
 
-  return (
+  const abrirModalDescuento = (item: PosCartItem) => {
+    setItemDescuentoActivo(item);
+    setTipoDesc(item.descuento?.tipo || "porcentaje");
+    setValorDesc(item.descuento?.valor?.toString() || "");
+  };
+return (
     <>
       {/* BARRA FLOTANTE MÓVIL (Fija justo arriba del Bottom Nav) */}
       <div className="lg:hidden fixed bottom-14 left-0 right-0 z-40 px-3 pb-2">
@@ -52,7 +75,7 @@ export default function PosCarrito({
                   Carrito ({totalItems}) {expandidoMobile ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
                 </span>
                 <span className="text-base font-extrabold text-gray-900 dark:text-zinc-100">
-                  ${subtotal.toLocaleString("es-AR")}
+                  ${subtotalNeto.toLocaleString("es-AR")}
                 </span>
               </div>
             </button>
@@ -86,7 +109,19 @@ export default function PosCarrito({
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-bold text-gray-800 dark:text-zinc-100 truncate">{item.titulo}</p>
                       <p className="text-[10px] text-gray-500">${item.precio_unitario.toLocaleString("es-AR")}</p>
+                      
+                      <button
+                        type="button"
+                        onClick={() => abrirModalDescuento(item)}
+                        className="text-[10px] text-[#0E6E55] dark:text-emerald-400 hover:underline font-bold mt-0.5 flex items-center gap-1"
+                      >
+                        <Tag className="h-3 w-3" />
+                        {item.descuento
+                          ? `Desc: ${item.descuento.valor}${item.descuento.tipo === "porcentaje" ? "%" : "$"}`
+                          : "Añadir Descuento"}
+                      </button>
                     </div>
+
                     <div className="flex items-center gap-1.5">
                       <button onClick={() => onModificarCantidad(item.producto_id, -1)} className="p-1 rounded-lg bg-white dark:bg-zinc-700 border border-gray-200 dark:border-zinc-600">
                         <Minus className="h-3 w-3" />
@@ -140,8 +175,24 @@ export default function PosCarrito({
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-gray-800 dark:text-zinc-100 truncate">{item.titulo}</p>
                     <p className="text-[11px] font-semibold text-[#0E6E55]">
-                      ${(item.precio_unitario * item.cantidad).toLocaleString("es-AR")}
+                      ${calcularSubtotalItem(item).toLocaleString("es-AR")}
+                      {item.descuento && (
+                        <span className="text-[9px] text-gray-400 line-through ml-1.5">
+                          ${(item.precio_unitario * item.cantidad).toLocaleString("es-AR")}
+                        </span>
+                      )}
                     </p>
+
+                    <button
+                      type="button"
+                      onClick={() => abrirModalDescuento(item)}
+                      className="text-[10px] text-[#0E6E55] dark:text-emerald-400 hover:underline font-bold mt-1 flex items-center gap-1"
+                    >
+                      <Tag className="h-3 w-3" />
+                      {item.descuento
+                        ? `Desc: ${item.descuento.valor}${item.descuento.tipo === "porcentaje" ? "%" : "$"}`
+                        : "Añadir Descuento"}
+                    </button>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -176,10 +227,16 @@ export default function PosCarrito({
 
         {/* Resumen de Pago Escritorio */}
         <div className="border-t border-gray-100 dark:border-zinc-800 pt-4 mt-4">
+          {descuentoTotalCalculado > 0 && (
+            <div className="flex justify-between items-center mb-1 text-xs text-emerald-600 font-semibold">
+              <span>Descuentos aplicados</span>
+              <span>-${descuentoTotalCalculado.toLocaleString("es-AR")}</span>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-3">
             <span className="text-sm font-semibold text-gray-500 dark:text-zinc-400">Total a Cobrar</span>
             <span className="text-2xl font-extrabold text-gray-900 dark:text-zinc-100">
-              ${subtotal.toLocaleString("es-AR")}
+              ${subtotalNeto.toLocaleString("es-AR")}
             </span>
           </div>
 
@@ -192,6 +249,94 @@ export default function PosCarrito({
           </button>
         </div>
       </div>
+
+      {/* MODAL CUSTOM DE DESCUENTO POR ÍTEM */}
+      {itemDescuentoActivo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
+            <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 mb-1">
+              Aplicar Descuento
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-zinc-400 mb-4 truncate">
+              {itemDescuentoActivo.titulo}
+            </p>
+
+            {/* Selector de tipo */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => setTipoDesc("porcentaje")}
+                className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                  tipoDesc === "porcentaje"
+                    ? "bg-[#0E6E55] text-white shadow-md shadow-[#0E6E55]/20"
+                    : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-gray-200"
+                }`}
+              >
+                Porcentaje (%)
+              </button>
+              <button
+                type="button"
+                onClick={() => setTipoDesc("monto")}
+                className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                  tipoDesc === "monto"
+                    ? "bg-[#0E6E55] text-white shadow-md shadow-[#0E6E55]/20"
+                    : "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-300 hover:bg-gray-200"
+                }`}
+              >
+                Monto Fijo ($)
+              </button>
+            </div>
+
+            {/* Input de valor */}
+            <div className="mb-5">
+              <label className="block text-[11px] font-bold text-gray-500 dark:text-zinc-400 mb-1.5">
+                {tipoDesc === "porcentaje" ? "Porcentaje de descuento (ej: 10)" : "Monto de descuento en $ (ej: 500)"}
+              </label>
+              <input
+                type="number"
+                autoFocus
+                value={valorDesc}
+                onChange={(e) => setValorDesc(e.target.value)}
+                placeholder={tipoDesc === "porcentaje" ? "10" : "500"}
+                className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm font-semibold text-gray-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 focus:outline-none focus:border-[#0E6E55]"
+              />
+            </div>
+
+            {/* Acciones */}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  // Si el usuario quiere remover el descuento por completo
+                  onAplicarDescuentoItem(itemDescuentoActivo.producto_id, "monto", 0);
+                  setItemDescuentoActivo(null);
+                }}
+                className="py-2.5 px-3 rounded-xl border border-red-200 text-xs font-bold text-red-500 hover:bg-red-50 dark:border-red-950 dark:hover:bg-red-950/30 transition-colors"
+              >
+                Quitar
+              </button>
+              <button
+                type="button"
+                onClick={() => setItemDescuentoActivo(null)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 dark:border-zinc-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const val = parseFloat(valorDesc) || 0;
+                  onAplicarDescuentoItem(itemDescuentoActivo.producto_id, tipoDesc, val);
+                  setItemDescuentoActivo(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-[#0E6E55] text-xs font-bold text-white hover:bg-[#0A5340] transition-colors shadow-md shadow-[#0E6E55]/20"
+              >
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

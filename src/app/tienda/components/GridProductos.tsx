@@ -4,7 +4,7 @@ import React from "react";
 import { Producto } from "@/types/tienda";
 import TarjetaProducto from "./TarjetaProducto";
 import ProductoSkeleton from "./ProductoSkeleton";
-import { Flame, Sparkles } from "lucide-react";
+import { Flame } from "lucide-react";
 
 interface GridProductosProps {
   productos: Producto[];
@@ -79,7 +79,7 @@ export default function GridProductos({
         {productosOferta.length > 0 && (
           <div className="flex items-center gap-2 pt-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#0E6E55]/10 text-[#0E6E55] dark:bg-emerald-500/20 dark:text-emerald-400">
-              <Sparkles className="h-4 w-4" />
+              <Flame className="h-4 w-4" />
             </div>
             <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-zinc-100">
               Todos los productos

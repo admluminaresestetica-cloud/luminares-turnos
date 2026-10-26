@@ -181,43 +181,45 @@ export default function TarjetaProducto({
         )}
       </div>
 
-      {/* Información del Producto */}
+{/* Información del Producto */}
       <div className="flex flex-1 flex-col justify-between">
         <div>
-          <h3 className="line-clamp-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100 leading-snug tracking-tight">
+          <h3 className="line-clamp-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100 leading-snug tracking-tight min-h-[2.5rem]">
             {producto.nombre}
           </h3>
         </div>
 
-        {/* Precios, Cuotas y Stock */}
-        <div className="mt-2 mb-2.5">
-          <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tight">
-              ${precioFormateado}
-            </span>
-            {tieneOferta && (
-              <span className="text-[11px] font-medium text-slate-400 dark:text-zinc-500 line-through">
-                ${precioOriginalFormateado}
+        {/* Precios, Cuotas y Stock (Estructura de altura uniforme) */}
+        <div className="mt-2 mb-2.5 flex flex-col justify-between flex-1">
+          <div>
+            <div className="flex items-baseline gap-1.5 flex-wrap">
+              <span className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tight">
+                ${precioFormateado}
               </span>
-            )}
+              {tieneOferta && (
+                <span className="text-[11px] font-medium text-slate-400 dark:text-zinc-500 line-through">
+                  ${precioOriginalFormateado}
+                </span>
+              )}
+            </div>
+
+            {/* Contenedor con altura reservada para cuotas (evita saltos si no tiene cuotas) */}
+            <div className="min-h-[24px] mt-1 flex items-center">
+              {aplicaCuotas ? (
+                <span className="inline-flex items-center gap-1 rounded-lg border border-purple-200/80 dark:border-purple-900/60 bg-purple-50/80 dark:bg-purple-950/40 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:text-purple-300">
+                  <CreditCard className="h-3 w-3 shrink-0 stroke-[2.2]" />
+                  <span>{cantidadCuotasConfig} cuotas fijas de ${cuotaFormateada}</span>
+                </span>
+              ) : null}
+            </div>
           </div>
 
-          {/* Badge dinámico de cuotas con icono Lucide */}
-          {aplicaCuotas && (
-            <div className="mt-1">
-              <span className="inline-flex items-center gap-1 rounded-lg border border-purple-200/80 dark:border-purple-900/60 bg-purple-50/80 dark:bg-purple-950/40 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:text-purple-300">
-                <CreditCard className="h-3 w-3 shrink-0 stroke-[2.2]" />
-                <span>{cantidadCuotasConfig} cuotas fijas de ${cuotaFormateada}</span>
-              </span>
-            </div>
-          )}
-
-          <p className="text-[10px] font-medium text-slate-400 dark:text-zinc-500 mt-1">
+          <p className="text-[10px] font-medium text-slate-400 dark:text-zinc-500 mt-2">
             Stock: {producto.stock}
           </p>
         </div>
 
-        {/* Botón Adaptativo estilo App Nativa */}
+        {/* Botón Adaptativo estilo App Nativa (Siempre alineado abajo) */}
         {sinStock ? (
           <button
             disabled

@@ -12,8 +12,10 @@ import ListaProductos from "./components/ListaProductos";
 import PedidosTab, { Pedido } from "./components/PedidosTab";
 import CategoriasTab from "./components/CategoriasTab";
 import TagsTab from "./components/TagsTab";
+import SeccionEtiquetasPrecios from "./components/SeccionEtiquetasPrecios";
 import PuntoVentaTab from "./components/pos/PuntoVentaTab";
 import ControlCajaTab from "./components/ControlCajaTab";
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -366,6 +368,14 @@ return (
         )}
 
         {activeTab === "tags" && <TagsTab />}
+
+        {activeTab === "etiquetas" && (
+          <SeccionEtiquetasPrecios
+            productos={productos}
+            categorias={categorias}
+          />
+        )}
+
       </div>
     </div>
 
@@ -379,4 +389,6 @@ return (
     />
   </div>
 );
+
+
 }
