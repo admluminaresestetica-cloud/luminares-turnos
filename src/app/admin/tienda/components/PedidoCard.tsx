@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Trash2, CheckCircle2, MapPin, Truck, Store, Loader2, UserCheck, Clock, CreditCard, MessageCircle } from 'lucide-react';
+import { Calendar, Trash2, CheckCircle2, MapPin, Truck, Store, Loader2, UserCheck, Clock, CreditCard, MessageCircle, Printer } from 'lucide-react';
+
+import PedidoTicketPrint from './PedidoTicketPrint';
+
 
 interface PedidoCardProps {
   pedido: any;
@@ -29,6 +32,11 @@ export default function PedidoCard({
   const telefonoLimpio = pedido.telefono_cliente ? pedido.telefono_cliente.replace(/\D/g, '') : '';
   const mensajeWhatsApp = encodeURIComponent(`Hola ${pedido.nombre_cliente}, te escribimos de la tienda por tu pedido #${pedido.id.slice(0, 6).toUpperCase()}.`);
   const urlWhatsApp = telefonoLimpio ? `https://wa.me/${telefonoLimpio}?text=${mensajeWhatsApp}` : '#';
+
+  const manejarImpresion = () => {
+    window.print();
+  };
+
 
   return (
     <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/40 p-4 sm:p-5 transition-all hover:border-slate-300 dark:hover:border-zinc-700">
