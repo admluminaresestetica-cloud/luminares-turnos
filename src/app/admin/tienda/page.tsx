@@ -9,13 +9,32 @@ import ModalAnulacionPedido, { ItemAAnular } from "./components/ModalAnulacionPe
 import MetricasHeader from "./components/MetricasHeader";
 import FormularioProducto from "./components/FormularioProducto";
 import ListaProductos from "./components/ListaProductos";
-import PedidosTab, { Pedido } from "./components/PedidosTab";
+import PedidosTab from "./components/PedidosTab";
 import CategoriasTab from "./components/CategoriasTab";
 import TagsTab from "./components/TagsTab";
 import SeccionEtiquetasPrecios from "./components/SeccionEtiquetasPrecios";
 import PuntoVentaTab from "./components/pos/PuntoVentaTab";
 import ControlCajaTab from "./components/ControlCajaTab";
 import { usePerfil } from "@/hooks/usePerfil";
+
+export interface Pedido {
+  id: string;
+  nombre_cliente: string;
+  telefono_cliente?: string;
+  estado: string;
+  metodo_envio: string;
+  metodo_pago: string;
+  total: number;
+  created_at: string;
+  direccion?: string;
+  preparado_por?: string;
+  historial_estados?: any[];
+  pedido_items?: any[];
+  items?: any[];
+  productos?: any[];
+  nota_adicional?: string;
+  payment_id?: string;
+}
 
 
 const supabase = createClient(
@@ -425,6 +444,4 @@ return (
     />
   </div>
 );
-
-
 }

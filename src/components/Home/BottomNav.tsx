@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, ShoppingBag, Heart, HelpCircle } from 'lucide-react';
+import { Home, ShoppingBag, Heart, HelpCircle, PackageSearch } from 'lucide-react';
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -10,6 +10,7 @@ export default function BottomNav() {
   const NAV_ITEMS = [
     { label: 'Inicio', href: '/', icon: Home },
     { label: 'Tienda', href: '/tienda', icon: ShoppingBag },
+    { label: 'Seguimiento', href: '/seguimiento', icon: PackageSearch },
     { label: 'Favoritos', href: '/favoritos', icon: Heart },
     { label: 'FAQ', href: '/faq', icon: HelpCircle },
   ];
@@ -26,13 +27,12 @@ export default function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all duration-300 active:scale-90 cursor-pointer ${
+                className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition-all duration-300 active:scale-90 cursor-pointer ${
                   esActivo
                     ? 'text-[hsl(var(--primary))] font-black'
                     : 'text-stone-400 dark:text-zinc-500 hover:text-stone-600 dark:hover:text-zinc-300 font-semibold'
                 }`}
               >
-                {/* Contenedor del ícono con píldora suave cuando está activo */}
                 <div
                   className={`relative p-1.5 rounded-xl transition-all duration-300 ${
                     esActivo
@@ -43,12 +43,10 @@ export default function BottomNav() {
                   <Icon className="w-5 h-5 stroke-[2.2]" />
                 </div>
 
-                {/* Texto */}
                 <span className="text-[10px] tracking-tight leading-none mt-1">
                   {item.label}
                 </span>
 
-                {/* Puntito indicador inferior activo */}
                 {esActivo && (
                   <span className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-[hsl(var(--primary))] animate-in fade-in zoom-in duration-200" />
                 )}

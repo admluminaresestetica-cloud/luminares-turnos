@@ -1,0 +1,293 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, PackageSearch, CheckCircle2, Clock, Truck, Search, AlertCircle, ShieldCheck } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// Pasos del flujo logístico para la línea de tiempo
+const ESTADOS_MAP = [
+  { key: 'pendiente', label: 'Pedido Recibido', icon: Clock },
+  { key: 'en_preparacion', label: 'En Preparación', icon: PackageSearch },
+  { key: 'listo', label: 'Listo para Entrega/Retiro', icon: CheckCircle2 },
+  { key: 'en_camino', label: 'En Camino', icon: Truck },
+  { key: 'completado', label: 'Entregado', icon: CheckCircle2 },
+];
+
+export default function SeguimientoPage() {
+  const [codigo, setCodigo] = useState('');
+  const [ultimos4Tel, setUltimos4Tel] = useState('');
+  const [cargando, setCargando] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [pedido, setPedido] = useState<any | null>(null);
+
+  // Función para enmascarar el nombre por privacidad (Ej: "Tamara Martinez" -> "Tamara M.")
+  const enmascararNombre = (nombreCompleto?: string) => {
+    if (!nombreCompleto) return 'Cliente';
+    
+    const partes = nombreCompleto.trim().split(/\s+/);
+    if (partes.length === 1) return partes[0];
+
+    const primerNombre = partes[0];
+    const inicialApellido = partes[1].charAt(0).toUpperCase();
+
+    return `${primerNombre} ${inicialApellido}.`;
+  };
+
+  const buscarPedido = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setPedido(null);
+
+    const codLimpio = codigo.trim().toUpperCase();
+    const tel4Limpio = ultimos4Tel.trim().replace(/\D/g, '');
+
+    if (!codLimpio || tel4Limpio.length !== 4) {
+      setErrorMsg('Por favor ingresa el código del pedido y los últimos 4 dígitos de tu teléfono.');
+      return;
+    }
+
+    setCargando(true);
+
+    try {
+      // Consultamos los pedidos para validar en cliente sin errores de filtro de Supabase
+      const { data, error } = await supabase
+        .from('pedidos')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        setErrorMsg('No se encontraron pedidos registrados.');
+        setCargando(false);
+        return;
+      }
+
+      // Validar coincidencia del código (ID corto de 6 caracteres o completo) y los 4 dígitos del teléfono
+      const pedidoEncontrado = data.find((p: any) => {
+        if (!p.id || !p.telefono_cliente) return false;
+
+        const idCorto = p.id.toString().slice(0, 6).toUpperCase();
+        const idCompleto = p.id.toString().toUpperCase();
+        const coincideCodigo = idCorto === codLimpio || idCompleto === codLimpio;
+
+        const telLimpio = p.telefono_cliente.replace(/\D/g, '');
+        const coincideTel = telLimpio.endsWith(tel4Limpio);
+
+        return coincideCodigo && coincideTel;
+      });
+
+      if (!pedidoEncontrado) {
+        setErrorMsg('El código o los 4 dígitos de validación del teléfono no coinciden.');
+        setCargando(false);
+        return;
+      }
+
+      setPedido(pedidoEncontrado);
+    } catch (err: any) {
+      console.error("Error al consultar pedido:", err);
+      setErrorMsg('Ocurrió un error al consultar el pedido. Intenta nuevamente.');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const obtenerIndiceEstado = (estadoActual: string) => {
+    if (estadoActual === 'cerca') return 3;
+    const index = ESTADOS_MAP.findIndex((e) => e.key === estadoActual);
+    return index !== -1 ? index : 0;
+  };
+
+  return (
+    <div className="min-h-screen bg-background text-foreground transition-colors pb-28 pt-6 px-4 sm:px-6">
+      <div className="max-w-2xl mx-auto space-y-6">
+        
+        {/* Cabecera con botón de regresar */}
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="p-2.5 rounded-2xl bg-card border border-border text-foreground hover:bg-accent transition-colors shadow-xs"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="text-xl font-black text-foreground flex items-center gap-2">
+              <PackageSearch className="w-5 h-5 text-primary" />
+              Seguimiento de Pedido
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Consulta el estado de tu compra en tiempo real
+            </p>
+          </div>
+        </div>
+
+        {/* Tarjeta del Formulario de Búsqueda */}
+        <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 shadow-xs">
+          <form onSubmit={buscarPedido} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold mb-1.5 text-muted-foreground">
+                  Código de Pedido
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej: 3FC124"
+                  maxLength={10}
+                  value={codigo}
+                  onChange={(e) => setCodigo(e.target.value)}
+                  className="w-full h-11 px-3.5 rounded-xl border border-input bg-background font-mono text-sm font-bold uppercase focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1.5 text-muted-foreground">
+                  Últimos 4 dígitos del celular
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej: 4978"
+                  maxLength={4}
+                  value={ultimos4Tel}
+                  onChange={(e) => setUltimos4Tel(e.target.value)}
+                  className="w-full h-11 px-3.5 rounded-xl border border-input bg-background font-mono text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            </div>
+
+            {errorMsg && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-medium border border-rose-500/20">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={cargando}
+              className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all cursor-pointer disabled:opacity-50"
+            >
+              {cargando ? (
+                <span>Consultando estado...</span>
+              ) : (
+                <>
+                  <Search className="w-4 h-4" />
+                  <span>Buscar mi pedido</span>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        {/* Resultado con Nombre Enmascarado y Timeline */}
+        {pedido && (
+          <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 shadow-xs space-y-6">
+            
+            {/* Resumen del cliente */}
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <div>
+                <span className="inline-block bg-primary/10 text-primary font-mono text-xs font-extrabold px-2.5 py-1 rounded-lg">
+                  #{pedido.id.slice(0, 6).toUpperCase()}
+                </span>
+                <h3 className="text-base font-extrabold text-foreground mt-1">
+                  Hola, {enmascararNombre(pedido.nombre_cliente)}
+                </h3>
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] text-muted-foreground">Método de entrega:</p>
+                <p className="text-xs font-bold text-foreground">
+                  {pedido.metodo_envio === 'envio' ? '📦 Envío a Domicilio' : '🏪 Retiro en Local'}
+                </p>
+              </div>
+            </div>
+
+            {/* Timeline gráfico de estados */}
+            <div>
+              <h4 className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider mb-4">
+                Progreso de tu pedido
+              </h4>
+
+              <div className="space-y-4">
+                {ESTADOS_MAP.map((paso, idx) => {
+                  const Icono = paso.icon;
+                  const indiceActual = obtenerIndiceEstado(pedido.estado);
+                  const estaCompletado = idx <= indiceActual;
+                  const esElActual = idx === indiceActual;
+
+                  const eventoHistorial = Array.isArray(pedido.historial_estados)
+                    ? pedido.historial_estados.find((h: any) => h.estado === paso.key)
+                    : null;
+
+                  return (
+                    <div key={paso.key} className="flex items-start gap-3">
+                      <div className="flex flex-col items-center">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                            estaCompletado
+                              ? 'bg-primary text-primary-foreground font-bold'
+                              : 'bg-muted text-muted-foreground'
+                          } ${esElActual ? 'ring-4 ring-primary/20 scale-105' : ''}`}
+                        >
+                          <Icono className="w-4 h-4" />
+                        </div>
+                        {idx < ESTADOS_MAP.length - 1 && (
+                          <div
+                            className={`w-0.5 h-6 my-1 ${
+                              idx < indiceActual ? 'bg-primary' : 'bg-muted'
+                            }`}
+                          />
+                        )}
+                      </div>
+
+                      <div className="pt-1">
+                        <p
+                          className={`text-xs font-bold ${
+                            estaCompletado ? 'text-foreground' : 'text-muted-foreground'
+                          }`}
+                        >
+                          {paso.label}
+                          {esElActual && (
+                            <span className="ml-2 text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-extrabold">
+                              En este paso
+                            </span>
+                          )}
+                        </p>
+
+                        {eventoHistorial ? (
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {new Date(eventoHistorial.fecha).toLocaleString('es-AR', {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            })}
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                            {estaCompletado ? 'Completado' : 'Pendiente'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Aviso de seguridad */}
+            <div className="p-3 rounded-2xl bg-accent/50 border border-border flex items-center gap-2 text-[11px] text-muted-foreground">
+              <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+              <span>Estado sincronizado directamente con la logística oficial del comercio.</span>
+            </div>
+
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
