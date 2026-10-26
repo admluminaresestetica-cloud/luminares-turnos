@@ -202,7 +202,7 @@ export default function TicketVenta({
         <div id="ticket-print-area">
           {/* Cabecera Ticket */}
           <div className="border-b border-dashed border-gray-300 dark:border-zinc-700 pb-3 text-center">
-            <span className="text-xl print:hidden">✨</span>
+            <span className="text-xl print:hidden"></span>
             <h3 className="text-base font-extrabold text-gray-900 dark:text-zinc-100 uppercase tracking-wide">
               {datosEmpresa.nombre}
             </h3>
@@ -301,7 +301,7 @@ export default function TicketVenta({
           </div>
 
           <div className="mt-3 text-center text-[10px] text-gray-400 dark:text-zinc-500">
-            <p>{datosEmpresa.mensajeTicket || "¡Gracias por tu preferencia! ✨"}</p>
+            <p>{datosEmpresa.mensajeTicket || "¡Gracias por tu preferencia! "}</p>
           </div>
         </div>
 

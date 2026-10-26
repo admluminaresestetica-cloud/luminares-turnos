@@ -68,45 +68,56 @@ export default function PuntoVentaTab({
   // Estado para Pop-up / Modal de Atajos de Teclado
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
-  // --------------------------------------------------------
-  // LÓGICA DE AGREGAR AL CARRITO (CON VALIDACIÓN DE CAJA)
-  // --------------------------------------------------------
+ // --------------------------------------------------------
+// LÓGICA DE AGREGAR AL CARRITO (CON AUTO-DETECCIÓN DE DESCUENTOS)
+// --------------------------------------------------------
 const handleAgregarAlCarrito = (prod: ProductoPOS) => {
-    if (cajaAbierta === false) {
-      return;
-    }
+  if (cajaAbierta === false) {
+    return;
+  }
 
-    if (prod.stock <= 0) {
-      alert(`El producto "${prod.nombre}" no tiene stock disponible.`);
-      return;
-    }
+  if (prod.stock <= 0) {
+    alert(`El producto "${prod.nombre}" no tiene stock disponible.`);
+    return;
+  }
 
-    setCarrito((prev) => {
-      const existe = prev.find((item) => item.producto_id === prod.id);
-      if (existe) {
-        if (existe.cantidad >= prod.stock) {
-          alert(`Límite de stock alcanzado para "${prod.nombre}".`);
-          return prev;
-        }
-        return prev.map((item) =>
-          item.producto_id === prod.id
-            ? { ...item, cantidad: item.cantidad + 1 }
-            : item
-        );
+  // Evaluar si el producto ya trae un precio promocional o descuento desde la BD
+  const precioBase = prod.precio_original && prod.precio_original > prod.precio 
+    ? prod.precio_original 
+    : prod.precio;
+
+  const tieneDescuentoPromocional = prod.precio_original && prod.precio_original > prod.precio;
+  const descuentoInicial = tieneDescuentoPromocional
+    ? { tipo: "monto" as const, valor: prod.precio_original! - prod.precio }
+    : undefined;
+
+  setCarrito((prev) => {
+    const existe = prev.find((item) => item.producto_id === prod.id);
+    if (existe) {
+      if (existe.cantidad >= prod.stock) {
+        alert(`Límite de stock alcanzado para "${prod.nombre}".`);
+        return prev;
       }
-      return [
-        ...prev,
-        {
-          producto_id: prod.id,
-          titulo: prod.nombre,
-          precio_unitario: prod.precio,
-          cantidad: 1,
-          imagen_url: prod.imagen_url,
-          stock_disponible: prod.stock,
-        },
-      ];
-    });
-  };
+      return prev.map((item) =>
+        item.producto_id === prod.id
+          ? { ...item, cantidad: item.cantidad + 1 }
+          : item
+      );
+    }
+    return [
+      ...prev,
+      {
+        producto_id: prod.id,
+        titulo: prod.nombre,
+        precio_unitario: precioBase, // Muestra el precio de lista original
+        cantidad: 1,
+        imagen_url: prod.imagen_url,
+        stock_disponible: prod.stock,
+        descuento: descuentoInicial, // Carga automáticamente la rebaja/oferta
+      },
+    ];
+  });
+};
 
   // --------------------------------------------------------
   // LÓGICA DE ESCANEO DIRECTO CON PISTOLA USB
@@ -212,18 +223,28 @@ const handleAgregarAlCarrito = (prod: ProductoPOS) => {
     );
   };
 
+const handleAplicarDescuentoItem = (productoId: number, tipo: "monto" | "porcentaje", valor: number) => {
+  setCarrito((prev) =>
+    prev.map((item) =>
+      item.producto_id === productoId
+        ? { ...item, descuento: valor > 0 ? { tipo, valor } : undefined }
+        : item
+    )
+  );
+};
+
   const handleEliminarItem = (productoId: number) => {
     setCarrito((prev) => prev.filter((item) => item.producto_id !== productoId));
   };
 
-  const handleIniciarCobro = (subtotal: number, descuentoCalculado: number, totalFinal: number) => {
-    if (cajaAbierta === false) {
-      alert("⚠️ No se puede procesar el cobro porque la caja se encuentra cerrada.");
-      return;
-    }
-    setDatosCobro({ subtotal, descuentoCalculado, totalFinal });
-    setIsModalCobroOpen(true);
-  };
+const handleIniciarCobro = (subtotal: number, descuentoCalculado: number, totalFinal: number) => {
+  if (cajaAbierta === false) {
+    alert("⚠️ No se puede procesar el cobro porque la caja se encuentra cerrada.");
+    return;
+  }
+  setDatosCobro({ subtotal, descuentoCalculado, totalFinal });
+  setIsModalCobroOpen(true);
+};
 
   const handleVentaExitosa = (infoTicket: {
     pedidoId: string | null;
@@ -276,12 +297,13 @@ const handleAgregarAlCarrito = (prod: ProductoPOS) => {
 
         <div className="lg:col-span-1">
           <PosCarrito
-            carrito={carrito}
-            onModificarCantidad={handleModificarCantidad}
-            onEliminarItem={handleEliminarItem}
-            onVaciarCarrito={() => setCarrito([])}
-            onIniciarCobro={handleIniciarCobro}
-          />
+  carrito={carrito}
+  onModificarCantidad={handleModificarCantidad}
+  onEliminarItem={handleEliminarItem}
+  onVaciarCarrito={() => setCarrito([])}
+  onIniciarCobro={handleIniciarCobro}
+  onAplicarDescuentoItem={handleAplicarDescuentoItem}
+/>
         </div>
       </div>
 

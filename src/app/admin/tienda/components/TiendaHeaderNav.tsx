@@ -8,12 +8,13 @@ import {
   ClipboardList, 
   Image as ImageIcon, 
   Tag, 
-  ShoppingBag, 
+  Store, 
   ArrowLeft,
+  Megaphone,
   LucideIcon 
 } from "lucide-react";
 
-export type TabKey = "catalogo" | "pos" | "caja" | "pedidos" | "banners" | "tags";
+export type TabKey = "catalogo" | "pos" | "caja" | "pedidos" | "tags" | "etiquetas" | "carteles";
 
 interface TabOption {
   key: TabKey;
@@ -55,10 +56,14 @@ export default function TiendaHeaderNav({
       badge: pedidosPendientes,
       icon: ClipboardList,
     },
-    
     {
       key: "tags",
       label: "Tags",
+      icon: Tag,
+    },
+    {
+      key: "etiquetas",
+      label: "Etiquetas y Carteles",
       icon: Tag,
     },
   ];
@@ -78,7 +83,7 @@ return (
           </Link>
           
           <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 text-white shadow-inner">
-            <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
+            <Store className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
 
           <div>

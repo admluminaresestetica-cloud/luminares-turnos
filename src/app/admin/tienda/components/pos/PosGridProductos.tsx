@@ -115,19 +115,32 @@ export default function PosGridProductos({
                 </div>
 
                 {/* Pie: Precio + Botón rápido de agregar */}
-                <div className="mt-2.5 flex items-center justify-between border-t border-gray-100 dark:border-zinc-800 pt-2 w-full">
-                  <span className="text-xs sm:text-sm font-extrabold text-gray-900 dark:text-zinc-100">
-                    ${prod.precio.toLocaleString("es-AR")}
-                  </span>
-                  
-                  <span className={`flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl text-xs font-black transition-colors ${
-                    cajaCerrada
-                      ? "bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-600"
-                      : "bg-[#0E6E55]/10 text-[#0E6E55] group-hover:bg-[#0E6E55] group-hover:text-white"
-                  }`}>
-                    {cajaCerrada ? "🔒" : "+"}
-                  </span>
-                </div>
+<div className="mt-2.5 flex items-center justify-between border-t border-gray-100 dark:border-zinc-800 pt-2 w-full">
+  <div className="flex flex-col">
+    {prod.precio_original && prod.precio_original > prod.precio ? (
+      <>
+        <span className="text-[10px] text-gray-400 line-through leading-none">
+          ${prod.precio_original.toLocaleString("es-AR")}
+        </span>
+        <span className="text-xs sm:text-sm font-extrabold text-[#0E6E55] dark:text-emerald-400 leading-tight">
+          ${prod.precio.toLocaleString("es-AR")}
+        </span>
+      </>
+    ) : (
+      <span className="text-xs sm:text-sm font-extrabold text-gray-900 dark:text-zinc-100">
+        ${prod.precio.toLocaleString("es-AR")}
+      </span>
+    )}
+  </div>
+  
+  <span className={`flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl text-xs font-black transition-colors ${
+    cajaCerrada
+      ? "bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-600"
+      : "bg-[#0E6E55]/10 text-[#0E6E55] group-hover:bg-[#0E6E55] group-hover:text-white"
+  }`}>
+    {cajaCerrada ? "🔒" : "+"}
+  </span>
+</div>
               </button>
             );
           })}

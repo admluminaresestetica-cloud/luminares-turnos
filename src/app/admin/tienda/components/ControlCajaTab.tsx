@@ -36,6 +36,9 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
   const [ventasEfectivoTotal, setVentasEfectivoTotal] = useState(0);
   const [ventasDigitalesTotal, setVentasDigitalesTotal] = useState(0);
 
+  // Agregamos un estado para saber si la caja abierta es de un día anterior
+  const [cajaAntadataEsVencida, setCajaAntadataEsVencida] = useState(false);
+
   const fetchCaja = async () => {
     setCargando(true);
 
@@ -50,9 +53,19 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
 
     if (error) console.error("Error al obtener la caja:", error);
 
-    setCajaActual(caja || null);
-
     if (caja) {
+      // Verificamos si la fecha de apertura es de un día anterior al actual
+      const fechaAperturaCaja = new Date(caja.fecha_apertura).toISOString().split("T")[0];
+      const fechaHoy = new Date().toISOString().split("T")[0];
+
+      if (fechaAperturaCaja !== fechaHoy) {
+        setCajaAntadataEsVencida(true);
+      } else {
+        setCajaAntadataEsVencida(false);
+      }
+
+      setCajaActual(caja);
+
       // 2. Obtener movimientos manuales
       const { data: movs } = await supabase
         .from("movimientos_caja")
@@ -102,6 +115,9 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
         setVentasEfectivoTotal(efecSum);
         setVentasDigitalesTotal(digiSum);
       }
+    } else {
+      setCajaActual(null);
+      setCajaAntadataEsVencida(false);
     }
 
     setCargando(false);
@@ -249,6 +265,18 @@ export default function ControlCajaTab({ supabase }: ControlCajaTabProps) {
 
   return (
     <div className="space-y-5 sm:space-y-6 mb-20 sm:mb-8">
+      {/* ⚠️ AVISO DE CAJA ABIIERTA DE DÍAS ANTERIORES */}
+      {cajaAntadataEsVencida && (
+        <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-4 text-amber-800 dark:text-amber-200 text-xs font-semibold flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Clock className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>
+              <strong>¡Atención!</strong> Esta caja abierta pertenece a una jornada anterior ({new Date(cajaActual.fecha_apertura).toLocaleDateString()}). Debes cerrarla realizando el arqueo antes de operar en la fecha actual.
+            </span>
+          </div>
+        </div>
+      )}
+    
       {/* Resumen Superior */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         <div className="rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs">

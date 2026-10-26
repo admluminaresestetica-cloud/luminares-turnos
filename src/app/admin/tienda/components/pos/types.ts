@@ -12,6 +12,13 @@ export interface ProductoPOS {
   activo?: boolean;
 }
 
+export type TipoDescuento = "monto" | "porcentaje";
+
+export interface DescuentoItem {
+  tipo: TipoDescuento;
+  valor: number;
+}
+
 export interface PosCartItem {
   producto_id: number;
   titulo: string;
@@ -19,9 +26,8 @@ export interface PosCartItem {
   cantidad: number;
   imagen_url?: string;
   stock_disponible: number;
+  descuento?: DescuentoItem; // <-- Añadido para soportar el descuento por ítem
 }
-
-export type TipoDescuento = "monto" | "porcentaje";
 
 export interface SesionCaja {
   id?: string;
