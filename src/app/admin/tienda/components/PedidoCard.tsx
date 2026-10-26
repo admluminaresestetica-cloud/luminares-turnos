@@ -80,6 +80,16 @@ export default function PedidoCard({
             {pedido.estado.replace('_', ' ')}
           </span>
 
+<button
+            type="button"
+            onClick={manejarImpresion}
+            title="Imprimir etiqueta de pedido"
+            className="flex h-8 items-center gap-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-all cursor-pointer text-xs font-bold"
+          >
+            <Printer className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Imprimir</span>
+          </button>
+
           <button
             type="button"
             onClick={() => solicitarAutorizacion('eliminar', pedido.id)}
@@ -316,7 +326,7 @@ export default function PedidoCard({
             </>
           )}
 
-          {/* 6. Si falló la entrega (No entregado) -> Permite reprogramar */}
+                             {/* 6. Si falló la entrega (No entregado) -> Permite reprogramar */}
           {pedido.estado === "no_entregado" && (
             <button
               type="button"
@@ -329,6 +339,9 @@ export default function PedidoCard({
           )}
         </div>
       </div>
+
+      {/* Componente oculto que solo aparece al mandar a imprimir */}
+      <PedidoTicketPrint pedido={pedido} />
     </div>
   );
 }
