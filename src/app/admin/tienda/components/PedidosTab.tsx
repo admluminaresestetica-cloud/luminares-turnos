@@ -16,7 +16,9 @@ import {
   MapPin, 
   Truck, 
   Store,
-  Loader2
+  Loader2,
+  UserCheck,
+  Clock
 } from "lucide-react";
 
 const supabase = createBrowserClient(
@@ -40,6 +42,9 @@ export interface Pedido {
   nota_adicional: string | null;
   total: number;
   estado: string;
+  origen?: string;
+  preparado_por?: string;
+  historial_estados?: any[];
   pedido_items?: PedidoItem[];
   items?: any[];
 }
@@ -49,7 +54,7 @@ interface PedidosTabProps {
   cargandoPedidos: boolean;
   procesandoPedidoId: string | null;
   onFetchPedidos: () => void;
-  onAprobarPedido: (id: string) => void;
+  onCambiarEstado: (id: string, nuevoEstado: string) => void;
   onCancelarPedido: (id: string) => void;
   onEliminarPedido: (id: string) => void;
 }
@@ -59,7 +64,7 @@ export default function PedidosTab({
   cargandoPedidos,
   procesandoPedidoId,
   onFetchPedidos,
-  onAprobarPedido,
+  onCambiarEstado,
   onCancelarPedido,
   onEliminarPedido,
 }: PedidosTabProps) {
@@ -113,8 +118,12 @@ export default function PedidosTab({
     setAccionPendiente(null);
   };
 
-  // Filtrado de pedidos según los criterios seleccionados
+  // Filtrado de pedidos según los criterios seleccionados (excluyendo ventas de POS/local)
   const pedidosFiltrados = pedidos.filter((pedido) => {
+    if (pedido.origen === 'pos' || pedido.origen === 'local' || pedido.origen === 'caja') {
+      return false;
+    }
+
     if (filtroEstado !== 'todos' && pedido.estado !== filtroEstado) {
       return false;
     }
@@ -145,7 +154,7 @@ export default function PedidosTab({
       return;
     }
 
-    const encabezados = ["ID", "Fecha", "Cliente", "Método Envío", "Dirección", "Estado", "Total"];
+    const encabezados = ["ID", "Fecha", "Cliente", "Método Envío", "Dirección", "Estado", "Total", "Preparado Por"];
     const filas = pedidosFiltrados.map((p) => [
       p.id,
       new Date(p.created_at).toLocaleString("es-AR"),
@@ -153,7 +162,8 @@ export default function PedidosTab({
       p.metodo_envio,
       `"${p.direccion || ''}"`,
       p.estado,
-      p.total
+      p.total,
+      `"${p.preparado_por || ''}"`
     ]);
 
     const contenidoCSV = [encabezados.join(";"), ...filas.map((f) => f.join(";"))].join("\n");
@@ -168,13 +178,15 @@ export default function PedidosTab({
   };
 
   const estadoStyles: Record<string, string> = {
-    completado: "bg-[#D1FAE5] text-[#065F46]",
-    aprobado: "bg-[#D1FAE5] text-[#065F46]",
-    cancelado: "bg-[#FEE2E2] text-[#991B1B]",
-    pendiente: "bg-[#FEF3C7] text-[#92400E]",
+    completado: "bg-[#D1FAE5] text-[#065F46] border-emerald-200",
+    aprobado: "bg-[#D1FAE5] text-[#065F46] border-emerald-200",
+    en_preparacion: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/50",
+    listo: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-900/50",
+    cancelado: "bg-[#FEE2E2] text-[#991B1B] border-rose-200",
+    pendiente: "bg-[#FEF3C7] text-[#92400E] border-amber-200",
   };
 
- return (
+  return (
     <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs transition-colors sm:rounded-3xl sm:p-6">
       {/* Encabezado y Acciones */}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -183,7 +195,7 @@ export default function PedidosTab({
             <ClipboardList className="w-5 h-5" />
           </div>
           <h2 className="m-0 text-base font-extrabold text-slate-900 dark:text-zinc-100 sm:text-lg">
-            Pedidos Recibidos
+            Pedidos Recibidos (Logística Web)
           </h2>
         </div>
 
@@ -231,7 +243,8 @@ export default function PedidosTab({
           >
             <option value="todos" className="dark:bg-zinc-900">Todos los Estados</option>
             <option value="pendiente" className="dark:bg-zinc-900">⏳ Pendiente</option>
-            <option value="aprobado" className="dark:bg-zinc-900">👍 Aprobado</option>
+            <option value="en_preparacion" className="dark:bg-zinc-900">📦 En Preparación</option>
+            <option value="listo" className="dark:bg-zinc-900">🚀 Listo</option>
             <option value="completado" className="dark:bg-zinc-900">✅ Completado</option>
             <option value="cancelado" className="dark:bg-zinc-900">❌ Cancelado</option>
           </select>
@@ -301,7 +314,7 @@ export default function PedidosTab({
                       estadoStyles[pedido.estado] || "bg-slate-100 text-slate-600 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
                     }`}
                   >
-                    {pedido.estado}
+                    {pedido.estado.replace('_', ' ')}
                   </span>
 
                   <button
@@ -315,8 +328,8 @@ export default function PedidosTab({
                 </div>
               </div>
 
-              {/* Información de Envío */}
-              <div className="mb-3 rounded-xl bg-white dark:bg-zinc-800/80 border border-slate-100 dark:border-zinc-700/60 p-3 text-xs text-slate-700 dark:text-zinc-300 space-y-1">
+              {/* Información de Envío y Responsable */}
+              <div className="mb-3 rounded-xl bg-white dark:bg-zinc-800/80 border border-slate-100 dark:border-zinc-700/60 p-3 text-xs text-slate-700 dark:text-zinc-300 space-y-1.5">
                 <div className="flex items-center gap-2 font-medium">
                   {pedido.metodo_envio === "envio" ? (
                     <Truck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -333,6 +346,30 @@ export default function PedidosTab({
                   <div className="flex items-start gap-2 pt-1 text-slate-600 dark:text-zinc-400">
                     <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                     <span><strong>Dirección:</strong> {pedido.direccion}</span>
+                  </div>
+                )}
+
+                {/* NUEVO: Atribución del empleado */}
+                {pedido.preparado_por && (
+                  <div className="flex items-center gap-1.5 pt-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+                    <UserCheck className="w-4 h-4 shrink-0" />
+                    <span>Atendido/Preparado por: {pedido.preparado_por}</span>
+                  </div>
+                )}
+
+                {/* NUEVO: Historial de Estados (Timeline resumido) */}
+                {pedido.historial_estados && Array.isArray(pedido.historial_estados) && pedido.historial_estados.length > 0 && (
+                  <div className="pt-2 border-t border-slate-100 dark:border-zinc-700/50 space-y-1">
+                    <span className="font-semibold text-slate-500 dark:text-zinc-400 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" /> Historial de flujo:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {pedido.historial_estados.map((h: any, i: number) => (
+                        <span key={i} className="bg-slate-100 dark:bg-zinc-700/60 text-slate-700 dark:text-zinc-300 px-2 py-0.5 rounded text-[10px] font-mono">
+                          {h.estado} ({new Date(h.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {h.usuario})
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -363,14 +400,14 @@ export default function PedidosTab({
                         <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold">{item.cantidad}x</strong> {item.nombre_producto}
                       </span>
                       <span className="font-mono text-slate-500 dark:text-zinc-400">
-                        ${item.precio_unitario.toLocaleString()} c/u
+                        ${(item.precio_unitario || 0).toLocaleString()} c/u
                       </span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Footer de la Tarjeta */}
+              {/* Footer de la Tarjeta y Botones de Avance de Estado */}
               <div className="mt-4 flex flex-col gap-3 border-t border-slate-200/80 dark:border-zinc-800 pt-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-xs font-bold text-slate-500 dark:text-zinc-400">Total:</span>
@@ -379,36 +416,68 @@ export default function PedidosTab({
                   </span>
                 </div>
 
-                {pedido.estado === "pendiente" && (
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Botón de Cancelar (Protegido por PIN) */}
+                  {pedido.estado !== "cancelado" && pedido.estado !== "completado" && (
                     <button
                       type="button"
                       onClick={() => solicitarAutorizacion('cancelar', pedido.id)}
                       disabled={procesandoPedidoId === pedido.id}
-                      className="h-10 flex-1 sm:flex-none rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/30 px-3.5 text-xs font-bold text-rose-600 dark:text-rose-400 transition-all hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 disabled:opacity-50 cursor-pointer"
+                      className="h-10 rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/30 px-3.5 text-xs font-bold text-rose-600 dark:text-rose-400 transition-all hover:bg-rose-100 dark:hover:bg-rose-900/50 active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                       Cancelar
                     </button>
+                  )}
+
+                  {/* FLUJO DE ESTADOS SECUENCIALES */}
+                  {pedido.estado === "pendiente" && (
                     <button
                       type="button"
-                      onClick={() => onAprobarPedido(pedido.id)}
+                      onClick={() => onCambiarEstado(pedido.id, "en_preparacion")}
                       disabled={procesandoPedidoId === pedido.id}
-                      className="h-10 flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 px-4 text-xs font-bold text-white transition-all shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
+                      className="h-10 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 hover:bg-amber-700 px-4 text-xs font-bold text-white transition-all shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                       {procesandoPedidoId === pedido.id ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Aprobando...</span>
-                        </>
+                        <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <>
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Aprobar Compra</span>
-                        </>
+                        <CheckCircle2 className="w-4 h-4" />
                       )}
+                      <span>Iniciar Armado</span>
                     </button>
-                  </div>
-                )}
+                  )}
+
+                  {pedido.estado === "en_preparacion" && (
+                    <button
+                      type="button"
+                      onClick={() => onCambiarEstado(pedido.id, "listo")}
+                      disabled={procesandoPedidoId === pedido.id}
+                      className="h-10 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 px-4 text-xs font-bold text-white transition-all shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
+                    >
+                      {procesandoPedidoId === pedido.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4" />
+                      )}
+                      <span>Marcar como Listo</span>
+                    </button>
+                  )}
+
+                  {pedido.estado === "listo" && (
+                    <button
+                      type="button"
+                      onClick={() => onCambiarEstado(pedido.id, "completado")}
+                      disabled={procesandoPedidoId === pedido.id}
+                      className="h-10 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 text-xs font-bold text-white transition-all shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
+                    >
+                      {procesandoPedidoId === pedido.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4" />
+                      )}
+                      <span>Marcar como Entregado</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}

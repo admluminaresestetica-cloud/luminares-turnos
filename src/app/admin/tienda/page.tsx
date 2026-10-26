@@ -15,6 +15,7 @@ import TagsTab from "./components/TagsTab";
 import SeccionEtiquetasPrecios from "./components/SeccionEtiquetasPrecios";
 import PuntoVentaTab from "./components/pos/PuntoVentaTab";
 import ControlCajaTab from "./components/ControlCajaTab";
+import { usePerfil } from "@/hooks/usePerfil";
 
 
 const supabase = createClient(
@@ -23,6 +24,7 @@ const supabase = createClient(
 );
 
 export default function AdminTiendaPage() {
+  const { perfil } = usePerfil();
   const [activeTab, setActiveTab] = useState<TabKey>("catalogo");
   const [mounted, setMounted] = useState(false);
 
@@ -225,6 +227,54 @@ export default function AdminTiendaPage() {
     }
   };
 
+// ─── NUEVA FUNCIÓN PARA EL TIMELINE Y CAMBIO DE ESTADOS ───
+  const avanzarEstadoPedido = async (pedidoId: string, nuevoEstado: string) => {
+    setProcesandoPedidoId(pedidoId);
+    try {
+      const pedidoActual = pedidos.find((p) => p.id === pedidoId);
+      const historialPrevio = Array.isArray(pedidoActual?.historial_estados) 
+        ? pedidoActual.historial_estados 
+        : [];
+
+      const nombreUsuario = perfil?.nombre || "Sistema / Admin";
+      const nuevoEvento = {
+        estado: nuevoEstado,
+        fecha: new Date().toISOString(),
+        usuario: nombreUsuario,
+      };
+
+      const historialActualizado = [...historialPrevio, nuevoEvento];
+
+      // Si el pedido estaba pendiente y pasa a preparación/aprobado, 
+      // ejecutamos tu función de stock de Supabase por seguridad:
+      if (pedidoActual?.estado === 'pendiente' && (nuevoEstado === 'en_preparacion' || nuevoEstado === 'aprobado')) {
+        const { error: errorRpc } = await supabase.rpc(
+          "aprobar_pedido_y_descontar_stock",
+          { p_pedido_id: pedidoId }
+        );
+        if (errorRpc) throw errorRpc;
+      }
+
+      // Actualizamos estado, responsable e historial en la base de datos
+      const { error } = await supabase
+        .from("pedidos")
+        .update({
+          estado: nuevoEstado,
+          preparado_por: nombreUsuario,
+          historial_estados: historialActualizado,
+        })
+        .eq("id", pedidoId);
+
+      if (error) throw error;
+
+      await Promise.all([fetchPedidos(), fetchProductos()]);
+    } catch (err: any) {
+      alert("Error al actualizar el estado: " + (err.message || err));
+    } finally {
+      setProcesandoPedidoId(null);
+    }
+  };
+
   if (!mounted) return null;
 
   const totalProductos = productos.length;
@@ -342,20 +392,7 @@ return (
             cargandoPedidos={cargandoPedidos}
             procesandoPedidoId={procesandoPedidoId}
             onFetchPedidos={fetchPedidos}
-            onAprobarPedido={async (id) => {
-              setProcesandoPedidoId(id);
-              const { error } = await supabase.rpc(
-                "aprobar_pedido_y_descontar_stock",
-                { p_pedido_id: id }
-              );
-
-              if (error) {
-                alert("Error al aprobar pedido: " + error.message);
-              } else {
-                await Promise.all([fetchPedidos(), fetchProductos()]);
-              }
-              setProcesandoPedidoId(null);
-            }}
+            onCambiarEstado={avanzarEstadoPedido} // <-- Debe ser esta prop, no onAprobarPedido
             onCancelarPedido={(id) => {
               const ped = pedidos.find((p) => p.id === id);
               if (ped) iniciarAnulacion(ped);
@@ -366,7 +403,6 @@ return (
             }}
           />
         )}
-
         {activeTab === "tags" && <TagsTab />}
 
         {activeTab === "etiquetas" && (
