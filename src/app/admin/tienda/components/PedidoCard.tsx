@@ -106,7 +106,7 @@ export default function PedidoCard({
 
   return (
     <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/40 p-4 sm:p-5 transition-all hover:border-slate-300 dark:hover:border-zinc-700">
-      {/* Header de la Tarjeta */}
+            {/* Header de la Tarjeta */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap items-center gap-2">
