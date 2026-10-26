@@ -15,6 +15,8 @@ import { Producto } from "@/types/tienda";
 import BotonFlotanteCarrito from "./components/BotonFlotanteCarrito";
 import ThemeToggle from "@/components/ThemeToggle";
 import Fuse from "fuse.js";
+import { useSearchParams } from "next/navigation";
+import ModalExito from "@/components/carrito/ModalExito";
 
 import BuscadorYCategorias from "./components/BuscadorYCategorias";
 import GridProductos from "./components/GridProductos";
@@ -31,6 +33,9 @@ function TiendaContenido() {
   const { config } = useConfig();
   const [mounted, setMounted] = useState(false);
   const [cargando, setCargando] = useState(true);
+  const searchParams = useSearchParams();
+  const [mostrarModalExito, setMostrarModalExito] = useState(false);
+  const [codigoPedidoMP, setCodigoPedidoMP] = useState<string | undefined>(undefined);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<string[]>(["Todos"]);
 
@@ -52,30 +57,42 @@ function TiendaContenido() {
     ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 1), 0)
     : 0;
 
-  // 1. Lectura de parámetros de la URL (Mercado Pago, Categoría, Etiqueta)
+// 1. Lectura de parámetros de la URL (Mercado Pago, Categoría, Etiqueta)
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const status = searchParams.get("status");
+    const externalRef = searchParams.get("external_reference");
 
-    // Si regresa de Mercado Pago con éxito
-    const status = urlParams.get("status");
-    if (status === "success" && typeof vaciarCarrito === "function") {
-      vaciarCarrito();
-      window.history.replaceState({}, document.title, window.location.pathname);
+    // Si regresa de Mercado Pago aprobado o success
+    if (status === "approved" || status === "success") {
+      if (typeof vaciarCarrito === "function") {
+        vaciarCarrito();
+      }
+      if (externalRef) {
+        // Guardamos los primeros 6 caracteres del ID para el código corto (#2D26C6)
+        setCodigoPedidoMP(externalRef.slice(0, 6).toUpperCase());
+      }
+      setMostrarModalExito(true);
     }
 
     // Si viene desde un Banner con filtro de categoría
-    const catParam = urlParams.get("categoria");
+    const catParam = searchParams.get("categoria");
     if (catParam) {
       setCategoriaFiltro(catParam);
     }
 
     // Si viene desde un Banner con filtro de etiqueta
-    const tagParam = urlParams.get("etiqueta") || urlParams.get("tag") || urlParams.get("promo");
+    const tagParam = searchParams.get("etiqueta") || searchParams.get("tag") || searchParams.get("promo");
     if (tagParam) {
       setTagSeleccionado(tagParam);
     }
-  }, [vaciarCarrito]);
+  }, [searchParams, vaciarCarrito]);
 
+  const cerrarModalYLimpiar = () => {
+    setMostrarModalExito(false);
+    window.history.replaceState({}, document.title, window.location.pathname);
+  };
+
+  // 2. Carga inicial de datos desde Supabase
   useEffect(() => {
     setMounted(true);
 
@@ -363,6 +380,14 @@ function TiendaContenido() {
           onSeleccionarProducto={(prod) => setProductoSeleccionado(prod)}
           onAbrirCarrito={() => setModalAbierto(true)}
           onFiltrarPorTag={(tag) => setTagSeleccionado(tag)}
+        />
+
+        {/* 🟢 Modal de Éxito de Mercado Pago */}
+        <ModalExito
+          mostrar={mostrarModalExito}
+          esMercadoPago={true}
+          codigoPedido={codigoPedidoMP}
+          onAceptar={cerrarModalYLimpiar}
         />
 
         <CarritoDrawer

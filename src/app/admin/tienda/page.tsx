@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-import { useSearchParams, useRouter } from "next/navigation";
-import ModalExito from "@/components/carrito/ModalExito";
 
 // Componentes modulares de la vista
 import TiendaHeaderNav, { TabKey } from "./components/TiendaHeaderNav";
@@ -46,30 +44,6 @@ const supabase = createClient(
 
 export default function AdminTiendaPage() {
   const { perfil } = usePerfil();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  
-  const [mostrarModalExito, setMostrarModalExito] = useState(false);
-  const [codigoPedidoMP, setCodigoPedidoMP] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    const status = searchParams.get("status");
-    const externalRef = searchParams.get("external_reference");
-
-    if (status === "approved") {
-      if (externalRef) {
-        // Tomamos los primeros 6 caracteres para el código corto
-        setCodigoPedidoMP(externalRef.slice(0, 6).toUpperCase());
-      }
-      setMostrarModalExito(true);
-    }
-  }, [searchParams]);
-
-  const cerrarModalYLimpiar = () => {
-    setMostrarModalExito(false);
-    // Limpiamos los parámetros de la URL para que no vuelva a saltar si recargan
-    router.replace("/tienda");
-  };
   const [activeTab, setActiveTab] = useState<TabKey>("catalogo");
   const [mounted, setMounted] = useState(false);
 
@@ -468,14 +442,6 @@ return (
       onCerrar={() => setPedidoAAnular(null)}
       onConfirmar={procesarAnulacionConfirmada}
     />
-
-    {/* Modal de Éxito al volver de Mercado Pago */}
-      <ModalExito
-        mostrar={mostrarModalExito}
-        esMercadoPago={true}
-        codigoPedido={codigoPedidoMP}
-        onAceptar={cerrarModalYLimpiar}
-      />
   </div>
 );
 }
