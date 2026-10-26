@@ -106,16 +106,25 @@ export default function PedidoCard({
 
   return (
     <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/40 p-4 sm:p-5 transition-all hover:border-slate-300 dark:hover:border-zinc-700">
-            {/* Header de la Tarjeta */}
+           {/* Header de la Tarjeta */}
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="mb-1 flex flex-wrap items-center gap-2">
+        <div className="min-w-0 flex-1">
+          {/* Fila superior: ID y Nombre */}
+          <div className="mb-1.5 flex flex-wrap items-center gap-2">
             <span className="rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-0.5 font-mono text-[11px] font-extrabold text-slate-900 dark:text-zinc-100 shadow-2xs">
               #{pedido.id.slice(0, 6).toUpperCase()}
             </span>
-            <h3 className="m-0 truncate text-sm sm:text-base font-extrabold text-slate-900 dark:text-zinc-100">
+            <h3 className="m-0 text-sm sm:text-base font-extrabold text-slate-900 dark:text-zinc-100">
               {pedido.nombre_cliente}
             </h3>
+          </div>
+
+          {/* Fila inferior: Fecha y WhatsApp juntos en una línea horizontal */}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-zinc-400">
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span>{new Date(pedido.created_at).toLocaleString("es-AR", { dateStyle: 'short', timeStyle: 'short' })}</span>
+            </span>
 
             {/* Botón de WhatsApp Directo */}
             {pedido.telefono_cliente && (
@@ -131,11 +140,8 @@ export default function PedidoCard({
               </a>
             )}
           </div>
-          <p className="m-0 mt-0.5 text-xs font-medium text-slate-500 dark:text-zinc-400 flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-            <span>{new Date(pedido.created_at).toLocaleString("es-AR")}</span>
-          </p>
         </div>
+
 
         <div className="flex shrink-0 items-center gap-2">
           <span
