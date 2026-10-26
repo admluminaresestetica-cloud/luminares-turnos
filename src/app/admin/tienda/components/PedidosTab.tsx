@@ -239,17 +239,20 @@ return (
 
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5">
           <select
-            value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value)}
-            className="h-10 flex-1 sm:flex-none rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-slate-800 dark:text-zinc-200 outline-none cursor-pointer"
-          >
-            <option value="todos" className="dark:bg-zinc-900">Todos los Estados</option>
-            <option value="pendiente" className="dark:bg-zinc-900">⏳ Pendiente</option>
-            <option value="en_preparacion" className="dark:bg-zinc-900">📦 En Preparación</option>
-            <option value="listo" className="dark:bg-zinc-900">🚀 Listo</option>
-            <option value="completado" className="dark:bg-zinc-900">✅ Completado</option>
-            <option value="cancelado" className="dark:bg-zinc-900">❌ Cancelado</option>
-          </select>
+  value={filtroEstado}
+  onChange={(e) => setFiltroEstado(e.target.value)}
+  className="h-10 flex-1 sm:flex-none rounded-xl border border-slate-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-slate-800 dark:text-zinc-200 outline-none cursor-pointer"
+>
+  <option value="todos" className="dark:bg-zinc-900">Todos los Estados</option>
+  <option value="pendiente" className="dark:bg-zinc-900">⏳ Pendiente</option>
+  <option value="en_preparacion" className="dark:bg-zinc-900">📦 En Preparación</option>
+  <option value="listo" className="dark:bg-zinc-900">🚀 Listo / Empaquetado</option>
+  <option value="en_camino" className="dark:bg-zinc-900">🛵 En Camino</option>
+  <option value="cerca" className="dark:bg-zinc-900">📍 Cerca del Domicilio</option>
+  <option value="completado" className="dark:bg-zinc-900">✅ Entregado con Éxito</option>
+  <option value="no_entregado" className="dark:bg-zinc-900">⚠️ No se pudo entregar</option>
+  <option value="cancelado" className="dark:bg-zinc-900">❌ Cancelado</option>
+</select>
 
           <div className="flex items-center gap-1.5 flex-1 sm:flex-none">
             <input
