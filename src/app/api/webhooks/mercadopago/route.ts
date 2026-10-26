@@ -49,19 +49,28 @@ export async function POST(request: Request) {
             console.error("Error intentando actualizar reserva en webhook:", errorReserva);
           }
 
-          // Si afectó una fila en 'reservas', cortamos aquí la ejecución exitosa
           if (reservaActualizada) {
             return NextResponse.json({ received: true, type: "reserva" }, { status: 200 });
           }
 
           // -------------------------------------------------------------
           // INTENTO 2: Si no fue reserva, actualizar en la TIENDA (pedidos)
+          // Mantenemos el estado como "pendiente" para que el personal lo vea en logística
           // -------------------------------------------------------------
+          const nuevoHistorial = [
+            {
+              estado: "pago_aprobado",
+              fecha: new Date().toISOString(),
+              usuario: "Mercado Pago (Webhook)",
+            }
+          ];
+
           const { data: pedido, error: errorPedido } = await supabase
             .from("pedidos")
             .update({
-              estado: "aprobado",
+              estado: "pendiente", // <-- Respetamos el flujo logístico de armado
               payment_id: String(dataId),
+              historial_estados: nuevoHistorial, // <-- Guardamos trazabilidad de que ya está abonado
             })
             .eq("id", externalRef)
             .select()
@@ -76,7 +85,6 @@ export async function POST(request: Request) {
           // -------------------------------------------------------------
           if (pedido && pedido.telefono_cliente) {
             const telefonoCliente = pedido.telefono_cliente.trim();
-            // Ventana de seguridad de las últimas 3 horas para evitar tocar pedidos viejos
             const haceTresHoras = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
 
             const { error: errorLimpieza } = await supabase
@@ -84,7 +92,7 @@ export async function POST(request: Request) {
               .update({ estado: "cancelado" })
               .eq("telefono_cliente", telefonoCliente)
               .eq("estado", "pendiente")
-              .neq("id", externalRef) // Excluimos estrictamente el pedido aprobado actual
+              .neq("id", externalRef)
               .gte("created_at", haceTresHoras);
 
             if (errorLimpieza) {
@@ -92,26 +100,8 @@ export async function POST(request: Request) {
             }
           }
 
-          // Descontar stock de los productos comprados si aplica
-          if (pedido && pedido.items) {
-            for (const item of pedido.items) {
-              if (item.id) {
-                const { data: prod } = await supabase
-                  .from("productos")
-                  .select("stock")
-                  .eq("id", item.id)
-                  .single();
-
-                if (prod) {
-                  const nuevoStock = Math.max(0, prod.stock - (item.cantidad || 1));
-                  await supabase
-                    .from("productos")
-                    .update({ stock: nuevoStock })
-                    .eq("id", item.id);
-                }
-              }
-            }
-          }
+          // Nota: El descuento de stock ahora se maneja de forma segura 
+          // cuando el empleado hace clic en "Iniciar Armado" desde el panel admin.
         }
       }
     }
