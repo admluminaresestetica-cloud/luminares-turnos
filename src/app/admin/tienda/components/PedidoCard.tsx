@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Trash2, CheckCircle2, MapPin, Truck, Store, Loader2, UserCheck, Clock, CreditCard } from 'lucide-react';
+import { Calendar, Trash2, CheckCircle2, MapPin, Truck, Store, Loader2, UserCheck, Clock, CreditCard, MessageCircle } from 'lucide-react';
 
 interface PedidoCardProps {
   pedido: any;
@@ -25,6 +25,11 @@ export default function PedidoCard({
   const esMercadoPago = pedido.metodo_pago === "mercadopago";
   const pagoAprobado = Boolean(pedido.payment_id);
 
+  // Limpiar el teléfono para que solo queden números para el enlace de WhatsApp
+  const telefonoLimpio = pedido.telefono_cliente ? pedido.telefono_cliente.replace(/\D/g, '') : '';
+  const mensajeWhatsApp = encodeURIComponent(`Hola ${pedido.nombre_cliente}, te escribimos de la tienda por tu pedido #${pedido.id.slice(0, 6).toUpperCase()}.`);
+  const urlWhatsApp = telefonoLimpio ? `https://wa.me/${telefonoLimpio}?text=${mensajeWhatsApp}` : '#';
+
   return (
     <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/40 p-4 sm:p-5 transition-all hover:border-slate-300 dark:hover:border-zinc-700">
       {/* Header de la Tarjeta */}
@@ -37,6 +42,20 @@ export default function PedidoCard({
             <h3 className="m-0 truncate text-sm sm:text-base font-extrabold text-slate-900 dark:text-zinc-100">
               {pedido.nombre_cliente}
             </h3>
+
+            {/* Botón de WhatsApp Directo */}
+            {pedido.telefono_cliente && (
+              <a
+                href={urlWhatsApp}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`Chatear con ${pedido.nombre_cliente}`}
+                className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>{pedido.telefono_cliente}</span>
+              </a>
+            )}
           </div>
           <p className="m-0 mt-0.5 text-xs font-medium text-slate-500 dark:text-zinc-400 flex items-center gap-1">
             <Calendar className="w-3.5 h-3.5 text-slate-400" />
