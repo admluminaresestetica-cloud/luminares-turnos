@@ -182,13 +182,16 @@ export default function PedidosTab({
   };
 
   const estadoStyles: Record<string, string> = {
-    completado: "bg-[#D1FAE5] text-[#065F46] border-emerald-200",
-    aprobado: "bg-[#D1FAE5] text-[#065F46] border-emerald-200",
-    en_preparacion: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-900/50",
-    listo: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-900/50",
-    cancelado: "bg-[#FEE2E2] text-[#991B1B] border-rose-200",
-    pendiente: "bg-[#FEF3C7] text-[#92400E] border-amber-200",
-  };
+  completado: "bg-[#D1FAE5] text-[#065F46] border-emerald-200",
+  aprobado: "bg-[#D1FAE5] text-[#065F46] border-emerald-200",
+  en_preparacion: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300",
+  listo: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300",
+  en_camino: "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300",
+  cerca: "bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300",
+  no_entregado: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950/50 dark:text-orange-300",
+  cancelado: "bg-[#FEE2E2] text-[#991B1B] border-rose-200",
+  pendiente: "bg-[#FEF3C7] text-[#92400E] border-amber-200",
+};
 
 return (
     <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs transition-colors sm:rounded-3xl sm:p-6">
