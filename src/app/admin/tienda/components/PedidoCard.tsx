@@ -3,9 +3,6 @@
 import React from 'react';
 import { Calendar, Trash2, CheckCircle2, MapPin, Truck, Store, Loader2, UserCheck, Clock, CreditCard, MessageCircle, Printer } from 'lucide-react';
 
-import PedidoTicketPrint from './PedidoTicketPrint';
-
-
 interface PedidoCardProps {
   pedido: any;
   estaExpandido: boolean;
@@ -33,10 +30,79 @@ export default function PedidoCard({
   const mensajeWhatsApp = encodeURIComponent(`Hola ${pedido.nombre_cliente}, te escribimos de la tienda por tu pedido #${pedido.id.slice(0, 6).toUpperCase()}.`);
   const urlWhatsApp = telefonoLimpio ? `https://wa.me/${telefonoLimpio}?text=${mensajeWhatsApp}` : '#';
 
+  // Lógica para generar y abrir la ventana de impresión independiente del ticket
   const manejarImpresion = () => {
-    window.print();
-  };
+    const itemsLista = (pedido.pedido_items && pedido.pedido_items.length > 0
+      ? pedido.pedido_items
+      : (pedido.items || []).map((i: any) => ({
+          nombre_producto: i.nombre || i.title || "Producto",
+          cantidad: i.cantidad || 1,
+          precio_unitario: i.precio || i.unit_price || 0,
+        }))
+    );
 
+    const htmlItems = itemsLista.map((item: any) => `
+      <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+        <span>${item.cantidad}x ${item.nombre_producto}</span>
+        <span style="font-family: monospace;">$${(item.precio_unitario * item.cantidad).toLocaleString()}</span>
+      </div>
+    `).join('');
+
+    const contenidoHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Imprimir Ticket #${pedido.id.slice(0, 6).toUpperCase()}</title>
+          <style>
+            body { font-family: sans-serif; font-size: 12px; color: black; background: white; width: 72mm; margin: 0; padding: 10px; }
+            .header { text-align: center; border-bottom: 1px solid black; padding-bottom: 8px; margin-bottom: 8px; }
+            .section { border-bottom: 1px solid black; padding-bottom: 8px; margin-bottom: 8px; }
+            .total { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; margin-top: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2 style="margin: 0; font-size: 14px; text-transform: uppercase;">Luminares Estética</h2>
+            <p style="margin: 2px 0; font-size: 10px; color: #555;">Comprobante de Fulfillment</p>
+            <div style="margin-top: 4px; display: inline-block; background: black; color: white; padding: 2px 6px; font-family: monospace; font-weight: bold; font-size: 11px;">
+              #${pedido.id.slice(0, 6).toUpperCase()}
+            </div>
+          </div>
+
+          <div class="section">
+            <p style="margin: 2px 0;"><strong>Fecha:</strong> ${new Date(pedido.created_at).toLocaleString("es-AR")}</p>
+            <p style="margin: 2px 0;"><strong>Cliente:</strong> ${pedido.nombre_cliente}</p>
+            <p style="margin: 2px 0;"><strong>Teléfono:</strong> ${pedido.telefono_cliente || "No especificado"}</p>
+            <p style="margin: 2px 0;"><strong>Método:</strong> ${pedido.metodo_envio === "envio" ? "📦 Envío a Domicilio" : "🏪 Retiro en Local"}</p>
+            ${pedido.direccion ? `<p style="margin: 2px 0;"><strong>Dirección:</strong> ${pedido.direccion}</p>` : ''}
+          </div>
+
+          <div class="section">
+            <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 10px; text-transform: uppercase;">Productos:</p>
+            ${htmlItems}
+          </div>
+
+          <div class="total">
+            <span>TOTAL:</span>
+            <span style="font-family: monospace;">$${Number(pedido.total).toLocaleString()}</span>
+          </div>
+
+          ${pedido.preparado_por ? `<p style="text-align: center; font-size: 10px; margin-top: 10px; border-top: 1px dashed #999; padding-top: 4px;">Preparado por: ${pedido.preparado_por}</p>` : ''}
+        </body>
+      </html>
+    `;
+
+    const ventanaImpresion = window.open('', '_blank', 'width=400,height=600');
+    if (ventanaImpresion) {
+      ventanaImpresion.document.write(contenidoHtml);
+      ventanaImpresion.document.close();
+      ventanaImpresion.focus();
+      setTimeout(() => {
+        ventanaImpresion.print();
+        ventanaImpresion.close();
+      }, 300);
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-800/40 p-4 sm:p-5 transition-all hover:border-slate-300 dark:hover:border-zinc-700">
@@ -80,7 +146,7 @@ export default function PedidoCard({
             {pedido.estado.replace('_', ' ')}
           </span>
 
-<button
+          <button
             type="button"
             onClick={manejarImpresion}
             title="Imprimir etiqueta de pedido"
@@ -326,7 +392,7 @@ export default function PedidoCard({
             </>
           )}
 
-                             {/* 6. Si falló la entrega (No entregado) -> Permite reprogramar */}
+          {/* 6. Si falló la entrega (No entregado) -> Permite reprogramar */}
           {pedido.estado === "no_entregado" && (
             <button
               type="button"
@@ -339,9 +405,6 @@ export default function PedidoCard({
           )}
         </div>
       </div>
-
-      {/* Componente oculto que solo aparece al mandar a imprimir */}
-      <PedidoTicketPrint pedido={pedido} />
     </div>
   );
 }
