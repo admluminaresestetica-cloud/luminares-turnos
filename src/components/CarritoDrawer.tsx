@@ -6,6 +6,7 @@ import { useConfig } from "@/context/ConfigContext";
 import { supabase } from "@/lib/supabase";
 import { X, Trash2, ShoppingCart, ArrowRight, Lock, ShieldCheck, CheckCircle2 } from "lucide-react";
 import FormularioEnvio from "./carrito/FormularioEnvio";
+import { useAuth } from "@/context/AuthContext";
 
 interface CarritoDrawerProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface CarritoDrawerProps {
 
 export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const { config } = useConfig();
+  const { user } = useAuth();
   const {
     carrito,
     datosEnvio,
@@ -165,6 +167,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             total: montoFinal,
             estado: "pendiente",
             direccion: direccionReal,
+            user_id: user?.id || datosEnvio.user_id || null,
             nota_adicional:
               `${datosEnvio.notaAdicional?.trim() || ""} [Pago: ${medioPagoStr}]`.trim(),
           },
@@ -282,7 +285,9 @@ const procesarWhatsApp = async () => {
             telefono: datosEnvio.telefonoCliente.trim(),
             metodoEnvio: datosEnvio.metodoEnvio,
             direccion: datosEnvio.direccion,
+            user_id: user?.id || null,
           },
+          user_id: user?.id || null,
         }),
       });
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, 
@@ -24,8 +24,12 @@ import { getConfiguracionSistema } from '@/lib/supabase/configuracion';
 import { buscarReserva, cancelarReserva } from '@/lib/supabase/reservas';
 import type { Reserva } from '@/lib/types';
 import { useConfig } from '@/context/ConfigContext';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase'; 
 
 export default function MisTurnosPage() {
+  const { user, loading: authLoading } = useAuth();
+  const [reservasLista, setReservasLista] = useState<Reserva[]>([]); 
   const { config } = useConfig();
   const [celular, setCelular] = useState('');
   const [codigo, setCodigo] = useState('');
@@ -38,6 +42,35 @@ export default function MisTurnosPage() {
 
   // Estado para controlar la apertura del modal (pop-up)
   const [modalCancelarOpen, setModalCancelarOpen] = useState(false);
+
+  useEffect(() => {
+    async function cargarTurnosLogueado() {
+      if (!user) return;
+      setBuscando(true);
+      try {
+        const [resQuery, configSys] = await Promise.all([
+          supabase
+            .from('reservas')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('fecha_hora_inicio', { ascending: false }),
+          getConfiguracionSistema(),
+        ]);
+
+        if (configSys) setVentanaHoras(configSys.ventana_horas_cancelacion);
+
+        if (resQuery.data && resQuery.data.length > 0) {
+          setReserva(resQuery.data[0]); // Toma la última reserva del usuario
+        }
+      } catch (err) {
+        console.error('Error al cargar turnos del usuario:', err);
+      } finally {
+        setBuscando(false);
+      }
+    }
+
+    cargarTurnosLogueado();
+  }, [user]);
 
   // WhatsApp dinámico
   const rawNumber = config?.whatsapp_numero || '5493413954355';

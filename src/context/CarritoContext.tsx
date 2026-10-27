@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 export interface Producto {
   id: number | string;
@@ -24,6 +26,7 @@ export interface DatosEnvio {
   direccion: string;
   metodoEnvio: "retiro" | "envio";
   notaAdicional: string;
+  user_id?: string | null;
 }
 
 interface CarritoContextType {
@@ -42,6 +45,7 @@ interface CarritoContextType {
 const CarritoContext = createContext<CarritoContextType | undefined>(undefined);
 
 export function CarritoProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [carrito, setCarrito] = useState<CarritoItem[]>([]);
   const [cargado, setCargado] = useState(false);
   const [datosEnvio, setDatosEnvio] = useState<DatosEnvio>({
@@ -50,7 +54,10 @@ export function CarritoProvider({ children }: { children: React.ReactNode }) {
     direccion: "",
     metodoEnvio: "retiro",
     notaAdicional: "",
+    user_id: null,
   });
+
+// Autocompletar datos y user_
 
   // Cargar carrito desde localStorage sólo en el cliente
   useEffect(() => {
@@ -185,8 +192,9 @@ export function useCarrito() {
         nombreCliente: "",
         telefonoCliente: "",
         direccion: "",
-        metodoEnvio: "retiro",
+        metodoEnvio: "retiro" as const,
         notaAdicional: "",
+        user_id: null,
       },
       setDatosEnvio: () => {},
       agregarAlCarrito: () => {},

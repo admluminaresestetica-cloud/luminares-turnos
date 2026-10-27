@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
     const client = new MercadoPagoConfig({ accessToken });
 
-    const { itemsCarrito, cliente, recargoPorcentaje } = await request.json();
+    const { itemsCarrito, cliente, recargoPorcentaje, user_id } = await request.json();
 
     if (!itemsCarrito || !Array.isArray(itemsCarrito) || itemsCarrito.length === 0) {
       return NextResponse.json(
@@ -177,6 +177,7 @@ export async function POST(request: Request) {
         metodo_pago: "mercadopago",
         origen: "web",
         es_cuotas: permiteFinanciacion,
+        user_id: user_id || cliente?.user_id || null,
       })
       .select()
       .single();

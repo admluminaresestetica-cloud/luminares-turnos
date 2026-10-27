@@ -17,6 +17,10 @@ import {
   Building2,
 } from 'lucide-react';
 
+import { useAuth } from '@/context/AuthContext';
+import { useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
 interface Props {
   servicioDetalle: string;
   precioTotal: number;
@@ -76,6 +80,7 @@ export default function FormConfirmacion({
   cbu,
   alias,
 }: Props) {
+  const { user } = useAuth();
   const [opcionMP, setOpcionMP] = useState<'sena' | 'total'>('sena');
   const [metodoPago, setMetodoPago] = useState<'mercadopago' | 'whatsapp'>(
     onPagarMercadoPago ? 'mercadopago' : 'whatsapp'
@@ -83,6 +88,43 @@ export default function FormConfirmacion({
 
   const [copiadoCbu, setCopiadoCbu] = useState(false);
   const [copiadoAlias, setCopiadoAlias] = useState(false);
+
+ useEffect(() => {
+    if (!user) return;
+
+    // Guardamos el ID de forma segura para TypeScript
+    const userId = user.id;
+
+    // 1. Autocompletar nombre desde Google si está vacío
+    if (!nombre) {
+      const nombreGoogle = user.user_metadata?.full_name || user.user_metadata?.name || '';
+      if (nombreGoogle) {
+        onNombreChange(nombreGoogle);
+      }
+    }
+
+    // 2. Autocompletar celular buscando la última reserva del usuario en Supabase
+    if (!celular) {
+      async function recuperarCelularAnterior() {
+        try {
+          const { data, error } = await supabase
+            .from('reservas')
+            .select('cliente_celular')
+            .eq('user_id', userId) // <-- Usamos userId en lugar de user.id
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (data && data.cliente_celular) {
+            onCelularChange(data.cliente_celular);
+          }
+        } catch (err) {
+          console.error('Error al recuperar teléfono anterior:', err);
+        }
+      }
+      recuperarCelularAnterior();
+    }
+  }, [user, nombre, celular, onNombreChange, onCelularChange]);
 
   const copiarAlPortapapeles = async (texto: string, tipo: 'cbu' | 'alias') => {
     if (!texto) return;
