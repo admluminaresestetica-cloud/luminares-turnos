@@ -216,38 +216,40 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
   };
 
 return (
-    <div ref={containerRef} className="space-y-3 relative z-50">
-        {/* Saludo + Botón Mis Turnos y ThemeToggle */}
-      <div className="flex items-center justify-between px-1">
-        <div>
-          <p className="text-xs font-medium text-white/80">
-            ¡Hola! Te damos la bienvenida a
-          </p>
-          <h1 className="text-xl font-extrabold tracking-tight text-white">
-            {nombreEmpresa}
-          </h1>
-        </div>
+<div ref={containerRef} className="space-y-3 relative z-50">
+    {/* Saludo + Botón Mis Turnos y ThemeToggle */}
+  <div className="flex items-center justify-between px-1">
+    <div>
+      <p className="text-xs font-medium text-white/80">
+        ¡Hola! Te damos la bienvenida a
+      </p>
+      <h1 className="text-xl font-extrabold tracking-tight text-white">
+        {nombreEmpresa}
+      </h1>
+    </div>
 
-<div className="flex items-center gap-2">
-  <ThemeToggle />
-  
-  {/* Botón Seguimiento de Pedido */}
-  <Link
-    href="/seguimiento"
-    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs cursor-pointer"
-  >
-    <PackageSearch className="h-3.5 w-3.5 text-emerald-400" />
-  </Link>
+    <div className="flex items-center gap-2">
+      <ThemeToggle />
+      
+      {/* Botón Seguimiento de Pedido (Oculto en celular gracias a 'hidden sm:flex') */}
+      <Link
+        href="/seguimiento"
+        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs cursor-pointer"
+      >
+        <PackageSearch className="h-3.5 w-3.5 text-emerald-400" />
+        <span>Seguimiento</span>
+      </Link>
 
-  {/* Botón Mis Turnos */}
-  <Link
-    href="/mis-turnos"
-    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
-  >
-    <Calendar className="h-3.5 w-3.5 text-white" />
-    <span>Mis Turnos</span>
-  </Link>
-</div>
+      {/* Botón Mis Turnos */}
+      <Link
+        href="/mis-turnos"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
+      >
+        <Calendar className="h-3.5 w-3.5 text-white" />
+        <span>Mis Turnos</span>
+      </Link>
+    </div>
+
       </div>
 
       {/* Input de Búsqueda */}
