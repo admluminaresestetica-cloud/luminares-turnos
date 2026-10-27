@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, User, Calendar, PackageSearch, Heart, Sparkles, LogOut, Loader2 } from 'lucide-react';
+import { X, User, Calendar, PackageSearch, Heart, Star, LogOut, Loader2, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 
@@ -11,7 +11,6 @@ interface UserAccountModalProps {
 }
 
 export default function UserAccountModal({ isOpen, onClose }: UserAccountModalProps) {
-  // Cambiamos 'logout' por 'signOut' que es el nombre real en el AuthContext
   const { user, loginWithGoogle, signOut } = useAuth();
   const [cargandoGoogle, setCargandoGoogle] = useState(false);
 
@@ -21,7 +20,6 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     try {
       setCargandoGoogle(true);
       await loginWithGoogle();
-      // No ejecutamos onClose() para dar tiempo a que la página redirija a Google
     } catch (error) {
       console.error('Error al iniciar sesión con Google:', error);
       setCargandoGoogle(false);
@@ -32,7 +30,6 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     try {
       await signOut();
       onClose();
-      // Recarga limpia para refrescar la sesión en toda la app
       window.location.reload();
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
@@ -42,7 +39,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
   return (
     <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs flex items-end sm:hidden animate-fadeIn">
       <div 
-        className="w-full bg-background border-t border-border rounded-t-[32px] p-6 space-y-5 shadow-2xl mb-16 animate-slideUp"
+        className="w-full bg-background border-t border-border rounded-t-[32px] p-6 space-y-4 shadow-2xl mb-16 animate-slideUp max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header del Modal */}
@@ -105,16 +102,19 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
             </button>
           </div>
         ) : (
-          /* Si está logueado: Programa de Fidelidad / Puntos */
+          /* Si está logueado: Programa de Fidelidad / Puntos Mejorado */
           <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-transparent border border-primary/20 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
             <div className="space-y-0.5">
               <span className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> Puntos Luminares
+                <Star className="w-3 h-3" /> Puntos Luminares
               </span>
               <p className="text-lg font-black text-foreground leading-none">
                 0 pts
               </p>
-              <p className="text-[10px] text-muted-foreground">Acumulá puntos en tus compras y servicios</p>
+              <p className="text-[10px] text-muted-foreground">Acumulá puntos en cada visita o compra</p>
+            </div>
+            <div className="px-3 py-1.5 bg-primary/20 rounded-xl text-[10px] font-bold text-primary">
+              Nivel Inicial
             </div>
           </div>
         )}
@@ -122,7 +122,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
         {/* Accesos Directos Unificados */}
         <div className="space-y-1.5">
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">
-            Accesos rápidos
+            Gestión y Actividad
           </span>
 
           <Link
@@ -163,6 +163,22 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
               <span>Mis Productos Favoritos</span>
             </div>
           </Link>
+
+          {/* Botón de Soporte / WhatsApp Rápido */}
+          <a
+            href="https://wa.me/"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            className="flex items-center justify-between p-3 rounded-xl bg-card border border-border hover:bg-accent active:scale-[0.99] transition-all text-xs font-bold text-foreground shadow-2xs"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600">
+                <MessageCircle className="w-4 h-4" />
+              </div>
+              <span>Soporte por WhatsApp</span>
+            </div>
+          </a>
         </div>
 
         {/* Cerrar sesión si está logueado */}
