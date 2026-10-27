@@ -29,8 +29,9 @@ import { supabase } from '@/lib/supabase';
 
 export default function MisTurnosPage() {
   const { user, loading: authLoading } = useAuth();
-  const [reservasLista, setReservasLista] = useState<Reserva[]>([]); 
   const { config } = useConfig();
+  
+  const [reservasLista, setReservasLista] = useState<Reserva[]>([]); 
   const [celular, setCelular] = useState('');
   const [codigo, setCodigo] = useState('');
   const [reserva, setReserva] = useState<Reserva | null>(null);
@@ -42,9 +43,6 @@ export default function MisTurnosPage() {
 
   // Estado para controlar la apertura del modal (pop-up)
   const [modalCancelarOpen, setModalCancelarOpen] = useState(false);
-
-    // Estado adicional para almacenar la lista completa de reservas del usuario
-  const [reservasLista, setReservasLista] = useState<Reserva[]>([]);
 
   useEffect(() => {
     async function cargarTurnosLogueado() {
@@ -64,7 +62,7 @@ export default function MisTurnosPage() {
 
         if (resQuery.data && resQuery.data.length > 0) {
           setReservasLista(resQuery.data);
-          setReserva(resQuery.data[0]); // Selecciona la más reciente por defecto
+          setReserva(resQuery.data[0]); // Toma la última reserva del usuario por defecto
         }
       } catch (err) {
         console.error('Error al cargar turnos del usuario:', err);
@@ -108,11 +106,11 @@ export default function MisTurnosPage() {
       }
 
       setReserva(found);
-// 🟢 Agregamos esto para que si busca manual, también se sume a la lista del selector
+
+      // Si busca manual y está logueado, lo sumamos a la lista si no estaba
       if (!reservasLista.some((r) => r.id === found.id)) {
         setReservasLista((prev) => [found, ...prev]);
       }
-
     } catch (err) {
       console.error('Error durante la búsqueda:', err);
       setError('Ocurrió un inconveniente al consultar el turno. Por favor, reintentá.');
@@ -269,8 +267,8 @@ export default function MisTurnosPage() {
           </div>
         )}
 
-
-{reservasLista.length > 1 && (
+        {/* Selector dinámico si el usuario tiene múltiples reservas con Google */}
+        {reservasLista.length > 1 && (
           <div className="bg-card border border-border rounded-2xl p-4 shadow-xs space-y-2">
             <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
               Tus turnos registrados ({reservasLista.length}):
@@ -298,7 +296,6 @@ export default function MisTurnosPage() {
             </select>
           </div>
         )}
-
 
         {/* Detalle del Turno */}
         {reserva && estadoInfo && (
