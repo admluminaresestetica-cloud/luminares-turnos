@@ -11,7 +11,8 @@ interface UserAccountModalProps {
 }
 
 export default function UserAccountModal({ isOpen, onClose }: UserAccountModalProps) {
-  const { user, loginWithGoogle, logout } = useAuth();
+  // Cambiamos 'logout' por 'signOut' que es el nombre real en el AuthContext
+  const { user, loginWithGoogle, signOut } = useAuth();
   const [cargandoGoogle, setCargandoGoogle] = useState(false);
 
   if (!isOpen) return null;
@@ -24,6 +25,17 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     } catch (error) {
       console.error('Error al iniciar sesión con Google:', error);
       setCargandoGoogle(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      onClose();
+      // Recarga limpia para refrescar la sesión en toda la app
+      window.location.reload();
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
     }
   };
 
@@ -157,10 +169,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
         {user && (
           <button
             type="button"
-            onClick={() => {
-              logout();
-              onClose();
-            }}
+            onClick={handleSignOut}
             className="w-full flex items-center justify-center gap-2 py-3 text-xs font-bold text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-xl transition-all active:scale-[0.98] cursor-pointer"
           >
             <LogOut className="w-4 h-4" />

@@ -229,10 +229,12 @@ return (
       </h1>
     </div>
 
-    <div className="flex items-center gap-2">
+<div className="flex items-center gap-2">
 
-     {/* Botón de Inicio de Sesión con Google */}
-     <GoogleLoginButton />
+     {/* Botón de Inicio de Sesión con Google (Oculto en celular, visible en PC a partir de pantallas medianas) */}
+     <div className="hidden md:block">
+       <GoogleLoginButton />
+     </div>
 
       <ThemeToggle />
       
