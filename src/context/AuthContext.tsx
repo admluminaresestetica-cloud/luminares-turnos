@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  loginWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -44,13 +45,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const loginWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      });
+      if (error) {
+        console.error('Error en OAuth de Google:', error.message);
+      }
+    } catch (err) {
+      console.error('Error inesperado al iniciar sesión con Google:', err);
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading, loginWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   );
