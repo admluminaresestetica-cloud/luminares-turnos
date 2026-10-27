@@ -8,6 +8,7 @@ import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap, PackageSearch
 import { supabase } from '@/lib/supabase';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useConfig } from '@/context/ConfigContext';
+import GoogleLoginButton from '@/components/GoogleLoginButton';
 
 interface HeaderBusquedaProps {
   nombreEmpresa: string;
@@ -229,6 +230,10 @@ return (
     </div>
 
     <div className="flex items-center gap-2">
+
+     {/* Botón de Inicio de Sesión con Google */}
+     <GoogleLoginButton />
+
       <ThemeToggle />
       
       {/* Botón Seguimiento de Pedido (Oculto en celular gracias a 'hidden sm:flex') */}
