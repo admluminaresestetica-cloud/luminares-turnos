@@ -264,6 +264,37 @@ export default function MisTurnosPage() {
           </div>
         )}
 
+
+{reservasLista.length > 1 && (
+          <div className="bg-card border border-border rounded-2xl p-4 shadow-xs space-y-2">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              Tus turnos registrados ({reservasLista.length}):
+            </label>
+            <select
+              className="w-full bg-background border border-input rounded-xl p-3 text-xs font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary cursor-pointer"
+              value={reserva?.id || ''}
+              onChange={(e) => {
+                const seleccionada = reservasLista.find((r) => r.id === e.target.value);
+                if (seleccionada) setReserva(seleccionada);
+              }}
+            >
+              {reservasLista.map((item) => {
+                const fechaFmt = new Date(item.fecha_hora_inicio).toLocaleDateString('es-AR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                });
+                return (
+                  <option key={item.id} value={item.id}>
+                    #{item.codigo_unico} - {fechaFmt} ({item.estado})
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        )}
+
+
         {/* Detalle del Turno */}
         {reserva && estadoInfo && (
           <div className="bg-card border border-border rounded-[24px] p-5 shadow-xs space-y-4 animate-fadeIn">
