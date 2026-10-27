@@ -43,6 +43,9 @@ export default function MisTurnosPage() {
   // Estado para controlar la apertura del modal (pop-up)
   const [modalCancelarOpen, setModalCancelarOpen] = useState(false);
 
+    // Estado adicional para almacenar la lista completa de reservas del usuario
+  const [reservasLista, setReservasLista] = useState<Reserva[]>([]);
+
   useEffect(() => {
     async function cargarTurnosLogueado() {
       if (!user) return;
@@ -60,7 +63,8 @@ export default function MisTurnosPage() {
         if (configSys) setVentanaHoras(configSys.ventana_horas_cancelacion);
 
         if (resQuery.data && resQuery.data.length > 0) {
-          setReserva(resQuery.data[0]); // Toma la última reserva del usuario
+          setReservasLista(resQuery.data);
+          setReserva(resQuery.data[0]); // Selecciona la más reciente por defecto
         }
       } catch (err) {
         console.error('Error al cargar turnos del usuario:', err);
