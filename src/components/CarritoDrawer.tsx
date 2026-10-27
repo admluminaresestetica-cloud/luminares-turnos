@@ -69,6 +69,43 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
     cargarConfiguracion();
   }, []);
 
+  // 🔄 Autocompletar datos del cliente si inició sesión con Google
+  useEffect(() => {
+    async function autocompletarDatosUsuario() {
+      if (!user) return;
+
+      const nombreGoogle = user.user_metadata?.full_name || user.email?.split('@')[0] || "";
+
+      let telefonoAnterior = "";
+      try {
+        const { data } = await supabase
+          .from("pedidos")
+          .select("telefono_cliente")
+          .eq("user_id", user.id)
+          .not("telefono_cliente", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (data && data.length > 0 && data[0].telefono_cliente) {
+          telefonoAnterior = data[0].telefono_cliente;
+        }
+      } catch (err) {
+        console.error("Error al buscar teléfono previo:", err);
+      }
+
+      setDatosEnvio((prev: any) => ({
+        ...prev,
+        user_id: user.id,
+        nombreCliente: prev.nombreCliente || nombreGoogle,
+        telefonoCliente: prev.telefonoCliente || telefonoAnterior,
+      }));
+    }
+
+    autocompletarDatosUsuario();
+  }, [user]);
+
+
+
   const carritoSeguro = Array.isArray(carrito) ? carrito : [];
   const subtotalProductos = carritoSeguro.reduce(
     (acc, item) => acc + (Number(item.precio) || 0) * (item.cantidad || 1),
