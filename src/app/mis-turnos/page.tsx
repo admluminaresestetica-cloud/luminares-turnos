@@ -108,6 +108,11 @@ export default function MisTurnosPage() {
       }
 
       setReserva(found);
+// 🟢 Agregamos esto para que si busca manual, también se sume a la lista del selector
+      if (!reservasLista.some((r) => r.id === found.id)) {
+        setReservasLista((prev) => [found, ...prev]);
+      }
+
     } catch (err) {
       console.error('Error durante la búsqueda:', err);
       setError('Ocurrió un inconveniente al consultar el turno. Por favor, reintentá.');
