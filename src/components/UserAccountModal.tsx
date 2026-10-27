@@ -1,6 +1,7 @@
 'use client';
 
-import { X, User, Calendar, PackageSearch, Heart, Sparkles, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { X, User, Calendar, PackageSearch, Heart, Sparkles, LogOut, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 
@@ -11,8 +12,20 @@ interface UserAccountModalProps {
 
 export default function UserAccountModal({ isOpen, onClose }: UserAccountModalProps) {
   const { user, loginWithGoogle, logout } = useAuth();
+  const [cargandoGoogle, setCargandoGoogle] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleGoogleLogin = async () => {
+    try {
+      setCargandoGoogle(true);
+      await loginWithGoogle();
+      // No ejecutamos onClose() para dar tiempo a que la página redirija a Google
+    } catch (error) {
+      console.error('Error al iniciar sesión con Google:', error);
+      setCargandoGoogle(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs flex items-end sm:hidden animate-fadeIn">
@@ -60,16 +73,23 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
             </p>
             <button
               type="button"
-              onClick={() => {
-                loginWithGoogle();
-                onClose();
-              }}
-              className="w-full bg-primary text-primary-foreground font-bold py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-xs"
+              onClick={handleGoogleLogin}
+              disabled={cargandoGoogle}
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-xs disabled:opacity-50"
             >
-              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z"/>
-              </svg>
-              <span>Iniciar sesión con Google</span>
+              {cargandoGoogle ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Conectando con Google...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z"/>
+                  </svg>
+                  <span>Iniciar sesión con Google</span>
+                </>
+              )}
             </button>
           </div>
         ) : (
