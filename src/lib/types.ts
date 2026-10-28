@@ -61,7 +61,8 @@ export interface ConfiguracionSistema {
   referidos_activo?: boolean;
   referidos_tipo_descuento?: 'porcentaje' | 'monto_fijo';
   referidos_valor_descuento?: number;
-  // Agregá estos:
+  puntos_activo?: boolean;
+  puntos_pesos_por_punto?: number;
   banco?: string;
   titular_cuenta?: string;
   cbu?: string;

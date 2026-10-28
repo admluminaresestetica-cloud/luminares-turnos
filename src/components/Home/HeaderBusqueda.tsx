@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, Calendar, ShoppingBag, Sparkles, X, Loader2, Zap, PackageSearch } from 'lucide-react';
+import { Search, Calendar, ShoppingBag, Star, X, Loader2, Zap, PackageSearch, User, LogOut, ChevronDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useConfig } from '@/context/ConfigContext';
 import GoogleLoginButton from '@/components/GoogleLoginButton';
+import UserAccountModal from '@/components/UserAccountModal';
 
 interface HeaderBusquedaProps {
   nombreEmpresa: string;
@@ -50,13 +51,64 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
   const [servicios, setServicios] = useState<ServicioResultado[]>([]);
   const [tags, setTags] = useState<TagBusqueda[]>([]);
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  // Estados de sesión, puntos y menú desplegable de PC
+  const [user, setUser] = useState<any>(null);
+  const [puntos, setPuntos] = useState<number>(0);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Cerrar el dropdown al hacer clic fuera
+  const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Escuchar sesión y cargar puntos
+  useEffect(() => {
+    async function getSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        cargarPuntos(session.user.id);
+      }
+    }
+    getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        cargarPuntos(session.user.id);
+      } else {
+        setPuntos(0);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function cargarPuntos(userId: string) {
+    const { data } = await supabase
+      .from('puntos_usuarios')
+      .select('puntos_totales')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (data) {
+      setPuntos(data.puntos_totales || 0);
+    }
+  }
+
+  const handleCerrarSesion = async () => {
+    setIsDropdownOpen(false);
+    await supabase.auth.signOut();
+    router.refresh();
+  };
+
+  // Cerrar dropdowns al hacer clic fuera
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setFocused(false);
+      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -216,47 +268,95 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
     setQuery(tag.nombre);
   };
 
-return (
-<div ref={containerRef} className="space-y-3 relative z-50">
-    {/* Saludo + Botón Mis Turnos y ThemeToggle */}
-  <div className="flex items-center justify-between px-1">
-    <div>
-      <p className="text-xs font-medium text-white/80">
-        ¡Hola! Te damos la bienvenida a
-      </p>
-      <h1 className="text-xl font-extrabold tracking-tight text-white">
-        {nombreEmpresa}
-      </h1>
-    </div>
+  return (
+    <div ref={containerRef} className="space-y-3 relative z-50">
+      {/* Saludo + Botones de Encabezado */}
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <p className="text-xs font-medium text-white/80">
+            ¡Hola! Te damos la bienvenida a
+          </p>
+          <h1 className="text-xl font-extrabold tracking-tight text-white">
+            {nombreEmpresa}
+          </h1>
+        </div>
 
-<div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          {/* BOTÓN DE GOOGLE LOGIN (Solo PC cuando NO hay sesión) */}
+          {!user && (
+            <div className="hidden md:block">
+              <GoogleLoginButton />
+            </div>
+          )}
 
-     {/* Botón de Inicio de Sesión con Google (Oculto en celular, visible en PC a partir de pantallas medianas) */}
-     <div className="hidden md:block">
-       <GoogleLoginButton />
-     </div>
+          {/* MENÚ DESPLEGABLE DE USUARIO (Solo PC cuando SÍ hay sesión) */}
+          {user && (
+            <div className="relative hidden md:block" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/10 px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-xs transition-all shadow-xs cursor-pointer"
+              >
+                <Star className="w-3.5 h-3.5 text-amber-300" />
+                <span>{puntos} pts</span>
+                <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px] font-bold ml-0.5">
+                  {user.email ? user.email.charAt(0).toUpperCase() : <User className="w-3 h-3" />}
+                </div>
+                <ChevronDown className="w-3 h-3 text-white/70" />
+              </button>
 
-      <ThemeToggle />
-      
-      {/* Botón Seguimiento de Pedido (Oculto en celular gracias a 'hidden sm:flex') */}
-      <Link
-        href="/seguimiento"
-        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs cursor-pointer"
-      >
-        <PackageSearch className="h-3.5 w-3.5 text-emerald-400" />
-        <span>Seguimiento</span>
-      </Link>
+              {/* Dropdown flotante de PC */}
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-stone-200 bg-white dark:bg-zinc-900 dark:border-zinc-800 p-2 shadow-2xl space-y-1 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-3 py-2 border-b border-stone-100 dark:border-zinc-800">
+                    <p className="text-[10px] text-stone-400 font-medium">Conectado como</p>
+                    <p className="text-xs font-bold text-stone-800 dark:text-zinc-200 truncate">{user.email}</p>
+                  </div>
 
-      {/* Botón Mis Turnos */}
-      <Link
-        href="/mis-turnos"
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
-      >
-        <Calendar className="h-3.5 w-3.5 text-white" />
-        <span>Mis Turnos</span>
-      </Link>
-    </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      setIsAccountModalOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-stone-700 dark:text-zinc-300 hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer text-left"
+                  >
+                    <span>Mi Cuenta y Puntos</span>
+                  </button>
 
+                  <button
+                    type="button"
+                    onClick={handleCerrarSesion}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Cerrar Sesión</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <ThemeToggle />
+
+          {/* Botón Seguimiento de Pedido (Oculto en celular) */}
+          <Link
+            href="/seguimiento"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs cursor-pointer"
+          >
+            <PackageSearch className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Seguimiento</span>
+          </Link>
+
+          {/* Botón Mis Turnos */}
+          <Link
+            href="/mis-turnos"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs"
+          >
+            <Calendar className="h-3.5 w-3.5 text-white" />
+            <span>Mis Turnos</span>
+          </Link>
+        </div>
       </div>
 
       {/* Input de Búsqueda */}
@@ -288,7 +388,7 @@ return (
           ) : null}
         </div>
 
-        {/* Dropdown Flotante con Scroll Completo */}
+        {/* Dropdown Flotante de Búsqueda */}
         {focused && (
           <div className="absolute left-0 right-0 top-full mt-2 z-50 rounded-2xl border border-stone-200 bg-white dark:bg-zinc-900 dark:border-zinc-800 p-3 shadow-2xl space-y-3 max-h-[60vh] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-150">
             {!query.trim() && (
@@ -340,7 +440,7 @@ return (
                         {s.tipo.includes('laser') ? (
                           <Zap className="h-3.5 w-3.5 text-[hsl(var(--primary))] fill-[hsl(var(--primary))] shrink-0" />
                         ) : (
-                          <Sparkles className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" />
+                          <Star className="h-3.5 w-3.5 text-[hsl(var(--primary))] shrink-0" />
                         )}
                         <span className="text-xs font-semibold text-stone-800 dark:text-zinc-200 line-clamp-1">
                           {s.nombre}
@@ -406,7 +506,7 @@ return (
               </div>
             )}
 
-{/* SIN RESULTADOS */}
+            {/* SIN RESULTADOS */}
             {query.trim().length >= 2 &&
               !loading &&
               productos.length === 0 &&
@@ -418,6 +518,12 @@ return (
           </div>
         )}
       </div>
+
+      {/* Modal de Mi Cuenta (para PC) */}
+      <UserAccountModal
+        isOpen={isAccountModalOpen}
+        onClose={() => setIsAccountModalOpen(false)}
+      />
     </div>
   );
 }

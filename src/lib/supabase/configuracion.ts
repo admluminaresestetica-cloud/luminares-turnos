@@ -56,6 +56,8 @@ export async function updateConfiguracionSistema(
       | 'referidos_activo'
       | 'referidos_tipo_descuento'
       | 'referidos_valor_descuento'
+      | 'puntos_activo'
+      | 'puntos_pesos_por_punto'
     >
   >
 ): Promise<boolean> {
