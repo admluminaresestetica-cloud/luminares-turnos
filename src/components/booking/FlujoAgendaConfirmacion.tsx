@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase';
 import { generarCodigoReferido } from '@/lib/admin/helpers';
 import { buildMensajeReserva, buildWhatsAppUrl, calcularMontoSena } from '@/lib/whatsapp';
 import { useConfig } from '@/context/ConfigContext';
+import { useAuth } from '@/context/AuthContext';
 
 import type { ConfiguracionCalendario, ConfiguracionSistema, TipoServicio, DetalleReservaGeneral, DetalleReservaLaser } from '@/lib/types';
 
@@ -74,6 +75,7 @@ export default function FlujoAgendaConfirmacion({
   titulo = 'Agenda tu turno',
 }: Props) {
   const { config } = useConfig();
+  const { user } = useAuth();
   const [paso, setPaso] = useState<Paso>('agenda');
   const [configCalendario, setConfigCalendario] = useState<ConfiguracionCalendario | null>(null);
   const [configSistema, setConfigSistema] = useState<ConfiguracionSistema | null>(null);
@@ -224,6 +226,7 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
       precio_total: precioFinal,
       duracion_total: duracionTotal,
       fecha_hora_inicio: fechaHoraInicio,
+      user_id: user?.id || null,
     });
 
     return { reserva, nombreLimpio, precioFinal, codigoReferidoPropio, codigoUsadoLimpio };

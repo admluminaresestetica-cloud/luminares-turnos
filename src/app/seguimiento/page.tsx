@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, PackageSearch, CheckCircle2, Clock, Truck, Search, AlertCircle, ShieldCheck, RefreshCw, MessageCircle } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { useConfig } from '@/context/ConfigContext';
+import { useAuth } from '@/context/AuthContext';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,30 +23,66 @@ const ESTADOS_MAP = [
 
 export default function SeguimientoPage() {
   const { config } = useConfig();
+  const { user } = useAuth();
 
   const [codigo, setCodigo] = useState('');
   const [ultimos4Tel, setUltimos4Tel] = useState('');
   const [cargando, setCargando] = useState(false);
   const [actualizando, setActualizando] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [pedido, setPedido] = useState<any | null>(null);
+  
+  // Estados para manejar lista de compras e historial del usuario logueado
+  const [pedidosLista, setPedidosLista] = useState<any[]>([]);
+  const [pedidoSeleccionado, setPedidoSeleccionado] = useState<any | null>(null);
 
-  // 📱 WhatsApp dinámico traído desde tu configuración de Admin
+  // 🔄 Carga automática del historial si el usuario inició sesión con Google
+  useEffect(() => {
+    async function cargarPedidosLogueado() {
+      if (!user) {
+        setPedidosLista([]);
+        setPedidoSeleccionado(null);
+        return;
+      }
+      setCargando(true);
+      try {
+        const { data, error } = await supabase
+          .from('pedidos')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          setPedidosLista(data);
+          setPedidoSeleccionado(data[0]); // Selecciona el pedido más reciente por defecto
+        } else {
+          setPedidosLista([]);
+          setPedidoSeleccionado(null);
+        }
+      } catch (err) {
+        console.error('Error al cargar historial de pedidos del usuario:', err);
+      } finally {
+        setCargando(false);
+      }
+    }
+
+    cargarPedidosLogueado();
+  }, [user]);
+
+  // 📱 WhatsApp dinámico traído desde la configuración de Admin
   const rawNumber = config?.whatsapp_numero || '';
   const numeroWhatsApp = rawNumber.replace(/[^0-9]/g, '');
   const mensajeAyuda = encodeURIComponent("¡Hola! No recuerdo los datos de seguimiento de mi pedido o necesito asistencia. ¿Me podrán ayudar?");
   const urlWhatsAppAyuda = numeroWhatsApp ? `https://wa.me/${numeroWhatsApp}?text=${mensajeAyuda}` : '#';
 
-  // Función para enmascarar el nombre por privacidad (Ej: "Tamara Martinez" -> "Tamara M.")
+  // Función para enmascarar el nombre por privacidad
   const enmascararNombre = (nombreCompleto?: string) => {
     if (!nombreCompleto) return 'Cliente';
-    
     const partes = nombreCompleto.trim().split(/\s+/);
     if (partes.length === 1) return partes[0];
-
     const primerNombre = partes[0];
     const inicialApellido = partes[1].charAt(0).toUpperCase();
-
     return `${primerNombre} ${inicialApellido}.`;
   };
 
@@ -54,7 +91,7 @@ export default function SeguimientoPage() {
       setActualizando(true);
     } else {
       setErrorMsg('');
-      setPedido(null);
+      setPedidoSeleccionado(null);
       setCargando(true);
     }
 
@@ -86,14 +123,11 @@ export default function SeguimientoPage() {
 
       const pedidoEncontrado = data.find((p: any) => {
         if (!p.id || !p.telefono_cliente) return false;
-
         const idCorto = p.id.toString().slice(0, 6).toUpperCase();
         const idCompleto = p.id.toString().toUpperCase();
         const coincideCodigo = idCorto === codLimpio || idCompleto === codLimpio;
-
         const telLimpio = p.telefono_cliente.replace(/\D/g, '');
         const coincideTel = telLimpio.endsWith(tel4Limpio);
-
         return coincideCodigo && coincideTel;
       });
 
@@ -104,7 +138,7 @@ export default function SeguimientoPage() {
         return;
       }
 
-      setPedido(pedidoEncontrado);
+      setPedidoSeleccionado(pedidoEncontrado);
     } catch (err: any) {
       console.error("Error al consultar pedido:", err);
       if (!esActualizacion) {
@@ -123,7 +157,23 @@ export default function SeguimientoPage() {
 
   // 🔄 Botón para actualizar el estado sin reingresar datos
   const handleActualizarEstado = () => {
-    if (codigo && ultimos4Tel) {
+    if (user) {
+      setCargando(true);
+      supabase
+        .from('pedidos')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            setPedidosLista(data);
+            const actualId = pedidoSeleccionado?.id;
+            const match = data.find((p: any) => p.id === actualId);
+            setPedidoSeleccionado(match || data[0]);
+          }
+          setCargando(false);
+        });
+    } else if (codigo && ultimos4Tel) {
       ejecutarBusqueda(codigo, ultimos4Tel, true);
     }
   };
@@ -138,7 +188,7 @@ export default function SeguimientoPage() {
     <div className="min-h-screen bg-background text-foreground transition-colors pb-28 pt-6 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto space-y-6">
         
-        {/* Cabecera con botón de regresar */}
+        {/* Cabecera */}
         <div className="flex items-center gap-3">
           <Link
             href="/"
@@ -157,64 +207,105 @@ export default function SeguimientoPage() {
           </div>
         </div>
 
-        {/* Tarjeta del Formulario de Búsqueda */}
-        <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 shadow-xs">
-          <form onSubmit={buscarPedido} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* 👤 Panel de usuario autenticado con selector de historial de compras */}
+        {user && (
+          <div className="bg-card border border-border rounded-3xl p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
               <div>
-                <label className="block text-xs font-bold mb-1.5 text-muted-foreground">
-                  Código de Pedido
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej: 3FC124"
-                  maxLength={10}
-                  value={codigo}
-                  onChange={(e) => setCodigo(e.target.value)}
-                  className="w-full h-11 px-3.5 rounded-xl border border-input bg-background font-mono text-sm font-bold uppercase focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
+                <p className="text-xs text-muted-foreground font-medium">Cuenta vinculada</p>
+                <p className="text-sm font-bold text-foreground">{user.email || user.user_metadata?.full_name}</p>
               </div>
-
-              <div>
-                <label className="block text-xs font-bold mb-1.5 text-muted-foreground">
-                  Últimos 4 dígitos del celular
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej: 4978"
-                  maxLength={4}
-                  value={ultimos4Tel}
-                  onChange={(e) => setUltimos4Tel(e.target.value)}
-                  className="w-full h-11 px-3.5 rounded-xl border border-input bg-background font-mono text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
+              {cargando && <span className="text-xs text-primary animate-pulse font-bold">Cargando tus compras...</span>}
             </div>
 
-            {errorMsg && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-medium border border-rose-500/20">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{errorMsg}</span>
+            {pedidosLista.length > 0 ? (
+              <div className="pt-2 border-t border-border space-y-2">
+                <label className="block text-xs font-bold text-muted-foreground">
+                  Historial de compras ({pedidosLista.length}):
+                </label>
+                <select
+                  value={pedidoSeleccionado?.id || ''}
+                  onChange={(e) => {
+                    const encontrado = pedidosLista.find((p) => p.id === e.target.value);
+                    if (encontrado) setPedidoSeleccionado(encontrado);
+                  }}
+                  className="w-full bg-background border border-input rounded-xl text-xs font-bold px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                >
+                  {pedidosLista.map((p, index) => (
+                    <option key={p.id} value={p.id}>
+                      #{p.id.slice(0, 6).toUpperCase()} — {new Date(p.created_at).toLocaleDateString('es-AR')} (${p.total?.toLocaleString('es-AR')}) {index === 0 ? '★ (Más reciente)' : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
+            ) : !cargando ? (
+              <div className="p-4 rounded-2xl bg-muted/50 text-center text-xs text-muted-foreground">
+                No encontramos compras registradas con esta cuenta de Google todavía.
+              </div>
+            ) : null}
+          </div>
+        )}
 
-            <button
-              type="submit"
-              disabled={cargando}
-              className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all cursor-pointer disabled:opacity-50"
-            >
-              {cargando ? (
-                <span>Consultando estado...</span>
-              ) : (
-                <>
-                  <Search className="w-4 h-4" />
-                  <span>Buscar mi pedido</span>
-                </>
+        {/* 🔍 Formulario de Búsqueda Manual (Solo si no hay sesión activa) */}
+        {!user && (
+          <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 shadow-xs">
+            <form onSubmit={buscarPedido} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold mb-1.5 text-muted-foreground">
+                    Código de Pedido
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej: 3FC124"
+                    maxLength={10}
+                    value={codigo}
+                    onChange={(e) => setCodigo(e.target.value)}
+                    className="w-full h-11 px-3.5 rounded-xl border border-input bg-background font-mono text-sm font-bold uppercase focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1.5 text-muted-foreground">
+                    Últimos 4 dígitos del celular
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej: 4978"
+                    maxLength={4}
+                    value={ultimos4Tel}
+                    onChange={(e) => setUltimos4Tel(e.target.value)}
+                    className="w-full h-11 px-3.5 rounded-xl border border-input bg-background font-mono text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+
+              {errorMsg && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-medium border border-rose-500/20">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
               )}
-            </button>
-          </form>
-        </div>
 
-        {/* 💬 Opción B: Recuperación rápida por WhatsApp dinámico */}
+              <button
+                type="submit"
+                disabled={cargando}
+                className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {cargando ? (
+                  <span>Consultando estado...</span>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4" />
+                    <span>Buscar mi pedido</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* 💬 Asistencia por WhatsApp */}
         <div className="text-center bg-card border border-border p-4 rounded-3xl space-y-2 shadow-xs">
           <p className="text-xs text-muted-foreground font-medium">
             ¿No recordás tu código o tenés dudas con tu pedido?
@@ -230,18 +321,17 @@ export default function SeguimientoPage() {
           </a>
         </div>
 
-        {/* Resultado con Nombre Enmascarado y Timeline */}
-        {pedido && (
+        {/* 📊 Tarjeta de Progreso y Detalles del Pedido Seleccionado */}
+        {pedidoSeleccionado && (
           <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 shadow-xs space-y-6">
             
-            {/* Resumen del cliente + Botón de Actualizar Estado */}
             <div className="flex items-center justify-between border-b border-border pb-4">
               <div>
                 <span className="inline-block bg-primary/10 text-primary font-mono text-xs font-extrabold px-2.5 py-1 rounded-lg">
-                  #{pedido.id.slice(0, 6).toUpperCase()}
+                  #{pedidoSeleccionado.id.slice(0, 6).toUpperCase()}
                 </span>
                 <h3 className="text-base font-extrabold text-foreground mt-1">
-                  Hola, {enmascararNombre(pedido.nombre_cliente)}
+                  Hola, {enmascararNombre(pedidoSeleccionado.nombre_cliente)}
                 </h3>
               </div>
 
@@ -257,7 +347,7 @@ export default function SeguimientoPage() {
                   <span>{actualizando ? 'Actualizando...' : 'Actualizar'}</span>
                 </button>
                 <p className="text-[11px] text-muted-foreground">
-                  {pedido.metodo_envio === 'envio' ? '📦 Envío a Domicilio' : '🏪 Retiro en Local'}
+                  {pedidoSeleccionado.metodo_envio === 'envio' ? '📦 Envío a Domicilio' : '🏪 Retiro en Local'}
                 </p>
               </div>
             </div>
@@ -271,12 +361,12 @@ export default function SeguimientoPage() {
               <div className="space-y-4">
                 {ESTADOS_MAP.map((paso, idx) => {
                   const Icono = paso.icon;
-                  const indiceActual = obtenerIndiceEstado(pedido.estado);
+                  const indiceActual = obtenerIndiceEstado(pedidoSeleccionado.estado);
                   const estaCompletado = idx <= indiceActual;
                   const esElActual = idx === indiceActual;
 
-                  const eventoHistorial = Array.isArray(pedido.historial_estados)
-                    ? pedido.historial_estados.find((h: any) => h.estado === paso.key)
+                  const eventoHistorial = Array.isArray(pedidoSeleccionado.historial_estados)
+                    ? pedidoSeleccionado.historial_estados.find((h: any) => h.estado === paso.key)
                     : null;
 
                   return (
@@ -333,7 +423,6 @@ export default function SeguimientoPage() {
               </div>
             </div>
 
-            {/* Aviso de seguridad */}
             <div className="p-3 rounded-2xl bg-accent/50 border border-border flex items-center gap-2 text-[11px] text-muted-foreground">
               <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
               <span>Estado sincronizado directamente con la logística oficial del comercio.</span>

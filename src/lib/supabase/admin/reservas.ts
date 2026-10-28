@@ -1,6 +1,8 @@
 import { supabase } from '../../supabase';
 import type { EstadoAsistencia, EstadoReserva, MedioPago, Reserva } from '../../types';
 
+import { acreditarPuntosTransaccion } from '../puntos';
+
 export async function getAllReservas(): Promise<Reserva[]> {
   const { data, error } = await supabase
     .from('reservas')
@@ -57,6 +59,24 @@ export async function actualizarCampoReserva(
   if (error) {
     console.error('Error al actualizar campo:', error);
     return false;
+  }
+
+  // --- ACREDITACIÓN AUTOMÁTICA DE PUNTOS LUMINARES ---
+  if (campos.estado_asistencia === 'asistio') {
+    const { data: reservaInfo } = await supabase
+      .from('reservas')
+      .select('user_id, precio_total')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (reservaInfo?.user_id) {
+      await acreditarPuntosTransaccion(
+        reservaInfo.user_id,
+        Number(reservaInfo.precio_total || 0),
+        'reserva',
+        id
+      );
+    }
   }
   return true;
 }

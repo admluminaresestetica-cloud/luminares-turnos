@@ -6,6 +6,7 @@ import { useConfig } from "@/context/ConfigContext";
 import { supabase } from "@/lib/supabase";
 import { X, Trash2, ShoppingCart, ArrowRight, Lock, ShieldCheck, CheckCircle2 } from "lucide-react";
 import FormularioEnvio from "./carrito/FormularioEnvio";
+import { useAuth } from "@/context/AuthContext";
 
 interface CarritoDrawerProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface CarritoDrawerProps {
 
 export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
   const { config } = useConfig();
+  const { user } = useAuth();
   const {
     carrito,
     datosEnvio,
@@ -66,6 +68,43 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
 
     cargarConfiguracion();
   }, []);
+
+  // 🔄 Autocompletar datos del cliente si inició sesión con Google
+  useEffect(() => {
+    async function autocompletarDatosUsuario() {
+      if (!user) return;
+
+      const nombreGoogle = user.user_metadata?.full_name || user.email?.split('@')[0] || "";
+
+      let telefonoAnterior = "";
+      try {
+        const { data } = await supabase
+          .from("pedidos")
+          .select("telefono_cliente")
+          .eq("user_id", user.id)
+          .not("telefono_cliente", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (data && data.length > 0 && data[0].telefono_cliente) {
+          telefonoAnterior = data[0].telefono_cliente;
+        }
+      } catch (err) {
+        console.error("Error al buscar teléfono previo:", err);
+      }
+
+      setDatosEnvio((prev: any) => ({
+        ...prev,
+        user_id: user.id,
+        nombreCliente: prev.nombreCliente || nombreGoogle,
+        telefonoCliente: prev.telefonoCliente || telefonoAnterior,
+      }));
+    }
+
+    autocompletarDatosUsuario();
+  }, [user]);
+
+
 
   const carritoSeguro = Array.isArray(carrito) ? carrito : [];
   const subtotalProductos = carritoSeguro.reduce(
@@ -165,6 +204,7 @@ export default function CarritoDrawer({ isOpen, onClose }: CarritoDrawerProps) {
             total: montoFinal,
             estado: "pendiente",
             direccion: direccionReal,
+            user_id: user?.id || datosEnvio.user_id || null,
             nota_adicional:
               `${datosEnvio.notaAdicional?.trim() || ""} [Pago: ${medioPagoStr}]`.trim(),
           },
@@ -282,7 +322,9 @@ const procesarWhatsApp = async () => {
             telefono: datosEnvio.telefonoCliente.trim(),
             metodoEnvio: datosEnvio.metodoEnvio,
             direccion: datosEnvio.direccion,
+            user_id: user?.id || null,
           },
+          user_id: user?.id || null,
         }),
       });
 

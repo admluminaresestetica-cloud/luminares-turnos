@@ -16,6 +16,7 @@ import SeccionEtiquetasPrecios from "./components/SeccionEtiquetasPrecios";
 import PuntoVentaTab from "./components/pos/PuntoVentaTab";
 import ControlCajaTab from "./components/ControlCajaTab";
 import { usePerfil } from "@/hooks/usePerfil";
+import { acreditarPuntosTransaccion } from "@/lib/supabase/puntos";
 
 export interface Pedido {
   id: string;
@@ -34,6 +35,7 @@ export interface Pedido {
   productos?: any[];
   nota_adicional?: string;
   payment_id?: string;
+  user_id?: string;
 }
 
 
@@ -285,6 +287,17 @@ export default function AdminTiendaPage() {
         .eq("id", pedidoId);
 
       if (error) throw error;
+
+      // ─── ACREDITACIÓN AUTOMÁTICA DE PUNTOS LUMINARES ───
+      if (nuevoEstado === "completado" && pedidoActual?.user_id) {
+        await acreditarPuntosTransaccion(
+          pedidoActual.user_id,
+          Number(pedidoActual.total || 0),
+          "pedido",
+          pedidoId
+        );
+      }
+      // ──────────────────────────────────────────────────
 
       await Promise.all([fetchPedidos(), fetchProductos()]);
     } catch (err: any) {

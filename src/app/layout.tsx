@@ -9,6 +9,7 @@ import BottomNav from '@/components/Home/BottomNav';
 import { CarritoProvider } from "@/context/CarritoContext";
 import { ConfigProvider } from "@/context/ConfigContext";
 import { FavoritosProvider } from "@/context/FavoritosContext";
+import { AuthProvider } from "@/context/AuthContext";
 
 const geistSans = localFont({ src: "./fonts/GeistVF.woff", variable: "--font-geist-sans", weight: "100 900" });
 const geistMono = localFont({ src: "./fonts/GeistMonoVF.woff", variable: "--font-geist-mono", weight: "100 900" });
@@ -28,36 +29,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     };
 
     checkTheme();
-
-    // Escuchamos cambios por si el botón del header actualiza el localStorage en la misma pestaña
     window.addEventListener('storage', checkTheme);
     return () => window.removeEventListener('storage', checkTheme);
   }, []);
 
-  if (!mounted) {
-    return (
-      <html lang="es">
-        <body className="bg-white text-slate-900 min-h-screen flex flex-col">{children}</body>
-      </html>
-    );
-  }
-
   return (
-    <html lang="es">
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased min-h-screen flex flex-col pb-16 md:pb-0 ${isPublicDark ? 'dark' : ''}`}>
+    <html lang="es" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased min-h-screen flex flex-col pb-16 md:pb-0 ${mounted && isPublicDark ? 'dark' : ''}`}>
         <div className="min-h-screen flex flex-col bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors flex-1 w-full">
           <ConfigProvider>
-            <FavoritosProvider>
-              <CarritoProvider>
-                <div className="flex-1 w-full">{children}</div>
-                {!isAdmin && (
-                  <>
-                    <Footer />
-                    <div className="md:hidden"><BottomNav /></div>
-                  </>
-                )}
-              </CarritoProvider>
-            </FavoritosProvider>
+            <AuthProvider>
+              <FavoritosProvider>
+                <CarritoProvider>
+                  <div className="flex-1 w-full">{children}</div>
+                  {!isAdmin && (
+                    <>
+                      <Footer />
+                      <div className="md:hidden"><BottomNav /></div>
+                    </>
+                  )}
+                </CarritoProvider>
+              </FavoritosProvider>
+            </AuthProvider>
           </ConfigProvider>
         </div>
       </body>

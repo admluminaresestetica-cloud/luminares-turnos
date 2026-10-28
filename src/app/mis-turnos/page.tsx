@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, 
@@ -24,9 +24,14 @@ import { getConfiguracionSistema } from '@/lib/supabase/configuracion';
 import { buscarReserva, cancelarReserva } from '@/lib/supabase/reservas';
 import type { Reserva } from '@/lib/types';
 import { useConfig } from '@/context/ConfigContext';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase'; 
 
 export default function MisTurnosPage() {
+  const { user, loading: authLoading } = useAuth();
   const { config } = useConfig();
+  
+  const [reservasLista, setReservasLista] = useState<Reserva[]>([]); 
   const [celular, setCelular] = useState('');
   const [codigo, setCodigo] = useState('');
   const [reserva, setReserva] = useState<Reserva | null>(null);
@@ -38,6 +43,36 @@ export default function MisTurnosPage() {
 
   // Estado para controlar la apertura del modal (pop-up)
   const [modalCancelarOpen, setModalCancelarOpen] = useState(false);
+
+  useEffect(() => {
+    async function cargarTurnosLogueado() {
+      if (!user) return;
+      setBuscando(true);
+      try {
+        const [resQuery, configSys] = await Promise.all([
+          supabase
+            .from('reservas')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('fecha_hora_inicio', { ascending: false }),
+          getConfiguracionSistema(),
+        ]);
+
+        if (configSys) setVentanaHoras(configSys.ventana_horas_cancelacion);
+
+        if (resQuery.data && resQuery.data.length > 0) {
+          setReservasLista(resQuery.data);
+          setReserva(resQuery.data[0]); // Toma la última reserva del usuario por defecto
+        }
+      } catch (err) {
+        console.error('Error al cargar turnos del usuario:', err);
+      } finally {
+        setBuscando(false);
+      }
+    }
+
+    cargarTurnosLogueado();
+  }, [user]);
 
   // WhatsApp dinámico
   const rawNumber = config?.whatsapp_numero || '5493413954355';
@@ -71,6 +106,11 @@ export default function MisTurnosPage() {
       }
 
       setReserva(found);
+
+      // Si busca manual y está logueado, lo sumamos a la lista si no estaba
+      if (!reservasLista.some((r) => r.id === found.id)) {
+        setReservasLista((prev) => [found, ...prev]);
+      }
     } catch (err) {
       console.error('Error durante la búsqueda:', err);
       setError('Ocurrió un inconveniente al consultar el turno. Por favor, reintentá.');
@@ -224,6 +264,36 @@ export default function MisTurnosPage() {
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
             <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 leading-relaxed">{mensaje}</p>
+          </div>
+        )}
+
+        {/* Selector dinámico si el usuario tiene múltiples reservas con Google */}
+        {reservasLista.length > 1 && (
+          <div className="bg-card border border-border rounded-2xl p-4 shadow-xs space-y-2">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              Tus turnos registrados ({reservasLista.length}):
+            </label>
+            <select
+              className="w-full bg-background border border-input rounded-xl p-3 text-xs font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary cursor-pointer"
+              value={reserva?.id || ''}
+              onChange={(e) => {
+                const seleccionada = reservasLista.find((r) => r.id === e.target.value);
+                if (seleccionada) setReserva(seleccionada);
+              }}
+            >
+              {reservasLista.map((item) => {
+                const fechaFmt = new Date(item.fecha_hora_inicio).toLocaleDateString('es-AR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                });
+                return (
+                  <option key={item.id} value={item.id}>
+                    #{item.codigo_unico} - {fechaFmt} ({item.estado})
+                  </option>
+                );
+              })}
+            </select>
           </div>
         )}
 
