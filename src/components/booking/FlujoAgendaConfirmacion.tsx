@@ -156,19 +156,31 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
     const nombreLimpio = nombre.trim();
     let codigoReferidoPropio = '';
 
+    // Tu búsqueda original por celular
     const { data: clienteExistente } = await supabase
       .from('clientes')
-      .select('codigo_referido')
+      .select('id, codigo_referido, user_id') // <--- Traemos también el id y user_id
       .eq('celular', celularLimpio)
       .maybeSingle();
 
     if (clienteExistente) {
       codigoReferidoPropio = clienteExistente.codigo_referido;
+
+      // Si ya existía, pero el usuario está logueado y no tenía su user_id guardado, se lo asociamos
+      if (user?.id && !clienteExistente.user_id) {
+        await supabase
+          .from('clientes')
+          .update({ user_id: user.id })
+          .eq('id', clienteExistente.id);
+      }
     } else {
       codigoReferidoPropio = generarCodigoReferido(nombreLimpio);
+      
+      // Tu inserción original, agregando user_id (irá con el ID si está logueado, o null si es anónimo)
       const { data: nuevoCliente, error: errorInsert } = await supabase
         .from('clientes')
         .insert([{
+          user_id: user?.id || null, // <--- Esto es lo único nuevo para que no quede vacío
           celular: celularLimpio,
           nombre: nombreLimpio,
           codigo_referido: codigoReferidoPropio,
@@ -245,7 +257,6 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
       const { reserva, nombreLimpio, precioFinal, codigoReferidoPropio, codigoUsadoLimpio } = base;
       const datosExito: DatosReservaExitosa = {
         codigo: reserva.codigo_unico,
-        codigoReferidoPropio,
         detalle: detalleTexto,
         fecha: fecha!,
         hora: hora!,

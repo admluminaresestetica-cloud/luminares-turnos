@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, User, Calendar, PackageSearch, Heart, Star, LogOut, Loader2, MessageCircle } from 'lucide-react';
+import { X, User, Calendar, PackageSearch, Heart, Star, LogOut, Loader2, MessageCircle, Gift, Copy, Check, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -17,6 +17,74 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
   const [puntosTotales, setPuntosTotales] = useState<number>(0);
   const [cargandoPuntos, setCargandoPuntos] = useState(false);
   const [historial, setHistorial] = useState<any[]>([]);
+  
+  // Estado para el próximo turno / actividad reciente
+  const [proximoTurno, setProximoTurno] = useState<any>(null);
+  const [cargandoTurno, setCargandoTurno] = useState(false);
+
+  // Estados para Referidos
+  const [clienteData, setClienteData] = useState<any>(null);
+  const [cargandoReferido, setCargandoReferido] = useState(false);
+  const [copiado, setCopiado] = useState(false);
+
+  // Función para generar un código único basado en el nombre
+  function generarCodigoReferido(nombre: string): string {
+    const limpio = (nombre || 'CLIENTE')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase()
+      .replace(/[^A-Z]/g, '')
+      .substring(0, 4);
+
+    const aleatorio = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `${limpio || 'USER'}-${aleatorio}`;
+  }
+
+  // Asegurar o buscar el perfil del cliente en la tabla `clientes`
+  async function asegurarPerfilCliente(currentUser: any) {
+    if (!currentUser?.id) return null;
+    setCargandoReferido(true);
+
+    try {
+      let { data: cliente, error } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+
+      if (cliente) {
+        setClienteData(cliente);
+        setCargandoReferido(false);
+        return cliente;
+      }
+
+      const nombreGoogle = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'Cliente';
+      const codigoNuevo = generarCodigoReferido(nombreGoogle);
+
+      const { data: nuevoCliente, error: errorInsert } = await supabase
+        .from('clientes')
+        .insert([
+          {
+            user_id: currentUser.id,
+            nombre: nombreGoogle,
+            celular: '', 
+            codigo_referido: codigoNuevo,
+            descuentos_disponibles: 0,
+            codigo_activo: false,
+          }
+        ])
+        .select()
+        .single();
+
+      if (!errorInsert && nuevoCliente) {
+        setClienteData(nuevoCliente);
+      }
+    } catch (err) {
+      console.error('Error al asegurar perfil de cliente:', err);
+    } finally {
+      setCargandoReferido(false);
+    }
+  }
 
   async function cargarHistorial(userId: string) {
     const { data } = await supabase
@@ -31,13 +99,39 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     }
   }
 
+  // 🟢 NUEVO: Consultar el próximo turno agendado del usuario
+  async function cargarProximoTurno(userId: string) {
+    setCargandoTurno(true);
+    try {
+      const ahoraIso = new Date().toISOString();
+      const { data } = await supabase
+        .from('reservas')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('fecha_hora_inicio', ahoraIso)
+        .in('estado', ['pendiente', 'confirmada'])
+        .order('fecha_hora_inicio', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (data) {
+        setProximoTurno(data);
+      } else {
+        setProximoTurno(null);
+      }
+    } catch (err) {
+      console.error('Error al cargar próximo turno:', err);
+    } finally {
+      setCargandoTurno(false);
+    }
+  }
+
   useEffect(() => {
     async function fetchData() {
       if (!user?.id || !isOpen) return;
 
       setCargandoPuntos(true);
-      
-      // Consultar puntos
+
       const { data, error } = await supabase
         .from('puntos_usuarios')
         .select('puntos_totales')
@@ -50,7 +144,12 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
         setPuntosTotales(0);
       }
 
-      await cargarHistorial(user.id);
+      await Promise.all([
+        cargarHistorial(user.id),
+        asegurarPerfilCliente(user),
+        cargarProximoTurno(user.id)
+      ]);
+
       setCargandoPuntos(false);
     }
 
@@ -79,7 +178,14 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     }
   };
 
-return (
+  const copiarCodigo = () => {
+    if (!clienteData?.codigo_referido) return;
+    navigator.clipboard.writeText(clienteData.codigo_referido);
+    setCopiado(true);
+    setTimeout(() => setCopiado(false), 2500);
+  };
+
+  return (
     <div 
       className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs animate-fadeIn"
       onClick={onClose}
@@ -111,7 +217,7 @@ return (
               </p>
             </div>
           </div>
-          
+
           <button 
             onClick={onClose}
             className="p-2 rounded-xl text-muted-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer"
@@ -148,7 +254,7 @@ return (
             </button>
           </div>
         ) : (
-          /* Si está logueado: Programa de Fidelidad / Puntos Dinámicos */
+          /* Si está logueado: Programa de Fidelidad, Tarjeta de Próximo Turno y Referidos */
           <div className="space-y-3">
             <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-transparent border border-primary/20 rounded-2xl p-3.5 flex items-center justify-between shadow-2xs">
               <div className="space-y-0.5">
@@ -169,7 +275,87 @@ return (
               </div>
             </div>
 
-            {/* ETAPA 1: Historial de Movimientos de Puntos */}
+            {/* 🟢 NUEVO: MINI WIDGET DE PRÓXIMO TURNO */}
+            <div className="bg-card border border-border rounded-2xl p-3 space-y-1.5 shadow-xs">
+              <div className="flex items-center justify-between px-0.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-primary" /> Próximo Turno Agendado
+                </span>
+              </div>
+              {cargandoTurno ? (
+                <p className="text-[11px] text-muted-foreground py-1 animate-pulse">Buscando citas...</p>
+              ) : proximoTurno ? (
+                <div className="flex items-center justify-between bg-primary/5 border border-primary/15 p-2.5 rounded-xl">
+                  <div className="space-y-0.5 pr-2">
+                    <p className="text-xs font-bold text-foreground line-clamp-1">
+                      {proximoTurno.detalle_reserva?.detalle_texto || 'Servicio Estético'}
+                    </p>
+                    <p className="text-[11px] font-medium text-primary">
+                      📅 {new Date(proximoTurno.fecha_hora_inicio).toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: 'short' })} a las {new Date(proximoTurno.fecha_hora_inicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} hs
+                    </p>
+                  </div>
+                  <Link 
+                    href="/mis-turnos" 
+                    onClick={onClose}
+                    className="text-[10px] font-bold px-2.5 py-1.5 bg-primary text-primary-foreground rounded-lg shrink-0 shadow-2xs"
+                  >
+                    Ver
+                  </Link>
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground py-1">
+                  No tenés turnos próximos agendados.
+                </p>
+              )}
+            </div>
+
+            {/* TARJETA DE CÓDIGO DE REFERIDOS */}
+            <div className="bg-card border border-border rounded-2xl p-3.5 space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-rose-500 flex items-center gap-1">
+                  <Gift className="w-3.5 h-3.5" /> Programa de Referidos
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${clienteData?.codigo_activo ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}>
+                  {clienteData?.codigo_activo ? 'Activo' : 'Pendiente de activación'}
+                </span>
+              </div>
+
+              {cargandoReferido ? (
+                <div className="flex items-center justify-center py-2 text-xs text-muted-foreground gap-2 animate-pulse">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Cargando tu código...
+                </div>
+              ) : clienteData?.codigo_activo ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between bg-muted/60 p-2.5 rounded-xl border border-border">
+                    <div>
+                      <p className="text-[10px] text-muted-foreground">Tu código único:</p>
+                      <p className="font-mono font-bold text-sm text-foreground tracking-wider">{clienteData.codigo_referido}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={copiarCodigo}
+                      className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+                    >
+                      {copiado ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiado ? '¡Copiado!' : 'Copiar'}</span>
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] px-1">
+                    <span className="text-muted-foreground">Beneficios disponibles:</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{clienteData.descuentos_disponibles || 0}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 space-y-1.5 text-center">
+                  <p className="font-mono font-bold text-xs text-foreground tracking-wider">{clienteData?.codigo_referido || '—'}</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Completá tu primera reserva y asisti a tu cita para activar tu código y empezar a regalar y recibir descuentos.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Historial de Movimientos de Puntos */}
             <div className="bg-card border border-border rounded-2xl p-3 space-y-2 shadow-xs">
               <div className="flex items-center justify-between px-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -251,7 +437,6 @@ return (
             </div>
           </Link>
 
-          {/* Botón de Soporte / WhatsApp Rápido */}
           <a
             href="https://wa.me/"
             target="_blank"
@@ -277,7 +462,7 @@ return (
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Cerrar sesión</span>
-          </button>
+      </button>
         )}
       </div>
     </div>
