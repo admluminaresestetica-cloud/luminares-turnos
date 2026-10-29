@@ -1,6 +1,6 @@
 // src/hooks/admin/useAgenda.ts
 'use client'
-
+import { procesarAsistenciaYReferidos } from '@/lib/supabase/admin/reservas' 
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
@@ -198,6 +198,10 @@ export function useAgenda() {
       return
     }
 
+    if (payload.estado === 'completado') {
+      await procesarAsistenciaYReferidos(turnoEdit.id);
+    }
+
     setTurnos((prev) =>
       prev.map((t) =>
         t.id === turnoEdit.id
@@ -272,6 +276,7 @@ export function useAgenda() {
       .eq('id', turnoACobrar.id)
 
     if (!error) {
+      await procesarAsistenciaYReferidos(turnoACobrar.id);
       setTurnos((prev) =>
         prev.map((t) =>
           t.id === turnoACobrar.id

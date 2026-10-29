@@ -399,7 +399,7 @@ export default function FormConfirmacion({
             <button
               type="button"
               disabled={!formValido || confirmando || cargandoMP}
-              onClick={onConfirmar}
+              onClick={() => onPagarMercadoPago && onPagarMercadoPago(montoSeleccionadoMP)}
               className="w-full bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] font-bold py-3.5 rounded-2xl shadow-xs text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
             >
               {cargandoMP ? (

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Reserva } from '@/app/admin/turnos/components/types'
 import { ServicioLaser, PromoLaser } from '@/lib/types'
+import { acreditarPuntosTransaccion } from '@/lib/supabase/puntos'
 import { 
   X, 
   Zap, 
@@ -73,6 +74,7 @@ export default function ModalCierreGabinete({
   // Estado local para los segundos del cronómetro integrado
   const [segundosSesion, setSegundosSesion] = useState<number>(duracionSegundos || 0)
   const [guardando, setGuardando] = useState<boolean>(false)
+  const esGeneral = turno?.servicio_tipo === 'general'
 
   // Cargar catálogo láser al abrir
   useEffect(() => {
@@ -274,7 +276,7 @@ export default function ModalCierreGabinete({
     setSwapTargetIndex(null)
   }
 
-  const handleGuardar = async (e: React.FormEvent) => {
+const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault()
     setGuardando(true)
 
@@ -283,9 +285,6 @@ export default function ModalCierreGabinete({
     const duracionTexto = mins > 0 ? `${mins} min ${segs} seg` : `${segs} seg`
 
     try {
-      const nuevoPrecioTotal = zonasSesion.reduce((acc, z) => acc + z.precio, 0)
-      const nuevoDetalleTexto = zonasSesion.map(z => z.nombre).join(' + ')
-
       let detalleObj = typeof turno.detalle_reserva === 'string'
         ? JSON.parse(turno.detalle_reserva || '{}')
         : turno.detalle_reserva || {}
@@ -294,15 +293,27 @@ export default function ModalCierreGabinete({
         ...detalleObj,
         operadora,
         notas_gabinete: notasGabinete,
-        detalle_texto: nuevoDetalleTexto,
-        zonas_sesion: zonasSesion,
+        duracion_sesion_segundos: segundosSesion,
         fecha_atencion_gabinete: new Date().toISOString()
       }
 
-      const resumenParametros = zonasSesion
-        .map(z => `${z.nombre}: Frec: ${z.frecuencia || '--'} | En: ${z.energia || '--'} | Pas: ${z.pasadas || '--'}`)
-        .join(' // ')
+      // 👈 ESTO ES LO NUEVO: Definimos variables con valores por defecto
+      let nuevoPrecioTotal = turno.precio_total || 0
+      let nuevoDetalleTexto = detalleObj.detalle_texto || turno.servicio_tipo || ''
+      let resumenParametros = ''
 
+      if (!esGeneral) {
+        nuevoPrecioTotal = zonasSesion.reduce((acc, z) => acc + z.precio, 0)
+        nuevoDetalleTexto = zonasSesion.map(z => z.nombre).join(' + ')
+        detalleActualizado.detalle_texto = nuevoDetalleTexto
+        detalleActualizado.zonas_sesion = zonasSesion
+
+        resumenParametros = zonasSesion
+          .map(z => `${z.nombre}: Frec: ${z.frecuencia || '--'} | En: ${z.energia || '--'} | Pas: ${z.pasadas || '--'}`)
+          .join(' // ')
+      }
+
+      if (!esGeneral) {
       const { error: errorHistorial } = await supabase
         .from('historial_sesiones_laser')
         .insert({
@@ -319,8 +330,26 @@ export default function ModalCierreGabinete({
           notas_recepcion: detalleObj.nota_recepcion || '',
           duracion_sesion_texto: duracionTexto
         })
-
+      
       if (errorHistorial) throw errorHistorial
+
+      } else {
+        // 👈 ESTO ES LO QUE FALTA AGREGAR PARA LOS SERVICIOS GENERALES:
+        const { error: errorHistorialGeneral } = await supabase
+          .from('historial_sesiones_generales')
+          .insert({
+            reserva_id: turno.id,
+            cliente_nombre: turno.cliente_nombre || 'Cliente',
+            cliente_celular: turno.cliente_celular || '',
+            profesional: operadora || 'Especialista',
+            detalle_trabajo: nuevoDetalleTexto,
+            notas_gabinete: notasGabinete,
+            notas_recepcion: detalleObj.nota_recepcion || ''
+          })
+
+        if (errorHistorialGeneral) throw errorHistorialGeneral
+      }
+
 
 const { error: errorReserva } = await supabase
       .from('reservas')
@@ -333,6 +362,23 @@ const { error: errorReserva } = await supabase
       .eq('id', turno.id)
 
     if (errorReserva) throw errorReserva
+
+    // 👇 Bloque seguro para acreditar puntos manejando posibles undefined
+      const userIdReserva = (turno as any).user_id || (turno as any).cliente_id;
+      const precioReserva = Number(turno.precio_total || nuevoPrecioTotal || 0);
+
+      if (userIdReserva && precioReserva > 0) {
+        try {
+          await acreditarPuntosTransaccion(
+            userIdReserva,
+            precioReserva,
+            'reserva',
+            turno.id
+          )
+        } catch (errPuntos) {
+          console.error('Error al acreditar puntos al finalizar sesión:', errPuntos)
+        }
+      }
 
       alert('Sesión finalizada y actualizada correctamente en reservas y gabinete.')
       onSuccess()
@@ -394,103 +440,106 @@ const { error: errorReserva } = await supabase
           />
         </div>
 
-        {/* ZONAS Y PARÁMETROS */}
-        <div className="space-y-3.5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <label className="font-extrabold text-slate-900 dark:text-zinc-100 text-sm tracking-tight block">
-                Zonas y Parámetros
-              </label>
-              <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
-                Configura la frecuencia, energía y pasadas por zona
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setMostrarSelectorExtra(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all shadow-md shadow-emerald-500/10 active:scale-95 cursor-pointer shrink-0"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Agregar Zona Extra</span>
-            </button>
-          </div>
-
-          {/* CONTENEDOR DE ZONAS */}
-          <div className="space-y-2.5">
-            {zonasSesion.map((item, idx) => (
-              <div 
-                key={idx} 
-                className="bg-slate-50/60 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 hover:border-slate-300 dark:hover:border-zinc-600 rounded-2xl p-3.5 transition-all space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3"
+{/* ZONAS Y PARÁMETROS (Solo se muestra si NO es general) */}
+        {!esGeneral && (
+          <div className="space-y-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <label className="font-extrabold text-slate-900 dark:text-zinc-100 text-sm tracking-tight block">
+                  Zonas y Parámetros
+                </label>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
+                  Configura la frecuencia, energía y pasadas por zona
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMostrarSelectorExtra(true)}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl transition-all shadow-md shadow-emerald-500/10 active:scale-95 cursor-pointer shrink-0"
               >
-                <div className="sm:w-1/4 flex items-center justify-between sm:justify-start gap-2 min-w-0">
-                  <span className="font-bold text-slate-800 dark:text-zinc-200 text-xs flex items-center gap-2 truncate">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                    <span className="truncate">{item.nombre}</span>
-                  </span>
-                  {item.esExtra && (
-                    <span className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-lg font-bold shrink-0">
-                      Extra
+                <Plus className="h-3.5 w-3.5" />
+                <span>Agregar Zona Extra</span>
+              </button>
+            </div>
+
+            {/* CONTENEDOR DE ZONAS */}
+            <div className="space-y-2.5">
+              {zonasSesion.map((item, idx) => (
+                <div 
+                  key={idx} 
+                  className="bg-slate-50/60 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/60 hover:border-slate-300 dark:hover:border-zinc-600 rounded-2xl p-3.5 transition-all space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-3"
+                >
+                  <div className="sm:w-1/4 flex items-center justify-between sm:justify-start gap-2 min-w-0">
+                    <span className="font-bold text-slate-800 dark:text-zinc-200 text-xs flex items-center gap-2 truncate">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                      <span className="truncate">{item.nombre}</span>
                     </span>
-                  )}
-                </div>
+                    {item.esExtra && (
+                      <span className="text-[10px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-lg font-bold shrink-0">
+                        Extra
+                      </span>
+                    )}
+                  </div>
 
-                <div className="grid grid-cols-3 gap-2 sm:flex-1">
-                  <div>
-                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1 font-semibold">Frecuencia</label>
-                    <input
-                      type="text"
-                      placeholder="Ej. 10 Hz"
-                      value={item.frecuencia}
-                      onChange={(e) => actualizarFila(idx, 'frecuencia', e.target.value)}
-                      className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none transition-all"
-                    />
+                  <div className="grid grid-cols-3 gap-2 sm:flex-1">
+                    <div>
+                      <label className="block sm:hidden text-[10px] text-slate-400 mb-1 font-semibold">Frecuencia</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 10 Hz"
+                        value={item.frecuencia}
+                        onChange={(e) => actualizarFila(idx, 'frecuencia', e.target.value)}
+                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block sm:hidden text-[10px] text-slate-400 mb-1 font-semibold">Energía</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 14 J"
+                        value={item.energia}
+                        onChange={(e) => actualizarFila(idx, 'energia', e.target.value)}
+                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block sm:hidden text-[10px] text-slate-400 mb-1 font-semibold">Pasadas</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 3"
+                        value={item.pasadas}
+                        onChange={(e) => actualizarFila(idx, 'pasadas', e.target.value)}
+                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none transition-all"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1 font-semibold">Energía</label>
-                    <input
-                      type="text"
-                      placeholder="Ej. 14 J"
-                      value={item.energia}
-                      onChange={(e) => actualizarFila(idx, 'energia', e.target.value)}
-                      className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block sm:hidden text-[10px] text-slate-400 mb-1 font-semibold">Pasadas</label>
-                    <input
-                      type="text"
-                      placeholder="Ej. 3"
-                      value={item.pasadas}
-                      onChange={(e) => actualizarFila(idx, 'pasadas', e.target.value)}
-                      className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-xl px-2.5 py-1.5 text-center text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none transition-all"
-                    />
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-end gap-1.5 pt-2 sm:pt-0 border-t border-slate-200/60 dark:border-zinc-700/60 sm:border-t-0 shrink-0">
-                  {item.id !== 'generico' && (
+                  <div className="flex items-center justify-end gap-1.5 pt-2 sm:pt-0 border-t border-slate-200/60 dark:border-zinc-700/60 sm:border-t-0 shrink-0">
+                    {item.id !== 'generico' && (
+                      <button
+                        type="button"
+                        onClick={() => abrirSwap(idx)}
+                        className="p-2 bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-zinc-700 active:scale-95"
+                        title="Intercambiar zona"
+                      >
+                        <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => abrirSwap(idx)}
-                      className="p-2 bg-white dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-zinc-700 active:scale-95"
-                      title="Intercambiar zona"
+                      onClick={() => eliminarZona(idx)}
+                      className="p-2 bg-white dark:bg-zinc-900 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-zinc-700 active:scale-95"
+                      title="Eliminar zona"
                     >
-                      <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => eliminarZona(idx)}
-                    className="p-2 bg-white dark:bg-zinc-900 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-all cursor-pointer border border-slate-200 dark:border-zinc-700 active:scale-95"
-                    title="Eliminar zona"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
 
         {/* CAMPOS GENERALES */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">

@@ -38,10 +38,10 @@ export function useReferidos(
           return;
         }
 
-        // 2. Buscar si el código existe en la tabla de clientes
+        // 2. Buscar si el código existe en la tabla de clientes y si está activo
         const { data: cliente, error } = await supabase
           .from('clientes')
-          .select('nombre, codigo_referido')
+          .select('nombre, codigo_referido, codigo_activo')
           .ilike('codigo_referido', codigoClean)
           .maybeSingle();
 
@@ -55,7 +55,16 @@ export function useReferidos(
           return;
         }
 
-        // 3. Calcular el monto de descuento según la configuración
+        // 3. Validar que el código esté activo (es decir, que su dueño ya haya completado al menos 1 reserva)
+        if (!cliente.codigo_activo) {
+          setValidando(false);
+          setDescuentoMonto(0);
+          setReferidoValido(false);
+          setMensajeReferido('Este código de referido aún no está activo para su uso.');
+          return;
+        }
+
+        // 4. Calcular el monto de descuento según la configuración
         const tipo = configSistema.referidos_tipo_descuento ?? 'monto_fijo';
         const valor = Number(configSistema.referidos_valor_descuento ?? 0);
 
