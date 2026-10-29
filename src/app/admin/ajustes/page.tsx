@@ -9,7 +9,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { 
   ArrowLeft, Building2, Image as ImageIcon, Flame, BookOpen, 
   Clock, Tag, Layers, Share2, ClipboardList, HelpCircle, Shield,
-  ChevronRight, FileStack, Palette
+  ChevronRight, FileStack, Palette, Gift, QrCode
 } from 'lucide-react'
 
 import { useConfigCalendario } from '@/hooks/admin/useConfigCalendario'
@@ -30,11 +30,10 @@ import ConfiguracionAnamnesisTab from './components/ConfiguracionAnamnesis'
 import ConfiguracionPinTab from './components/ConfiguracionPinTab'
 import DestacadosAjustesTab from './components/DestacadosAjustesTab'
 import AparienciaAjustesTab from './components/AparienciaAjustesTab'
-
 import ModalServicioLaser from '@/app/admin/turnos/components/modals/ModalServicioLaser'
 import ModalPromo from '@/app/admin/turnos/components/modals/ModalPromo'
 import ModalServicioGeneral from '@/app/admin/turnos/components/modals/ModalServicioGeneral'
-
+import ModuloFidelizacionTab from './components/ModuloFidelizacionTab'
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -194,10 +193,11 @@ export default function AjustesAdminPage() {
         },
         {
           id: 'referidos',
-          titulo: 'Programa de Referidos',
-          descripcion: 'Configuración de descuentos y beneficios por recomendación.',
-          icono: Share2,
-          colorIcono: 'text-fuchsia-500 bg-fuchsia-500/10'
+          titulo: 'Fidelización, Puntos & Premios',
+          descripcion: 'Gestioná el programa de referidos, catálogo de premios y validación de canjes.',
+          icono: Gift,
+          colorIcono: 'text-fuchsia-500 bg-fuchsia-500/10',
+          badge: 'Fidelización'
         },
         {
           id: 'anamnesis',
@@ -371,6 +371,7 @@ return (
             )}
 
             {moduloActivo === 'seguridad' && <ConfiguracionPinTab />}
+            {moduloActivo === 'referidos' && <ModuloFidelizacionTab />}
           </div>
         )}
 

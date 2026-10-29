@@ -13,7 +13,7 @@ import {
   UserCheck, 
   Plus, 
   Minus,
-  Sparkles
+  Star
 } from 'lucide-react';
 
 interface Cliente {
@@ -200,7 +200,7 @@ export default function ReferidosTab() {
       {/* TARJETA 1.5: AJUSTES DE PUNTOS LUMINARES (LEALTAD) */}
       <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-gray-100 shadow-sm transition-all dark:bg-zinc-900 dark:border-zinc-800 space-y-4">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-rose-500 dark:text-rose-400" />
+          <Star className="w-5 h-5 text-rose-500 dark:text-rose-400" />
           <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-zinc-100">
             Ajustes de Puntos Luminares (Lealtad)
           </h2>
@@ -344,7 +344,7 @@ export default function ReferidosTab() {
                                 : 'bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400'
                             }`}
                           >
-                            <Sparkles className="w-3 h-3" />
+                            <Star className="w-3 h-3" />
                             {cliente.descuentos_disponibles || 0} dispon.
                           </span>
                         </td>
