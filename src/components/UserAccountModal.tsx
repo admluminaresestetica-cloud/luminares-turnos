@@ -467,3 +467,4 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
       </div>
     </div>
   );
+}
