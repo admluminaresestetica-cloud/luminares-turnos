@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, User, Calendar, PackageSearch, Heart, Star, LogOut, Loader2, MessageCircle, Gift, Copy, Check } from 'lucide-react';
+import { X, User, Calendar, PackageSearch, Heart, Star, LogOut, Loader2, MessageCircle, Gift, Copy, Check, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -17,6 +17,10 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
   const [puntosTotales, setPuntosTotales] = useState<number>(0);
   const [cargandoPuntos, setCargandoPuntos] = useState(false);
   const [historial, setHistorial] = useState<any[]>([]);
+  
+  // Estado para el próximo turno / actividad reciente
+  const [proximoTurno, setProximoTurno] = useState<any>(null);
+  const [cargandoTurno, setCargandoTurno] = useState(false);
 
   // Estados para Referidos
   const [clienteData, setClienteData] = useState<any>(null);
@@ -24,7 +28,6 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
   const [copiado, setCopiado] = useState(false);
 
   // Función para generar un código único basado en el nombre
-// Función para generar un código único basado en el nombre
   function generarCodigoReferido(nombre: string): string {
     const limpio = (nombre || 'CLIENTE')
       .normalize('NFD')
@@ -32,9 +35,9 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
       .toUpperCase()
       .replace(/[^A-Z]/g, '')
       .substring(0, 4);
-    
+
     const aleatorio = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `${limpio || 'USER'}-${aleatorio}`; // <--- Aquí estaba como "limpo", lo cambiamos a "limpio"
+    return `${limpio || 'USER'}-${aleatorio}`;
   }
 
   // Asegurar o buscar el perfil del cliente en la tabla `clientes`
@@ -43,7 +46,6 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     setCargandoReferido(true);
 
     try {
-      // 1. Buscar si ya existe por user_id
       let { data: cliente, error } = await supabase
         .from('clientes')
         .select('*')
@@ -56,7 +58,6 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
         return cliente;
       }
 
-      // 2. Si no existe, creamos uno nuevo con su código único e inactivo por defecto
       const nombreGoogle = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'Cliente';
       const codigoNuevo = generarCodigoReferido(nombreGoogle);
 
@@ -69,7 +70,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
             celular: '', 
             codigo_referido: codigoNuevo,
             descuentos_disponibles: 0,
-            codigo_activo: false, // Nace inactivo hasta completar su primera reserva
+            codigo_activo: false,
           }
         ])
         .select()
@@ -98,13 +99,39 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     }
   }
 
+  // 🟢 NUEVO: Consultar el próximo turno agendado del usuario
+  async function cargarProximoTurno(userId: string) {
+    setCargandoTurno(true);
+    try {
+      const ahoraIso = new Date().toISOString();
+      const { data } = await supabase
+        .from('reservas')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('fecha_hora_inicio', ahoraIso)
+        .in('estado', ['pendiente', 'confirmada'])
+        .order('fecha_hora_inicio', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      if (data) {
+        setProximoTurno(data);
+      } else {
+        setProximoTurno(null);
+      }
+    } catch (err) {
+      console.error('Error al cargar próximo turno:', err);
+    } finally {
+      setCargandoTurno(false);
+    }
+  }
+
   useEffect(() => {
     async function fetchData() {
       if (!user?.id || !isOpen) return;
 
       setCargandoPuntos(true);
-      
-      // Consultar puntos
+
       const { data, error } = await supabase
         .from('puntos_usuarios')
         .select('puntos_totales')
@@ -117,8 +144,12 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
         setPuntosTotales(0);
       }
 
-      await cargarHistorial(user.id);
-      await asegurarPerfilCliente(user);
+      await Promise.all([
+        cargarHistorial(user.id),
+        asegurarPerfilCliente(user),
+        cargarProximoTurno(user.id)
+      ]);
+
       setCargandoPuntos(false);
     }
 
@@ -186,7 +217,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
               </p>
             </div>
           </div>
-          
+
           <button 
             onClick={onClose}
             className="p-2 rounded-xl text-muted-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer"
@@ -223,7 +254,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
             </button>
           </div>
         ) : (
-          /* Si está logueado: Programa de Fidelidad y Tarjeta de Referidos */
+          /* Si está logueado: Programa de Fidelidad, Tarjeta de Próximo Turno y Referidos */
           <div className="space-y-3">
             <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-transparent border border-primary/20 rounded-2xl p-3.5 flex items-center justify-between shadow-2xs">
               <div className="space-y-0.5">
@@ -244,6 +275,40 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
               </div>
             </div>
 
+            {/* 🟢 NUEVO: MINI WIDGET DE PRÓXIMO TURNO */}
+            <div className="bg-card border border-border rounded-2xl p-3 space-y-1.5 shadow-xs">
+              <div className="flex items-center justify-between px-0.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-primary" /> Próximo Turno Agendado
+                </span>
+              </div>
+              {cargandoTurno ? (
+                <p className="text-[11px] text-muted-foreground py-1 animate-pulse">Buscando citas...</p>
+              ) : proximoTurno ? (
+                <div className="flex items-center justify-between bg-primary/5 border border-primary/15 p-2.5 rounded-xl">
+                  <div className="space-y-0.5 pr-2">
+                    <p className="text-xs font-bold text-foreground line-clamp-1">
+                      {proximoTurno.detalle_reserva?.detalle_texto || 'Servicio Estético'}
+                    </p>
+                    <p className="text-[11px] font-medium text-primary">
+                      📅 {new Date(proximoTurno.fecha_hora_inicio).toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: 'short' })} a las {new Date(proximoTurno.fecha_hora_inicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} hs
+                    </p>
+                  </div>
+                  <Link 
+                    href="/mis-turnos" 
+                    onClick={onClose}
+                    className="text-[10px] font-bold px-2.5 py-1.5 bg-primary text-primary-foreground rounded-lg shrink-0 shadow-2xs"
+                  >
+                    Ver
+                  </Link>
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground py-1">
+                  No tenés turnos próximos agendados.
+                </p>
+              )}
+            </div>
+
             {/* TARJETA DE CÓDIGO DE REFERIDOS */}
             <div className="bg-card border border-border rounded-2xl p-3.5 space-y-2.5 shadow-xs">
               <div className="flex items-center justify-between">
@@ -260,7 +325,6 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
                   <Loader2 className="w-3.5 h-3.5 animate-spin" /> Cargando tu código...
                 </div>
               ) : clienteData?.codigo_activo ? (
-                /* Si el código está activo (ya completó su 1ra reserva) */
                 <div className="space-y-2">
                   <div className="flex items-center justify-between bg-muted/60 p-2.5 rounded-xl border border-border">
                     <div>
@@ -282,7 +346,6 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
                   </div>
                 </div>
               ) : (
-                /* Si el código está pendiente (necesita completar su primera reserva) */
                 <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 space-y-1.5 text-center">
                   <p className="font-mono font-bold text-xs text-foreground tracking-wider">{clienteData?.codigo_referido || '—'}</p>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
@@ -399,9 +462,8 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Cerrar sesión</span>
-          </button>
+      </button>
         )}
       </div>
     </div>
   );
-}
