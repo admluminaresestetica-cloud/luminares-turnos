@@ -10,7 +10,9 @@ import {
   Loader2, 
   Star, 
   ToggleLeft, 
-  ToggleRight 
+  ToggleRight,
+  Pencil,
+  X
 } from 'lucide-react';
 
 interface Premio {
@@ -27,10 +29,11 @@ export default function PremiosAdminTab() {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
-  // Estados del formulario para nuevo premio
+  // Estados del formulario y control de edición
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [puntos, setPuntos] = useState<number>(100);
+  const [premioEditandoId, setPremioEditandoId] = useState<string | null>(null);
 
   useEffect(() => {
     cargarPremios();
@@ -49,33 +52,71 @@ export default function PremiosAdminTab() {
     setCargando(false);
   }
 
-  const handleCrearPremio = async (e: React.FormEvent) => {
+  const handleGuardarPremio = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!titulo.trim() || puntos <= 0) return;
 
     setGuardando(true);
-    const { data, error } = await supabase
-      .from('premios_catalogo')
-      .insert([
-        {
+
+    if (premioEditandoId) {
+      // MODO EDICIÓN
+      const { data, error } = await supabase
+        .from('premios_catalogo')
+        .update({
           titulo: titulo.trim(),
           descripcion: descripcion.trim(),
           puntos_requeridos: Number(puntos),
-          activo: true,
-        }
-      ])
-      .select()
-      .single();
+        })
+        .eq('id', premioEditandoId)
+        .select()
+        .single();
 
-    if (!error && data) {
-      setPremios((prev) => [...prev, data]);
-      setTitulo('');
-      setDescripcion('');
-      setPuntos(100);
-      setMensaje('Premio creado con éxito');
-      setTimeout(() => setMensaje(null), 3000);
+      if (!error && data) {
+        setPremios((prev) => prev.map((p) => (p.id === premioEditandoId ? data : p)));
+        setMensaje('Premio actualizado con éxito');
+        cancelarEdicion();
+        setTimeout(() => setMensaje(null), 3000);
+      }
+    } else {
+      // MODO CREACIÓN
+      const { data, error } = await supabase
+        .from('premios_catalogo')
+        .insert([
+          {
+            titulo: titulo.trim(),
+            descripcion: descripcion.trim(),
+            puntos_requeridos: Number(puntos),
+            activo: true,
+          }
+        ])
+        .select()
+        .single();
+
+      if (!error && data) {
+        setPremios((prev) => [...prev, data]);
+        setTitulo('');
+        setDescripcion('');
+        setPuntos(100);
+        setMensaje('Premio creado con éxito');
+        setTimeout(() => setMensaje(null), 3000);
+      }
     }
     setGuardando(false);
+  };
+
+  const iniciarEdicion = (premio: Premio) => {
+    setPremioEditandoId(premio.id);
+    setTitulo(premio.titulo);
+    setDescripcion(premio.descripcion || '');
+    setPuntos(premio.puntos_requeridos);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelarEdicion = () => {
+    setPremioEditandoId(null);
+    setTitulo('');
+    setDescripcion('');
+    setPuntos(100);
   };
 
   const toggleEstadoPremio = async (id: string, estadoActual: boolean) => {
@@ -101,21 +142,37 @@ export default function PremiosAdminTab() {
 
     if (!error) {
       setPremios((prev) => prev.filter((p) => p.id !== id));
+      if (premioEditandoId === id) cancelarEdicion();
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* TARJETA: CREAR NUEVO PREMIO */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 border border-gray-100 shadow-sm transition-all dark:bg-zinc-900 dark:border-zinc-800">
-        <div className="flex items-center gap-2 mb-4">
-          <Gift className="w-5 h-5 text-rose-500 dark:text-rose-400" />
-          <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-zinc-100">
-            Agregar Nuevo Premio al Catálogo
-          </h2>
+      {/* TARJETA: CREAR / EDITAR PREMIO */}
+      <div className={`rounded-2xl sm:rounded-3xl p-5 sm:p-6 border shadow-sm transition-all dark:bg-zinc-900 ${
+        premioEditandoId 
+          ? 'bg-amber-50/50 border-amber-200 dark:border-amber-900/50' 
+          : 'bg-white border-gray-100 dark:border-zinc-800'
+      }`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Gift className="w-5 h-5 text-rose-500 dark:text-rose-400" />
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-zinc-100">
+              {premioEditandoId ? 'Editar Premio Existente' : 'Agregar Nuevo Premio al Catálogo'}
+            </h2>
+          </div>
+          {premioEditandoId && (
+            <button
+              type="button"
+              onClick={cancelarEdicion}
+              className="text-xs font-semibold text-gray-500 hover:text-gray-800 dark:text-zinc-400 flex items-center gap-1 cursor-pointer"
+            >
+              <X className="w-4 h-4" /> Cancelar edición
+            </button>
+          )}
         </div>
 
-        <form onSubmit={handleCrearPremio} className="space-y-4">
+        <form onSubmit={handleGuardarPremio} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5 dark:text-zinc-300">
@@ -171,10 +228,14 @@ export default function PremiosAdminTab() {
             <button
               type="submit"
               disabled={guardando}
-              className="bg-rose-500 hover:bg-rose-600 active:scale-[0.98] text-white font-semibold text-xs px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-sm disabled:opacity-50 dark:bg-rose-600 dark:hover:bg-rose-500 cursor-pointer"
+              className={`font-semibold text-xs px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer ${
+                premioEditandoId 
+                  ? 'bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-600 dark:hover:bg-amber-500' 
+                  : 'bg-rose-500 hover:bg-rose-600 text-white dark:bg-rose-600 dark:hover:bg-rose-500'
+              }`}
             >
               {guardando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              <span>Crear Premio</span>
+              <span>{premioEditandoId ? 'Guardar Cambios' : 'Crear Premio'}</span>
             </button>
           </div>
         </form>
@@ -241,14 +302,24 @@ export default function PremiosAdminTab() {
                     )}
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => eliminarPremio(premio.id)}
-                    className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-                    title="Eliminar premio"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => iniciarEdicion(premio)}
+                      className="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
+                      title="Editar premio"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => eliminarPremio(premio.id)}
+                      className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                      title="Eliminar premio"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

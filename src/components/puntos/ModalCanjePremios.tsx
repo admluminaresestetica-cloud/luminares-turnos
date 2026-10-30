@@ -54,7 +54,6 @@ export default function ModalCanjePremios({
     setCargando(false);
   }
 
-  // Función para generar un código único de canje (ej: CANJE-X8F2)
   function generarCodigoCanje(): string {
     const aleatorio = Math.random().toString(36).substring(2, 6).toUpperCase();
     return `CANJE-${aleatorio}`;
@@ -73,7 +72,6 @@ export default function ModalCanjePremios({
       const nuevosPuntos = puntosActuales - premio.puntos_requeridos;
       const codigoUnico = generarCodigoCanje();
 
-      // 1. Actualizar el saldo de puntos totales del usuario
       const { error: errorUpdate } = await supabase
         .from('puntos_usuarios')
         .update({ puntos_totales: nuevosPuntos })
@@ -81,7 +79,6 @@ export default function ModalCanjePremios({
 
       if (errorUpdate) throw errorUpdate;
 
-      // 2. Registrar el movimiento negativo en el historial de puntos
       await supabase.from('puntos_historial').insert([
         {
           user_id: userId,
@@ -90,7 +87,6 @@ export default function ModalCanjePremios({
         },
       ]);
 
-      // 3. Registrar el canje en la tabla de canjes_usuarios
       const { error: errorCanje } = await supabase.from('canjes_usuarios').insert([
         {
           user_id: userId,
@@ -102,12 +98,11 @@ export default function ModalCanjePremios({
 
       if (errorCanje) throw errorCanje;
 
-      // Éxito
       setMensajeExito({
         titulo: premio.titulo,
         codigo: codigoUnico,
       });
-      onCanjeExitoso(); // Notifica al componente padre para actualizar los puntos en pantalla
+      onCanjeExitoso();
     } catch (err) {
       console.error('Error al procesar el canje:', err);
       setErrorMensaje('Ocurrió un error al procesar el canje. Intentá nuevamente.');
@@ -118,13 +113,13 @@ export default function ModalCanjePremios({
 
   if (!isOpen) return null;
 
-  return (
+return (
     <div 
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn"
+      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-end sm:pr-[420px] p-4 animate-fadeIn"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-md bg-background border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto"
+        className="w-full max-w-md bg-background border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[82vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
