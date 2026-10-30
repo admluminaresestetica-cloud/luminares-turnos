@@ -149,7 +149,7 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
     }
   }, [fecha, configCalendario, cargarSlots]);
 
-  const prepararReservaBase = async () => {
+  const prepararReservaBase = async (canjeId?: string) => {
     if (!fecha || !hora || !configSistema) return null;
 
     const celularLimpio = celular.replace(/\D/g, '');
@@ -222,8 +222,28 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
       }
     }
 
+// Si hay canjeId, buscamos el título o monto del cupón para restarlo
+    let descuentoCuponMonto = 0;
+    let codigoCuponTexto = '';
+    
+    if (canjeId) {
+      const { data: datosCanje } = await supabase
+        .from('canjes_usuarios')
+        .select('codigo_canje, premios_catalogo(titulo)')
+        .eq('id', canjeId)
+        .maybeSingle();
+
+      if (datosCanje) {
+        codigoCuponTexto = datosCanje.codigo_canje;
+        const tituloPremio = (datosCanje.premios_catalogo as any)?.titulo || '';
+        const match = tituloPremio.replace(/\./g, '').match(/\d+/);
+        descuentoCuponMonto = match ? Number(match[0]) : 0;
+      }
+    }
+
     const montoDescuentoAplicar = sistemaReferidosActivo ? descuentoMonto : 0;
-    const precioFinal = Math.max(0, precioTotal - montoDescuentoAplicar);
+    // Restamos referidos Y el cupón del total
+    const precioFinal = Math.max(0, precioTotal - montoDescuentoAplicar - descuentoCuponMonto);
 
     const [year, month, day] = fecha.split('-').map(Number);
     const [hours, minutes] = hora.split(':').map(Number);
@@ -239,22 +259,31 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
       duracion_total: duracionTotal,
       fecha_hora_inicio: fechaHoraInicio,
       user_id: user?.id || null,
+      canje_id: canjeId || null,
     });
 
-    return { reserva, nombreLimpio, precioFinal, codigoReferidoPropio, codigoUsadoLimpio };
+if (canjeId) {
+      await supabase
+        .from('canjes_usuarios')
+        .update({ estado: 'utilizado' })
+        .eq('id', canjeId);
+    }
+
+    return { reserva, nombreLimpio, precioFinal, codigoReferidoPropio, codigoUsadoLimpio, codigoCuponTexto, descuentoCuponMonto };
   };
 
-  const handleConfirmar = async () => {
+  const handleConfirmar = async (canjeId?: string) => {
     setConfirmando(true);
     setError(null);
     try {
-      const base = await prepararReservaBase();
+      const base = await prepararReservaBase(canjeId);
       setConfirmando(false);
       if (!base || !base.reserva) {
         setError('No pudimos crear la reserva. Intentá de nuevo.');
         return;
       }
-      const { reserva, nombreLimpio, precioFinal, codigoReferidoPropio, codigoUsadoLimpio } = base;
+      
+      const { reserva, nombreLimpio, precioFinal, codigoReferidoPropio, codigoUsadoLimpio, codigoCuponTexto, descuentoCuponMonto } = base;
       const datosExito: DatosReservaExitosa = {
         codigo: reserva.codigo_unico,
         detalle: detalleTexto,
@@ -274,6 +303,7 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
         hora: hora!,
         precioTotal: precioFinal,
         montoSena,
+        cuponTexto: codigoCuponTexto ? `${codigoCuponTexto} (-$${descuentoCuponMonto.toLocaleString('es-AR')})` : undefined,
       });
 
       if (descuentoMonto > 0) {
@@ -291,11 +321,11 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
     }
   };
 
-  const handlePagarMercadoPago = async (montoAPagar: number) => {
+const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => {
     setCargandoMP(true);
     setError(null);
     try {
-      const base = await prepararReservaBase();
+      const base = await prepararReservaBase(canjeId);
       if (!base || !base.reserva) {
         setCargandoMP(false);
         setError('No pudimos registrar la reserva antes del pago. Intentá de nuevo.');
@@ -381,6 +411,8 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
     return activos.length > 0 ? activos : [0, 1, 2, 3, 4, 5, 6];
   })();
 
+
+  
   return (
     <main className="min-h-screen bg-background px-3 py-4 sm:p-6 md:p-12 pb-20 sm:pb-24 relative font-sans">
       <div className="max-w-lg mx-auto">

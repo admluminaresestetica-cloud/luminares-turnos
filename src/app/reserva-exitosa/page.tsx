@@ -131,7 +131,7 @@ export default function MisTurnosPage() {
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 bg-white border border-slate-200/80 px-3.5 py-2 rounded-xl shadow-xs hover:border-slate-300 active:scale-95 transition-all"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Volver al menú principal</span>
+            <span></span>
           </Link>
         </div>
 

@@ -86,18 +86,18 @@ export default function ValidarCanjesTab() {
       setLoading(false);
     }
   };
-  const handleConfirmarEntrega = async (idCanje: string) => {
+
+const handleConfirmarEntrega = async (idCanje: string) => {
     setLoading(true);
     setMensajeError('');
     setMensajeExito('');
 
     try {
-      const fechaActual = new Date().toISOString();
+      // 🟢 Actualizamos únicamente la columna 'estado' que sí existe en la tabla
       const { error } = await supabase
         .from('canjes_usuarios')
         .update({ 
-          estado: 'UTILIZADO',
-          utilizado_at: fechaActual 
+          estado: 'utilizado' 
         })
         .eq('id', idCanje);
 
@@ -105,16 +105,15 @@ export default function ValidarCanjesTab() {
 
       setMensajeExito('¡Canje validado y entregado con éxito!');
       
-      // Actualizar vista local y recargar historial
       if (canjeEncontrado) {
         setCanjeEncontrado({
           ...canjeEncontrado,
-          estado: 'UTILIZADO',
-          utilizado_at: fechaActual
+          estado: 'utilizado'
         });
       }
       cargarHistorial();
     } catch (err) {
+      console.error(err); // Esto te mostrará el error real en la consola si vuelve a pasar
       setMensajeError('Error al actualizar el estado del canje.');
     } finally {
       setLoading(false);
@@ -215,7 +214,7 @@ export default function ValidarCanjesTab() {
               </div>
             </div>
 
-            {canjeEncontrado.estado === 'PENDIENTE' ? (
+            {canjeEncontrado.estado === 'pendiente' ? (
               <div className="pt-2">
                 <button
                   type="button"
@@ -282,7 +281,7 @@ export default function ValidarCanjesTab() {
                     </td>
                     <td className="py-3 px-3">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        c.estado === 'UTILIZADO'
+                        c.estado === 'utilizado'
                           ? 'bg-slate-200 text-slate-700 dark:bg-zinc-700 dark:text-zinc-300'
                           : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                       }`}>

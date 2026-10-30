@@ -121,6 +121,7 @@ export interface CrearReservaInput {
   precio_total: number;
   duracion_total: number;
   fecha_hora_inicio: string;
+  canje_id?: string | null;
 }
 
 export interface TemaColores {

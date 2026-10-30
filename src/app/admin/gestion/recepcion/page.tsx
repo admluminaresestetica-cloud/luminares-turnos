@@ -227,7 +227,7 @@ const turnosFiltrados = useMemo(() => {
               title="Volver al Menú Admin"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Menú Principal</span>
+              <span className="hidden sm:inline"></span>
             </Link>
 
             <div className="flex items-center gap-2">

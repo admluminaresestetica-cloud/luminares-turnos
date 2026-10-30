@@ -38,11 +38,11 @@ interface Props {
   onNombreChange: (val: string) => void;
   onCelularChange: (val: string) => void;
   onCodigoReferidoChange: (val: string) => void;
-  onConfirmar: () => void;
+  onConfirmar: (canjeId?: string) => void;
   confirmando: boolean;
   error: string | null;
   colorAccent?: 'violet' | 'indigo' | 'rose' | 'emerald';
-  onPagarMercadoPago?: (montoAPagar: number) => void;
+  onPagarMercadoPago?: (montoAPagar: number, canjeId?: string) => void;
   cargandoMP?: boolean;
   onCancelarMP?: () => void;
   banco?: string;
@@ -88,6 +88,8 @@ export default function FormConfirmacion({
 
   const [copiadoCbu, setCopiadoCbu] = useState(false);
   const [copiadoAlias, setCopiadoAlias] = useState(false);
+  const [cuponesDisponibles, setCuponesDisponibles] = useState<any[]>([]);
+  const [cuponSeleccionado, setCuponSeleccionado] = useState<any | null>(null);
 
  useEffect(() => {
     if (!user) return;
@@ -126,6 +128,35 @@ export default function FormConfirmacion({
     }
   }, [user, nombre, celular, onNombreChange, onCelularChange]);
 
+useEffect(() => {
+    if (!user) {
+      console.log('🔴 [DEBUG]: No hay usuario logueado todavía.');
+      return;
+    }
+    const userId = user.id;
+    console.log('🟢 [DEBUG]: Usuario logueado ID:', userId);
+
+    async function cargarCuponesPendientes() {
+      try {
+        const { data, error } = await supabase
+          .from('canjes_usuarios')
+          .select('*, premios_catalogo(*)')
+          .eq('user_id', userId)
+          .ilike('estado', 'pendiente');
+
+        console.log('📦 [DEBUG]: Respuesta de Supabase cupones:', { data, error });
+
+        if (!error && data) {
+          setCuponesDisponibles(data);
+        }
+      } catch (err) {
+        console.error('❌ [DEBUG] Error al cargar cupones:', err);
+      }
+    }
+
+    cargarCuponesPendientes();
+  }, [user]);
+
   const copiarAlPortapapeles = async (texto: string, tipo: 'cbu' | 'alias') => {
     if (!texto) return;
     try {
@@ -152,8 +183,23 @@ export default function FormConfirmacion({
     month: 'long',
   });
 
-  // Cálculos base
-  const precioFinalCalculado = Math.max(0, precioTotal - descuentoMonto);
+const extraerMontoDelTitulo = (texto?: string) => {
+    if (!texto) return 0;
+    const match = texto.replace(/\./g, '').match(/\d+/);
+    return match ? Number(match[0]) : 0;
+  };
+
+ // 🟢 REEMPLAZALO POR ESTO:
+  const valorDescuentoCupon = cuponSeleccionado 
+    ? Number(
+        cuponSeleccionado.descuento_aplicado || 
+        cuponSeleccionado.monto || 
+        extraerMontoDelTitulo(cuponSeleccionado.premios_catalogo?.titulo) || 
+        0
+      ) 
+    : 0;
+
+  const precioFinalCalculado = Math.max(0, precioTotal - descuentoMonto - valorDescuentoCupon);
   const montoSenaBase = Math.round((precioFinalCalculado * porcentajeSena) / 100);
 
   // Cálculos de Mercado Pago con 10% de recargo por servicio
@@ -168,9 +214,16 @@ export default function FormConfirmacion({
 
  // Evaluar horario comercial (09:00 hs a 20:00 hs)
   const horaActual = new Date().getHours();
-  const esHorarioComercial = horaActual >= 9 && horaActual < 20;
+  const esHorarioComercial = horaActual >= 9 && horaActual < 23;
 
+
+  console.log('👀 [DEBUG RENDER]: Estado actual ->', {
+    userExistente: !!user,
+    cantidadCupones: cuponesDisponibles.length,
+    cupones: cuponesDisponibles
+  });
   return (
+    
     <div className="space-y-5 animate-in fade-in duration-300">
       {/* TARJETA DE RESUMEN DEL TURNO */}
       <div className="bg-slate-50/80 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 space-y-3">
@@ -210,6 +263,13 @@ export default function FormConfirmacion({
             </div>
           )}
 
+            {cuponSeleccionado && (
+            <div className="flex justify-between items-center text-emerald-600 font-medium">
+              <span>Descuento por cupón ({cuponSeleccionado.codigo_canje}):</span>
+              <span>-${valorDescuentoCupon.toLocaleString('es-AR')}</span>
+            </div>
+          )}
+
           <div className="flex justify-between items-center text-slate-900 font-bold pt-1">
             <span>Total del servicio:</span>
             <span className="text-sm">${precioFinalCalculado.toLocaleString('es-AR')}</span>
@@ -220,6 +280,38 @@ export default function FormConfirmacion({
             <span className="font-semibold text-slate-700">${montoSenaBase.toLocaleString('es-AR')}</span>
           </div>
         </div>
+
+
+{/* SECCIÓN DE CUPONES DISPONIBLES */}
+      {cuponesDisponibles.length > 0 && (
+        <div className="bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-4 space-y-2.5">
+          <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
+            <Gift className="w-4 h-4 text-amber-600" />
+            <span>Tenés cupones de fidelización disponibles</span>
+          </div>
+          
+          <select
+            value={cuponSeleccionado ? cuponSeleccionado.id : ''}
+            onChange={(e) => {
+              const id = e.target.value;
+              if (!id) {
+                setCuponSeleccionado(null);
+              } else {
+                const encontrado = cuponesDisponibles.find((c) => c.id === id);
+                setCuponSeleccionado(encontrado || null);
+              }
+            }}
+            className="w-full p-3 bg-white dark:bg-zinc-800 border border-amber-200 dark:border-zinc-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+          >
+            <option value="">-- No usar ningún cupón en este turno --</option>
+            {cuponesDisponibles.map((cupon) => (
+              <option key={cupon.id} value={cupon.id}>
+                Cupón: {cupon.codigo_canje} {cupon.premios_catalogo?.titulo ? `- ${cupon.premios_catalogo.titulo}` : ''} ({cupon.descuento_aplicado ? `Descuento: $${Number(cupon.descuento_aplicado).toLocaleString('es-AR')}` : 'Sin descuento especificado'})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* FORMULARIO DE DATOS DEL CLIENTE */}
       <div className="space-y-3">
@@ -283,6 +375,7 @@ export default function FormConfirmacion({
           </div>
         )}
       </div>
+
 
       {/* MENSAJE DE ERROR */}
       {error && (
@@ -399,8 +492,7 @@ export default function FormConfirmacion({
             <button
               type="button"
               disabled={!formValido || confirmando || cargandoMP}
-              onClick={() => onPagarMercadoPago && onPagarMercadoPago(montoSeleccionadoMP)}
-              className="w-full bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] font-bold py-3.5 rounded-2xl shadow-xs text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
+              onClick={() => onPagarMercadoPago && onPagarMercadoPago(montoSeleccionadoMP, cuponSeleccionado?.id)}              className="w-full bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] font-bold py-3.5 rounded-2xl shadow-xs text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
             >
               {cargandoMP ? (
                 <span className="flex items-center gap-2">
@@ -475,7 +567,7 @@ export default function FormConfirmacion({
             <button
               type="button"
               disabled={!formValido || confirmando || cargandoMP}
-              onClick={onConfirmar}
+              onClick={() => onConfirmar(cuponSeleccionado ? cuponSeleccionado.id : undefined)}
               className="w-full bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] font-bold py-3.5 rounded-2xl shadow-xs text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
             >
               {confirmando ? (
