@@ -68,10 +68,11 @@ export default function ModalCanjePremios({
     setProcesandoId(premio.id);
     setErrorMensaje(null);
 
-    try {
+try {
       const nuevosPuntos = puntosActuales - premio.puntos_requeridos;
       const codigoUnico = generarCodigoCanje();
 
+      // 1. Descontar puntos del usuario
       const { error: errorUpdate } = await supabase
         .from('puntos_usuarios')
         .update({ puntos_totales: nuevosPuntos })
@@ -79,14 +80,21 @@ export default function ModalCanjePremios({
 
       if (errorUpdate) throw errorUpdate;
 
-      await supabase.from('puntos_historial').insert([
+      // 2. Insertar en puntos_historial (asignando const { error: errorHistorial })
+      const { error: errorHistorial } = await supabase.from('puntos_historial').insert([
         {
           user_id: userId,
           puntos: -premio.puntos_requeridos,
+          tipo: 'canje',
           descripcion: `Canje de premio: ${premio.titulo}`,
         },
       ]);
 
+      if (errorHistorial) {
+        console.error('Error al insertar en puntos_historial:', errorHistorial);
+      }
+
+      // 3. Registrar el canje en canjes_usuarios
       const { error: errorCanje } = await supabase.from('canjes_usuarios').insert([
         {
           user_id: userId,
@@ -115,132 +123,156 @@ export default function ModalCanjePremios({
 
 return (
     <div 
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-end sm:pr-[420px] p-4 animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-stone-950/60 dark:bg-black/80 backdrop-blur-md animate-fadeIn"
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-md bg-background border border-border rounded-3xl p-5 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[82vh] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
         onClick={(e) => e.stopPropagation()}
+        className="relative flex flex-col w-full h-[90vh] sm:h-auto sm:max-h-[82vh] sm:max-w-md overflow-hidden rounded-t-[32px] sm:rounded-3xl bg-stone-50/95 dark:bg-zinc-950/95 backdrop-blur-2xl border-t sm:border border-stone-200/80 dark:border-zinc-800 shadow-2xl shadow-stone-900/30 dark:shadow-black/70 animate-in slide-in-from-bottom duration-300"
       >
+        {/* Handle bar para móvil */}
+        <div className="relative flex justify-center pt-3 pb-1 sm:hidden shrink-0" aria-hidden>
+          <span className="h-1.5 w-12 rounded-full bg-stone-300 dark:bg-zinc-700" />
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-border">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-primary/10 text-primary">
+        <div className="flex items-center justify-between px-6 pt-3 sm:pt-5 pb-4 border-b border-stone-200/60 dark:border-zinc-800 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20 shadow-xs">
               <Gift className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold text-foreground leading-tight">
+              <h3 className="text-sm sm:text-base font-black tracking-tight text-stone-900 dark:text-zinc-50">
                 Canjear Puntos Luminares
               </h3>
-              <p className="text-xs text-muted-foreground font-medium flex items-center gap-1 mt-0.5">
-                <Star className="w-3 h-3 text-primary fill-primary" /> Tus puntos actuales: <strong className="text-foreground">{puntosActuales} pts</strong>
+              <p className="text-xs font-medium text-stone-500 dark:text-zinc-400 flex items-center gap-1.5 mt-0.5">
+                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" /> 
+                <span>Tus puntos actuales:</span> 
+                <strong className="text-stone-900 dark:text-zinc-100 font-extrabold">{puntosActuales} pts</strong>
               </p>
             </div>
           </div>
 
           <button 
+            type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-muted-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer"
+            aria-label="Cerrar modal"
+            className="p-2.5 rounded-full bg-stone-200/60 dark:bg-zinc-800/80 text-stone-600 dark:text-zinc-300 hover:bg-stone-200 dark:hover:bg-zinc-800 active:scale-90 transition-all cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Mensaje de Éxito al Canjear */}
-        {mensajeExito ? (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 text-center space-y-3">
-            <div className="w-10 h-10 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-xs font-bold text-foreground">¡Canje realizado con éxito!</h4>
-              <p className="text-[11px] text-muted-foreground">
-                Canjeaste tu premio: <strong className="text-foreground">{mensajeExito.titulo}</strong>
-              </p>
-            </div>
-            <div className="bg-background border border-border rounded-xl p-3 space-y-1">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Tu código único de retiro:</span>
-              <span className="font-mono font-black text-base text-primary tracking-widest">{mensajeExito.codigo}</span>
-              <p className="text-[10px] text-muted-foreground">Mostrá este código en el local o por WhatsApp para recibir tu beneficio.</p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full py-2.5 bg-primary text-primary-foreground font-bold text-xs rounded-xl shadow-xs active:scale-[0.98] transition-all cursor-pointer"
-            >
-              Entendido
-            </button>
-          </div>
-        ) : (
-          /* Listado de Premios */
-          <div className="space-y-3">
-            {errorMensaje && (
-              <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{errorMensaje}</span>
+        {/* Cuerpo con Scroll fluido */}
+        <div className="relative flex-1 overflow-y-auto overscroll-contain px-6 py-5 space-y-4">
+          {/* Mensaje de Éxito al Canjear */}
+          {mensajeExito ? (
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 text-center space-y-4 shadow-lg">
+              <div className="w-12 h-12 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mx-auto ring-1 ring-emerald-500/30">
+                <CheckCircle2 className="w-6 h-6" />
               </div>
-            )}
-
-            {cargando ? (
-              <div className="flex items-center justify-center py-8 text-xs text-muted-foreground gap-2 animate-pulse">
-                <Loader2 className="w-4 h-4 animate-spin" /> Cargando premios disponibles...
+              <div className="space-y-1">
+                <h4 className="text-sm font-extrabold text-stone-900 dark:text-zinc-50">¡Canje realizado con éxito!</h4>
+                <p className="text-xs text-stone-500 dark:text-zinc-400">
+                  Canjeaste tu premio: <strong className="text-stone-900 dark:text-zinc-100">{mensajeExito.titulo}</strong>
+                </p>
               </div>
-            ) : premios.length === 0 ? (
-              <div className="text-center py-8 space-y-2">
-                <Sparkles className="w-8 h-8 text-muted-foreground/40 mx-auto" />
-                <p className="text-xs text-muted-foreground">No hay premios disponibles para canjear en este momento.</p>
+              <div className="bg-white dark:bg-zinc-900 border border-stone-200/80 dark:border-zinc-800 rounded-2xl p-4 space-y-1.5 shadow-inner">
+                <span className="text-[10px] text-stone-400 dark:text-zinc-500 uppercase tracking-wider block font-bold">Tu código único de retiro:</span>
+                <span className="font-mono font-black text-lg text-primary tracking-widest block">{mensajeExito.codigo}</span>
+                <p className="text-[10px] text-stone-500 dark:text-zinc-400">Mostrá este código en el local o por WhatsApp para recibir tu beneficio.</p>
               </div>
-            ) : (
-              <div className="space-y-2.5">
-                {premios.map((premio) => {
-                  const alcanza = puntosActuales >= premio.puntos_requeridos;
-                  const procesando = procesandoId === premio.id;
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-3.5 bg-stone-900 hover:bg-stone-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-white text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md active:scale-[0.98] transition-all cursor-pointer"
+              >
+                Entendido
+              </button>
+            </div>
+          ) : (
+            /* Listado de Premios */
+            <div className="space-y-3">
+              {errorMensaje && (
+                <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2.5 shadow-sm">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span className="font-medium">{errorMensaje}</span>
+                </div>
+              )}
 
-                  return (
-                    <div 
-                      key={premio.id}
-                      className="bg-card border border-border rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-2xs"
-                    >
-                      <div className="space-y-1 pr-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-foreground">{premio.titulo}</h4>
-                          <span className="font-mono text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-md">
-                            {premio.puntos_requeridos} pts
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground leading-snug">
-                          {premio.descripcion || 'Beneficio especial para clientes Luminares.'}
-                        </p>
-                      </div>
+              {cargando ? (
+                <div className="flex items-center justify-center py-12 text-xs text-stone-500 gap-2.5 animate-pulse">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" /> 
+                  <span>Cargando premios disponibles...</span>
+                </div>
+              ) : premios.length === 0 ? (
+                <div className="text-center py-12 space-y-3">
+                  <Sparkles className="w-10 h-10 text-stone-300 dark:text-zinc-700 mx-auto" />
+                  <p className="text-xs text-stone-500 dark:text-zinc-400 font-medium">No hay premios disponibles para canjear en este momento.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {premios.map((premio) => {
+                    const alcanza = puntosActuales >= premio.puntos_requeridos;
+                    const procesando = procesandoId === premio.id;
 
-                      <button
-                        type="button"
-                        onClick={() => realizarCanje(premio)}
-                        disabled={!alcanza || procesando}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 ${
-                          alcanza 
-                            ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xs' 
-                            : 'bg-muted text-muted-foreground opacity-60 cursor-not-allowed'
-                        }`}
+                    return (
+                      <div 
+                        key={premio.id}
+                        className="bg-white dark:bg-zinc-900 border border-stone-200/80 dark:border-zinc-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shadow-sm hover:shadow-md transition-all"
                       >
-                        {procesando ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            <span>Canjeando...</span>
-                          </>
-                        ) : alcanza ? (
-                          <span>Canjear</span>
-                        ) : (
-                          <span>Te faltan puntos</span>
-                        )}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
+                        {/* Info del Premio */}
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-xs sm:text-sm font-black text-stone-900 dark:text-zinc-100 tracking-tight">
+                              {premio.titulo}
+                            </h4>
+                            
+                            {/* Badge de puntos corregido en una sola línea estricta */}
+                            <span className="inline-flex items-center gap-1 font-mono text-[10px] font-black bg-primary/10 text-primary dark:bg-primary/20 px-2.5 py-0.5 rounded-full whitespace-nowrap">
+                              {premio.puntos_requeridos} pts
+                            </span>
+                          </div>
+
+                          <p className="text-[11px] font-medium text-stone-500 dark:text-zinc-400 leading-relaxed line-clamp-2">
+                            {premio.descripcion || 'Beneficio especial para clientes Luminares.'}
+                          </p>
+                        </div>
+
+                        {/* Botón de Canje o Estado */}
+                        <div className="shrink-0 flex items-center justify-end sm:justify-center pt-1 sm:pt-0 border-t sm:border-t-0 border-stone-100 dark:border-zinc-800/80">
+                          <button
+                            type="button"
+                            onClick={() => realizarCanje(premio)}
+                            disabled={!alcanza || procesando}
+                            className={`w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
+                              alcanza 
+                                ? 'bg-stone-900 hover:bg-stone-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-white text-white shadow-sm' 
+                                : 'bg-stone-100 dark:bg-zinc-800 text-stone-400 dark:text-zinc-500 opacity-80 cursor-not-allowed'
+                            }`}
+                          >
+                            {procesando ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>Canjeando...</span>
+                              </>
+                            ) : alcanza ? (
+                              <span>Canjear premio</span>
+                            ) : (
+                              <span>Te faltan puntos</span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

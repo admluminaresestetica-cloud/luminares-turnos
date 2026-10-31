@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock } from 'lucide-react';
+import { Clock, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
 interface ProximoTurnoWidgetProps {
@@ -24,14 +24,21 @@ export default function ProximoTurnoWidget({
       {cargandoTurno ? (
         <p className="text-[11px] text-muted-foreground py-1 animate-pulse">Buscando citas...</p>
       ) : proximoTurno ? (
-        <div className="flex items-center justify-between bg-primary/5 border border-primary/15 p-2.5 rounded-xl">
-          <div className="space-y-0.5 pr-2">
-            <p className="text-xs font-bold text-foreground line-clamp-1">
-              {proximoTurno.detalle_reserva?.detalle_texto || 'Servicio Estético'}
-            </p>
-            <p className="text-[11px] font-medium text-primary">
-              📅 {new Date(proximoTurno.fecha_hora_inicio).toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: 'short' })} a las {new Date(proximoTurno.fecha_hora_inicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} hs
-            </p>
+        <div className="flex items-center justify-between bg-primary/5 border border-primary/15 p-3 rounded-2xl">
+          <div className="flex items-start gap-3">
+            {/* Contenedor elegante para el icono de Lucide */}
+            <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5">
+              <Calendar className="w-4 h-4" />
+            </div>
+            
+            <div className="space-y-0.5 pr-2">
+              <p className="text-xs font-bold text-foreground line-clamp-1">
+                {proximoTurno.detalle_reserva?.detalle_texto || 'Servicio Estético'}
+              </p>
+              <p className="text-[11px] font-medium text-primary">
+                {new Date(proximoTurno.fecha_hora_inicio).toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: 'short' })} a las {new Date(proximoTurno.fecha_hora_inicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} hs
+              </p>
+            </div>
           </div>
           <Link 
             href="/mis-turnos" 
