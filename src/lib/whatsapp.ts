@@ -10,8 +10,10 @@ export function buildMensajeReserva(params: {
   hora: string;
   precioTotal: number;
   montoSena: number;
+  cuponTexto?: string; // 👈 1. Agregamos esto
 }): string {
-  const { codigo, clienteNombre, servicioDetalle, fecha, hora, precioTotal, montoSena } = params;
+  const { codigo, clienteNombre, servicioDetalle, fecha, hora, precioTotal, montoSena, cuponTexto } = params;
+
   return [
     `Hola! Quiero confirmar mi reserva ${codigo}.`,
     ``,
@@ -19,6 +21,7 @@ export function buildMensajeReserva(params: {
     `Servicio: ${servicioDetalle}`,
     `Fecha: ${fecha}`,
     `Hora: ${hora}`,
+    ...(cuponTexto ? [`Cupón aplicado: ${cuponTexto}`] : []), // 👈 2. Se muestra solo si hay cupón
     `Total: $${precioTotal.toLocaleString('es-AR')}`,
     `Seña a abonar (${Math.round((montoSena / precioTotal) * 100)}%): $${montoSena.toLocaleString('es-AR')}`,
   ].join('\n');

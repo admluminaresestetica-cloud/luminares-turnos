@@ -13,7 +13,8 @@ import BannersCarousel from '@/components/Home/BannersCarousel';
 import GuiaReservaCard from '@/components/Home/GuiaReservaCard';
 import ServiciosDestacados from '@/components/Home/ServiciosDestacados';
 import InstallPrompt from '@/components/Home/InstallPrompt';
-import BannerModal from '@/components/Home/BannerModal'; // <--- 1. IMPORTAR EL MODAL
+import BannerModal from '@/components/Home/BannerModal';
+import UserAccountModal from '@/components/UserAccountModal';
 
 interface Banner {
   id: string;
@@ -28,6 +29,8 @@ interface Banner {
 export default function HomePage() {
   const { config } = useConfig();
   const nombreEmpresa = config?.nombre_empresa || 'Nuestro Centro';
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+
 
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
@@ -115,7 +118,10 @@ export default function HomePage() {
     <div className="relative z-10">
       {/* 1. Buscador Fijo Superior */}
       <div className="px-4 pt-4 pb-3 relative z-50">
-        <HeaderBusqueda nombreEmpresa={nombreEmpresa} />
+      <HeaderBusqueda 
+      nombreEmpresa={nombreEmpresa} 
+      onOpenAccountModal={() => setIsAccountModalOpen(true)} 
+       />
       </div>
 
       {/* 2. Acciones Rápidas */}
@@ -230,6 +236,11 @@ export default function HomePage() {
       </main>
 
       <InstallPrompt />
+
+      <UserAccountModal
+     isOpen={isAccountModalOpen}
+     onClose={() => setIsAccountModalOpen(false)}
+   />
     </div>
   );
 }

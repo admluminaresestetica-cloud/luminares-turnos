@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { LogIn, LogOut, User as UserIcon } from 'lucide-react';
+import UserAccountModal from '@/components/UserAccountModal';
 
-export default function GoogleLoginButton() {
+export default function AuthButton() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     // 1. Obtener la sesión actual al cargar
@@ -27,15 +29,6 @@ export default function GoogleLoginButton() {
       subscription.unsubscribe();
     };
   }, []);
-
-  const handleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -66,15 +59,22 @@ export default function GoogleLoginButton() {
     );
   }
 
-  // Si el usuario es invitado (Guest)
+  // Si el usuario es invitado (Guest) -> Abre el modal con las opciones de Google y Facebook
   return (
-    <button
-      type="button"
-      onClick={handleLogin}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs cursor-pointer"
-    >
-      <LogIn className="h-3.5 w-3.5 text-white" />
-      <span>Ingresar</span>
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => setIsModalOpen(true)}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs transition-colors border border-white/10 shadow-xs cursor-pointer"
+      >
+        <LogIn className="h-3.5 w-3.5 text-white" />
+        <span>Ingresar</span>
+      </button>
+
+      <UserAccountModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
   );
 }

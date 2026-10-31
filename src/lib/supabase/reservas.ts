@@ -16,6 +16,7 @@ export interface CrearReservaInput {
   duracion_total: number;
   fecha_hora_inicio: string;
   user_id?: string | null; 
+  canje_id?: string | null;
 }
 
 export async function getReservasPorFecha(fecha: string): Promise<Reserva[]> {

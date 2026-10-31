@@ -1,24 +1,77 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, User, Calendar, PackageSearch, Heart, Star, LogOut, Loader2, MessageCircle, Gift, Copy, Check, Clock } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import {
+  X,
+  User,
+  Calendar,
+  PackageSearch,
+  Heart,
+  LogOut,
+  Loader2,
+  MessageCircle,
+  ChevronRight,
+  SquareCheck,
+  type LucideIcon,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+
+// Widgets modulares y modal de canje
+import PuntosCardWidget from '@/components/puntos/PuntosCardWidget';
+import ProximoTurnoWidget from '@/components/puntos/ProximoTurnoWidget';
+import ReferidosCardWidget from '@/components/puntos/ReferidosCardWidget';
+import HistorialPuntosList from '@/components/puntos/HistorialPuntosList';
+import ModalCanjePremios from '@/components/puntos/ModalCanjePremios';
 
 interface UserAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface Atajo {
+  href: string;
+  label: string;
+  hint: string;
+  icon: LucideIcon;
+  tone: 'primary' | 'emerald';
+  external?: boolean;
+}
+
+const ATAJOS: Atajo[] = [
+  { href: '/mis-turnos', label: 'Mis Reservas', hint: 'Próximos y anteriores', icon: Calendar, tone: 'primary' },
+  { href: '/seguimiento', label: 'Mis compras y pedidos', hint: 'Seguí el estado de tus pedidos', icon: PackageSearch, tone: 'primary' },
+  { href: '/favoritos', label: 'Mis productos favoritos', hint: 'Lo que guardaste', icon: Heart, tone: 'primary' },
+  { href: 'https://wa.me/', label: 'Soporte por WhatsApp', hint: 'Escribinos, te respondemos', icon: MessageCircle, tone: 'emerald', external: true },
+];
+
+const TONOS = {
+  primary:
+    'bg-primary/10 text-primary ring-primary/15 group-hover:bg-primary group-hover:text-primary-foreground group-hover:ring-primary',
+  emerald:
+    'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-emerald-500/15 group-hover:bg-emerald-500 group-hover:text-white group-hover:ring-emerald-500',
+} as const;
+
 export default function UserAccountModal({ isOpen, onClose }: UserAccountModalProps) {
   const { user, loginWithGoogle, signOut } = useAuth();
   const [cargandoGoogle, setCargandoGoogle] = useState(false);
+  const [cargandoFacebook, setCargandoFacebook] = useState(false);
   const [puntosTotales, setPuntosTotales] = useState<number>(0);
   const [cargandoPuntos, setCargandoPuntos] = useState(false);
   const [historial, setHistorial] = useState<any[]>([]);
-  
-  // Estado para el próximo turno / actividad reciente
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'auto';
+    }
+  }, [isOpen]);
+
+  const [canjesPendientes, setCanjesPendientes] = useState<any[]>([]);
+  const [cargandoCanjes, setCargandoCanjes] = useState(false);
+
+  // Estado para el próximo turno
   const [proximoTurno, setProximoTurno] = useState<any>(null);
   const [cargandoTurno, setCargandoTurno] = useState(false);
 
@@ -26,8 +79,11 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
   const [clienteData, setClienteData] = useState<any>(null);
   const [cargandoReferido, setCargandoReferido] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  
 
-  // Función para generar un código único basado en el nombre
+  // Estado para abrir/cerrar el modal de canje de premios
+  const [isModalCanjeOpen, setIsModalCanjeOpen] = useState(false);
+
   function generarCodigoReferido(nombre: string): string {
     const limpio = (nombre || 'CLIENTE')
       .normalize('NFD')
@@ -40,13 +96,12 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     return `${limpio || 'USER'}-${aleatorio}`;
   }
 
-  // Asegurar o buscar el perfil del cliente en la tabla `clientes`
   async function asegurarPerfilCliente(currentUser: any) {
     if (!currentUser?.id) return null;
     setCargandoReferido(true);
 
     try {
-      let { data: cliente, error } = await supabase
+      let { data: cliente } = await supabase
         .from('clientes')
         .select('*')
         .eq('user_id', currentUser.id)
@@ -61,22 +116,22 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
       const nombreGoogle = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'Cliente';
       const codigoNuevo = generarCodigoReferido(nombreGoogle);
 
-      const { data: nuevoCliente, error: errorInsert } = await supabase
+      const { data: nuevoCliente } = await supabase
         .from('clientes')
         .insert([
           {
             user_id: currentUser.id,
             nombre: nombreGoogle,
-            celular: '', 
+            celular: '',
             codigo_referido: codigoNuevo,
             descuentos_disponibles: 0,
             codigo_activo: false,
-          }
+          },
         ])
         .select()
         .single();
 
-      if (!errorInsert && nuevoCliente) {
+      if (nuevoCliente) {
         setClienteData(nuevoCliente);
       }
     } catch (err) {
@@ -99,31 +154,45 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     }
   }
 
-  // 🟢 NUEVO: Consultar el próximo turno agendado del usuario
-  async function cargarProximoTurno(userId: string) {
+async function cargarProximoTurno(userId: string) {
     setCargandoTurno(true);
     try {
       const ahoraIso = new Date().toISOString();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('reservas')
         .select('*')
         .eq('user_id', userId)
         .gte('fecha_hora_inicio', ahoraIso)
-        .in('estado', ['pendiente', 'confirmada'])
+        // 🟢 Agregamos 'pendiente_sena' a los estados permitidos
+        .in('estado', ['pendiente', 'confirmada', 'pendiente_sena'])
         .order('fecha_hora_inicio', { ascending: true })
         .limit(1)
         .maybeSingle();
 
-      if (data) {
-        setProximoTurno(data);
-      } else {
-        setProximoTurno(null);
+      if (error) {
+        console.error('Error al cargar próximo turno:', error);
       }
+
+      setProximoTurno(data || null);
     } catch (err) {
       console.error('Error al cargar próximo turno:', err);
     } finally {
       setCargandoTurno(false);
     }
+  }
+
+  async function refetchDatosPuntos() {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from('puntos_usuarios')
+      .select('puntos_totales')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (data) {
+      setPuntosTotales(data.puntos_totales || 0);
+    }
+    await cargarHistorial(user.id);
   }
 
   useEffect(() => {
@@ -132,22 +201,19 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
 
       setCargandoPuntos(true);
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('puntos_usuarios')
         .select('puntos_totales')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (!error && data) {
-        setPuntosTotales(data.puntos_totales || 0);
-      } else {
-        setPuntosTotales(0);
-      }
+      setPuntosTotales(data?.puntos_totales || 0);
 
       await Promise.all([
         cargarHistorial(user.id),
         asegurarPerfilCliente(user),
-        cargarProximoTurno(user.id)
+        cargarProximoTurno(user.id),
+        cargarCanjesPendientes(user.id)
       ]);
 
       setCargandoPuntos(false);
@@ -155,6 +221,41 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
 
     fetchData();
   }, [user?.id, isOpen]);
+
+  async function cargarCanjesPendientes(userId: string) {
+  setCargandoCanjes(true);
+  try {
+    const { data, error } = await supabase
+      .from('canjes_usuarios')
+      .select('id, codigo_canje, created_at, estado, premios_catalogo(titulo, descripcion)')
+      .eq('user_id', userId)
+      .eq('estado', 'pendiente')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setCanjesPendientes(data);
+    }
+  } catch (err) {
+    console.error('Error al cargar canjes pendientes:', err);
+  } finally {
+    setCargandoCanjes(false);
+  }
+}
+
+  // Cerrar con Escape y bloquear el scroll del fondo mientras está abierto
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isModalCanjeOpen) onClose();
+    };
+    const overflowPrevio = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = overflowPrevio;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [isOpen, isModalCanjeOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -165,6 +266,22 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     } catch (error) {
       console.error('Error al iniciar sesión con Google:', error);
       setCargandoGoogle(false);
+    }
+  };
+
+const handleFacebookLogin = async () => {
+    try {
+      setCargandoFacebook(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error al iniciar sesión con Facebook:', error);
+      setCargandoFacebook(false);
     }
   };
 
@@ -185,286 +302,299 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     setTimeout(() => setCopiado(false), 2500);
   };
 
-  return (
-    <div 
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs animate-fadeIn"
+  const claseAtajo =
+    'group flex items-center gap-3 p-3 rounded-2xl border border-stone-200/60 dark:border-zinc-800 ' +
+    'bg-white/70 dark:bg-zinc-900/60 shadow-sm shadow-stone-900/[0.03] ' +
+    'transition-all duration-200 ease-out ' +
+    'hover:bg-white dark:hover:bg-zinc-900 hover:border-stone-300/70 dark:hover:border-zinc-700 ' +
+    'hover:shadow-lg hover:shadow-stone-900/5 hover:-translate-y-px ' +
+    'active:scale-[0.98] active:translate-y-0 cursor-pointer ' +
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40';  
+  
+return createPortal(
+    <div
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-stone-950/60 dark:bg-black/80 backdrop-blur-md animate-fadeIn"
       onClick={onClose}
     >
-      <div 
-        className="absolute top-16 right-4 sm:right-8 w-full max-w-sm bg-background border border-border rounded-3xl p-5 space-y-3.5 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 max-h-[82vh] overflow-y-auto"
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mi cuenta"
         onClick={(e) => e.stopPropagation()}
+        className="relative flex flex-col w-full max-w-md max-h-[85vh] overflow-y-auto
+                   rounded-[32px]
+                   bg-stone-50 dark:bg-zinc-950
+                   border border-stone-200/60 dark:border-zinc-800
+                   shadow-2xl shadow-stone-900/30 dark:shadow-black/70
+                   animate-in fade-in zoom-in-95 duration-200"
       >
-        {/* Header del Modal */}
-        <div className="flex items-center justify-between pb-3 border-b border-border">
-          <div className="flex items-center gap-3">
-            {user?.user_metadata?.avatar_url ? (
-              <img 
-                src={user.user_metadata.avatar_url} 
-                alt="Foto de perfil" 
-                className="w-11 h-11 rounded-2xl object-cover border-2 border-primary/20 shadow-xs"
-              />
-            ) : (
-              <div className="w-11 h-11 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shadow-xs">
-                <User className="w-6 h-6" />
-              </div>
-            )}
-            <div>
-              <h3 className="text-sm font-extrabold text-foreground leading-tight">
-                {user ? (user.user_metadata?.full_name || 'Mi Perfil') : '¡Hola! Bienvenid@'}
-              </h3>
-              <p className="text-xs text-muted-foreground font-medium">
-                {user ? user.email : 'Iniciá sesión para ver tu actividad'}
-              </p>
-            </div>
+          {/* Resplandor superior sutil */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-primary/10 via-primary/[0.03] to-transparent"
+          />
+
+          {/* Handle bar (solo móvil) */}
+          <div className="relative flex justify-center pt-3 pb-1 sm:hidden shrink-0" aria-hidden>
+            <span className="h-1.5 w-11 rounded-full bg-stone-300/80 dark:bg-zinc-700" />
           </div>
 
-          <button 
-            onClick={onClose}
-            className="p-2 rounded-xl text-muted-foreground hover:bg-muted active:scale-95 transition-all cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Si no está logueado: Botón para ingresar con Google */}
-        {!user ? (
-          <div className="bg-card border border-border rounded-2xl p-4 space-y-3 text-center shadow-xs">
-            <p className="text-xs text-muted-foreground font-medium">
-              Iniciá sesión con tu cuenta de Google para acceder a tus turnos, compras y acumular puntos.
-            </p>
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              disabled={cargandoGoogle}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-xs disabled:opacity-50"
-            >
-              {cargandoGoogle ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Conectando con Google...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                    <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z"/>
-                  </svg>
-                  <span>Iniciar sesión con Google</span>
-                </>
-              )}
-            </button>
-          </div>
-        ) : (
-          /* Si está logueado: Programa de Fidelidad, Tarjeta de Próximo Turno y Referidos */
-          <div className="space-y-3">
-            <div className="bg-gradient-to-r from-primary/15 via-primary/10 to-transparent border border-primary/20 rounded-2xl p-3.5 flex items-center justify-between shadow-2xs">
-              <div className="space-y-0.5">
-                <span className="text-[10px] font-black uppercase tracking-wider text-primary flex items-center gap-1">
-                  <Star className="w-3 h-3" /> Puntos Luminares
-                </span>
-                <p className="text-base font-black text-foreground leading-none">
-                  {cargandoPuntos ? (
-                    <span className="text-xs font-normal text-muted-foreground animate-pulse">Cargando...</span>
-                  ) : (
-                    `${puntosTotales} pts`
-                  )}
-                </p>
-                <p className="text-[10px] text-muted-foreground">Acumulá puntos en cada visita o compra</p>
-              </div>
-              <div className="px-2.5 py-1 bg-primary/20 rounded-xl text-[10px] font-bold text-primary">
-                Nivel Inicial
-              </div>
-            </div>
-
-            {/* 🟢 NUEVO: MINI WIDGET DE PRÓXIMO TURNO */}
-            <div className="bg-card border border-border rounded-2xl p-3 space-y-1.5 shadow-xs">
-              <div className="flex items-center justify-between px-0.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-primary" /> Próximo Turno Agendado
-                </span>
-              </div>
-              {cargandoTurno ? (
-                <p className="text-[11px] text-muted-foreground py-1 animate-pulse">Buscando citas...</p>
-              ) : proximoTurno ? (
-                <div className="flex items-center justify-between bg-primary/5 border border-primary/15 p-2.5 rounded-xl">
-                  <div className="space-y-0.5 pr-2">
-                    <p className="text-xs font-bold text-foreground line-clamp-1">
-                      {proximoTurno.detalle_reserva?.detalle_texto || 'Servicio Estético'}
-                    </p>
-                    <p className="text-[11px] font-medium text-primary">
-                      📅 {new Date(proximoTurno.fecha_hora_inicio).toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: 'short' })} a las {new Date(proximoTurno.fecha_hora_inicio).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} hs
-                    </p>
-                  </div>
-                  <Link 
-                    href="/mis-turnos" 
-                    onClick={onClose}
-                    className="text-[10px] font-bold px-2.5 py-1.5 bg-primary text-primary-foreground rounded-lg shrink-0 shadow-2xs"
-                  >
-                    Ver
-                  </Link>
-                </div>
-              ) : (
-                <p className="text-[11px] text-muted-foreground py-1">
-                  No tenés turnos próximos agendados.
-                </p>
-              )}
-            </div>
-
-            {/* TARJETA DE CÓDIGO DE REFERIDOS */}
-            <div className="bg-card border border-border rounded-2xl p-3.5 space-y-2.5 shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-rose-500 flex items-center gap-1">
-                  <Gift className="w-3.5 h-3.5" /> Programa de Referidos
-                </span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${clienteData?.codigo_activo ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'}`}>
-                  {clienteData?.codigo_activo ? 'Activo' : 'Pendiente de activación'}
-                </span>
-              </div>
-
-              {cargandoReferido ? (
-                <div className="flex items-center justify-center py-2 text-xs text-muted-foreground gap-2 animate-pulse">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Cargando tu código...
-                </div>
-              ) : clienteData?.codigo_activo ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between bg-muted/60 p-2.5 rounded-xl border border-border">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground">Tu código único:</p>
-                      <p className="font-mono font-bold text-sm text-foreground tracking-wider">{clienteData.codigo_referido}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={copiarCodigo}
-                      className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer"
-                    >
-                      {copiado ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiado ? '¡Copiado!' : 'Copiar'}</span>
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] px-1">
-                    <span className="text-muted-foreground">Beneficios disponibles:</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{clienteData.descuentos_disponibles || 0}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 space-y-1.5 text-center">
-                  <p className="font-mono font-bold text-xs text-foreground tracking-wider">{clienteData?.codigo_referido || '—'}</p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Completá tu primera reserva y asisti a tu cita para activar tu código y empezar a regalar y recibir descuentos.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Historial de Movimientos de Puntos */}
-            <div className="bg-card border border-border rounded-2xl p-3 space-y-2 shadow-xs">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Historial de Puntos
-                </span>
-                <span className="text-[10px] text-muted-foreground font-medium">Últimos movimientos</span>
-              </div>
-
-              <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
-                {historial && historial.length > 0 ? (
-                  historial.map((item) => {
-                    const esPositivo = item.puntos > 0;
-                    return (
-                      <div key={item.id} className="flex items-center justify-between p-2 rounded-xl bg-muted/50 text-xs">
-                        <div className="space-y-0.5 pr-2">
-                          <p className="font-semibold text-foreground line-clamp-1">{item.descripcion || 'Movimiento de puntos'}</p>
-                          <p className="text-[9px] text-muted-foreground">
-                            {new Date(item.created_at).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                        <span className={`font-black shrink-0 ${esPositivo ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                          {esPositivo ? `+${item.puntos}` : item.puntos} pts
-                        </span>
-                      </div>
-                    );
-                  })
+          {/* Header */}
+          <div className="relative flex items-center justify-between gap-3 px-6 pt-5 pb-4 shrink-0 border-b border-stone-200/40 dark:border-zinc-800/50">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="relative shrink-0">
+                {user?.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt="Foto de perfil"
+                    className="w-14 h-14 rounded-[20px] object-cover ring-2 ring-white dark:ring-zinc-900 shadow-lg shadow-primary/20"
+                  />
                 ) : (
-                  <p className="text-[11px] text-center text-muted-foreground py-2">
-                    Aún no tenés movimientos registrados.
-                  </p>
+                  <div className="w-14 h-14 rounded-[20px] bg-gradient-to-br from-primary/20 to-primary/5 text-primary flex items-center justify-center ring-2 ring-white dark:ring-zinc-900 shadow-lg shadow-primary/10">
+                    <User className="w-6 h-6" />
+                  </div>
+                )}
+                {user && (
+                  <span
+                    className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-stone-50 dark:border-zinc-950"
+                    aria-label="Sesión activa"
+                  />
                 )}
               </div>
+
+              <div className="min-w-0">
+                <h3 className="text-base font-extrabold tracking-tight text-stone-900 dark:text-zinc-50 leading-tight truncate">
+                  {user ? user.user_metadata?.full_name || 'Mi perfil' : '¡Hola! Bienvenid@'}
+                </h3>
+                <p className="text-xs font-medium text-stone-500 dark:text-zinc-400 truncate mt-0.5">
+                  {user ? user.email : 'Iniciá sesión para ver tu actividad'}
+                </p>
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Cerrar"
+              className="shrink-0 p-2.5 rounded-full bg-stone-200/50 dark:bg-zinc-800/70 text-stone-500 dark:text-zinc-400
+                         hover:bg-stone-200 dark:hover:bg-zinc-800 hover:text-stone-900 dark:hover:text-zinc-100
+                         active:scale-90 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-        )}
 
-        {/* Accesos Directos Unificados */}
-        <div className="space-y-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1">
-            Gestión y Actividad
-          </span>
+          {/* Cuerpo con scroll */}
+          <div className="relative flex-1 overflow-y-auto px-6 py-5 space-y-6">
+            {!user ? (
+              <div className="relative overflow-hidden rounded-3xl border border-stone-200/60 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/70 p-6 text-center shadow-xl shadow-stone-900/5">
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-56 h-56 rounded-full bg-primary/10 blur-3xl"
+                />
+                <div className="relative space-y-4">
+                  <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15 flex items-center justify-center">
+                    <SquareCheck className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="text-sm font-bold text-stone-900 dark:text-zinc-50">Entrá a tu cuenta</p>
+                    <p className="text-xs leading-relaxed text-stone-500 dark:text-zinc-400 font-medium">
+                      Con tu cuenta de Google accedés a tus turnos y compras, y empezás a acumular puntos.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    disabled={cargandoGoogle}
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-sm font-bold
+                               bg-stone-900 text-white hover:bg-stone-800
+                               dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-white
+                               shadow-lg shadow-stone-900/15 dark:shadow-black/30
+                               active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed
+                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                  >
+                    {cargandoGoogle ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Conectando con Google...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden>
+                          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
+                          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
+                          <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z" />
+                          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z" />
+                        </svg>
+                        <span>Continuar con Google</span>
+                      </>
+                    )}
+                  </button>
 
-          <Link
-            href="/mis-turnos"
-            onClick={onClose}
-            className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border hover:bg-accent active:scale-[0.99] transition-all text-xs font-bold text-foreground shadow-2xs"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                <Calendar className="w-3.5 h-3.5" />
+                  <button
+                    type="button"
+                    onClick={handleFacebookLogin}
+                    disabled={cargandoFacebook}
+                    className="w-full mt-2.5 flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-sm font-bold
+                               bg-[#1877F2] text-white hover:bg-[#166fe5]
+                               shadow-lg shadow-[#1877F2]/25
+                               active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed
+                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2]/50"
+                  >
+                    {cargandoFacebook ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Conectando con Facebook...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden>
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        <span>Continuar con Facebook</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-              <span>Mis Turnos y Reservas</span>
-            </div>
-          </Link>
+            ) : (
+              <div className="space-y-3.5">
+                <PuntosCardWidget
+                  puntosTotales={puntosTotales}
+                  cargandoPuntos={cargandoPuntos}
+                  onAbrirCanje={() => setIsModalCanjeOpen(true)}
+                />
 
-          <Link
-            href="/seguimiento"
-            onClick={onClose}
-            className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border hover:bg-accent active:scale-[0.99] transition-all text-xs font-bold text-foreground shadow-2xs"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                <PackageSearch className="w-3.5 h-3.5" />
-              </div>
-              <span>Mis Compras y Pedidos</span>
-            </div>
-          </Link>
+                <ProximoTurnoWidget
+                  proximoTurno={proximoTurno}
+                  cargandoTurno={cargandoTurno}
+                  onCloseModal={onClose}
+                />
 
-          <Link
-            href="/favoritos"
-            onClick={onClose}
-            className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border hover:bg-accent active:scale-[0.99] transition-all text-xs font-bold text-foreground shadow-2xs"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                <Heart className="w-3.5 h-3.5" />
-              </div>
-              <span>Mis Productos Favoritos</span>
-            </div>
-          </Link>
+                <ReferidosCardWidget
+                  clienteData={clienteData}
+                  cargandoReferido={cargandoReferido}
+                  copiado={copiado}
+                  onCopiarCodigo={copiarCodigo}
+                />
 
-          <a
-            href="https://wa.me/"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={onClose}
-            className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border hover:bg-accent active:scale-[0.99] transition-all text-xs font-bold text-foreground shadow-2xs"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600">
-                <MessageCircle className="w-3.5 h-3.5" />
+                {canjesPendientes.length > 0 && (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between px-1">
+                      <h4 className="text-xs font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wider">
+                        Premios listos para retirar
+                      </h4>
+                      <span className="text-[10px] font-extrabold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                        {canjesPendientes.length} pendiente{canjesPendientes.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {canjesPendientes.map((canje) => (
+                        <div
+                          key={canje.id}
+                          className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/[0.05] to-transparent border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-between gap-3 shadow-xs"
+                        >
+                          <div className="min-w-0 space-y-0.5">
+                            <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider block">
+                              Código de canje
+                            </span>
+                            <h5 className="text-xs font-extrabold text-stone-900 dark:text-zinc-100 truncate">
+                              {canje.premios_catalogo?.titulo || 'Premio Canjeado'}
+                            </h5>
+                          </div>
+
+                          <div className="shrink-0 text-right bg-white dark:bg-zinc-900 px-3 py-1.5 rounded-xl border border-emerald-500/20 shadow-2xs">
+                            <span className="font-mono font-black text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 tracking-wider">
+                              {canje.codigo_canje}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <HistorialPuntosList historial={historial} />
               </div>
-              <span>Soporte por WhatsApp</span>
-            </div>
-          </a>
+            )}
+
+            {/* Accesos directos */}
+            <section className="space-y-2.5">
+              <h4 className="px-1 text-xs font-bold text-stone-500 dark:text-zinc-400">
+                Gestión y actividad
+              </h4>
+
+              <div className="space-y-2">
+                {ATAJOS.map(({ href, label, hint, icon: Icon, tone, external }) => {
+                  const contenido = (
+                    <>
+                      <span
+                        className={`shrink-0 w-10 h-10 rounded-xl ring-1 flex items-center justify-center transition-all duration-200 ${TONOS[tone]}`}
+                      >
+                        <Icon className="w-[18px] h-[18px]" />
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-[13px] font-bold text-stone-900 dark:text-zinc-100 leading-tight truncate">
+                          {label}
+                        </span>
+                        <span className="block text-[11px] font-medium text-stone-500 dark:text-zinc-500 mt-0.5 truncate">
+                          {hint}
+                        </span>
+                      </span>
+                      <ChevronRight className="shrink-0 w-4 h-4 text-stone-400 dark:text-zinc-600 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-stone-600 dark:group-hover:text-zinc-300" />
+                    </>
+                  );
+
+                  return external ? (
+                    <a
+                      key={href}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={onClose}
+                      className={claseAtajo}
+                    >
+                      {contenido}
+                    </a>
+                  ) : (
+                    <Link key={href} href={href} onClick={onClose} className={claseAtajo}>
+                      {contenido}
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+
+{/* Cerrar sesión */}
+          {user && (
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[13px] font-bold
+                         text-destructive bg-destructive/[0.06] hover:bg-destructive/10
+                         border border-destructive/15 hover:border-destructive/25
+                         active:scale-[0.98] transition-all cursor-pointer
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/30"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Cerrar sesión</span>
+            </button>
+          )}
         </div>
-
-        {/* Cerrar sesión si está logueado */}
-        {user && (
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-xl transition-all active:scale-[0.98] cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Cerrar sesión</span>
-      </button>
-        )}
       </div>
-    </div>
+
+      {/* Modal secundario de canje de premios */}
+      {user && (
+        <ModalCanjePremios
+          isOpen={isModalCanjeOpen}
+          onClose={() => setIsModalCanjeOpen(false)}
+          userId={user.id}
+          puntosActuales={puntosTotales}
+          onCanjeExitoso={refetchDatosPuntos}
+        />
+      )}
+    </div>,
+    document.body 
   );
 }
