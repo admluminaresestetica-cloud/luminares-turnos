@@ -364,7 +364,7 @@ return createPortal(
 
               <div className="min-w-0">
                 <h3 className="text-base font-extrabold tracking-tight text-stone-900 dark:text-zinc-50 leading-tight truncate">
-                  {user ? user.user_metadata?.full_name || 'Mi perfil' : '¡Hola! Bienvenid@'}
+                  {user ? user.user_metadata?.full_name || 'Mi perfil' : '¡Hola! Bienvenida/o'}
                 </h3>
                 <p className="text-xs font-medium text-stone-500 dark:text-zinc-400 truncate mt-0.5">
                   {user ? user.email : 'Iniciá sesión para ver tu actividad'}
