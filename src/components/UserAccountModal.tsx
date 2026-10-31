@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   User,
@@ -11,7 +12,7 @@ import {
   Loader2,
   MessageCircle,
   ChevronRight,
-  Sparkles,
+  SquareCheck,
   type LucideIcon,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -40,7 +41,7 @@ interface Atajo {
 }
 
 const ATAJOS: Atajo[] = [
-  { href: '/mis-turnos', label: 'Mis turnos y reservas', hint: 'Próximos y anteriores', icon: Calendar, tone: 'primary' },
+  { href: '/mis-turnos', label: 'Mis Reservas', hint: 'Próximos y anteriores', icon: Calendar, tone: 'primary' },
   { href: '/seguimiento', label: 'Mis compras y pedidos', hint: 'Seguí el estado de tus pedidos', icon: PackageSearch, tone: 'primary' },
   { href: '/favoritos', label: 'Mis productos favoritos', hint: 'Lo que guardaste', icon: Heart, tone: 'primary' },
   { href: 'https://wa.me/', label: 'Soporte por WhatsApp', hint: 'Escribinos, te respondemos', icon: MessageCircle, tone: 'emerald', external: true },
@@ -56,9 +57,16 @@ const TONOS = {
 export default function UserAccountModal({ isOpen, onClose }: UserAccountModalProps) {
   const { user, loginWithGoogle, signOut } = useAuth();
   const [cargandoGoogle, setCargandoGoogle] = useState(false);
+  const [cargandoFacebook, setCargandoFacebook] = useState(false);
   const [puntosTotales, setPuntosTotales] = useState<number>(0);
   const [cargandoPuntos, setCargandoPuntos] = useState(false);
   const [historial, setHistorial] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'auto';
+    }
+  }, [isOpen]);
 
   const [canjesPendientes, setCanjesPendientes] = useState<any[]>([]);
   const [cargandoCanjes, setCargandoCanjes] = useState(false);
@@ -71,6 +79,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
   const [clienteData, setClienteData] = useState<any>(null);
   const [cargandoReferido, setCargandoReferido] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  
 
   // Estado para abrir/cerrar el modal de canje de premios
   const [isModalCanjeOpen, setIsModalCanjeOpen] = useState(false);
@@ -260,6 +269,22 @@ async function cargarProximoTurno(userId: string) {
     }
   };
 
+const handleFacebookLogin = async () => {
+    try {
+      setCargandoFacebook(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error al iniciar sesión con Facebook:', error);
+      setCargandoFacebook(false);
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -286,24 +311,23 @@ async function cargarProximoTurno(userId: string) {
     'active:scale-[0.98] active:translate-y-0 cursor-pointer ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40';  
   
-  return (
-    <>
+return createPortal(
+    <div
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-stone-950/60 dark:bg-black/80 backdrop-blur-md animate-fadeIn"
+      onClick={onClose}
+    >
       <div
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-stone-950/50 dark:bg-black/70 backdrop-blur-md animate-fadeIn"
-        onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Mi cuenta"
+        onClick={(e) => e.stopPropagation()}
+        className="relative flex flex-col w-full max-w-md max-h-[85vh] overflow-y-auto
+                   rounded-[32px]
+                   bg-stone-50 dark:bg-zinc-950
+                   border border-stone-200/60 dark:border-zinc-800
+                   shadow-2xl shadow-stone-900/30 dark:shadow-black/70
+                   animate-in fade-in zoom-in-95 duration-200"
       >
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Mi cuenta"
-          onClick={(e) => e.stopPropagation()}
-          className="relative flex flex-col w-full h-[92vh] sm:h-auto sm:max-h-[85vh] sm:max-w-md overflow-hidden
-                     rounded-t-[32px] sm:rounded-[32px]
-                     bg-stone-50/90 dark:bg-zinc-950/90 backdrop-blur-2xl
-                     border-t sm:border border-stone-200/60 dark:border-zinc-800
-                     shadow-2xl shadow-stone-900/20 dark:shadow-black/60
-                     animate-in slide-in-from-bottom duration-300"
-        >
           {/* Resplandor superior sutil */}
           <div
             aria-hidden
@@ -316,7 +340,7 @@ async function cargarProximoTurno(userId: string) {
           </div>
 
           {/* Header */}
-          <div className="relative flex items-center justify-between gap-3 px-6 pt-3 sm:pt-6 pb-4 shrink-0">
+          <div className="relative flex items-center justify-between gap-3 px-6 pt-5 pb-4 shrink-0 border-b border-stone-200/40 dark:border-zinc-800/50">
             <div className="flex items-center gap-3.5 min-w-0">
               <div className="relative shrink-0">
                 {user?.user_metadata?.avatar_url ? (
@@ -361,7 +385,7 @@ async function cargarProximoTurno(userId: string) {
           </div>
 
           {/* Cuerpo con scroll */}
-          <div className="relative flex-1 overflow-y-auto overscroll-contain px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-6">
+          <div className="relative flex-1 overflow-y-auto px-6 py-5 space-y-6">
             {!user ? (
               <div className="relative overflow-hidden rounded-3xl border border-stone-200/60 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/70 p-6 text-center shadow-xl shadow-stone-900/5">
                 <div
@@ -370,7 +394,7 @@ async function cargarProximoTurno(userId: string) {
                 />
                 <div className="relative space-y-4">
                   <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5" />
+                    <SquareCheck className="w-5 h-5" />
                   </div>
                   <div className="space-y-1.5">
                     <p className="text-sm font-bold text-stone-900 dark:text-zinc-50">Entrá a tu cuenta</p>
@@ -406,6 +430,31 @@ async function cargarProximoTurno(userId: string) {
                       </>
                     )}
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={handleFacebookLogin}
+                    disabled={cargandoFacebook}
+                    className="w-full mt-2.5 flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl text-sm font-bold
+                               bg-[#1877F2] text-white hover:bg-[#166fe5]
+                               shadow-lg shadow-[#1877F2]/25
+                               active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed
+                               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1877F2]/50"
+                  >
+                    {cargandoFacebook ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Conectando con Facebook...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden>
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        <span>Continuar con Facebook</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             ) : (
@@ -429,43 +478,42 @@ async function cargarProximoTurno(userId: string) {
                   onCopiarCodigo={copiarCodigo}
                 />
 
-{/* Sección de Canjes Activos / Sin Usar */}
-{canjesPendientes.length > 0 && (
-  <div className="space-y-2.5">
-    <div className="flex items-center justify-between px-1">
-      <h4 className="text-xs font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wider">
-        Premios listos para retirar
-      </h4>
-      <span className="text-[10px] font-extrabold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-        {canjesPendientes.length} pendiente{canjesPendientes.length > 1 ? 's' : ''}
-      </span>
-    </div>
+                {canjesPendientes.length > 0 && (
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between px-1">
+                      <h4 className="text-xs font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wider">
+                        Premios listos para retirar
+                      </h4>
+                      <span className="text-[10px] font-extrabold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                        {canjesPendientes.length} pendiente{canjesPendientes.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
 
-    <div className="space-y-2">
-      {canjesPendientes.map((canje) => (
-        <div
-          key={canje.id}
-          className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/[0.05] to-transparent border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-between gap-3 shadow-xs"
-        >
-          <div className="min-w-0 space-y-0.5">
-            <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider block">
-              Código de canje
-            </span>
-            <h5 className="text-xs font-extrabold text-stone-900 dark:text-zinc-100 truncate">
-              {canje.premios_catalogo?.titulo || 'Premio Canjeado'}
-            </h5>
-          </div>
+                    <div className="space-y-2">
+                      {canjesPendientes.map((canje) => (
+                        <div
+                          key={canje.id}
+                          className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/[0.05] to-transparent border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-between gap-3 shadow-xs"
+                        >
+                          <div className="min-w-0 space-y-0.5">
+                            <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider block">
+                              Código de canje
+                            </span>
+                            <h5 className="text-xs font-extrabold text-stone-900 dark:text-zinc-100 truncate">
+                              {canje.premios_catalogo?.titulo || 'Premio Canjeado'}
+                            </h5>
+                          </div>
 
-          <div className="shrink-0 text-right bg-white dark:bg-zinc-900 px-3 py-1.5 rounded-xl border border-emerald-500/20 shadow-2xs">
-            <span className="font-mono font-black text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 tracking-wider">
-              {canje.codigo_canje}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+                          <div className="shrink-0 text-right bg-white dark:bg-zinc-900 px-3 py-1.5 rounded-xl border border-emerald-500/20 shadow-2xs">
+                            <span className="font-mono font-black text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 tracking-wider">
+                              {canje.codigo_canje}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <HistorialPuntosList historial={historial} />
               </div>
@@ -518,22 +566,21 @@ async function cargarProximoTurno(userId: string) {
               </div>
             </section>
 
-            {/* Cerrar sesión */}
-            {user && (
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[13px] font-bold
-                           text-destructive bg-destructive/[0.06] hover:bg-destructive/10
-                           border border-destructive/15 hover:border-destructive/25
-                           active:scale-[0.98] transition-all cursor-pointer
-                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/30"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Cerrar sesión</span>
-              </button>
-            )}
-          </div>
+{/* Cerrar sesión */}
+          {user && (
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-[13px] font-bold
+                         text-destructive bg-destructive/[0.06] hover:bg-destructive/10
+                         border border-destructive/15 hover:border-destructive/25
+                         active:scale-[0.98] transition-all cursor-pointer
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/30"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Cerrar sesión</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -547,6 +594,7 @@ async function cargarProximoTurno(userId: string) {
           onCanjeExitoso={refetchDatosPuntos}
         />
       )}
-    </>
+    </div>,
+    document.body 
   );
 }
