@@ -13,6 +13,7 @@ import UserAccountModal from '@/components/UserAccountModal';
 
 interface HeaderBusquedaProps {
   nombreEmpresa: string;
+  onOpenAccountModal: () => void;
 }
 
 interface ProductoResultado {
@@ -40,7 +41,7 @@ interface TagBusqueda {
   slug: string;
 }
 
-export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
+export default function HeaderBusqueda({ nombreEmpresa, onOpenAccountModal }: HeaderBusquedaProps) {
   const router = useRouter();
   const { config } = useConfig();
   const [query, setQuery] = useState('');
@@ -54,7 +55,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
   // Estados de sesión, puntos y menú desplegable de PC
   const [user, setUser] = useState<any>(null);
   const [puntos, setPuntos] = useState<number>(0);
-  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -317,7 +317,7 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
                     type="button"
                     onClick={() => {
                       setIsDropdownOpen(false);
-                      setIsAccountModalOpen(true);
+                      onOpenAccountModal();
                     }}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-stone-700 dark:text-zinc-300 hover:bg-stone-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer text-left"
                   >
@@ -518,12 +518,6 @@ export default function HeaderBusqueda({ nombreEmpresa }: HeaderBusquedaProps) {
           </div>
         )}
       </div>
-
-      {/* Modal de Mi Cuenta (para PC) */}
-      <UserAccountModal
-        isOpen={isAccountModalOpen}
-        onClose={() => setIsAccountModalOpen(false)}
-      />
     </div>
   );
 }
