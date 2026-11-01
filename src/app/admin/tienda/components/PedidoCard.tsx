@@ -223,9 +223,9 @@ export default function PedidoCard({
                 <Clock className="w-3.5 h-3.5" /> Historial de flujo:
               </span>
               <div className="flex flex-wrap gap-1.5 mt-1">
-                {pedido.historial_estados.map((h: any, i: number) => (
+              {pedido.historial_estados.map((h: any, i: number) => (
                   <span key={i} className="bg-white dark:bg-zinc-800 px-2 py-0.5 rounded text-[10px] font-mono border border-slate-200 dark:border-zinc-700">
-                    {h.estado} ({new Date(h.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {h.usuario})
+                    {h.estado} ({new Date(h.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}) {h.usuario ? `- ${h.usuario}` : ''}
                   </span>
                 ))}
               </div>
