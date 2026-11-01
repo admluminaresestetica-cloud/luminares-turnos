@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
     const client = new MercadoPagoConfig({ accessToken });
 
-    const { itemsCarrito, cliente, recargoPorcentaje, user_id } = await request.json();
+    const { itemsCarrito, cliente, recargoPorcentaje } = await request.json();
 
     if (!itemsCarrito || !Array.isArray(itemsCarrito) || itemsCarrito.length === 0) {
       return NextResponse.json(
@@ -177,7 +177,6 @@ export async function POST(request: Request) {
         metodo_pago: "mercadopago",
         origen: "web",
         es_cuotas: permiteFinanciacion,
-        user_id: user_id || cliente?.user_id || null,
       })
       .select()
       .single();
@@ -205,19 +204,19 @@ export async function POST(request: Request) {
     const preference = new Preference(client);
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://luminaresestetica.com.ar";
 
-const result = await preference.create({
+    const result = await preference.create({
       body: {
         items: itemsMP,
         external_reference: String(pedido.id),
         back_urls: {
-          success: `${baseUrl}/tienda?status=approved&external_reference=${pedido.id}`,
+          success: `${baseUrl}/tienda?status=success&pedido_id=${pedido.id}`,
           failure: `${baseUrl}/tienda?status=failure`,
           pending: `${baseUrl}/tienda?status=pending`,
         },
         auto_return: "approved",
         notification_url: `${baseUrl}/api/webhooks/mercadopago`,
         payment_methods: {
-          installments: permiteFinanciacion ? cantidadCuotasConfig : 1,
+          installments: permiteFinanciacion ? cantidadCuotasConfig : 1, // 🟢 Dinámico según admin
         },
       },
     });

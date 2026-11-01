@@ -15,7 +15,6 @@ import { Producto } from "@/types/tienda";
 import BotonFlotanteCarrito from "./components/BotonFlotanteCarrito";
 import ThemeToggle from "@/components/ThemeToggle";
 import Fuse from "fuse.js";
-import { useSearchParams } from "next/navigation";
 import ModalExito from "@/components/carrito/ModalExito";
 
 import BuscadorYCategorias from "./components/BuscadorYCategorias";
@@ -33,9 +32,6 @@ function TiendaContenido() {
   const { config } = useConfig();
   const [mounted, setMounted] = useState(false);
   const [cargando, setCargando] = useState(true);
-  const searchParams = useSearchParams();
-  const [mostrarModalExito, setMostrarModalExito] = useState(false);
-  const [codigoPedidoMP, setCodigoPedidoMP] = useState<string | undefined>(undefined);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<string[]>(["Todos"]);
 
@@ -43,6 +39,11 @@ function TiendaContenido() {
   const [tagSeleccionado, setTagSeleccionado] = useState<string | null>(null);
 
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [mostrarModalExito, setMostrarModalExito] = useState(false);
+  const [codigoPedidoExito, setCodigoPedidoExito] = useState<string | undefined>(undefined);
+  const [itemsPedidoExito, setItemsPedidoExito] = useState<any[]>([]);
+  const [totalPedidoExito, setTotalPedidoExito] = useState<number>(0);
+  
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("Todos");
   const [ordenarPor, setOrdenarPor] = useState("destacados");
@@ -57,42 +58,65 @@ function TiendaContenido() {
     ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 1), 0)
     : 0;
 
-// 1. Lectura de parámetros de la URL (Mercado Pago, Categoría, Etiqueta)
+ // 1. Lectura de parámetros de la URL (Mercado Pago, Categoría, Etiqueta)
   useEffect(() => {
-    const status = searchParams.get("status");
-    const externalRef = searchParams.get("external_reference");
+    const urlParams = new URLSearchParams(window.location.search);
 
-    // Si regresa de Mercado Pago aprobado o success
-    if (status === "approved" || status === "success") {
+    // Si regresa de Mercado Pago con éxito
+    const status = urlParams.get("status");
+    const pedidoId = urlParams.get("pedido_id");
+
+    if (status === "success") {
       if (typeof vaciarCarrito === "function") {
         vaciarCarrito();
       }
-      if (externalRef) {
-        // Guardamos los primeros 6 caracteres del ID para el código corto (#2D26C6)
-        setCodigoPedidoMP(externalRef.slice(0, 6).toUpperCase());
+
+if (pedidoId) {
+        setCodigoPedidoExito(pedidoId);       
+        // 🟢 Consultamos el total en la tabla 'pedidos' y los productos en 'pedido_items'
+        const fetchDetallePedidoExito = async () => {
+          // 1. Traemos el total del pedido
+          const { data: pedidoData } = await supabase
+            .from("pedidos")
+            .select("total")
+            .eq("id", pedidoId)
+            .maybeSingle();
+
+          if (pedidoData) {
+            setTotalPedidoExito(Number(pedidoData.total) || 0);
+          }
+
+          // 2. Traemos los productos reales desde 'pedido_items' que acabamos de validar
+          const { data: itemsData, error: itemsError } = await supabase
+            .from("pedido_items")
+            .select("nombre_producto, cantidad, precio_unitario")
+            .eq("pedido_id", pedidoId);
+
+          if (!itemsError && itemsData) {
+            setItemsPedidoExito(itemsData);
+          }
+        };
+
+        fetchDetallePedidoExito();
+        setMostrarModalExito(true);
       }
-      setMostrarModalExito(true);
+
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     // Si viene desde un Banner con filtro de categoría
-    const catParam = searchParams.get("categoria");
+    const catParam = urlParams.get("categoria");
     if (catParam) {
       setCategoriaFiltro(catParam);
     }
 
     // Si viene desde un Banner con filtro de etiqueta
-    const tagParam = searchParams.get("etiqueta") || searchParams.get("tag") || searchParams.get("promo");
+    const tagParam = urlParams.get("etiqueta") || urlParams.get("tag") || urlParams.get("promo");
     if (tagParam) {
       setTagSeleccionado(tagParam);
     }
-  }, [searchParams, vaciarCarrito]);
+  }, [vaciarCarrito]);
 
-  const cerrarModalYLimpiar = () => {
-    setMostrarModalExito(false);
-    window.history.replaceState({}, document.title, window.location.pathname);
-  };
-
-  // 2. Carga inicial de datos desde Supabase
   useEffect(() => {
     setMounted(true);
 
@@ -382,17 +406,19 @@ function TiendaContenido() {
           onFiltrarPorTag={(tag) => setTagSeleccionado(tag)}
         />
 
-        {/* 🟢 Modal de Éxito de Mercado Pago */}
-        <ModalExito
-          mostrar={mostrarModalExito}
-          esMercadoPago={true}
-          codigoPedido={codigoPedidoMP}
-          onAceptar={cerrarModalYLimpiar}
-        />
-
         <CarritoDrawer
           isOpen={modalAbierto}
           onClose={() => setModalAbierto(false)}
+        />
+
+        {/* MODAL DE ÉXITO AUTOMÁTICO AL VOLVER DE MERCADO PAGO */}
+        <ModalExito
+          mostrar={mostrarModalExito}
+          onAceptar={() => setMostrarModalExito(false)}
+          esMercadoPago={true}
+          codigoPedido={codigoPedidoExito}
+          items={itemsPedidoExito}
+          total={totalPedidoExito}
         />
 
         <BotonFlotanteCarrito onOpenCarrito={() => setModalAbierto(true)} />
