@@ -41,10 +41,10 @@ export default function PedidoCard({
         }))
     );
 
-    const htmlItems = itemsLista.map((item: any) => `
+        const htmlItems = itemsLista.map((item: any) => `
       <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
         <span>${item.cantidad}x ${item.nombre_producto}</span>
-        <span style="font-family: monospace;">$${(item.precio_unitario * item.cantidad).toLocaleString()}</span>
+        <span style="font-family: monospace;">$${(Number(item.precio_unitario || 0) * Number(item.cantidad || 1)).toLocaleString()}</span>
       </div>
     `).join('');
 
