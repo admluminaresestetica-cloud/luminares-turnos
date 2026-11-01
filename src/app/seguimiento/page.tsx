@@ -184,6 +184,16 @@ export default function SeguimientoPage() {
     return index !== -1 ? index : 0;
   };
 
+  // 🟢 Pasos dinámicos del timeline adaptados según el método de envío/retiro
+  const pasosDinamicos = (() => {
+    const metodo = pedidoSeleccionado?.metodo_envio;
+    const esRetiro = !metodo || metodo.toLowerCase().includes('retiro');
+    if (esRetiro) {
+      return ESTADOS_MAP.filter((paso) => paso.key !== 'en_camino' && paso.key !== 'completado');
+    }
+    return ESTADOS_MAP;
+  })();
+
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors pb-28 pt-6 px-4 sm:px-6">
       <div className="max-w-2xl mx-auto space-y-6">
@@ -359,7 +369,7 @@ export default function SeguimientoPage() {
               </h4>
 
               <div className="space-y-4">
-                {ESTADOS_MAP.map((paso, idx) => {
+                {pasosDinamicos.map((paso, idx) => {
                   const Icono = paso.icon;
                   const indiceActual = obtenerIndiceEstado(pedidoSeleccionado.estado);
                   const estaCompletado = idx <= indiceActual;
@@ -381,7 +391,7 @@ export default function SeguimientoPage() {
                         >
                           <Icono className="w-4 h-4" />
                         </div>
-                        {idx < ESTADOS_MAP.length - 1 && (
+                        {idx < pasosDinamicos.length - 1 && (
                           <div
                             className={`w-0.5 h-6 my-1 ${
                               idx < indiceActual ? 'bg-primary' : 'bg-muted'
