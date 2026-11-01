@@ -209,9 +209,9 @@ export async function POST(request: Request) {
         items: itemsMP,
         external_reference: String(pedido.id),
         back_urls: {
-          success: `${baseUrl}/?status=success`,
-          failure: `${baseUrl}/?status=failure`,
-          pending: `${baseUrl}/?status=pending`,
+          success: `${baseUrl}/tienda?status=success&pedido_id=${pedido.id}`,
+          failure: `${baseUrl}/tienda?status=failure`,
+          pending: `${baseUrl}/tienda?status=pending`,
         },
         auto_return: "approved",
         notification_url: `${baseUrl}/api/webhooks/mercadopago`,

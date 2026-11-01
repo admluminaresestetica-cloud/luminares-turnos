@@ -15,6 +15,7 @@ import { Producto } from "@/types/tienda";
 import BotonFlotanteCarrito from "./components/BotonFlotanteCarrito";
 import ThemeToggle from "@/components/ThemeToggle";
 import Fuse from "fuse.js";
+import ModalExito from "@/components/carrito/ModalExito";
 
 import BuscadorYCategorias from "./components/BuscadorYCategorias";
 import GridProductos from "./components/GridProductos";
@@ -38,6 +39,11 @@ function TiendaContenido() {
   const [tagSeleccionado, setTagSeleccionado] = useState<string | null>(null);
 
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [mostrarModalExito, setMostrarModalExito] = useState(false);
+  const [codigoPedidoExito, setCodigoPedidoExito] = useState<string | undefined>(undefined);
+  const [itemsPedidoExito, setItemsPedidoExito] = useState<any[]>([]);
+  const [totalPedidoExito, setTotalPedidoExito] = useState<number>(0);
+  
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("Todos");
   const [ordenarPor, setOrdenarPor] = useState("destacados");
@@ -52,14 +58,46 @@ function TiendaContenido() {
     ? items.reduce((acc: number, item: any) => acc + (Number(item?.cantidad) || 1), 0)
     : 0;
 
-  // 1. Lectura de parámetros de la URL (Mercado Pago, Categoría, Etiqueta)
+ // 1. Lectura de parámetros de la URL (Mercado Pago, Categoría, Etiqueta)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
 
     // Si regresa de Mercado Pago con éxito
     const status = urlParams.get("status");
-    if (status === "success" && typeof vaciarCarrito === "function") {
-      vaciarCarrito();
+    const pedidoId = urlParams.get("pedido_id");
+
+    if (status === "success") {
+      if (typeof vaciarCarrito === "function") {
+        vaciarCarrito();
+      }
+
+      if (pedidoId) {
+        setCodigoPedidoExito(pedidoId);
+        
+        // Consultamos en Supabase los detalles del pedido para mostrarlos en el modal
+        const fetchDetallePedidoExito = async () => {
+          const { data, error } = await supabase
+            .from("pedidos")
+            .select("*")
+            .eq("id", pedidoId)
+            .maybeSingle();
+
+          if (!error && data) {
+            setTotalPedidoExito(Number(data.total) || 0);
+            let parsedItems = [];
+            try {
+              parsedItems = typeof data.items === "string" ? JSON.parse(data.items) : (data.items || []);
+            } catch (e) {
+              parsedItems = [];
+            }
+            setItemsPedidoExito(parsedItems);
+          }
+        };
+
+        fetchDetallePedidoExito();
+        setMostrarModalExito(true);
+      }
+
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
@@ -368,6 +406,16 @@ function TiendaContenido() {
         <CarritoDrawer
           isOpen={modalAbierto}
           onClose={() => setModalAbierto(false)}
+        />
+
+        {/* MODAL DE ÉXITO AUTOMÁTICO AL VOLVER DE MERCADO PAGO */}
+        <ModalExito
+          mostrar={mostrarModalExito}
+          onAceptar={() => setMostrarModalExito(false)}
+          esMercadoPago={true}
+          codigoPedido={codigoPedidoExito}
+          items={itemsPedidoExito}
+          total={totalPedidoExito}
         />
 
         <BotonFlotanteCarrito onOpenCarrito={() => setModalAbierto(true)} />
