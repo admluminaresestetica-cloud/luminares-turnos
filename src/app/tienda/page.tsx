@@ -71,26 +71,27 @@ function TiendaContenido() {
         vaciarCarrito();
       }
 
-      if (pedidoId) {
+if (pedidoId) {
         setCodigoPedidoExito(pedidoId);
-        
-        // Consultamos en Supabase los detalles del pedido para mostrarlos en el modal
         const fetchDetallePedidoExito = async () => {
-          const { data, error } = await supabase
+          // 1. Traemos el total del pedido
+          const { data: pedidoData } = await supabase
             .from("pedidos")
-            .select("*")
+            .select("total")
             .eq("id", pedidoId)
             .maybeSingle();
 
-          if (!error && data) {
-            setTotalPedidoExito(Number(data.total) || 0);
-            let parsedItems = [];
-            try {
-              parsedItems = typeof data.items === "string" ? JSON.parse(data.items) : (data.items || []);
-            } catch (e) {
-              parsedItems = [];
-            }
-            setItemsPedidoExito(parsedItems);
+          if (pedidoData) {
+            setTotalPedidoExito(Number(pedidoData.total) || 0);
+          }
+
+          const { data: itemsData, error: itemsError } = await supabase
+            .from("pedido_items")
+            .select("nombre_producto, cantidad, precio_unitario")
+            .eq("pedido_id", pedidoId);
+
+          if (!itemsError && itemsData) {
+            setItemsPedidoExito(itemsData);
           }
         };
 

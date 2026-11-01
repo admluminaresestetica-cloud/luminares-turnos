@@ -38,7 +38,6 @@ export default function ModalExito({
 
   const handleIrASeguimiento = () => {
     onAceptar();
-    // Redirige a la pantalla de seguimiento (puedes pasar el código por query param si tu página lo lee)
     if (codigoPedido) {
       router.push(`/seguimiento?codigo=${codigoPedido}`);
     } else {
