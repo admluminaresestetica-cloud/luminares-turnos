@@ -13,8 +13,8 @@ interface Props {
 export default function PanelZonasIndividuales({ zonas, seleccionadas, onToggle }: Props) {
   if (zonas.length === 0) {
     return (
-      <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 text-center text-card-foreground">
-        <p className="text-muted-foreground text-sm font-medium">
+      <div className="rounded-[28px] border border-border bg-card p-8 text-center text-card-foreground">
+        <p className="text-sm font-medium text-muted-foreground">
           No hay zonas disponibles para este perfil.
         </p>
       </div>
@@ -22,49 +22,54 @@ export default function PanelZonasIndividuales({ zonas, seleccionadas, onToggle 
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
-      {zonas.map((zona) => {
-        const activa = seleccionadas.includes(zona.id);
-        return (
-          <button
-            key={zona.id}
-            type="button"
-            onClick={() => onToggle(zona.id)}
-            className={`w-full flex items-center gap-3 p-3 sm:p-4 rounded-2xl border text-left transition-all active:scale-[0.98] cursor-pointer ${
-              activa
-                ? 'border-primary bg-primary text-primary-foreground shadow-xs'
-                : 'border-border bg-card text-card-foreground hover:border-muted-foreground/30 hover:bg-accent/50'
-            }`}
-          >
-            <div
-              className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors ${
-                activa
-                  ? 'border-primary-foreground bg-primary-foreground text-primary'
-                  : 'border-muted-foreground/30 bg-background text-transparent'
-              }`}
-            >
-              {activa ? (
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
-              ) : (
-                <Plus className="w-3 h-3 text-muted-foreground" />
-              )}
-            </div>
+    <section className="rounded-[28px] border border-border bg-card px-5 py-2 shadow-xs">
+      <ul className="divide-y divide-border">
+        {zonas.map((zona) => {
+          const activa = seleccionadas.includes(zona.id);
+          return (
+            <li key={zona.id}>
+              <button
+                type="button"
+                onClick={() => onToggle(zona.id)}
+                aria-pressed={activa}
+                className="flex w-full items-center gap-3.5 py-4 text-left transition-colors active:bg-accent/50 cursor-pointer"
+              >
+                <span
+                  aria-hidden
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                    activa
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-background text-muted-foreground'
+                  }`}
+                >
+                  {activa ? (
+                    <Check className="h-3.5 w-3.5 stroke-[3]" />
+                  ) : (
+                    <Plus className="h-3.5 w-3.5" />
+                  )}
+                </span>
 
-            <div className="flex-1 min-w-0">
-              <p className={`text-xs sm:text-sm font-bold truncate ${activa ? 'text-primary-foreground' : 'text-foreground'}`}>
-                {zona.nombre_zona}
-              </p>
-              <p className={`text-[11px] sm:text-xs truncate ${activa ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
-                {ETIQUETA_CATEGORIA[zona.categoria_zona]} · {zona.duracion_minutos} min
-              </p>
-            </div>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-bold text-foreground">
+                    {zona.nombre_zona}
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs font-medium text-muted-foreground">
+                    {ETIQUETA_CATEGORIA[zona.categoria_zona]} · {zona.duracion_minutos} min
+                  </span>
+                </span>
 
-            <p className={`text-xs sm:text-sm font-bold shrink-0 ${activa ? 'text-primary-foreground' : 'text-foreground'}`}>
-              ${Number(zona.precio_lista).toLocaleString('es-AR')}
-            </p>
-          </button>
-        );
-      })}
-    </div>
+                <span
+                  className={`shrink-0 text-lg font-extrabold tabular-nums tracking-tight ${
+                    activa ? 'text-primary' : 'text-foreground'
+                  }`}
+                >
+                  ${Number(zona.precio_lista).toLocaleString('es-AR')}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
