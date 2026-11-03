@@ -11,8 +11,8 @@ interface Props {
 }
 
 /**
- * En mobile se apoya justo encima de la navegación inferior de la app.
- * Alto de esa navegación: variable CSS --bottom-nav-h (por defecto 4rem = h-16).
+ * En mobile se apoya un poco por encima de la navegación inferior de la app.
+ * Alto de esa navegación: variable CSS --bottom-nav-h (por defecto 4rem = h-16) + margen adicional de 0.75rem.
  * Más el safe-area del celular, para no encimarse con la barra de gestos.
  */
 export default function BarraFlotanteLaser({
@@ -27,7 +27,7 @@ export default function BarraFlotanteLaser({
 
   return (
     <div
-      className="fixed inset-x-0 z-40 bottom-[calc(var(--bottom-nav-h,4rem)+env(safe-area-inset-bottom,0px))] sm:bottom-0 sm:pb-[env(safe-area-inset-bottom,0px)]"
+      className="fixed inset-x-0 z-40 bottom-[calc(var(--bottom-nav-h,4rem)+env(safe-area-inset-bottom,0px)+0.75rem)] sm:bottom-0 sm:pb-[env(safe-area-inset-bottom,0px)]"
     >
       <div className="mx-auto max-w-3xl">
         <div className="bg-card text-card-foreground border-t border-border rounded-t-[28px] px-5 pt-4 pb-4 sm:px-6 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.18)]">
