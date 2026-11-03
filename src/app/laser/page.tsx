@@ -323,7 +323,7 @@ function LaserContent() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-start px-4 pt-4 sm:px-6 sm:pt-6 pb-36 font-sans">
+    <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-start px-4 pt-4 sm:px-6 sm:pt-6 pb-44 font-sans">
       <div className="w-full max-w-md sm:max-w-2xl space-y-5">
 
         {/* Barra superior: volver + progreso */}
@@ -413,17 +413,14 @@ function LaserContent() {
                 <div className="space-y-4">
                   {modo === 'promo' ? (
                     <>
-                      {/* Cada promo se muestra como tarjeta independiente dentro de este contenedor */}
-                      <div className="space-y-3 [&>*]:rounded-[28px]">
-                        <PanelPromos
-                          promos={promos}
-                          zonas={zonas}
-                          promoSeleccionada={promoSeleccionada}
-                          swaps={swaps}
-                          onSelectPromo={handleSelectPromo}
-                          onSwapClick={setSwapModalZonaId}
-                        />
-                      </div>
+                      <PanelPromos
+                        promos={promos}
+                        zonas={zonas}
+                        promoSeleccionada={promoSeleccionada}
+                        swaps={swaps}
+                        onSelectPromo={handleSelectPromo}
+                        onSwapClick={setSwapModalZonaId}
+                      />
                       {promoSeleccionada && (
                         <div className="animate-in fade-in slide-in-from-bottom-2 duration-200">
                           <PanelZonasExtra
