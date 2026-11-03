@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Check, Mars, Venus, Zap } from 'lucide-react';
+import { ArrowLeft, Zap } from 'lucide-react';
+import SelectorGenero from '@/components/laser/SelectorGenero';
 import SelectorModoLaser from '@/components/laser/SelectorModoLaser';
 import PanelPromos from '@/components/laser/PanelPromos';
 import PanelZonasIndividuales from '@/components/laser/PanelZonasIndividuales';
@@ -29,67 +30,6 @@ const STORAGE_KEY = 'laser-seleccion';
 /* ------------------------------------------------------------------ */
 /* UI auxiliar (solo presentación, usa únicamente tokens del tema)     */
 /* ------------------------------------------------------------------ */
-
-const OPCIONES_GENERO: {
-  valor: GeneroLaser;
-  titulo: string;
-  detalle: string;
-  Icono: typeof Venus;
-}[] = [
-  { valor: 'femenino', titulo: 'Femenino', detalle: 'Promos y zonas para mujeres', Icono: Venus },
-  { valor: 'masculino', titulo: 'Masculino', detalle: 'Promos y zonas para hombres', Icono: Mars },
-];
-
-function TarjetaGenero({
-  titulo,
-  detalle,
-  Icono,
-  activa,
-  onClick,
-}: {
-  titulo: string;
-  detalle: string;
-  Icono: typeof Venus;
-  activa: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={activa}
-      className={`group relative flex w-full items-center gap-4 rounded-[28px] border p-5 text-left shadow-xs transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:flex-col sm:items-start sm:gap-6 sm:p-6 ${
-        activa
-          ? 'border-primary bg-primary/10'
-          : 'border-border bg-card hover:border-primary/40'
-      }`}
-    >
-      <span
-        className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-colors ${
-          activa ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-        }`}
-      >
-        <Icono className="h-7 w-7" />
-      </span>
-
-      <span className="min-w-0 flex-1">
-        <span className="block text-lg font-extrabold tracking-tight text-foreground">{titulo}</span>
-        <span className="mt-0.5 block text-xs font-medium text-muted-foreground">{detalle}</span>
-      </span>
-
-      <span
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors sm:absolute sm:right-5 sm:top-5 ${
-          activa
-            ? 'border-primary bg-primary text-primary-foreground'
-            : 'border-border bg-background text-transparent'
-        }`}
-        aria-hidden
-      >
-        <Check className="h-3.5 w-3.5" strokeWidth={3} />
-      </span>
-    </button>
-  );
-}
 
 function IndicadorPasos({ paso }: { paso: 1 | 2 }) {
   return (
@@ -355,17 +295,8 @@ function LaserContent() {
 
         {/* Paso 1: pantalla limpia con tarjetas de género */}
         {!genero && (
-          <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 animate-in fade-in duration-200">
-            {OPCIONES_GENERO.map((op) => (
-              <TarjetaGenero
-                key={op.valor}
-                titulo={op.titulo}
-                detalle={op.detalle}
-                Icono={op.Icono}
-                activa={genero === op.valor}
-                onClick={() => handleGenero(op.valor)}
-              />
-            ))}
+          <section className="animate-in fade-in duration-200">
+            <SelectorGenero genero={genero} onSelect={handleGenero} />
           </section>
         )}
 
@@ -373,31 +304,7 @@ function LaserContent() {
         {genero && (
           <section className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
             {/* Cambio rápido de perfil (misma lógica que el paso 1) */}
-            <div
-              role="group"
-              aria-label="Perfil"
-              className="grid grid-cols-2 gap-1 rounded-full border border-border bg-card p-1 shadow-xs"
-            >
-              {OPCIONES_GENERO.map(({ valor, titulo, Icono }) => {
-                const activo = genero === valor;
-                return (
-                  <button
-                    key={valor}
-                    type="button"
-                    onClick={() => handleGenero(valor)}
-                    aria-pressed={activo}
-                    className={`flex h-10 items-center justify-center gap-2 rounded-full text-sm font-bold transition-all active:scale-[0.98] ${
-                      activo
-                        ? 'bg-primary text-primary-foreground shadow-xs'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Icono className="h-4 w-4" />
-                    {titulo}
-                  </button>
-                );
-              })}
-            </div>
+            <SelectorGenero genero={genero} onSelect={handleGenero} compacto />
 
             {cargando ? (
               <div className="rounded-[28px] border border-border bg-card p-10 text-center shadow-xs">
@@ -406,9 +313,7 @@ function LaserContent() {
               </div>
             ) : (
               <>
-                <div className="rounded-full border border-border bg-card p-1.5 shadow-xs">
-                  <SelectorModoLaser modo={modo} onChange={handleModoChange} />
-                </div>
+                <SelectorModoLaser modo={modo} onChange={handleModoChange} />
 
                 <div className="space-y-4">
                   {modo === 'promo' ? (
