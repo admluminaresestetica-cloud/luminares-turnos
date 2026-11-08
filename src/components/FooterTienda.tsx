@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MapPin, ShieldCheck, CreditCard, Lock, X, Wallet, MessageCircle, BadgeCheck } from "lucide-react";
+import { MapPin, ShieldCheck, CreditCard, Lock, X, Wallet, MessageCircle, BadgeCheck, RotateCcw } from "lucide-react";
 import { useConfig } from "@/context/ConfigContext";
 
 export default function FooterTienda() {
@@ -14,6 +14,13 @@ export default function FooterTienda() {
   const direccionTexto = config?.direccion_texto || "Rosario, Santa Fe";
   const mapsUrl = config?.google_maps_url || "https://maps.google.com";
   const nombreEmpresa = config?.nombre_empresa || "Luminares Estética";
+  const rawNumber = config?.whatsapp_numero|| "5493410000000";
+
+  // Mensaje prearmado para arrepentimiento por WhatsApp
+  const mensajeArrepentimiento = encodeURIComponent(
+    "Hola! Quiero ejercer mi Derecho de Arrepentimiento sobre mi compra. Mi código de pedido es: "
+  );
+  const urlWhatsappArrepentimiento = `https://wa.me/${rawNumber}?text=${mensajeArrepentimiento}`;
 
   // Cierra modal con la tecla Escape y deshabilita el scroll del body
   useEffect(() => {
@@ -73,7 +80,7 @@ export default function FooterTienda() {
             </div>
           </div>
 
-          {/* Enlaces secundarios */}
+          {/* Enlaces secundarios (Mapa, FAQ y Botón de Arrepentimiento) */}
           <div className="flex flex-wrap items-center justify-center gap-2.5">
             <a
               href={mapsUrl}
@@ -93,6 +100,17 @@ export default function FooterTienda() {
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0 group-hover:scale-110 transition-transform" />
               <span>Envíos y FAQ</span>
             </button>
+
+            {/* BOTÓN DE ARREPENTIMIENTO LEY ARGENITNA */}
+            <a
+              href={urlWhatsappArrepentimiento}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-3.5 py-2 rounded-full border border-amber-200 shadow-2xs hover:shadow-md hover:border-amber-300 transition-all duration-200 active:scale-95 dark:border-amber-800/60"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0 group-hover:-rotate-45 transition-transform" />
+              <span>Boton de Arrepentimiento</span>
+            </a>
           </div>
 
           <p className="text-center text-[10px] text-slate-400 dark:text-zinc-500 font-medium border-t border-slate-100 dark:border-zinc-800 mt-1 pt-3">
@@ -194,9 +212,20 @@ export default function FooterTienda() {
                 </p>
               </div>
 
+              {/* SECCIÓN 5: DERECHO DE ARREPENTIMIENTO */}
+              <div className="p-3.5 bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 rounded-xl">
+                <h4 className="font-bold text-amber-900 dark:text-amber-300 text-sm mb-1 flex items-center gap-1.5">
+                  <RotateCcw className="w-4 h-4 text-amber-600 shrink-0" />
+                  5. Arrepentimiento de Compra
+                </h4>
+                <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
+                  Podés revocar tu compra dentro de los 10 días corridos de haberla recibido mediante nuestro enlace directo de WhatsApp. El producto debe mantenerse sin uso y en empaque cerrado.
+                </p>
+              </div>
+
               <div>
                 <h4 className="font-bold text-slate-800 dark:text-zinc-200 text-sm mb-1.5 flex items-center gap-1.5">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold shrink-0 dark:bg-zinc-800 dark:text-zinc-400">5</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold shrink-0 dark:bg-zinc-800 dark:text-zinc-400">6</span>
                   Atención al Cliente
                 </h4>
                 <p className="pl-6">Para consultas sobre productos o envíos, podés escribirnos directo a nuestro WhatsApp oficial o Instagram.</p>

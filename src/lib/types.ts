@@ -160,3 +160,12 @@ export interface HistorialSesionGeneral {
   notas_recepcion?: string | null;
   created_at?: string;
 }
+
+export interface PreguntaFrecuenteDB {
+  id: number;
+  pregunta: string;
+  respuesta: string;
+  destacado?: boolean;
+  orden?: number;
+  created_at?: string;
+}

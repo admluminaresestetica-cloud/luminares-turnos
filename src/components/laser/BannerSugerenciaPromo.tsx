@@ -11,6 +11,8 @@ interface Props {
   onDismiss: () => void;
 }
 
+const formatPrecio = (n: number) => `$${Number(n).toLocaleString('es-AR')}`;
+
 export default function BannerSugerenciaPromo({
   promo,
   ahorro,
@@ -19,55 +21,64 @@ export default function BannerSugerenciaPromo({
   onDismiss,
 }: Props) {
   return (
-    <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 mb-4 shadow-2xs">
+    <aside className="rounded-[28px] border border-primary/20 bg-primary/10 p-5">
       <div className="flex items-start gap-3.5">
-        <div className="p-2 bg-primary/15 text-primary rounded-xl shrink-0 mt-0.5">
-          <Lightbulb className="w-4 h-4" />
+        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+          <Lightbulb className="h-5 w-5" />
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <p className="font-bold text-primary text-xs uppercase tracking-wider">
-              ¡Sugerencia de ahorro!
-            </p>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="text-base font-extrabold leading-tight tracking-tight text-foreground">
+              Con un combo pagás menos
+            </h3>
             <button
               type="button"
               onClick={onDismiss}
-              className="text-muted-foreground hover:text-foreground p-0.5 rounded-lg transition-colors"
-              title="Descartar aviso"
+              aria-label="Descartar aviso"
+              className="-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground active:bg-background/60"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
-          <p className="text-xs text-foreground mt-1 leading-relaxed">
-            Las zonas elegidas equivalen al combo <strong className="font-semibold text-foreground">{promo.nombre_promo}</strong>. 
-            Pagás <span className="font-bold">${Number(promo.precio_promo).toLocaleString()}</span> en lugar de ${precioIndividual.toLocaleString()}
-            {ahorro > 0 && (
-              <span className="font-bold text-primary"> (ahorrás ${ahorro.toLocaleString()})</span>
-            )}.
+          <p className="mt-1.5 text-sm font-medium leading-relaxed text-muted-foreground">
+            Tus zonas equivalen a <strong className="font-bold text-foreground">{promo.nombre_promo}</strong>.
           </p>
 
-          <div className="flex items-center gap-2.5 mt-3.5">
+          {/* Comparación de precios */}
+          <div className="mt-3 flex items-baseline gap-2.5">
+            <span className="text-2xl font-black tabular-nums tracking-tight text-foreground">
+              {formatPrecio(promo.precio_promo)}
+            </span>
+            <span className="text-sm font-semibold tabular-nums text-muted-foreground line-through">
+              {formatPrecio(precioIndividual)}
+            </span>
+          </div>
+          {ahorro > 0 && (
+            <p className="mt-0.5 text-sm font-bold text-primary">Ahorrás {formatPrecio(ahorro)}</p>
+          )}
+
+          <div className="mt-4 flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
             <button
               type="button"
               onClick={onAplicarPromo}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold bg-primary text-primary-foreground px-3.5 py-2 rounded-xl hover:bg-primary/90 transition-colors shadow-2xs"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-extrabold text-primary-foreground transition-all active:scale-95 cursor-pointer"
             >
-              <span>Aplicar promocional</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>Aplicar combo</span>
+              <ArrowRight className="h-4 w-4 stroke-[2.5]" />
             </button>
 
             <button
               type="button"
               onClick={onDismiss}
-              className="text-xs font-semibold text-muted-foreground hover:text-foreground px-3 py-2 rounded-xl hover:bg-muted transition-colors"
+              className="inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground active:bg-background/60 cursor-pointer"
             >
               Mantener zonas sueltas
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

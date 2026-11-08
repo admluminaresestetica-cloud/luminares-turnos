@@ -27,7 +27,7 @@ export default function PanelPromos({
 }: Props) {
   if (promos.length === 0) {
     return (
-      <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 text-center text-card-foreground">
+      <div className="bg-card border border-border rounded-[28px] p-8 text-center text-card-foreground">
         <p className="text-muted-foreground text-sm font-medium">
           No hay promociones disponibles para este perfil.
         </p>
@@ -42,113 +42,112 @@ export default function PanelPromos({
         const zonasPromo = getZonasPromoResueltas(promo, zonas, swaps);
 
         return (
-          <div
+          <article
             key={promo.id}
-            className={`rounded-2xl border transition-all overflow-hidden ${
+            className={`rounded-[28px] border bg-card overflow-hidden transition-colors ${
               seleccionada
-                ? 'border-primary bg-card ring-1 ring-primary shadow-sm'
-                : 'border-border bg-card hover:border-muted-foreground/30'
+                ? 'border-primary ring-1 ring-primary shadow-sm'
+                : 'border-border'
             }`}
           >
+            {/* Cabecera: título e info a la izquierda, precio a la derecha */}
             <button
               type="button"
               onClick={() => onSelectPromo(seleccionada ? null : promo)}
-              className="w-full p-3.5 sm:p-5 text-left active:bg-accent/50 transition-colors cursor-pointer"
+              aria-pressed={seleccionada}
+              className="w-full p-5 text-left active:bg-accent/50 transition-colors cursor-pointer"
             >
-              <div className="flex justify-between items-start gap-3 sm:gap-4">
-                <div className="space-y-1 sm:space-y-1.5 min-w-0 flex-1">
-                  <p className="font-bold text-foreground text-sm sm:text-base leading-snug">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1 space-y-2">
+                  <h3 className="text-lg font-extrabold leading-tight tracking-tight text-foreground">
                     {promo.nombre_promo}
-                  </p>
+                  </h3>
 
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1 font-medium">
-                      <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 font-semibold">
+                      <Clock className="w-3.5 h-3.5" />
                       {promo.duracion_total_min} min
                     </span>
 
                     {promo.permite_swap && (
-                      <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-semibold">
-                        <RefreshCw className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary">
+                        <RefreshCw className="w-3 h-3" />
                         Permite intercambio
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="text-right shrink-0 flex items-center gap-2.5 sm:gap-3">
-                  <div>
-                    <p className="font-bold text-foreground text-base sm:text-xl tracking-tight">
-                      ${Number(promo.precio_promo).toLocaleString('es-AR')}
-                    </p>
-                  </div>
-
-                  <div
-                    className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all shrink-0 ${
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="text-2xl font-black tabular-nums tracking-tight text-foreground">
+                    ${Number(promo.precio_promo).toLocaleString('es-AR')}
+                  </span>
+                  <span
+                    aria-hidden
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
                       seleccionada
                         ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-muted-foreground/30 bg-background'
+                        : 'border-border bg-background text-transparent'
                     }`}
                   >
-                    {seleccionada && <Check className="w-3 h-3 stroke-[3]" />}
-                  </div>
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  </span>
                 </div>
               </div>
             </button>
 
-            {/* Zonas Incluidas */}
+            {/* Zonas incluidas: lista minimalista, sin cajas */}
             {seleccionada && zonasPromo.length > 0 && (
-              <div className="px-3.5 pb-3.5 sm:px-5 sm:pb-5 border-t border-border bg-muted/40 pt-3.5 space-y-2">
-                <p className="text-[10px] sm:text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-                  Zonas incluidas en esta promo
+              <div className="mx-5 pb-2 border-t border-border animate-in fade-in duration-200">
+                <p className="pt-4 pb-1 text-xs font-bold text-muted-foreground">
+                  Zonas incluidas
                 </p>
-                {promo.zonas_incluidas.map((zonaId) => {
-                  const original = zonas.find((z) => z.id === zonaId);
-                  const swapId = swaps[zonaId];
-                  const actual = swapId ? zonas.find((z) => z.id === swapId) : original;
-                  if (!actual) return null;
+                <ul className="divide-y divide-border">
+                  {promo.zonas_incluidas.map((zonaId) => {
+                    const original = zonas.find((z) => z.id === zonaId);
+                    const swapId = swaps[zonaId];
+                    const actual = swapId ? zonas.find((z) => z.id === swapId) : original;
+                    if (!actual) return null;
 
-                  return (
-                    <div
-                      key={zonaId}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between bg-card rounded-xl p-3 sm:px-3.5 sm:py-2.5 border border-border shadow-xs gap-2 sm:gap-4"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-foreground flex items-center gap-1.5 flex-wrap">
-                          <span>{actual.nombre_zona}</span>
-                          {swapId && (
-                            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 px-1.5 py-0.5 rounded">
-                              intercambiada
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {ETIQUETA_CATEGORIA[actual.categoria_zona]} · {actual.duracion_minutos} min
-                        </p>
-                      </div>
+                    return (
+                      <li key={zonaId} className="flex items-center justify-between gap-3 py-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-foreground">
+                            {actual.nombre_zona}
+                            {swapId && (
+                              <span className="ml-2 text-[11px] font-semibold text-primary">
+                                intercambiada
+                              </span>
+                            )}
+                          </p>
+                          <p className="mt-0.5 text-xs font-medium text-muted-foreground">
+                            {ETIQUETA_CATEGORIA[actual.categoria_zona]} · {actual.duracion_minutos} min
+                          </p>
+                        </div>
 
-                      {promo.permite_swap && original && (
-                        <button
-                          type="button"
-                          onClick={() => onSwapClick(zonaId)}
-                          className="inline-flex items-center justify-center gap-1 text-xs font-semibold text-secondary-foreground bg-secondary hover:bg-secondary/80 px-2.5 py-1.5 rounded-lg transition-colors w-full sm:w-auto active:scale-95 cursor-pointer"
-                        >
-                          <RefreshCw className="w-3 h-3 text-muted-foreground" />
-                          Intercambiar
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
+                        {promo.permite_swap && original && (
+                          <button
+                            type="button"
+                            onClick={() => onSwapClick(zonaId)}
+                            className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-primary active:bg-primary/10 transition-colors cursor-pointer"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            Intercambiar
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             )}
 
             {seleccionada && zonasPromo.length === 0 && promo.zonas_incluidas.length === 0 && (
-              <div className="px-4 pb-4 text-xs text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/30 pt-3 border-t border-amber-200/40 dark:border-amber-900/40">
+              <p className="mx-5 border-t border-border py-4 text-xs font-medium text-muted-foreground">
                 Esta promo aún no tiene zonas vinculadas en el sistema.
-              </div>
+              </p>
             )}
-          </div>
+          </article>
         );
       })}
     </div>

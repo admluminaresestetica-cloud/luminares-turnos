@@ -27,6 +27,29 @@ import type { GeneroLaser, PromoLaser, ServicioLaser } from '@/lib/types';
 
 const STORAGE_KEY = 'laser-seleccion';
 
+/* ------------------------------------------------------------------ */
+/* UI auxiliar (solo presentación, usa únicamente tokens del tema)     */
+/* ------------------------------------------------------------------ */
+
+function IndicadorPasos({ paso }: { paso: 1 | 2 }) {
+  return (
+    <div className="flex items-center gap-1.5" aria-label={`Paso ${paso} de 2`}>
+      {[1, 2].map((n) => (
+        <span
+          key={n}
+          className={`h-1.5 rounded-full transition-all ${
+            n === paso ? 'w-6 bg-primary' : n < paso ? 'w-1.5 bg-primary' : 'w-1.5 bg-border'
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Página                                                              */
+/* ------------------------------------------------------------------ */
+
 function LaserContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -240,69 +263,59 @@ function LaserContent() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-start p-4 sm:p-6 pb-36 font-sans">
-      <div className="max-w-md sm:max-w-2xl w-full space-y-4">
+    <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-start px-4 pt-4 sm:px-6 sm:pt-6 pb-44 font-sans">
+      <div className="w-full max-w-md sm:max-w-2xl space-y-5">
 
-        {/* Volver */}
-        <div className="w-full flex justify-start">
+        {/* Barra superior: volver + progreso */}
+        <div className="flex w-full items-center justify-between">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground bg-card border border-border px-3.5 py-2 rounded-2xl shadow-xs hover:text-foreground active:scale-95 transition-all"
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card pl-3 pr-4 text-xs font-bold text-muted-foreground shadow-xs transition-all hover:text-foreground active:scale-95"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="h-4 w-4" />
             <span>Volver</span>
           </Link>
+          <IndicadorPasos paso={genero ? 2 : 1} />
         </div>
 
-        {/* Header estilo Card Verde del Inicio */}
-        <header className="bg-primary text-primary-foreground rounded-[26px] p-5 sm:p-6 shadow-md relative overflow-hidden space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/10">
-              <Zap className="w-3.5 h-3.5 text-primary-foreground fill-primary-foreground" />
-              <span className="text-[10px] font-black tracking-[0.18em] uppercase text-primary-foreground/90">
-                Reserva Online
-              </span>
-            </div>
-            <div className="w-10 h-10 rounded-2xl bg-primary-foreground/10 backdrop-blur-sm flex items-center justify-center border border-primary-foreground/10">
-              <Zap className="w-5 h-5 text-primary-foreground" />
-            </div>
+        {/* Título */}
+        <header className="flex items-center gap-4 px-1">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-primary text-primary-foreground shadow-md">
+            <Zap className="h-6 w-6 fill-primary-foreground" />
           </div>
-
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-primary-foreground">
-              Depilación Láser
+          <div className="min-w-0">
+            <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+              Depilación láser
             </h1>
-            <p className="text-xs text-primary-foreground/80 font-medium mt-1">
-              {!genero
-                ? 'Paso 1: Seleccioná tu perfil (Femenino o Masculino)'
-                : 'Paso 2: Elegí combos en promo o zonas individuales'}
+            <p className="mt-0.5 text-sm font-medium text-muted-foreground">
+              {!genero ? '¿Para quién es el turno?' : 'Elegí tu promo o armá tu combo'}
             </p>
           </div>
         </header>
 
-        {/* Paso 1: Género */}
-        <section className="bg-card/90 backdrop-blur-sm border border-border rounded-[24px] p-4 sm:p-5 shadow-xs space-y-3">
-          <h2 className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
-            ¿Para quién es el turno?
-          </h2>
-          <SelectorGenero genero={genero} onSelect={handleGenero} />
-        </section>
+        {/* Paso 1: pantalla limpia con tarjetas de género */}
+        {!genero && (
+          <section className="animate-in fade-in duration-200">
+            <SelectorGenero genero={genero} onSelect={handleGenero} />
+          </section>
+        )}
 
-        {/* Paso 2: Selección de servicios */}
+        {/* Paso 2: selección de servicios */}
         {genero && (
-          <section className="space-y-4 animate-in fade-in duration-200">
+          <section className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            {/* Cambio rápido de perfil (misma lógica que el paso 1) */}
+            <SelectorGenero genero={genero} onSelect={handleGenero} compacto />
+
             {cargando ? (
-              <div className="bg-card/90 border border-border rounded-[24px] p-8 text-center shadow-xs">
-                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                <p className="text-xs font-bold text-muted-foreground">Cargando opciones disponibles...</p>
+              <div className="rounded-[28px] border border-border bg-card p-10 text-center shadow-xs">
+                <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="text-sm font-semibold text-muted-foreground">Cargando opciones…</p>
               </div>
             ) : (
               <>
-                <div className="bg-card/90 border border-border rounded-[24px] p-3 shadow-xs">
-                  <SelectorModoLaser modo={modo} onChange={handleModoChange} />
-                </div>
+                <SelectorModoLaser modo={modo} onChange={handleModoChange} />
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {modo === 'promo' ? (
                     <>
                       <PanelPromos
@@ -314,12 +327,14 @@ function LaserContent() {
                         onSwapClick={setSwapModalZonaId}
                       />
                       {promoSeleccionada && (
-                        <PanelZonasExtra
-                          zonas={zonas}
-                          zonasPromoIds={zonasPromoActivas}
-                          zonasExtraIds={zonasExtraIds}
-                          onToggleExtra={toggleZonaExtra}
-                        />
+                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-200">
+                          <PanelZonasExtra
+                            zonas={zonas}
+                            zonasPromoIds={zonasPromoActivas}
+                            zonasExtraIds={zonasExtraIds}
+                            onToggleExtra={toggleZonaExtra}
+                          />
+                        </div>
                       )}
                     </>
                   ) : (
