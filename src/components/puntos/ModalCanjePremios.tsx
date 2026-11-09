@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Gift, Star, CheckCircle2, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { X, Gift, Star, CheckCircle2, Loader2, Trophy, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface Premio {
@@ -209,7 +209,7 @@ return (
                 </div>
               ) : premios.length === 0 ? (
                 <div className="text-center py-12 space-y-3">
-                  <Sparkles className="w-10 h-10 text-stone-300 dark:text-zinc-700 mx-auto" />
+                  <Trophy className="w-10 h-10 text-stone-300 dark:text-zinc-700 mx-auto" />
                   <p className="text-xs text-stone-500 dark:text-zinc-400 font-medium">No hay premios disponibles para canjear en este momento.</p>
                 </div>
               ) : (

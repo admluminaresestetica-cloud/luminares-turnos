@@ -1,6 +1,6 @@
 "use client";
 
-import { Wand2, Layers, Shield, Sparkles } from "lucide-react";
+import { Wand2, Layers, Shield, PlayingCardsFan } from "lucide-react";
 import { SombraProducto, BordeProducto, StickerDecorativo } from "@/types/story";
 
 interface ProductEffectsControlProps {
@@ -88,7 +88,7 @@ export function ProductEffectsControl({
       {/* Stickers / Insignias Decorativas */}
       <div className="flex flex-col gap-1.5">
         <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-amber-500" /> Insignia Decorativa
+          <PlayingCardsFan className="w-3 h-3 text-amber-500" /> Insignia Decorativa
         </span>
         <div className="grid grid-cols-3 gap-1">
           {[

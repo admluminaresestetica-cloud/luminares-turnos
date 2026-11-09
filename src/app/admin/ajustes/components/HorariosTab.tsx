@@ -1,7 +1,7 @@
 // src/components/admin/tabs/HorariosTab.tsx
 'use client'
 
-import { Plus, Calendar, Sparkles, CheckCircle2, XCircle, Trash2, CalendarX, Save } from 'lucide-react'
+import { Plus, Calendar, PencilLine, CheckCircle2, XCircle, Trash2, CalendarX, Save } from 'lucide-react'
 import { ConfigCalendario, DIAS_SEMANA, HorarioDia, HorariosSemana, formatFecha, horarioDiaDefault } from '../../turnos/components/types'
 
 // Definimos el tipo para una franja horaria bloqueada (puedes moverlo a types.ts si prefieres)
@@ -91,7 +91,7 @@ export default function HorariosTab({
           <div>
             <div className="flex items-center gap-2">
               <div className="p-2 bg-rose-50 text-rose-600 rounded-xl dark:bg-rose-950/60 dark:text-rose-400">
-                <Sparkles className="w-4 h-4" />
+                <PencilLine className="w-4 h-4" />
               </div>
               <h2 className="text-base font-bold text-gray-900 dark:text-zinc-100">Depilación Láser</h2>
             </div>

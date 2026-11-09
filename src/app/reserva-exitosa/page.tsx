@@ -10,7 +10,7 @@ import {
   Calendar, 
   Clock, 
   User, 
-  Sparkles, 
+  CircleCheckBig, 
   AlertCircle, 
   CheckCircle2, 
   Loader2,
@@ -254,7 +254,7 @@ export default function MisTurnosPage() {
               </div>
 
               <div className="flex items-center gap-2.5 text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-xs">
-                <Sparkles className="w-4 h-4 text-slate-400 shrink-0" />
+                <CircleCheckBig className="w-4 h-4 text-slate-400 shrink-0" />
                 <span>Servicio: <strong className="text-slate-900 font-bold">{formatDetalleReservaDisplay(reserva)}</strong></span>
               </div>
 

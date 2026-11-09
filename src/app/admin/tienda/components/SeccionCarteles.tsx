@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Printer, Megaphone, Sparkles, Tag, Layers, Search } from "lucide-react";
+import { Printer, Megaphone, PencilLine, Tag, Layers, Search } from "lucide-react";
 
 type TipoCartel = "oferta" | "2x1" | "combo" | "nuevo";
 type TamanoCartel = "a4" | "a5" | "a6";
@@ -122,7 +122,7 @@ export default function SeccionCarteles({ productos = [] }: SeccionCartelesProps
                     : "border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400"
                 }`}
               >
-                <Sparkles className="w-4 h-4" /> 2x1 / Promo
+                <PencilLine className="w-4 h-4" /> 2x1 / Promo
               </button>
               <button
                 type="button"
@@ -144,7 +144,7 @@ export default function SeccionCarteles({ productos = [] }: SeccionCartelesProps
                     : "border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-zinc-400"
                 }`}
               >
-                <Sparkles className="w-4 h-4" /> Nuevo
+                <PencilLine className="w-4 h-4" /> Nuevo
               </button>
             </div>
           </div>

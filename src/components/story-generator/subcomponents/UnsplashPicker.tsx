@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Image as ImageIcon } from "lucide-react";
+import { ImagePlus, Image as ImageIcon } from "lucide-react";
 
 interface UnsplashPickerProps {
   onSeleccionarImagen: (url: string) => void;
@@ -153,7 +153,7 @@ export function UnsplashPicker({ onSeleccionarImagen }: UnsplashPickerProps) {
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white drop-shadow-md" />
+                <ImagePlus className="w-4 h-4 text-white drop-shadow-md" />
               </div>
             </button>
           );

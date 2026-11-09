@@ -9,7 +9,7 @@ import {
   guardarConfiguracion,
 } from '@/lib/supabase/configuracion-empresa';
 import { obtenerColorTextoContraste } from '@/lib/utils/color';
-import { Palette, RefreshCw, Save, Check, Image as ImageIcon, Upload, Loader2, Sparkles } from 'lucide-react';
+import { Palette, RefreshCw, Save, Check, Image as ImageIcon, Upload, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 const PALETAS_PREDEFINIDAS: { nombre: string; colores: TemaColores }[] = [

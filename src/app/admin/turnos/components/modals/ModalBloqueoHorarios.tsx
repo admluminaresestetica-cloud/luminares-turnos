@@ -11,7 +11,7 @@ import {
   AlertCircle,
   FileText,
   Clock,
-  Sparkles,
+  CalendarCheck,
 } from 'lucide-react';
 import { getConfiguracionCalendario } from '@/lib/supabase/configuracion';
 import { getReservasPorFecha } from '@/lib/supabase/reservas';
@@ -255,7 +255,7 @@ return (
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1.5 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />
+                <CalendarCheck className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500" />
                 Tipo de Agenda
               </label>
               <select

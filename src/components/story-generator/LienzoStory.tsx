@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import { Camera, MapPin, Sparkles } from "lucide-react";
+import { Camera, MapPin, ShoppingCart } from "lucide-react";
 import { calcularCuotas } from "@/lib/precios";
 import { ConfiguracionEmpresa } from "@/lib/supabase/configuracion-empresa";
 import { OpcionesStory, BadgeTipo } from "@/types/story";
@@ -193,7 +193,7 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
             style={{ color: esTextoOscuro ? "#047857" : "#34d399" }}
           >
             {opciones.estiloPlantilla === "ecommerce_modern" && (
-              <Sparkles className="w-3 h-3" />
+              <ShoppingCart className="w-3 h-3" />
             )}
             {config?.nombre_empresa || "Luminares"}
           </span>

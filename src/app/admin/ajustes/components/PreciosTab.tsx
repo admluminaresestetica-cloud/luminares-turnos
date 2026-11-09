@@ -1,7 +1,7 @@
 // src/components/admin/tabs/PreciosTab.tsx
 'use client'
 
-import { Plus, Edit2, Trash2, CheckCircle2, XCircle, Sparkles, Tag, Clock, Loader2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, CheckCircle2, XCircle, PencilLine, Tag, Clock, Loader2 } from 'lucide-react'
 import { ServicioLaser, PromoLaser, getNombresZonas } from '@/app/admin/turnos/components/types'
 
 interface PreciosTabProps {
@@ -53,7 +53,7 @@ return (
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 dark:text-zinc-400 dark:hover:text-zinc-100 dark:hover:bg-zinc-700/50'
             }`}
           >
-            <Sparkles className="w-4 h-4" />
+            <PencilLine className="w-4 h-4" />
             Zonas / Servicios Láser ({servicios.length})
           </button>
           

@@ -10,7 +10,7 @@ import {
   Edit3, 
   Clock, 
   History, 
-  Sparkles, 
+  PencilLine, 
   Scissors,
   AlertCircle,
   CreditCard,
@@ -159,7 +159,7 @@ return (
           <div className="flex-1 min-w-[130px] md:flex-none">
             <label className="block text-xs font-semibold text-slate-500 dark:text-zinc-400 mb-1.5 flex items-center gap-1.5">
               {tipoJornada === 'laser' ? (
-                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <PencilLine className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               ) : (
                 <Scissors className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
               )}

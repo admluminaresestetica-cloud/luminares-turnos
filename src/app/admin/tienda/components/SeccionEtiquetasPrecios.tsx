@@ -8,7 +8,6 @@ import {
   CheckSquare,
   Square,
   Megaphone,
-  Sparkles,
   Layers,
   LayoutGrid,
   Palette,

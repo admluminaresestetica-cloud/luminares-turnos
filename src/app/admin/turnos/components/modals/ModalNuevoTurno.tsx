@@ -1,7 +1,7 @@
 'use client'
 
 import {
-  Sparkles, Scissors, Tag, X, User, Phone, Calendar, FileText,
+  Zap, Scissors, Tag, X, User, Phone, Calendar, FileText,
   DollarSign, CreditCard, CheckCircle2, Loader2
 } from 'lucide-react'
 import { PromoLaser, ServicioGeneral, ServicioLaser, TurnoForm } from '../types'
@@ -148,7 +148,7 @@ return (
                       : 'bg-slate-50/60 border-slate-200/80 text-slate-600 hover:bg-rose-50/50 hover:border-rose-200 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700'
                   }`}
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <Zap className="w-4 h-4" />
                   Zonas Láser
                 </button>
 
