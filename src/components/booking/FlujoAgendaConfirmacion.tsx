@@ -138,7 +138,21 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
     setCargandoSlots(true);
     setHora(null);
     const reservas = await getReservasPorFecha(fechaSel);
-    const slotsConEstado = calcularSlotsConEstado(fechaSel, duracionTotal, configCalendario.horarios_atencion, reservas);
+
+    // ➕ Extraemos los bloqueos configurados por el admin
+    const horariosBase = configCalendario.horarios_atencion || {};
+    const bloqueosDelAdmin = (horariosBase as any).bloqueos_franjas || [];
+
+    // ➕ Pasamos los bloqueos como último parámetro a la función de los slots
+    const slotsConEstado = calcularSlotsConEstado(
+      fechaSel, 
+      duracionTotal, 
+      configCalendario.horarios_atencion, 
+      reservas, 
+      15, // buffer predeterminado
+      bloqueosDelAdmin
+    );
+
     setSlots(slotsConEstado);
     setCargandoSlots(false);
   }, [configCalendario, duracionTotal]);

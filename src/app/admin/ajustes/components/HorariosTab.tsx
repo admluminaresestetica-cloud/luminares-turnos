@@ -4,6 +4,14 @@
 import { Plus, Calendar, Sparkles, CheckCircle2, XCircle, Trash2, CalendarX, Save } from 'lucide-react'
 import { ConfigCalendario, DIAS_SEMANA, HorarioDia, HorariosSemana, formatFecha, horarioDiaDefault } from '../../turnos/components/types'
 
+// Definimos el tipo para una franja horaria bloqueada (puedes moverlo a types.ts si prefieres)
+export interface BloqueoFranjaHoraria {
+  id?: string;
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+}
+
 interface HorariosTabProps {
   loadingHorarios: boolean
 
@@ -25,6 +33,17 @@ interface HorariosTabProps {
   onAgregarExcepcionGeneral: () => void
   onQuitarExcepcionGeneral: (fecha: string) => void
   onGuardarConfigGeneral: () => void
+
+  // ➕ NUEVAS PROPIEDADES PARA FRANJAS HORARIAS BLOQUEADAS
+  bloqueosFranjas: BloqueoFranjaHoraria[]
+  nuevaFechaBloqueo: string
+  setNuevaFechaBloqueo: (v: string) => void
+  nuevoInicioBloqueo: string
+  setNuevoInicioBloqueo: (v: string) => void
+  nuevoFinBloqueo: string
+  setNuevoFinBloqueo: (v: string) => void
+  onAgregarBloqueoFranja: () => void
+  onQuitarBloqueoFranja: (index: number, id?: string) => void
 }
 
 export default function HorariosTab({
@@ -45,7 +64,16 @@ export default function HorariosTab({
   onActualizarHorarioGeneral,
   onAgregarExcepcionGeneral,
   onQuitarExcepcionGeneral,
-  onGuardarConfigGeneral
+  onGuardarConfigGeneral,
+  bloqueosFranjas,
+  nuevaFechaBloqueo,
+  setNuevaFechaBloqueo,
+  nuevoInicioBloqueo,
+  setNuevoInicioBloqueo,
+  nuevoFinBloqueo,
+  setNuevoFinBloqueo,
+  onAgregarBloqueoFranja,
+  onQuitarBloqueoFranja
 }: HorariosTabProps) {
   if (loadingHorarios) {
     return (
@@ -294,6 +322,77 @@ export default function HorariosTab({
                   <button
                     onClick={() => onQuitarExcepcionGeneral(fecha)}
                     className="text-rose-400 hover:text-rose-700 font-bold ml-1 p-0.5 rounded transition-all active:scale-90 dark:text-rose-400 dark:hover:text-rose-300"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 dark:bg-zinc-950/50 dark:border-zinc-800/80 mt-4">
+          <label className="block text-xs font-bold text-gray-800 mb-1 dark:text-zinc-200">
+            Bloquear Rangos Horarios Específicos (Cortes Operativos)
+          </label>
+          <p className="text-[11px] text-gray-400 dark:text-zinc-500 mb-3">
+            Elegí un día y un rango de horas en el que las operadoras no podrán recibir turnos.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 mb-3 items-center">
+            <div className="sm:col-span-4">
+              <input
+                type="date"
+                value={nuevaFechaBloqueo}
+                onChange={(e) => setNuevaFechaBloqueo(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl p-2.5 text-xs font-medium text-gray-800 outline-none focus:border-black focus:ring-2 focus:ring-rose-500/20 transition-all [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800/80 dark:border-zinc-700 dark:text-zinc-100"
+              />
+            </div>
+            <div className="sm:col-span-3 flex items-center gap-1">
+              <input
+                type="time"
+                value={nuevoInicioBloqueo}
+                onChange={(e) => setNuevoInicioBloqueo(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl p-2.5 text-xs font-bold text-gray-800 outline-none focus:border-black focus:ring-2 focus:ring-rose-500/20 transition-all [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800/80 dark:border-zinc-700 dark:text-zinc-100"
+              />
+            </div>
+            <div className="sm:col-span-3 flex items-center gap-1">
+              <input
+                type="time"
+                value={nuevoFinBloqueo}
+                onChange={(e) => setNuevoFinBloqueo(e.target.value)}
+                className="w-full bg-white border border-gray-200 rounded-xl p-2.5 text-xs font-bold text-gray-800 outline-none focus:border-black focus:ring-2 focus:ring-rose-500/20 transition-all [color-scheme:light] dark:[color-scheme:dark] dark:bg-zinc-800/80 dark:border-zinc-700 dark:text-zinc-100"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <button
+                type="button"
+                onClick={onAgregarBloqueoFranja}
+                className="w-full justify-center px-3 py-2.5 text-xs font-bold bg-gray-900 text-white rounded-xl hover:bg-black transition-all flex items-center gap-1 active:scale-95 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Bloquear
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {(!bloqueosFranjas || bloqueosFranjas.length === 0) ? (
+              <span className="text-xs text-gray-400 font-medium dark:text-zinc-500">No hay franjas horarias bloqueadas.</span>
+            ) : (
+              bloqueosFranjas.map((bloqueo, index) => (
+                <span
+                  key={bloqueo.id || index}
+                  className="inline-flex items-center gap-2 bg-amber-50 text-amber-800 text-xs font-bold px-3 py-1.5 rounded-xl border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-900/60"
+                >
+                  <CalendarX className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  {new Date(bloqueo.fecha + 'T00:00:00').toLocaleDateString('es-AR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric'
+                  })} ({bloqueo.hora_inicio} a {bloqueo.hora_fin})
+                  <button
+                    type="button"
+                    onClick={() => onQuitarBloqueoFranja(index, bloqueo.id)}
+                    className="text-amber-600 hover:text-amber-900 font-bold ml-1 p-0.5 rounded transition-all active:scale-90 dark:text-amber-400 dark:hover:text-amber-200"
                   >
                     ×
                   </button>

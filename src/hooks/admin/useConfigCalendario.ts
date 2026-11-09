@@ -25,6 +25,12 @@ export function useConfigCalendario() {
   const [nuevaFechaLaser, setNuevaFechaLaser] = useState<string>('')
   const [nuevaExcepcionGeneral, setNuevaExcepcionGeneral] = useState<string>('')
 
+  // ➕ Estados para franjas horarias bloqueadas
+  const [bloqueosFranjas, setBloqueosFranjas] = useState<any[]>([])
+  const [nuevaFechaBloqueo, setNuevaFechaBloqueo] = useState<string>('')
+  const [nuevoInicioBloqueo, setNuevoInicioBloqueo] = useState<string>('10:00')
+  const [nuevoFinBloqueo, setNuevoFinBloqueo] = useState<string>('11:00')
+
   const fetchConfigCalendario = async () => {
     setLoadingHorarios(true)
     const { data, error } = await supabase
@@ -58,6 +64,7 @@ export function useConfigCalendario() {
           },
           updated_at: general.updated_at
         })
+        setBloqueosFranjas(horariosBase.bloqueos_franjas || [])
       }
     } else if (error) {
       console.error('Error al cargar configuración de calendario:', error.message)
@@ -210,11 +217,12 @@ export function useConfigCalendario() {
       { inicio: '14:00', fin: '19:00' }
     ]
 
-    const payload = {
+const payload = {
       tipo_servicio: 'general' as const,
       horarios_atencion: {
         ...horarios,
-        bloques: horarios.bloques || bloquesCalculados
+        bloques: horarios.bloques || bloquesCalculados,
+        bloqueos_franjas: bloqueosFranjas 
       },
       updated_at: new Date().toISOString()
     }
@@ -249,6 +257,34 @@ export function useConfigCalendario() {
     setGuardandoGeneral(false)
   }
 
+// ➕ Funciones para manejar los bloqueos de franjas horarias
+  const agregarBloqueoFranja = () => {
+    if (!nuevaFechaBloqueo || !nuevoInicioBloqueo || !nuevoFinBloqueo) {
+      alert('Por favor complete la fecha y el rango horario para bloquear.')
+      return
+    }
+
+    if (nuevoInicioBloqueo >= nuevoFinBloqueo) {
+      alert('La hora de inicio debe ser menor a la hora de fin.')
+      return
+    }
+
+    const nuevoBloqueo = {
+      fecha: nuevaFechaBloqueo,
+      hora_inicio: nuevoInicioBloqueo,
+      hora_fin: nuevoFinBloqueo
+    }
+
+    setBloqueosFranjas((prev) => [...prev, nuevoBloqueo])
+    // Limpiamos los inputs de hora (mantenemos la fecha para comodidad)
+    setNuevoInicioBloqueo('10:00')
+    setNuevoFinBloqueo('11:00')
+  }
+
+  const quitarBloqueoFranja = (index: number) => {
+    setBloqueosFranjas((prev) => prev.filter((_, i) => i !== index))
+  }
+
   return {
     configLaser,
     guardandoLaser,
@@ -268,7 +304,15 @@ export function useConfigCalendario() {
     onAgregarExcepcionGeneral: agregarExcepcionGeneral,
     onQuitarExcepcionGeneral: quitarExcepcionGeneral,
     onGuardarConfigGeneral: guardarConfigGeneral,
-
+    bloqueosFranjas,
+    nuevaFechaBloqueo,
+    setNuevaFechaBloqueo,
+    nuevoInicioBloqueo,
+    setNuevoInicioBloqueo,
+    nuevoFinBloqueo,
+    setNuevoFinBloqueo,
+    onAgregarBloqueoFranja: agregarBloqueoFranja,
+    onQuitarBloqueoFranja: quitarBloqueoFranja,
     loadingHorarios
   }
 }
