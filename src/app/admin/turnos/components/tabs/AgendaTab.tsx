@@ -168,15 +168,6 @@ export default function AgendaTab({
 
 return (
   <div className="space-y-5">
-    {/* 1. RESUMEN DE RECAUDACIÓN (TARJETAS FLOTANTES) */}
-    <ResumenAgenda turnos={turnosAgendaResumen} esFechaPasada={esFechaAgendaPasada} />
-
-    {/* 2. BARRA DE FILTROS COMPACTA + TIRA DE DÍAS MENSUAL */}
-    <div className="border border-slate-200/80 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 bg-white dark:bg-zinc-900 shadow-xl flex flex-col gap-4">
-        <div className="max-w-7xl mx-auto space-y-4">
-
-        </div>
-      </div>
 
       {/* ⬜ CONTENEDOR PRINCIPAL FLOTANTE */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 space-y-5">

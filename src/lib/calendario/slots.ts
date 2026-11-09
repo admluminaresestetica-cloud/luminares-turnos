@@ -79,7 +79,8 @@ export function calcularSlotsConEstado(
   duracionMin: number,
   horarios: HorariosAtencion | any,
   reservas: Reserva[],
-  bufferMinimoRestante: number = 15
+  bufferMinimoRestante: number = 15,
+  bloqueosFranjas: { fecha: string; hora_inicio: string; hora_fin: string }[] = []
 ): SlotDisponibilidad[] {
   if (!horarios) return [];
 
@@ -152,6 +153,21 @@ export function calcularSlotsConEstado(
 
     if (estadoSlot === 'ocupado') continue;
 
+    // ➕ Validar si el slot cae dentro de un bloqueo por franja horaria del admin
+    if (estadoSlot === 'disponible' && bloqueosFranjas && bloqueosFranjas.length > 0) {
+      const estaBloqueado = bloqueosFranjas.some((b) => {
+        if (b.fecha !== fecha) return false;
+        const bStart = parseTime(b.hora_inicio);
+        const bEnd = parseTime(b.hora_fin);
+        // Si el minuto de inicio del slot cae dentro del rango bloqueado
+        return startMin >= bStart && startMin < bEnd;
+      });
+
+      if (estaBloqueado) {
+        continue; // Salta este slot y no lo muestra disponible
+      }
+    }
+
     // Validación de "hueco basura"
     if (estadoSlot === 'disponible') {
       const bloqueCorrespondiente = bloquesAtencion.find((b) => {
@@ -202,9 +218,10 @@ export function calcularSlotsDisponibles(
   duracionMin: number,
   horarios: HorariosAtencion | any,
   reservas: Reserva[],
-  bufferMinimoRestante: number = 15
+  bufferMinimoRestante: number = 15,
+  bloqueosFranjas: { fecha: string; hora_inicio: string; hora_fin: string }[] = []
 ): string[] {
-  const conEstado = calcularSlotsConEstado(fecha, duracionMin, horarios, reservas, bufferMinimoRestante);
+  const conEstado = calcularSlotsConEstado(fecha, duracionMin, horarios, reservas, bufferMinimoRestante, bloqueosFranjas);
   return conEstado.filter((s) => s.estado === 'disponible').map((s) => s.hora);
 }
 
