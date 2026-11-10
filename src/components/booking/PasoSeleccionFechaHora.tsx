@@ -1,11 +1,9 @@
 'use client';
 
-import { Calendar, Clock, CircleDollarSign, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, ChevronRight } from 'lucide-react';
 import SelectorFecha from '@/components/booking/SelectorFecha';
 import SelectorHorario from '@/components/booking/SelectorHorario';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import type { TipoServicio } from '@/lib/types';
 import type { SlotDisponibilidad } from '@/lib/calendario/slots';
 
@@ -26,6 +24,30 @@ interface Props {
   onContinuar: () => void;
 }
 
+function TituloSeccion({
+  Icono,
+  titulo,
+  detalle,
+}: {
+  Icono: typeof Calendar;
+  titulo: string;
+  detalle: string;
+}) {
+  return (
+    <div className="flex items-center gap-3.5 px-1">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <Icono className="h-5 w-5" />
+      </span>
+      <div className="min-w-0">
+        <h2 className="text-lg font-extrabold leading-tight tracking-tight text-foreground">
+          {titulo}
+        </h2>
+        <p className="mt-0.5 text-xs font-medium text-muted-foreground">{detalle}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function PasoSeleccionFechaHora({
   tipo,
   fechasLaser,
@@ -43,25 +65,14 @@ export default function PasoSeleccionFechaHora({
   onContinuar,
 }: Props) {
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-8 animate-in fade-in duration-300">
       {/* Sección Fecha */}
-      <section className="space-y-3">
-        <div className="flex items-center gap-2.5">
-          <Badge
-            variant="outline"
-            className="p-2 rounded-xl bg-white dark:bg-zinc-800 border-slate-200/80 dark:border-zinc-700 shadow-2xs text-slate-700 dark:text-zinc-200"
-          >
-            <Calendar className="w-4 h-4 text-[hsl(var(--primary))]" />
-          </Badge>
-          <div>
-            <h2 className="text-xs font-extrabold text-slate-800 dark:text-zinc-100 uppercase tracking-wider">
-              Elegí la fecha
-            </h2>
-            <p className="text-[11px] font-medium text-slate-400 dark:text-zinc-400">
-              Selecciona el día de tu turno
-            </p>
-          </div>
-        </div>
+      <section className="space-y-4">
+        <TituloSeccion
+          Icono={Calendar}
+          titulo="Elegí la fecha"
+          detalle="Deslizá los días o usá el calendario"
+        />
 
         <SelectorFecha
           tipo={tipo}
@@ -74,23 +85,12 @@ export default function PasoSeleccionFechaHora({
 
       {/* Sección Horario */}
       {fecha && (
-        <section className="space-y-3 animate-in fade-in slide-in-from-top-3 duration-300">
-          <div className="flex items-center gap-2.5">
-            <Badge
-              variant="outline"
-              className="p-2 rounded-xl bg-white dark:bg-zinc-800 border-slate-200/80 dark:border-zinc-700 shadow-2xs text-slate-700 dark:text-zinc-200"
-            >
-              <Clock className="w-4 h-4 text-[hsl(var(--primary))]" />
-            </Badge>
-            <div>
-              <h2 className="text-xs font-extrabold text-slate-800 dark:text-zinc-100 uppercase tracking-wider">
-                Elegí el horario
-              </h2>
-              <p className="text-[11px] font-medium text-slate-400 dark:text-zinc-400">
-                Horarios disponibles para la fecha seleccionada
-              </p>
-            </div>
-          </div>
+        <section className="space-y-4 animate-in fade-in slide-in-from-top-3 duration-300">
+          <TituloSeccion
+            Icono={Clock}
+            titulo="Elegí el horario"
+            detalle="Horarios disponibles para la fecha seleccionada"
+          />
 
           <SelectorHorario
             slots={slots}
@@ -101,41 +101,40 @@ export default function PasoSeleccionFechaHora({
         </section>
       )}
 
-      {/* Resumen Total */}
-      <Card
-        className={`p-4 sm:p-5 border border-slate-200/80 dark:border-zinc-800 rounded-2xl shadow-2xs transition-all duration-300 ${
-          summaryBgStyle || 'bg-slate-50/70 dark:bg-zinc-900/60'
-        }`}
-      >
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2 text-slate-700 dark:text-zinc-200 text-xs sm:text-sm font-bold">
-            <CircleDollarSign className="w-4 h-4 text-[hsl(var(--primary))] shrink-0" />
-            <span>Total estimado</span>
-          </div>
-          <div className="text-right flex items-baseline gap-1.5">
-            <span className="font-black text-slate-900 dark:text-zinc-100 text-lg sm:text-xl tracking-tight">
+      {/* Barra inferior fija: total + continuar (se apoya sobre la navegación de la app) */}
+      <div className="sticky bottom-[calc(var(--bottom-nav-h,4rem)+env(safe-area-inset-bottom,0px)+0.5rem)] z-30">
+        <div
+          className={`space-y-3 rounded-[24px] border border-border p-4 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.25)] transition-all duration-300 ${
+            summaryBgStyle || 'bg-card'
+          }`}
+        >
+          <div className="flex items-end justify-between gap-4 px-1">
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-muted-foreground">Total estimado</p>
+              <p className="mt-0.5 text-xs font-semibold text-muted-foreground">
+                {duracionTotal} min
+              </p>
+            </div>
+            <span className="text-3xl font-black leading-none tabular-nums tracking-tight text-foreground">
               ${precioTotal.toLocaleString('es-AR')}
             </span>
-            <span className="text-xs text-slate-500 dark:text-zinc-400 font-semibold">
-              ({duracionTotal} min)
-            </span>
           </div>
-        </div>
-      </Card>
 
-      {/* Botón Siguiente */}
-      <Button
-        type="button"
-        disabled={!fecha || !hora}
-        onClick={onContinuar}
-        className={`w-full h-12 font-extrabold rounded-2xl text-xs sm:text-sm shadow-md transition-all duration-200 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 ${
-          buttonStyle ||
-          'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 disabled:opacity-40'
-        }`}
-      >
-        <span>Continuar a confirmación</span>
-        <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-      </Button>
+          <Button
+            type="button"
+            disabled={!fecha || !hora}
+            onClick={onContinuar}
+            className={`flex h-14 w-full cursor-pointer items-center justify-center gap-2 rounded-full text-sm font-extrabold shadow-md transition-all duration-200 active:scale-[0.98] ${
+              buttonStyle ||
+              'bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40'
+            }`}
+          >
+            <span>Continuar a confirmación</span>
+            <ChevronRight className="h-4 w-4 stroke-[2.5]" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
+
