@@ -427,39 +427,39 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
   })();
 
 
-  
-  return (
-    <main className="min-h-screen bg-background px-3 py-4 sm:p-6 md:p-12 pb-20 sm:pb-24 relative font-sans">
+    return (
+    <main className="min-h-screen bg-background px-4 py-5 sm:p-6 md:p-12 pb-48 relative font-sans">
       <div className="max-w-lg mx-auto">
-        <div className="mb-3 sm:mb-4">
+        <div className="mb-5">
           {volverHref ? (
-            <Link href={volverHref} className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground bg-card border border-border px-3.5 py-2 rounded-2xl shadow-xs hover:bg-accent hover:text-accent-foreground transition-all">
-              <ArrowLeft className="w-3.5 h-3.5" />
+            <Link href={volverHref} className="inline-flex items-center gap-2 h-11 text-sm font-bold text-foreground bg-card border border-border px-4 rounded-2xl shadow-xs hover:bg-accent hover:text-accent-foreground transition-all active:scale-95">
+              <ArrowLeft className="w-4 h-4" />
               <span>{volverLabel}</span>
             </Link>
           ) : onVolver ? (
-            <button type="button" onClick={onVolver} className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground bg-card border border-border px-3.5 py-2 rounded-2xl shadow-xs hover:bg-accent hover:text-accent-foreground transition-all">
-              <ArrowLeft className="w-3.5 h-3.5" />
+            <button type="button" onClick={onVolver} className="inline-flex items-center gap-2 h-11 text-sm font-bold text-foreground bg-card border border-border px-4 rounded-2xl shadow-xs hover:bg-accent hover:text-accent-foreground transition-all active:scale-95 cursor-pointer">
+              <ArrowLeft className="w-4 h-4" />
               <span>{volverLabel}</span>
             </button>
           ) : null}
         </div>
 
-        <div className="bg-card text-card-foreground border border-border rounded-[28px] p-4 sm:p-7 shadow-xs">
-          <div className="flex items-center gap-1.5 sm:gap-2 mb-5 sm:mb-6 overflow-x-auto pb-1 no-scrollbar">
-            <span className={`text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 shrink-0 ${paso === 'agenda' ? styles.stepActive : 'bg-muted text-muted-foreground'}`}>
-              <Calendar className="w-3.5 h-3.5" /> 1. Fecha y hora
+        {/* Contenedor: en mobile el contenido respira sobre el fondo; desde sm vuelve a ser tarjeta */}
+        <div className="text-card-foreground sm:bg-card sm:border sm:border-border sm:rounded-[32px] sm:p-8 sm:shadow-xs">
+          <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1 no-scrollbar">
+            <span className={`text-sm font-extrabold px-4 py-2.5 rounded-2xl transition-all flex items-center gap-2 shrink-0 ${paso === 'agenda' ? styles.stepActive : 'bg-muted text-muted-foreground'}`}>
+              <Calendar className="w-4 h-4" /> 1. Fecha y hora
             </span>
-            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-            <span className={`text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 shrink-0 ${paso === 'confirmacion' ? styles.stepActive : 'bg-muted text-muted-foreground'}`}>
-              <CheckCircle2 className="w-3.5 h-3.5" /> 2. Confirmación
+            <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+            <span className={`text-sm font-extrabold px-4 py-2.5 rounded-2xl transition-all flex items-center gap-2 shrink-0 ${paso === 'confirmacion' ? styles.stepActive : 'bg-muted text-muted-foreground'}`}>
+              <CheckCircle2 className="w-4 h-4" /> 2. Confirmación
             </span>
           </div>
 
           {titulo && (
-            <div className="mb-5 sm:mb-6">
-              <h1 className="text-lg sm:text-2xl font-black text-foreground tracking-tight leading-tight">{titulo}</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1 font-medium leading-normal line-clamp-2 sm:line-clamp-none">{detalleTexto}</p>
+            <div className="mb-8 space-y-1.5">
+              <h1 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight leading-tight">{titulo}</h1>
+              <p className="text-sm sm:text-base text-muted-foreground font-medium leading-relaxed line-clamp-2 sm:line-clamp-none">{detalleTexto}</p>
             </div>
           )}
 
@@ -487,9 +487,9 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
               <button
                 type="button"
                 onClick={() => setPaso('agenda')}
-                className={`inline-flex items-center gap-1.5 text-xs font-bold mb-4 transition-colors ${styles.link}`}
+                className={`inline-flex items-center gap-2 h-11 text-sm font-extrabold mb-6 transition-colors cursor-pointer ${styles.link}`}
               >
-                <ArrowLeft className="w-3.5 h-3.5" />
+                <ArrowLeft className="w-4 h-4" />
                 <span>Cambiar fecha u hora</span>
               </button>
 
@@ -540,3 +540,5 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
     </main>
   );
 }
+
+  
