@@ -22,6 +22,14 @@ const AVATARES_DISPONIBLES = [
   "https://api.dicebear.com/7.x/avataaars/svg?seed=Coco",
   "https://api.dicebear.com/7.x/avataaars/svg?seed=Milo",
   "https://api.dicebear.com/7.x/avataaars/svg?seed=Cleo",
+  "https://api.dicebear.com/7.x/fun-emoji/svg?seed=cat",
+  "https://api.dicebear.com/7.x/fun-emoji/svg?seed=dog",
+  "https://api.dicebear.com/7.x/fun-emoji/svg?seed=panda",
+  "https://api.dicebear.com/7.x/fun-emoji/svg?seed=fox",
+  "https://api.dicebear.com/7.x/fun-emoji/svg?seed=tiger",
+  "https://api.dicebear.com/7.x/fun-emoji/svg?seed=rabbit",
+  "https://api.dicebear.com/7.x/fun-emoji/svg?seed=koala",
+  "https://api.dicebear.com/7.x/fun-emoji/svg?seed=lion",
 ];
 
 export default function EditarPerfilForm({
