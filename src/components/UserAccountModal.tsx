@@ -122,28 +122,33 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
     }
   }
 
-  // Función para guardar el nombre y celular real
+  // Función para actualizar o guardar el perfil real de forma segura
   const guardarPerfilReal = async () => {
     if (!user?.id || !nombreInput.trim()) return;
     try {
+      // Usamos .update() porque el cliente ya fue creado al iniciar sesión
       const { error } = await supabase
         .from('clientes')
         .update({ 
           nombre: nombreInput.trim(),
-          celular: celularInput.trim()
+          celular: celularInput.trim(),
+          updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
 
-      if (!error) {
-        setClienteData((prev: any) => ({ 
-          ...prev, 
-          nombre: nombreInput.trim(), 
-          celular: celularInput.trim() 
-        }));
-        setNombreIncompleto(false);
-      }
+      if (error) throw error;
+
+      // Actualizamos el estado local de forma limpia
+      setClienteData((prev: any) => ({ 
+        ...prev, 
+        nombre: nombreInput.trim(), 
+        celular: celularInput.trim() 
+      }));
+      setNombreIncompleto(false);
+      setIsEditingProfile(false);
     } catch (err) {
-      console.error('Error al guardar perfil:', err);
+      console.error('Error al actualizar perfil en Supabase:', err);
+      alert('Hubo un error al guardar los cambios.');
     }
   };
 
@@ -355,10 +360,21 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
               )}
             </div>
 
-            <div className="min-w-0">
-              <h3 className="text-base font-extrabold tracking-tight text-stone-900 dark:text-zinc-50 leading-tight truncate">
-                {user ? clienteData?.nombre || user.user_metadata?.full_name || 'Mi perfil' : '¡Hola! Bienvenida/o'}
-              </h3>
+              <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-extrabold tracking-tight text-stone-900 dark:text-zinc-50 leading-tight truncate">
+                  {user ? clienteData?.nombre || user.user_metadata?.full_name || 'Mi perfil' : '¡Hola! Bienvenida/o'}
+                </h3>
+                {user && !nombreIncompleto && (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingProfile(!isEditingProfile)}
+                    className="text-[11px] font-bold text-primary hover:underline shrink-0 cursor-pointer"
+                  >
+                    {isEditingProfile ? 'Cancelar' : '✏️ Editar'}
+                  </button>
+                )}
+              </div>
               <p className="text-xs font-medium text-stone-500 dark:text-zinc-400 truncate mt-0.5">
                 {user ? user.email : 'Iniciá sesión para ver tu actividad'}
               </p>
@@ -400,7 +416,6 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
               onCancelar={() => setIsEditingProfile(false)}
             />
           ) : (
-
             <div className="space-y-3.5">
               <PuntosCardWidget
                 puntosTotales={puntosTotales}
