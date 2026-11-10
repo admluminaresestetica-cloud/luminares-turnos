@@ -93,43 +93,37 @@ export default function FormConfirmacion({
   const [cuponesDisponibles, setCuponesDisponibles] = useState<any[]>([]);
   const [cuponSeleccionado, setCuponSeleccionado] = useState<any | null>(null);
 
- useEffect(() => {
+useEffect(() => {
     if (!user) return;
-
-    // Guardamos el ID de forma segura para TypeScript
     const userId = user.id;
 
-    // 1. Autocompletar nombre desde Google si está vacío
-    if (!nombre) {
-      const nombreGoogle = user.user_metadata?.full_name || user.user_metadata?.name || '';
-      if (nombreGoogle) {
-        onNombreChange(nombreGoogle);
+    // 🟢 Fuente de la verdad: Consultamos la tabla 'clientes' para autorrellenar con el nombre real guardado
+    async function cargarDatosDesdeClientes() {
+      try {
+        const { data: cliente } = await supabase
+          .from('clientes')
+          .select('nombre, celular')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (cliente) {
+          if (cliente.nombre && !nombre) {
+            onNombreChange(cliente.nombre);
+          }
+          if (cliente.celular && !celular) {
+            onCelularChange(cliente.celular);
+          }
+        }
+      } catch (err) {
+        console.error('Error al cargar datos del cliente:', err);
       }
     }
 
-    // 2. Autocompletar celular buscando la última reserva del usuario en Supabase
-    if (!celular) {
-      async function recuperarCelularAnterior() {
-        try {
-          const { data, error } = await supabase
-            .from('reservas')
-            .select('cliente_celular')
-            .eq('user_id', userId) // <-- Usamos userId en lugar de user.id
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          if (data && data.cliente_celular) {
-            onCelularChange(data.cliente_celular);
-          }
-        } catch (err) {
-          console.error('Error al recuperar teléfono anterior:', err);
-        }
-      }
-      recuperarCelularAnterior();
+    if (!nombre || !celular) {
+      cargarDatosDesdeClientes();
     }
   }, [user, nombre, celular, onNombreChange, onCelularChange]);
-
+  
 useEffect(() => {
     if (!user) {
       console.log('🔴 [DEBUG]: No hay usuario logueado todavía.');
@@ -244,6 +238,7 @@ const extraerMontoDelTitulo = (texto?: string) => {
     cantidadCupones: cuponesDisponibles.length,
     cupones: cuponesDisponibles
   });
+
   return (
     
     <div className="space-y-5 animate-in fade-in duration-300">
@@ -586,24 +581,38 @@ const extraerMontoDelTitulo = (texto?: string) => {
               </div>
             )}
 
-            <button
-              type="button"
-              disabled={!formValido || confirmando || cargandoMP}
-              onClick={() => onConfirmar(cuponSeleccionado ? cuponSeleccionado.id : undefined)}
-              className="w-full bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] font-bold py-3.5 rounded-2xl shadow-xs text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
-            >
-              {confirmando ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Procesando reserva...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <MessageCircle className="w-4 h-4 fill-white" />
-                  Enviar comprobante y confirmar por WhatsApp
-                </span>
-              )}
-            </button>
+<button
+  type="button"
+  disabled={!formValido || confirmando || cargandoMP}
+  onClick={async () => {
+    // 🟢 Validación de seguridad para TypeScript y sesión activa
+    if (!user) return;
+
+    await supabase
+      .from('clientes')
+      .update({
+        nombre: nombre.trim(),
+        celular: celular.trim(),
+      })
+      .eq('user_id', user.id);
+
+    // Ejecutamos la función original de confirmación
+    onConfirmar(cuponSeleccionado ? cuponSeleccionado.id : undefined);
+  }}
+  className="w-full bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] font-bold py-3.5 rounded-2xl shadow-xs text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
+>
+  {confirmando ? (
+    <span className="flex items-center gap-2">
+      <Loader2 className="w-4 h-4 animate-spin" />
+      Procesando reserva...
+    </span>
+  ) : (
+    <span className="flex items-center gap-2">
+      <MessageCircle className="w-4 h-4 fill-white" />
+      Enviar comprobante y confirmar por WhatsApp
+    </span>
+  )}
+</button>
           </div>
         )}
 
