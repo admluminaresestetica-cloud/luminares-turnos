@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,12 +67,22 @@ export default function SelectorFecha({
     return { year: y, month: m, celdas: c };
   }, [hoy, mesOffset]);
 
+  // Mantiene visible la tarjeta seleccionada al volver al carrusel
+  useEffect(() => {
+    if (mostrarCalendarioCompleto || !fechaSeleccionada) return;
+    const el = scrollRef.current?.querySelector<HTMLElement>('[data-selected="true"]');
+    el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [fechaSeleccionada, mostrarCalendarioCompleto]);
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-5">
       <div className="flex items-center justify-between px-1">
-        <span className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
-          {fechaSeleccionada 
-            ? new Date(fechaSeleccionada + 'T00:00:00').toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
+        <span className="text-base font-bold capitalize tracking-tight text-slate-800 dark:text-zinc-100">
+          {fechaSeleccionada
+            ? new Date(fechaSeleccionada + 'T00:00:00').toLocaleDateString('es-AR', {
+                month: 'long',
+                year: 'numeric',
+              })
             : MESES[hoy.getMonth()] + ' ' + hoy.getFullYear()}
         </span>
         <Button
@@ -80,18 +90,18 @@ export default function SelectorFecha({
           variant="ghost"
           size="sm"
           onClick={() => setMostrarCalendarioCompleto(!mostrarCalendarioCompleto)}
-          className="text-xs font-extrabold text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/10 rounded-xl h-8 gap-1.5 cursor-pointer"
+          className="h-10 gap-2 rounded-xl px-3.5 text-sm font-extrabold text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/10 cursor-pointer"
         >
-          <Grid className="w-3.5 h-3.5" />
+          <Grid className="w-4 h-4" />
           <span>{mostrarCalendarioCompleto ? 'Ver carrusel' : 'Ver mes'}</span>
         </Button>
       </div>
 
       {!mostrarCalendarioCompleto ? (
-        /* CARRUSEL DE DÍAS AMPLIADO Y CÓMODO */
-        <div 
+        /* Carrusel con sangrado lateral: las tarjetas llegan al borde de la pantalla */
+        <div
           ref={scrollRef}
-          className="flex items-center gap-2.5 overflow-x-auto pb-3 pt-1 scrollbar-none snap-x touch-pan-x"
+          className="-mx-4 flex items-center gap-3 overflow-x-auto px-4 py-3 scrollbar-none snap-x snap-mandatory touch-pan-x scroll-px-4"
         >
           {diasCarrusel.map((fecha) => {
             const iso = formatDateISO(fecha);
@@ -104,66 +114,72 @@ export default function SelectorFecha({
               <button
                 key={iso}
                 type="button"
+                data-selected={seleccionada}
                 disabled={!habilitada}
                 onClick={() => onSelect(iso)}
                 className={`
-                  snap-start shrink-0 w-18 h-22 rounded-[22px] flex flex-col items-center justify-center transition-all duration-200 active:scale-95 border cursor-pointer shadow-2xs
+                  relative snap-start shrink-0 w-20 h-24 rounded-3xl flex flex-col items-center justify-center gap-1.5 border transition-all duration-200 active:scale-95 cursor-pointer shadow-2xs
                   ${
                     seleccionada
-                      ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))] shadow-md scale-105 z-10 ring-2 ring-[hsl(var(--primary))]/30'
+                      ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))] shadow-lg ring-4 ring-[hsl(var(--primary))]/20'
                       : habilitada
-                      ? 'bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-200 border-slate-200/80 dark:border-zinc-800 hover:border-[hsl(var(--primary))]/40 hover:bg-slate-50 dark:hover:bg-zinc-800'
+                      ? 'bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 border-slate-200/80 dark:border-zinc-800 hover:border-[hsl(var(--primary))]/40 hover:bg-slate-50 dark:hover:bg-zinc-800'
                       : 'bg-slate-100/50 dark:bg-zinc-800/30 text-slate-300 dark:text-zinc-700 border-slate-100 dark:border-zinc-800/40 cursor-not-allowed opacity-50'
                   }
                 `}
               >
-                <span className={`text-[11px] font-extrabold uppercase tracking-tight ${seleccionada ? 'opacity-90' : 'text-slate-400 dark:text-zinc-400'}`}>
+                <span
+                  className={`text-xs font-bold ${
+                    seleccionada ? 'opacity-90' : 'text-slate-500 dark:text-zinc-400'
+                  }`}
+                >
                   {esHoy ? 'Hoy' : nombreDia}
                 </span>
-                <span className="text-xl font-black leading-tight mt-1">
+                <span className="text-3xl font-black leading-none tracking-tight tabular-nums">
                   {fecha.getDate()}
                 </span>
                 {esHoy && !seleccionada && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--primary))] mt-1.5" />
+                  <span className="absolute bottom-2 w-1.5 h-1.5 rounded-full bg-[hsl(var(--primary))]" />
                 )}
               </button>
             );
           })}
         </div>
       ) : (
-        <Card className="bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 rounded-[24px] p-4 sm:p-5 shadow-none animate-in fade-in duration-200">
-          <div className="flex items-center justify-between mb-4">
+        <Card className="bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 rounded-[28px] p-5 sm:p-6 shadow-none animate-in fade-in duration-200">
+          <div className="flex items-center justify-between mb-6">
             <Button
               type="button"
               variant="outline"
               size="icon"
               onClick={() => setMesOffset((m) => m - 1)}
               disabled={mesOffset === 0}
-              className="h-8 w-8 rounded-xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 cursor-pointer"
+              className="h-11 w-11 rounded-2xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </Button>
 
-            <div className="text-center">
-              <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-zinc-100 uppercase tracking-wider">
-                {MESES[month]} {year}
-              </h3>
-            </div>
+            <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-zinc-100">
+              {MESES[month]} {year}
+            </h3>
 
             <Button
               type="button"
               variant="outline"
               size="icon"
               onClick={() => setMesOffset((m) => m + 1)}
-              className="h-8 w-8 rounded-xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 cursor-pointer"
+              className="h-11 w-11 rounded-2xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 cursor-pointer"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </Button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 mb-2">
+          <div className="grid grid-cols-7 gap-1.5 mb-3">
             {DIAS_CORTOS.map((d) => (
-              <div key={d} className="text-center text-[11px] font-bold text-slate-400 dark:text-zinc-500 py-1">
+              <div
+                key={d}
+                className="py-1 text-center text-xs font-bold text-slate-400 dark:text-zinc-500"
+              >
                 {d}
               </div>
             ))}
@@ -188,10 +204,10 @@ export default function SelectorFecha({
                     setMostrarCalendarioCompleto(false);
                   }}
                   className={`
-                    relative aspect-square rounded-2xl text-xs sm:text-sm font-extrabold transition-all duration-150 flex flex-col items-center justify-center active:scale-95
+                    relative aspect-square rounded-2xl text-sm sm:text-base font-extrabold tabular-nums transition-all duration-150 flex flex-col items-center justify-center active:scale-95
                     ${
                       seleccionada
-                        ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-md scale-105 z-10 ring-2 ring-[hsl(var(--primary))]/30'
+                        ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-md z-10 ring-4 ring-[hsl(var(--primary))]/20'
                         : habilitada
                         ? 'bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/20 border border-[hsl(var(--primary))]/20 cursor-pointer'
                         : 'bg-white/40 dark:bg-zinc-800/30 text-slate-300 dark:text-zinc-700 border border-slate-100 dark:border-zinc-800/50 cursor-not-allowed'
@@ -210,8 +226,8 @@ export default function SelectorFecha({
       )}
 
       {tipo === 'laser' && fechasLaser.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-zinc-800 flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-zinc-400">
-          <CalendarIcon className="w-3.5 h-3.5 shrink-0 text-[hsl(var(--primary))]" />
+        <div className="flex items-center gap-2.5 rounded-2xl bg-slate-50/70 dark:bg-zinc-900/60 border border-slate-200/60 dark:border-zinc-800 px-4 py-3 text-xs font-medium text-slate-500 dark:text-zinc-400">
+          <CalendarIcon className="w-4 h-4 shrink-0 text-[hsl(var(--primary))]" />
           <span>Días destacados disponibles exclusivamente para la jornada láser.</span>
         </div>
       )}
