@@ -38,7 +38,6 @@ export default function SelectorFecha({
   const [mostrarCalendarioCompleto, setMostrarCalendarioCompleto] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Generación de días para el carrusel (próximos 30 días)
   const diasCarrusel = useMemo(() => {
     const lista = [];
     const base = new Date(hoy);
@@ -50,7 +49,6 @@ export default function SelectorFecha({
     return lista;
   }, [hoy]);
 
-  // Datos para el calendario mensual completo
   const { year, month, celdas } = useMemo(() => {
     const base = new Date(hoy.getFullYear(), hoy.getMonth() + mesOffset, 1);
     const y = base.getFullYear();
@@ -71,7 +69,6 @@ export default function SelectorFecha({
 
   return (
     <div className="space-y-3">
-      {/* Selector Vista / Título de Mes */}
       <div className="flex items-center justify-between px-1">
         <span className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
           {fechaSeleccionada 
@@ -86,15 +83,15 @@ export default function SelectorFecha({
           className="text-xs font-extrabold text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/10 rounded-xl h-8 gap-1.5 cursor-pointer"
         >
           <Grid className="w-3.5 h-3.5" />
-          <span>{mostrarCalendarioCompleto ? 'Vista lista' : 'Ver mes'}</span>
+          <span>{mostrarCalendarioCompleto ? 'Ver carrusel' : 'Ver mes'}</span>
         </Button>
       </div>
 
       {!mostrarCalendarioCompleto ? (
-        /* 📱 CARRUSEL HORIZONTAL DESLIZANTE DE DÍAS */
+        /* CARRUSEL DE DÍAS AMPLIADO Y CÓMODO */
         <div 
           ref={scrollRef}
-          className="flex items-center gap-2 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x touch-pan-x"
+          className="flex items-center gap-2.5 overflow-x-auto pb-3 pt-1 scrollbar-none snap-x touch-pan-x"
         >
           {diasCarrusel.map((fecha) => {
             const iso = formatDateISO(fecha);
@@ -110,7 +107,7 @@ export default function SelectorFecha({
                 disabled={!habilitada}
                 onClick={() => onSelect(iso)}
                 className={`
-                  snap-start shrink-0 w-15 h-20 rounded-[20px] flex flex-col items-center justify-center transition-all duration-200 active:scale-95 border cursor-pointer
+                  snap-start shrink-0 w-18 h-22 rounded-[22px] flex flex-col items-center justify-center transition-all duration-200 active:scale-95 border cursor-pointer shadow-2xs
                   ${
                     seleccionada
                       ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))] shadow-md scale-105 z-10 ring-2 ring-[hsl(var(--primary))]/30'
@@ -120,21 +117,20 @@ export default function SelectorFecha({
                   }
                 `}
               >
-                <span className={`text-[11px] font-bold uppercase tracking-tight ${seleccionada ? 'opacity-90' : 'text-slate-400 dark:text-zinc-400'}`}>
+                <span className={`text-[11px] font-extrabold uppercase tracking-tight ${seleccionada ? 'opacity-90' : 'text-slate-400 dark:text-zinc-400'}`}>
                   {esHoy ? 'Hoy' : nombreDia}
                 </span>
-                <span className="text-lg font-black leading-tight mt-0.5">
+                <span className="text-xl font-black leading-tight mt-1">
                   {fecha.getDate()}
                 </span>
                 {esHoy && !seleccionada && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--primary))] mt-1" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--primary))] mt-1.5" />
                 )}
               </button>
             );
           })}
         </div>
       ) : (
-        /* 📅 CALENDARIO MENSUAL COMPLETO */
         <Card className="bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 rounded-[24px] p-4 sm:p-5 shadow-none animate-in fade-in duration-200">
           <div className="flex items-center justify-between mb-4">
             <Button
@@ -143,7 +139,7 @@ export default function SelectorFecha({
               size="icon"
               onClick={() => setMesOffset((m) => m - 1)}
               disabled={mesOffset === 0}
-              className="h-8 w-8 rounded-xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 disabled:opacity-30 shadow-2xs transition-all cursor-pointer"
+              className="h-8 w-8 rounded-xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -159,7 +155,7 @@ export default function SelectorFecha({
               variant="outline"
               size="icon"
               onClick={() => setMesOffset((m) => m + 1)}
-              className="h-8 w-8 rounded-xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 shadow-2xs transition-all cursor-pointer"
+              className="h-8 w-8 rounded-xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -213,7 +209,6 @@ export default function SelectorFecha({
         </Card>
       )}
 
-      {/* Leyenda de servicio Láser */}
       {tipo === 'laser' && fechasLaser.length > 0 && (
         <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-zinc-800 flex items-center gap-2 text-[11px] font-medium text-slate-500 dark:text-zinc-400">
           <CalendarIcon className="w-3.5 h-3.5 shrink-0 text-[hsl(var(--primary))]" />
