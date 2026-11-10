@@ -240,73 +240,71 @@ const extraerMontoDelTitulo = (texto?: string) => {
   });
 
   return (
-    
-    <div className="space-y-5 animate-in fade-in duration-300">
+    <div className="space-y-10 pb-4 animate-in fade-in duration-300">
       {/* TARJETA DE RESUMEN DEL TURNO */}
-      <div className="bg-slate-50/80 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 space-y-3">
-        <div className="flex justify-between items-start gap-2">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 block">
-              Servicio Seleccionado
+      <section className="bg-slate-50/80 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800 rounded-3xl p-5 sm:p-6 space-y-5">
+        <div className="flex justify-between items-start gap-3">
+          <div className="space-y-1">
+            <span className="text-sm font-semibold text-slate-500 dark:text-zinc-400 block">
+              Servicio seleccionado
             </span>
-            <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100 leading-tight mt-0.5">
+            <p className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-zinc-50 leading-snug">
               {servicioDetalle}
             </p>
           </div>
-          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full border shrink-0 bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.2)]">
+          <span className="text-sm font-extrabold px-3 py-1.5 rounded-full border shrink-0 bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.2)]">
             {duracionTotal} min
           </span>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 bg-white dark:bg-zinc-800/80 p-3 rounded-2xl border border-slate-200/60 dark:border-zinc-700/60">
-          <span className="capitalize">{fechaFormateada}</span>
-          <span className="text-slate-300 dark:text-zinc-600">•</span>
-          <span>{hora} hs</span>
+        <div className="flex items-center justify-between gap-3 bg-white dark:bg-zinc-800/80 px-5 py-4 rounded-2xl border border-slate-200/60 dark:border-zinc-700/60 shadow-2xs">
+          <span className="capitalize text-sm font-bold text-slate-700 dark:text-zinc-300">{fechaFormateada}</span>
+          <span className="text-xl font-black tracking-tight text-slate-900 dark:text-zinc-50 tabular-nums">{hora} hs</span>
         </div>
 
         {/* DESGLOSE DE PRECIOS */}
-        <div className="pt-2 border-t border-slate-200/60 space-y-1.5 text-xs">
+        <div className="pt-4 border-t border-slate-200/60 dark:border-zinc-800 space-y-2.5 text-sm">
           {descuentoMonto > 0 && (
-            <div className="flex justify-between items-center text-slate-500">
-              <span>Precio original:</span>
-              <span className="line-through">${precioTotal.toLocaleString('es-AR')}</span>
+            <div className="flex justify-between items-center text-slate-500 dark:text-zinc-400">
+              <span>Precio original</span>
+              <span className="line-through tabular-nums">${precioTotal.toLocaleString('es-AR')}</span>
             </div>
           )}
 
           {descuentoMonto > 0 && (
-            <div className="flex justify-between items-center text-emerald-600 font-medium">
-              <span>Descuento por referido:</span>
-              <span>-${descuentoMonto.toLocaleString('es-AR')}</span>
+            <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-semibold">
+              <span>Descuento por referido</span>
+              <span className="tabular-nums">-${descuentoMonto.toLocaleString('es-AR')}</span>
             </div>
           )}
 
-            {cuponSeleccionado && (
-            <div className="flex justify-between items-center text-emerald-600 font-medium">
-              <span>Descuento por cupón ({cuponSeleccionado.codigo_canje}):</span>
-              <span>-${valorDescuentoCupon.toLocaleString('es-AR')}</span>
+          {cuponSeleccionado && (
+            <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-semibold">
+              <span>Descuento por cupón ({cuponSeleccionado.codigo_canje})</span>
+              <span className="tabular-nums">-${valorDescuentoCupon.toLocaleString('es-AR')}</span>
             </div>
           )}
 
-          <div className="flex justify-between items-center text-slate-900 font-bold pt-1">
-            <span>Total del servicio:</span>
-            <span className="text-sm">${precioFinalCalculado.toLocaleString('es-AR')}</span>
+          <div className="flex justify-between items-baseline text-slate-900 dark:text-zinc-50 font-bold pt-1">
+            <span>Total del servicio</span>
+            <span className="text-2xl font-black tracking-tight tabular-nums">${precioFinalCalculado.toLocaleString('es-AR')}</span>
           </div>
 
-          <div className="flex justify-between items-center text-slate-500 text-[11px]">
-            <span>Seña mínima para congelar turno ({porcentajeSena}%):</span>
-            <span className="font-semibold text-slate-700">${montoSenaBase.toLocaleString('es-AR')}</span>
+          <div className="flex justify-between items-center gap-3 rounded-2xl bg-white/70 dark:bg-zinc-800/60 border border-slate-200/60 dark:border-zinc-700/60 px-4 py-3 text-xs text-slate-500 dark:text-zinc-400">
+            <span>Seña mínima para congelar turno ({porcentajeSena}%)</span>
+            <span className="text-sm font-extrabold text-slate-800 dark:text-zinc-100 tabular-nums shrink-0">${montoSenaBase.toLocaleString('es-AR')}</span>
           </div>
         </div>
+      </section>
 
-
-{/* SECCIÓN DE CUPONES DISPONIBLES */}
+      {/* SECCIÓN DE CUPONES DISPONIBLES */}
       {cuponesDisponibles.length > 0 && (
-        <div className="bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-4 space-y-2.5">
-          <div className="flex items-center gap-2 text-xs font-bold text-amber-900 dark:text-amber-300">
-            <Gift className="w-4 h-4 text-amber-600" />
+        <section className="bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-3xl p-5 space-y-3.5">
+          <div className="flex items-center gap-2.5 text-sm font-extrabold text-amber-900 dark:text-amber-300">
+            <Gift className="w-5 h-5 text-amber-600" />
             <span>Tenés cupones de fidelización disponibles</span>
           </div>
-          
+
           <select
             value={cuponSeleccionado ? cuponSeleccionado.id : ''}
             onChange={(e) => {
@@ -318,7 +316,7 @@ const extraerMontoDelTitulo = (texto?: string) => {
                 setCuponSeleccionado(encontrado || null);
               }
             }}
-            className="w-full p-3 bg-white dark:bg-zinc-800 border border-amber-200 dark:border-zinc-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full px-4 py-4 bg-white dark:bg-zinc-800 border border-amber-200 dark:border-zinc-700 rounded-2xl text-base sm:text-sm font-semibold text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-4 focus:ring-amber-500/20 focus:border-amber-500 transition-all"
           >
             <option value="">-- No usar ningún cupón en este turno --</option>
             {cuponesDisponibles.map((cupon) => (
@@ -327,33 +325,38 @@ const extraerMontoDelTitulo = (texto?: string) => {
               </option>
             ))}
           </select>
-        </div>
+        </section>
       )}
 
       {/* FORMULARIO DE DATOS DEL CLIENTE */}
-      <div className="space-y-3">
-        <label htmlFor="input-nombre" className="block text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5 ml-1">
-            Nombre y Apellido *
+      <section className="space-y-5">
+        <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-zinc-50">
+          Tus datos
+        </h2>
+
+        <div>
+          <label htmlFor="input-nombre" className="block text-sm font-bold text-slate-700 dark:text-zinc-300 mb-2 ml-1">
+            Nombre y apellido *
           </label>
           <div className="relative">
-            <User className="w-4 h-4 text-slate-400 dark:text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
+            <User className="w-5 h-5 text-slate-400 dark:text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               id="input-nombre"
               type="text"
               placeholder="Ej: María González"
               value={nombre}
               onChange={(e) => onNombreChange(e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''))}
-              className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-[15px] sm:text-sm text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-4 focus:ring-[hsl(var(--primary)/0.2)] focus:border-[hsl(var(--primary))] transition-all"
+              className="w-full pl-12 pr-4 py-4 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-base font-medium text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 shadow-2xs focus:outline-none focus:ring-4 focus:ring-[hsl(var(--primary)/0.2)] focus:border-[hsl(var(--primary))] transition-all"
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="input-celular" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
+          <label htmlFor="input-celular" className="block text-sm font-bold text-slate-700 dark:text-zinc-300 mb-2 ml-1">
             Celular (WhatsApp) *
           </label>
           <div className="relative">
-            <Phone className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            <Phone className="w-5 h-5 text-slate-400 dark:text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               id="input-celular"
               type="tel"
@@ -362,7 +365,7 @@ const extraerMontoDelTitulo = (texto?: string) => {
               placeholder="Ej: 3411234567"
               value={celular}
               onChange={(e) => onCelularChange(e.target.value.replace(/\D/g, '').slice(0, 10))}
-              className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-[15px] sm:text-sm text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-4 focus:ring-[hsl(var(--primary)/0.2)] focus:border-[hsl(var(--primary))] transition-all"
+              className="w-full pl-12 pr-4 py-4 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-base font-medium text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 shadow-2xs focus:outline-none focus:ring-4 focus:ring-[hsl(var(--primary)/0.2)] focus:border-[hsl(var(--primary))] transition-all tabular-nums"
             />
           </div>
         </div>
@@ -370,121 +373,124 @@ const extraerMontoDelTitulo = (texto?: string) => {
         {/* CÓDIGO DE REFERIDO */}
         {referidosActivo && (
           <div>
-            <label htmlFor="input-referido" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 ml-1">
-              ¿Tenés un código de recomendada? <span className="text-slate-400 font-normal lowercase">(opcional)</span>
+            <label htmlFor="input-referido" className="block text-sm font-bold text-slate-700 dark:text-zinc-300 mb-2 ml-1">
+              ¿Tenés un código de recomendada? <span className="text-slate-400 dark:text-zinc-500 font-normal">(opcional)</span>
             </label>
             <div className="relative">
-              <Gift className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <Gift className="w-5 h-5 text-slate-400 dark:text-zinc-500 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 id="input-referido"
                 type="text"
                 placeholder="Ej: MARIA-A8F2"
                 value={codigoReferidoUsado}
                 onChange={(e) => onCodigoReferidoChange(e.target.value.toUpperCase())}
-                className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-[15px] sm:text-sm text-slate-900 dark:text-zinc-100 uppercase tracking-wider placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-4 focus:ring-[hsl(var(--primary)/0.2)] focus:border-[hsl(var(--primary))] transition-all"
+                className="w-full pl-12 pr-4 py-4 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-2xl text-base font-medium text-slate-900 dark:text-zinc-100 uppercase tracking-wider placeholder:text-slate-400 dark:placeholder:text-zinc-500 shadow-2xs focus:outline-none focus:ring-4 focus:ring-[hsl(var(--primary)/0.2)] focus:border-[hsl(var(--primary))] transition-all"
               />
             </div>
             {mensajeReferido && (
-              <p className={`text-xs mt-1.5 ml-1 font-semibold ${referidoValido ? 'text-emerald-600' : 'text-rose-500'}`}>
+              <p className={`text-sm mt-2 ml-1 font-semibold ${referidoValido ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}`}>
                 {mensajeReferido}
               </p>
             )}
           </div>
         )}
-      </div>
+      </section>
 
-
-      {/* MENSAJE DE ERROR */}
+{/* MENSAJE DE ERROR */}
       {error && (
-        <div className="p-3.5 bg-rose-50 border border-rose-200/80 rounded-2xl flex items-start gap-2 text-rose-700 text-xs font-semibold animate-in fade-in">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+        <div className="p-4 bg-rose-50 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/50 rounded-2xl flex items-start gap-2.5 text-rose-700 dark:text-rose-300 text-sm font-semibold animate-in fade-in">
+          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
 
       {/* OPCIONES DE PAGO Y CONFIRMACIÓN */}
-      <div className="space-y-3 pt-1">
-        <span className="block text-xs font-bold text-slate-700 dark:text-zinc-300 uppercase tracking-wider ml-1">
+      <section className="space-y-5">
+        <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-zinc-50">
           Elegí cómo confirmar
-        </span>
+        </h2>
 
-        {/* RADIO CARDS */}
-        <div className={`grid gap-2.5 ${onPagarMercadoPago ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        {/* RADIO CARDS: una por fila, cómodas para el dedo */}
+        <div className="grid grid-cols-1 gap-3.5">
           {onPagarMercadoPago && (
             <button
               type="button"
               onClick={() => setMetodoPago('mercadopago')}
               aria-pressed={metodoPago === 'mercadopago'}
-              className={`relative text-left p-3.5 rounded-2xl border-2 transition-all duration-150 ${
+              className={`relative flex items-center gap-4 text-left p-5 rounded-3xl border-2 transition-all duration-150 active:scale-[0.98] cursor-pointer ${
                 metodoPago === 'mercadopago'
-                  ? 'border-sky-500 bg-sky-50/70 shadow-xs shadow-sky-500/10'
+                  ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/30 shadow-md shadow-sky-500/10'
                   : 'border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-slate-300 dark:hover:border-zinc-600'
               }`}
             >
-              {metodoPago === 'mercadopago' && (
-                <CheckCircle2 className="w-4 h-4 text-sky-600 absolute top-3 right-3" />
-              )}
               <div
-                className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 ${
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
                   metodoPago === 'mercadopago' ? 'bg-sky-600 text-white' : 'bg-slate-100 dark:bg-zinc-700 text-slate-500 dark:text-zinc-400'
                 }`}
               >
-                <CreditCard className="w-4 h-4" />
+                <CreditCard className="w-6 h-6" />
               </div>
-              <p className="text-xs font-bold text-slate-900 dark:text-zinc-100 leading-tight pr-5">Mercado Pago</p>
-              <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded-full">
-                <Zap className="w-2.5 h-2.5" />
-                Acreditación instantánea
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <p className="text-base font-extrabold text-slate-900 dark:text-zinc-100 leading-tight">Mercado Pago</p>
+                <div className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/50 px-2 py-1 rounded-full">
+                  <Zap className="w-3 h-3" />
+                  Acreditación instantánea
+                </div>
               </div>
+              {metodoPago === 'mercadopago' && (
+                <CheckCircle2 className="w-6 h-6 text-sky-600 shrink-0" />
+              )}
             </button>
           )}
 
-           <button
+          <button
             type="button"
             disabled={!esHorarioComercial}
             onClick={() => esHorarioComercial && setMetodoPago('whatsapp')}
             aria-pressed={metodoPago === 'whatsapp'}
-            className={`relative text-left p-3.5 rounded-2xl border-2 transition-all duration-150 ${
+            className={`relative flex items-center gap-4 text-left p-5 rounded-3xl border-2 transition-all duration-150 ${
               !esHorarioComercial
                 ? 'opacity-60 cursor-not-allowed border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900'
                 : metodoPago === 'whatsapp'
-                ? 'border-emerald-500 bg-emerald-50/70 shadow-xs shadow-emerald-500/10 cursor-pointer'
-                : 'border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-slate-300 dark:hover:border-zinc-600 cursor-pointer'
+                ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/30 shadow-md shadow-emerald-500/10 cursor-pointer active:scale-[0.98]'
+                : 'border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-slate-300 dark:hover:border-zinc-600 cursor-pointer active:scale-[0.98]'
             }`}
           >
-            {metodoPago === 'whatsapp' && (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 absolute top-3 right-3" />
-            )}
             <div
-                className={`w-8 h-8 rounded-xl flex items-center justify-center mb-2 ${
-                  metodoPago === 'whatsapp' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-zinc-700 text-slate-500 dark:text-zinc-400'
-                }`}
-              >
-                <MessageCircle className="w-4 h-4" />
-              </div>
-              <p className="text-xs font-bold text-slate-900 dark:text-zinc-100 leading-tight pr-5">Transferencia / WhatsApp</p>
-              <p className="mt-1.5 text-[10px] font-medium text-slate-500 dark:text-zinc-400 leading-tight">
-              {!esHorarioComercial && (
-              <p className="mt-1.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 leading-tight">
-                ⚠️ Solo disponible de 09:00 a 20:00 hs. De noche utilizá Mercado Pago.
+              className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
+                metodoPago === 'whatsapp' ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-zinc-700 text-slate-500 dark:text-zinc-400'
+              }`}
+            >
+              <MessageCircle className="w-6 h-6" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-base font-extrabold text-slate-900 dark:text-zinc-100 leading-tight">Transferencia / WhatsApp</p>
+              <p className="text-xs font-medium text-slate-500 dark:text-zinc-400 leading-snug">
+                Abonás por transferencia y enviás comprobante
               </p>
+              {!esHorarioComercial && (
+                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 leading-snug pt-0.5">
+                  ⚠️ Solo disponible de 09:00 a 20:00 hs. De noche utilizá Mercado Pago.
+                </p>
+              )}
+            </div>
+            {metodoPago === 'whatsapp' && (
+              <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
             )}
-              Abonás por transferencia y enviás comprobante
-            </p>
           </button>
         </div>
 
         {/* PANEL MERCADO PAGO */}
         {onPagarMercadoPago && metodoPago === 'mercadopago' && (
-          <div className="bg-sky-50/60 border border-sky-100 rounded-2xl p-3.5 sm:p-4 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-            <div className="grid grid-cols-2 gap-2">
+          <div className="bg-sky-50/60 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/40 rounded-3xl p-5 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setOpcionMP('sena')}
-                className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-center ${
+                className={`py-3.5 px-3 rounded-2xl border text-sm font-extrabold transition-all text-center active:scale-95 cursor-pointer ${
                   opcionMP === 'sena'
-                    ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ? 'bg-sky-600 text-white border-sky-600 shadow-md'
+                    : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700'
                 }`}
               >
                 Seña (${montoSenaMP.toLocaleString('es-AR')})
@@ -492,28 +498,29 @@ const extraerMontoDelTitulo = (texto?: string) => {
               <button
                 type="button"
                 onClick={() => setOpcionMP('total')}
-                className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-center ${
+                className={`py-3.5 px-3 rounded-2xl border text-sm font-extrabold transition-all text-center active:scale-95 cursor-pointer ${
                   opcionMP === 'total'
-                    ? 'bg-sky-600 text-white border-sky-600 shadow-xs'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ? 'bg-sky-600 text-white border-sky-600 shadow-md'
+                    : 'bg-white dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700'
                 }`}
               >
                 Total (${montoTotalMP.toLocaleString('es-AR')})
               </button>
             </div>
 
-            <p className="text-[11px] text-slate-500 font-medium leading-tight">
+            <p className="text-xs text-slate-500 dark:text-zinc-400 font-medium leading-relaxed">
               * Los pagos con Mercado Pago incluyen un <strong>10% de recargo por servicio</strong> (${recargoCalculadoMP.toLocaleString('es-AR')}).
             </p>
 
             <button
               type="button"
               disabled={!formValido || confirmando || cargandoMP}
-              onClick={() => onPagarMercadoPago && onPagarMercadoPago(montoSeleccionadoMP, cuponSeleccionado?.id)}              className="w-full bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] font-bold py-3.5 rounded-2xl shadow-xs text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
+              onClick={() => onPagarMercadoPago && onPagarMercadoPago(montoSeleccionadoMP, cuponSeleccionado?.id)}
+              className="w-full h-14 bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] font-extrabold rounded-2xl shadow-md text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
             >
               {cargandoMP ? (
                 <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                   Generando pago Mercado Pago...
                 </span>
               ) : (
@@ -525,7 +532,7 @@ const extraerMontoDelTitulo = (texto?: string) => {
               <button
                 type="button"
                 onClick={onCancelarMP}
-                className="w-full text-center text-[11px] text-slate-500 hover:text-slate-800 underline transition-colors pt-0.5 block"
+                className="w-full text-center text-sm text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-100 underline transition-colors py-2 block cursor-pointer"
               >
                 Cancelar y elegir otro medio
               </button>
@@ -535,92 +542,92 @@ const extraerMontoDelTitulo = (texto?: string) => {
 
         {/* PANEL WHATSAPP / TRANSFERENCIA */}
         {metodoPago === 'whatsapp' && (
-          <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
             {(banco || titularCuenta || cbu || alias) && (
-              <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 space-y-2.5 text-xs text-slate-700">
-                <div className="font-bold text-amber-900 flex items-center gap-1.5">
-                  <Building2 className="w-4 h-4 text-amber-700" />
-                  <span>Datos para la Transferencia Bancaria</span>
+              <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 rounded-3xl p-5 space-y-3.5 text-sm text-slate-700 dark:text-zinc-300">
+                <div className="font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-amber-700 dark:text-amber-400" />
+                  <span>Datos para la transferencia bancaria</span>
                 </div>
 
-                <div className="space-y-1.5 pt-1 border-t border-amber-200/60">
+                <div className="space-y-2.5 pt-3 border-t border-amber-200/60 dark:border-amber-900/40">
                   {banco && <p><strong>Banco:</strong> {banco}</p>}
                   {titularCuenta && <p><strong>Titular:</strong> {titularCuenta}</p>}
-                  
+
                   {cbu && (
-                    <div className="flex items-center justify-between bg-white/80 p-2 rounded-xl border border-amber-200/50">
+                    <div className="flex items-center justify-between gap-2 bg-white/80 dark:bg-zinc-800/70 p-3 rounded-2xl border border-amber-200/50 dark:border-amber-900/30">
                       <span className="truncate pr-2"><strong>CBU:</strong> <span className="font-mono">{cbu}</span></span>
                       <button
                         type="button"
                         onClick={() => copiarAlPortapapeles(cbu, 'cbu')}
-                        className="shrink-0 px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg text-[10px] flex items-center gap-1 transition-colors"
+                        className="shrink-0 h-10 px-3.5 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                       >
-                        {copiadoCbu ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                        {copiadoCbu ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                         {copiadoCbu ? '¡Copiado!' : 'Copiar CBU'}
                       </button>
                     </div>
                   )}
 
                   {alias && (
-                    <div className="flex items-center justify-between bg-white/80 p-2 rounded-xl border border-amber-200/50">
-                      <span className="truncate pr-2"><strong>Alias:</strong> <span className="font-mono text-emerald-800 font-bold">{alias}</span></span>
+                    <div className="flex items-center justify-between gap-2 bg-white/80 dark:bg-zinc-800/70 p-3 rounded-2xl border border-amber-200/50 dark:border-amber-900/30">
+                      <span className="truncate pr-2"><strong>Alias:</strong> <span className="font-mono text-emerald-800 dark:text-emerald-400 font-bold">{alias}</span></span>
                       <button
                         type="button"
                         onClick={() => copiarAlPortapapeles(alias, 'alias')}
-                        className="shrink-0 px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg text-[10px] flex items-center gap-1 transition-colors"
+                        className="shrink-0 h-10 px-3.5 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:hover:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
                       >
-                        {copiadoAlias ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                        {copiadoAlias ? '¡Copiado!' : 'Copiar Alias'}
+                        {copiadoAlias ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                        {copiadoAlias ? '¡Copiado!' : 'Copiar alias'}
                       </button>
                     </div>
                   )}
                 </div>
-                <p className="text-[10px] text-amber-800/80 italic pt-0.5">
+                <p className="text-xs text-amber-800/80 dark:text-amber-300/80 italic pt-0.5">
                   * Recordá enviar el comprobante por WhatsApp una vez realizada la transferencia.
                 </p>
               </div>
             )}
 
-<button
-  type="button"
-  disabled={!formValido || confirmando || cargandoMP}
-  onClick={async () => {
-    // 🟢 Validación de seguridad para TypeScript y sesión activa
-    if (!user) return;
+            <button
+              type="button"
+              disabled={!formValido || confirmando || cargandoMP}
+              onClick={async () => {
+                // 🟢 Validación de seguridad para TypeScript y sesión activa
+                if (!user) return;
 
-    await supabase
-      .from('clientes')
-      .update({
-        nombre: nombre.trim(),
-        celular: celular.trim(),
-      })
-      .eq('user_id', user.id);
+                await supabase
+                  .from('clientes')
+                  .update({
+                    nombre: nombre.trim(),
+                    celular: celular.trim(),
+                  })
+                  .eq('user_id', user.id);
 
-    // Ejecutamos la función original de confirmación
-    onConfirmar(cuponSeleccionado ? cuponSeleccionado.id : undefined);
-  }}
-  className="w-full bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] font-bold py-3.5 rounded-2xl shadow-xs text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
->
-  {confirmando ? (
-    <span className="flex items-center gap-2">
-      <Loader2 className="w-4 h-4 animate-spin" />
-      Procesando reserva...
-    </span>
-  ) : (
-    <span className="flex items-center gap-2">
-      <MessageCircle className="w-4 h-4 fill-white" />
-      Enviar comprobante y confirmar por WhatsApp
-    </span>
-  )}
-</button>
+                // Ejecutamos la función original de confirmación
+                onConfirmar(cuponSeleccionado ? cuponSeleccionado.id : undefined);
+              }}
+              className="w-full min-h-14 bg-[hsl(var(--primary))] hover:opacity-90 text-[hsl(var(--primary-foreground))] font-extrabold px-4 py-3.5 rounded-2xl shadow-md text-base flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+            >
+              {confirmando ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Procesando reserva...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2 text-center leading-tight">
+                  <MessageCircle className="w-5 h-5 fill-white shrink-0" />
+                  Enviar comprobante y confirmar por WhatsApp
+                </span>
+              )}
+            </button>
           </div>
         )}
 
-        <p className="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1 pt-1">
-          <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
+        <p className="text-xs text-slate-400 dark:text-zinc-500 text-center flex items-center justify-center gap-1.5 pt-2">
+          <ShieldCheck className="w-4 h-4 text-slate-400 dark:text-zinc-500" />
           <span>Tus datos se encuentran protegidos</span>
         </p>
-      </div>
+      </section>
     </div>
   );
 }
