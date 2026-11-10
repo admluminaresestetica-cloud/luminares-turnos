@@ -87,6 +87,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
         setClienteData(cliente);
         setNombreInput(cliente.nombre || '');
         setCelularInput(cliente.celular || '');
+        setAvatarInput(cliente.avatar_url || '');
         
         if (!cliente.nombre || cliente.nombre.trim() === '') {
           setNombreIncompleto(true);
@@ -343,25 +344,25 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
         {/* Header */}
         <div className="relative flex items-center justify-between gap-3 px-6 pt-5 pb-4 shrink-0 border-b border-stone-200/40 dark:border-zinc-800/50">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="relative shrink-0">
-              {user?.user_metadata?.avatar_url ? (
-                <img
-                  src={user.user_metadata.avatar_url}
-                  alt="Foto de perfil"
-                  className="w-14 h-14 rounded-[20px] object-cover ring-2 ring-white dark:ring-zinc-900 shadow-lg shadow-primary/20"
-                />
-              ) : (
-                <div className="w-14 h-14 rounded-[20px] bg-gradient-to-br from-primary/20 to-primary/5 text-primary flex items-center justify-center ring-2 ring-white dark:ring-zinc-900 shadow-lg shadow-primary/10">
-                  <User className="w-6 h-6" />
-                </div>
-              )}
-              {user && (
-                <span
-                  className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-stone-50 dark:border-zinc-950"
-                  aria-label="Sesión activa"
-                />
-              )}
-            </div>
+<div className="relative shrink-0">
+  {clienteData?.avatar_url || user?.user_metadata?.avatar_url ? (
+    <img
+      src={clienteData?.avatar_url || user?.user_metadata?.avatar_url}
+      alt="Foto de perfil"
+      className="w-14 h-14 rounded-[20px] object-cover ring-2 ring-white dark:ring-zinc-900 shadow-lg shadow-primary/20 bg-stone-100 dark:bg-zinc-800"
+    />
+  ) : (
+    <div className="w-14 h-14 rounded-[20px] bg-gradient-to-br from-primary/20 to-primary/5 text-primary flex items-center justify-center ring-2 ring-white dark:ring-zinc-900 shadow-lg shadow-primary/10">
+      <User className="w-6 h-6" />
+    </div>
+  )}
+  {user && (
+    <span
+      className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-stone-50 dark:border-zinc-950"
+      aria-label="Sesión activa"
+    />
+  )}
+</div>
 
               <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
