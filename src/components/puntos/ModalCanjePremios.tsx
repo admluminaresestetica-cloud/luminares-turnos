@@ -59,7 +59,7 @@ export default function ModalCanjePremios({
     return `CANJE-${aleatorio}`;
   }
 
-  const realizarCanje = async (premio: Premio) => {
+const realizarCanje = async (premio: Premio) => {
     if (puntosActuales < premio.puntos_requeridos) {
       setErrorMensaje(`No tenés suficientes puntos para canjear "${premio.titulo}".`);
       return;
@@ -68,9 +68,12 @@ export default function ModalCanjePremios({
     setProcesandoId(premio.id);
     setErrorMensaje(null);
 
-try {
+    try {
       const nuevosPuntos = puntosActuales - premio.puntos_requeridos;
       const codigoUnico = generarCodigoCanje();
+
+      // 📅 Calculamos la fecha de expiración sumando 30 días exactos a partir de hoy
+      const fechaVencimiento = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
       // 1. Descontar puntos del usuario
       const { error: errorUpdate } = await supabase
@@ -80,7 +83,7 @@ try {
 
       if (errorUpdate) throw errorUpdate;
 
-      // 2. Insertar en puntos_historial (asignando const { error: errorHistorial })
+      // 2. Insertar en puntos_historial
       const { error: errorHistorial } = await supabase.from('puntos_historial').insert([
         {
           user_id: userId,
@@ -94,13 +97,14 @@ try {
         console.error('Error al insertar en puntos_historial:', errorHistorial);
       }
 
-      // 3. Registrar el canje en canjes_usuarios
+      // 3. Registrar el canje en canjes_usuarios con fecha_expiracion
       const { error: errorCanje } = await supabase.from('canjes_usuarios').insert([
         {
           user_id: userId,
           premio_id: premio.id,
           codigo_canje: codigoUnico,
           estado: 'pendiente',
+          fecha_expiracion: fechaVencimiento,
         },
       ]);
 
