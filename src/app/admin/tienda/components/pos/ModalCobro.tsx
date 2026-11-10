@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { PosCartItem } from "./types";
@@ -45,6 +46,9 @@ export default function ModalCobro({
   const [pagoCon, setPagoCon] = useState<string>("");
   const [nombreCliente, setNombreCliente] = useState<string>("Cliente Ocasional");
   const [loading, setLoading] = useState<boolean>(false);
+  const [cuponesCliente, setCuponesCliente] = useState<any[]>([]);
+  const [cuponSeleccionado, setCuponSeleccionado] = useState<any | null>(null);
+  const [buscandoCupones, setBuscandoCupones] = useState<boolean>(false); 
 
   const inputPagoRef = useRef<HTMLInputElement>(null);
 
@@ -56,6 +60,8 @@ export default function ModalCobro({
       setPorcentajeAjuste(0);
       setMontoEfectivoMixto("");
       setMontoDigitalMixto("");
+      setCuponesCliente([]);
+      setCuponSeleccionado(null);
       setTimeout(() => {
         if (inputPagoRef.current) {
           inputPagoRef.current.focus();
@@ -64,15 +70,111 @@ export default function ModalCobro({
     }
   }, [isOpen]);
 
+// 🔍 Buscar cupones activos cuando escriben el nombre o celular
+  useEffect(() => {
+    const buscarCuponesPorCliente = async () => {
+      if (!nombreCliente || nombreCliente === "Cliente Ocasional" || nombreCliente.trim().length < 2) {
+        setCuponesCliente([]);
+        setCuponSeleccionado(null);
+        return;
+      }
+
+      setBuscandoCupones(true);
+      try {
+        console.log("🔍 Buscando cliente con texto:", nombreCliente.trim());
+
+        const { data: clientes, error: errCliente } = await supabase
+          .from("clientes")
+          .select("*")
+          .or(`nombre.ilike.%${nombreCliente.trim()}%,celular.ilike.%${nombreCliente.trim()}%`)
+          .limit(1);
+
+        if (errCliente) {
+          console.error("❌ Error buscando cliente:", errCliente);
+          setCuponesCliente([]);
+          return;
+        }
+
+        if (clientes && clientes.length > 0) {
+          const cliente = clientes[0];
+          console.log("👤 Cliente encontrado:", cliente);
+          
+          const { data: cupones, error: errCupones } = await supabase
+  .from("canjes_usuarios")
+  .select("*, premios_catalogo(*)");
+
+          if (errCupones) {
+            console.error("❌ Error trayendo canjes_usuarios:", errCupones);
+            setCuponesCliente([]);
+          } else {
+            console.log("📦 Total de registros en canjes_usuarios:", cupones);
+            
+            // Relajamos temporalmente el filtro para ver todos los canjes de este cliente o mostrar algo en pantalla
+              const activos = (cupones || []).filter((c: any) => {
+const coincideCliente = 
+  String(c.user_id) === String(cliente.id) || 
+  String(c.user_id) === String(cliente.user_id) || 
+  String(c.cliente_id) === String(cliente.id) || 
+  String(c.id_cliente) === String(cliente.id) ||
+  String(c.celular) === String(cliente.celular);
+
+const estaActivo = 
+  c.estado === "activo" || 
+  c.estado === "disponible" || 
+  c.estado === "pendiente";
+
+// 🛍️ FILTRO DE TIENDA: Permitir premios marcados como 'tienda' o 'todos' (o sin definir por compatibilidad)
+const tipoValido = 
+  !c.premios_catalogo?.tipo_aplicacion || 
+  c.premios_catalogo?.tipo_aplicacion === "todos" || 
+  c.premios_catalogo?.tipo_aplicacion === "tienda";
+
+return coincideCliente && estaActivo && tipoValido;
+            });
+
+            console.log("🎁 Primer cupón completo para inspeccionar:", activos[0]);
+            setCuponesCliente(activos);
+          }
+        } else {
+          console.log("⚠️ No se encontró ningún cliente en la tabla clientes con ese nombre.");
+          setCuponesCliente([]);
+        }
+      } catch (err) {
+        console.error("❌ Error general en búsqueda:", err);
+      } finally {
+        setBuscandoCupones(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      buscarCuponesPorCliente();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [nombreCliente, supabase]);
   if (!isOpen) return null;
 
-  // Cálculos de montos desglosados
-  const montoAjusteMedioPago = (totalBase * porcentajeAjuste) / 100;
-  const recargoMonto = montoAjusteMedioPago > 0 ? Math.round(montoAjusteMedioPago) : 0;
-  const descuentoAdicionalMonto = montoAjusteMedioPago < 0 ? Math.abs(Math.round(montoAjusteMedioPago)) : 0;
-  const descuentoTotalMonto = descuentoCalculado + descuentoAdicionalMonto;
+const valorCupon = cuponSeleccionado 
+  ? Number(
+      cuponSeleccionado.premios_catalogo?.valor || 
+      cuponSeleccionado.premios_catalogo?.monto || 
+      cuponSeleccionado.premios_catalogo?.descuento || 
+      cuponSeleccionado.monto_descuento || 
+      cuponSeleccionado.valor || 
+      (cuponSeleccionado.premios_catalogo?.titulo?.match(/\d+/) ? Number(cuponSeleccionado.premios_catalogo.titulo.match(/\d+/)[0]) : 0) ||
+      (cuponSeleccionado.titulo?.match(/\d+/) ? Number(cuponSeleccionado.titulo.match(/\d+/)[0]) : 0) ||
+      0
+    ) 
+  : 0;
 
-  const totalConAjuste = Math.max(0, Math.round(totalBase + montoAjusteMedioPago));
+// Cálculos de montos desglosados
+const montoAjusteMedioPago = (totalBase * porcentajeAjuste) / 100;
+const recargoMonto = montoAjusteMedioPago > 0 ? Math.round(montoAjusteMedioPago) : 0;
+const descuentoAdicionalMonto = montoAjusteMedioPago < 0 ? Math.abs(Math.round(montoAjusteMedioPago)) : 0;
+const descuentoTotalMonto = descuentoCalculado + descuentoAdicionalMonto + valorCupon;
+
+// 🏷️ Restamos el cupón al total final
+const totalConAjuste = Math.max(0, Math.round(totalBase + montoAjusteMedioPago - valorCupon));
 
   const montoEntregado = Number(pagoCon) || 0;
   const vuelto = !esPagoMixto && metodoPago === "efectivo" ? Math.max(0, montoEntregado - totalConAjuste) : 0;
@@ -138,7 +240,17 @@ const { data, error } = await supabase.rpc("registrar_venta_pos", {
 
       if (error) throw error;
 
-      if (data && data.pedido_id) {
+      if (cuponSeleccionado) {
+  await supabase
+    .from("canjes_usuarios")
+    .update({
+      estado: "usado",
+      usado_at: new Date().toISOString(),
+    })
+    .eq("id", cuponSeleccionado.id);
+}
+
+if (data && data.pedido_id) {
         onVentaExitosa({
           pedidoId: data.pedido_id,
           items: carrito,
@@ -415,6 +527,53 @@ const { data, error } = await supabase.rpc("registrar_venta_pos", {
           </button>
         </div>
       </div>
+
+      {/* 🏷️ SECCIÓN DE CUPONES / CANJES DISPONIBLES POR PUNTOS */}
+{buscandoCupones && (
+  <p className="text-[10px] text-gray-400 mt-1 animate-pulse">Buscando cupones activos del cliente...</p>
+)}
+
+{cuponesCliente.length > 0 && (
+  <div className="mt-2 rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50/80 dark:bg-zinc-800/40 p-2.5">
+    <span className="text-[10px] font-extrabold text-gray-700 dark:text-zinc-300 block mb-1">
+    Cupones / Puntos disponibles del cliente:
+    </span>
+    <div className="space-y-1.5">
+      {cuponesCliente.map((cup) => {
+        const esEsteSeleccionado = cuponSeleccionado?.id === cup.id;
+        return (
+          <div key={cup.id} className="flex items-center justify-between bg-white dark:bg-zinc-900 p-2 rounded-lg border border-amber-100 dark:border-zinc-800">
+            <div>
+<p className="text-xs font-bold text-gray-800 dark:text-zinc-200">
+  {cup.premios_catalogo?.titulo || cup.titulo || "Descuento por Puntos"} (-${Number(
+    cup.premios_catalogo?.valor || 
+    cup.premios_catalogo?.monto || 
+    cup.premios_catalogo?.descuento || 
+    cup.monto_descuento || 
+    cup.valor || 
+    (cup.premios_catalogo?.titulo?.match(/\d+/) ? Number(cup.premios_catalogo.titulo.match(/\d+/)[0]) : 0) || 
+    0
+  ).toLocaleString("es-AR")})
+</p>
+<span className="text-[9px] text-gray-400">Código: {cup.codigo_canje || cup.codigo || "CANJE"}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCuponSeleccionado(esEsteSeleccionado ? null : cup)}
+              className={`px-3 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                esEsteSeleccionado
+                  ? "bg-red-500 text-white"
+                  : "bg-[#0E6E55] text-white hover:bg-[#0A5340]"
+              }`}
+            >
+              {esEsteSeleccionado ? "Quitar" : "Aplicar"}
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)}
     </div>
   );
 }

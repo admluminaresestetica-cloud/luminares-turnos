@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
@@ -493,6 +494,7 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
               </button>
 
               <FormConfirmacion
+                tipo={tipo}
                 servicioDetalle={detalleTexto}
                 precioTotal={precioTotal}
                 duracionTotal={duracionTotal}

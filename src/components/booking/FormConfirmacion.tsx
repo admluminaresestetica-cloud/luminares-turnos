@@ -49,9 +49,11 @@ interface Props {
   titularCuenta?: string;
   cbu?: string;
   alias?: string;
+  tipo?: string;
 }
 
 export default function FormConfirmacion({
+  tipo,
   servicioDetalle,
   precioTotal,
   duracionTotal,
@@ -136,7 +138,7 @@ useEffect(() => {
     const userId = user.id;
     console.log('🟢 [DEBUG]: Usuario logueado ID:', userId);
 
-    async function cargarCuponesPendientes() {
+async function cargarCuponesPendientes() {
       try {
         const { data, error } = await supabase
           .from('canjes_usuarios')
@@ -147,15 +149,35 @@ useEffect(() => {
         console.log('📦 [DEBUG]: Respuesta de Supabase cupones:', { data, error });
 
         if (!error && data) {
-          setCuponesDisponibles(data);
+          // 🛑 FILTRO DE HIERRO: Si estamos en servicios, bloqueamos explícitamente el ID de la tienda ("3000") 
+          // y cualquier otro que no sea de servicios o todos.
+          const cuponesFiltrados = data.filter((c: any) => {
+            const tituloPremio = c.premios_catalogo?.titulo || '';
+            const tipoApp = c.premios_catalogo?.tipo_aplicacion;
+
+            console.log(`Evaluando cupón -> Título: "${tituloPremio}" | Tipo: "${tipoApp}" | Vista: "${tipo}"`);
+
+            if (tipo === 'laser') {
+              return tipoApp === 'laser' || tipoApp === 'todos';
+            } else {
+              // En Servicios Generales: Si el título es "3000" o el tipo es "tienda", LO RECHAZAMOS ROTUNDAMENTE
+              if (tituloPremio === '3000' || tipoApp === 'tienda') {
+                console.warn(`🚫 BLOQUEADO en servicios: El cupón "${tituloPremio}" (tipo: ${tipoApp}) no corresponde aquí.`);
+                return false;
+              }
+              return tipoApp === 'servicios_general' || tipoApp === 'todos' || !tipoApp;
+            }
+          });
+
+          console.log("✅ Cupones permitidos para esta vista:", cuponesFiltrados);
+          setCuponesDisponibles(cuponesFiltrados);
         }
       } catch (err) {
         console.error('❌ [DEBUG] Error al cargar cupones:', err);
       }
     }
-
     cargarCuponesPendientes();
-  }, [user]);
+  }, [user, tipo]);
 
   const copiarAlPortapapeles = async (texto: string, tipo: 'cbu' | 'alias') => {
     if (!texto) return;

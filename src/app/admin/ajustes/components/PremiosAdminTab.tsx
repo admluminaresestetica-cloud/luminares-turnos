@@ -21,6 +21,7 @@ interface Premio {
   descripcion: string;
   puntos_requeridos: number;
   activo: boolean;
+  tipo_aplicacion?: string;
 }
 
 export default function PremiosAdminTab() {
@@ -33,6 +34,7 @@ export default function PremiosAdminTab() {
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [puntos, setPuntos] = useState<number>(100);
+  const [tipoAplicacion, setTipoAplicacion] = useState<string>('todos');
   const [premioEditandoId, setPremioEditandoId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,6 +68,7 @@ export default function PremiosAdminTab() {
           titulo: titulo.trim(),
           descripcion: descripcion.trim(),
           puntos_requeridos: Number(puntos),
+          tipo_aplicacion: tipoAplicacion,
         })
         .eq('id', premioEditandoId)
         .select()
@@ -86,6 +89,7 @@ export default function PremiosAdminTab() {
             titulo: titulo.trim(),
             descripcion: descripcion.trim(),
             puntos_requeridos: Number(puntos),
+            tipo_aplicacion: tipoAplicacion,
             activo: true,
           }
         ])
@@ -97,6 +101,7 @@ export default function PremiosAdminTab() {
         setTitulo('');
         setDescripcion('');
         setPuntos(100);
+        setTipoAplicacion('todos');
         setMensaje('Premio creado con éxito');
         setTimeout(() => setMensaje(null), 3000);
       }
@@ -109,6 +114,7 @@ export default function PremiosAdminTab() {
     setTitulo(premio.titulo);
     setDescripcion(premio.descripcion || '');
     setPuntos(premio.puntos_requeridos);
+    setTipoAplicacion(premio.tipo_aplicacion || 'todos');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -117,6 +123,7 @@ export default function PremiosAdminTab() {
     setTitulo('');
     setDescripcion('');
     setPuntos(100);
+    setTipoAplicacion('todos');
   };
 
   const toggleEstadoPremio = async (id: string, estadoActual: boolean) => {
@@ -143,6 +150,19 @@ export default function PremiosAdminTab() {
     if (!error) {
       setPremios((prev) => prev.filter((p) => p.id !== id));
       if (premioEditandoId === id) cancelarEdicion();
+    }
+  };
+
+  const getBadgeTipo = (tipo?: string) => {
+    switch (tipo) {
+      case 'tienda':
+        return <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-md dark:bg-blue-950/60 dark:text-blue-400">🛍️ Tienda (POS)</span>;
+      case 'laser':
+        return <span className="text-[10px] font-bold bg-purple-50 text-purple-600 px-2 py-0.5 rounded-md dark:bg-purple-950/60 dark:text-purple-400">⚡ Láser</span>;
+      case 'servicios_general':
+        return <span className="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md dark:bg-emerald-950/60 dark:text-emerald-400">💆‍♀️ Servicios General</span>;
+      default:
+        return <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md dark:bg-zinc-800 dark:text-zinc-400">🌐 Todos</span>;
     }
   };
 
@@ -173,8 +193,8 @@ export default function PremiosAdminTab() {
         </div>
 
         <form onSubmit={handleGuardarPremio} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-1">
               <label className="block text-xs font-semibold text-gray-700 mb-1.5 dark:text-zinc-300">
                 Título del Premio
               </label>
@@ -200,6 +220,22 @@ export default function PremiosAdminTab() {
                 onChange={(e) => setPuntos(Number(e.target.value))}
                 className="w-full text-xs font-medium border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5 dark:text-zinc-300">
+                Aplica en (Contexto)
+              </label>
+              <select
+                value={tipoAplicacion}
+                onChange={(e) => setTipoAplicacion(e.target.value)}
+                className="w-full text-xs font-bold border border-gray-200 rounded-xl px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 cursor-pointer"
+              >
+                <option value="todos">🌐 En todos lados (General)</option>
+                <option value="tienda">🛍️ Solo Tienda (POS)</option>
+                <option value="laser">⚡ Solo Reservas Láser</option>
+                <option value="servicios_general">💆‍♀️ Solo Servicios Generales</option>
+              </select>
             </div>
           </div>
 
@@ -269,11 +305,14 @@ export default function PremiosAdminTab() {
                     : 'bg-gray-100/40 border-gray-200 opacity-60 dark:bg-zinc-850/30 dark:border-zinc-800'
                 }`}
               >
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-xs font-bold text-gray-900 dark:text-zinc-100">
-                      {premio.titulo}
-                    </h3>
+                    <div className="space-y-1">
+                      <h3 className="text-xs font-bold text-gray-900 dark:text-zinc-100">
+                        {premio.titulo}
+                      </h3>
+                      <div>{getBadgeTipo(premio.tipo_aplicacion)}</div>
+                    </div>
                     <span className="font-mono text-xs font-black bg-rose-50 text-rose-600 px-2 py-0.5 rounded-md dark:bg-rose-950/60 dark:text-rose-400 shrink-0">
                       {premio.puntos_requeridos} pts
                     </span>
