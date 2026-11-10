@@ -14,14 +14,14 @@ interface EditarPerfilFormProps {
 
 // 🎨 Galería de avatares predefinidos de DiceBear
 const AVATARES_DISPONIBLES = [
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Bandit",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Zack",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Snuggles",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Coco",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Milo",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Cleo",
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Leo",
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Zoe",
+  "https://api.dicebear.com/7.x/adventurer/svg?seed=Max",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Oliver",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Mia",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Lucas",
+  "https://api.dicebear.com/7.x/micah/svg?seed=Sam",
+  "https://api.dicebear.com/7.x/micah/svg?seed=Alex"
   "https://api.dicebear.com/7.x/fun-emoji/svg?seed=cat",
   "https://api.dicebear.com/7.x/fun-emoji/svg?seed=dog",
   "https://api.dicebear.com/7.x/fun-emoji/svg?seed=panda",
