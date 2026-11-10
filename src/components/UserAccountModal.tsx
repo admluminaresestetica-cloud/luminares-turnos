@@ -22,6 +22,7 @@ import ProximoTurnoWidget from '@/components/puntos/ProximoTurnoWidget';
 import ReferidosCardWidget from '@/components/puntos/ReferidosCardWidget';
 import HistorialPuntosList from '@/components/puntos/HistorialPuntosList';
 import ModalCanjePremios from '@/components/puntos/ModalCanjePremios';
+import EditarPerfilForm from '@/components/cuenta/EditarPerfilForm';
 
 interface UserAccountModalProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
   
   // Estados para Perfil / Nombre / Celular
   const [nombreIncompleto, setNombreIncompleto] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [nombreInput, setNombreInput] = useState('');
   const [celularInput, setCelularInput] = useState('');
 
@@ -384,51 +386,21 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
               cargandoGoogle={cargandoGoogle}
               cargandoFacebook={cargandoFacebook}
             />
-          ) : nombreIncompleto ? (
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-stone-200 dark:border-zinc-800 space-y-4 text-center shadow-lg my-auto">
-              <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
-                👋
-              </div>
-              <div className="space-y-1.5">
-                <h4 className="text-base font-bold text-stone-900 dark:text-zinc-50">¡Completá tu perfil!</h4>
-                <p className="text-xs leading-relaxed text-stone-500 dark:text-zinc-400 font-medium">
-                  Para sumar puntos, retirar premios y gestionar tus turnos sin errores, por favor ingresá tus datos:
-                </p>
-              </div>
-
-              <div className="space-y-3 text-left">
-                <div>
-                  <label className="text-[11px] font-bold text-stone-500 dark:text-zinc-400 block mb-1">Nombre y Apellido</label>
-                  <input
-                    type="text"
-                    placeholder="Ej: Juan Pérez"
-                    value={nombreInput}
-                    onChange={(e) => setNombreInput(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-800/80 text-sm font-medium text-stone-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-bold text-stone-500 dark:text-zinc-400 block mb-1">Celular / WhatsApp</label>
-                  <input
-                    type="tel"
-                    placeholder="Ej: 3415123456"
-                    value={celularInput}
-                    onChange={(e) => setCelularInput(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-800/80 text-sm font-medium text-stone-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={guardarPerfilReal}
-                disabled={!nombreInput.trim()}
-                className="w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-md hover:opacity-90 transition-all disabled:opacity-50 cursor-pointer"
-              >
-                Guardar y continuar
-              </button>
-            </div>
+          ) : nombreIncompleto || isEditingProfile ? (
+            <EditarPerfilForm
+              esIncompleto={nombreIncompleto}
+              nombreInput={nombreInput}
+              setNombreInput={setNombreInput}
+              celularInput={celularInput}
+              setCelularInput={setCelularInput}
+              onGuardar={async () => {
+                await guardarPerfilReal();
+                setIsEditingProfile(false);
+              }}
+              onCancelar={() => setIsEditingProfile(false)}
+            />
           ) : (
+
             <div className="space-y-3.5">
               <PuntosCardWidget
                 puntosTotales={puntosTotales}
