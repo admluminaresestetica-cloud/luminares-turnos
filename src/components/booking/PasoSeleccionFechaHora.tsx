@@ -43,7 +43,7 @@ export default function PasoSeleccionFechaHora({
   onContinuar,
 }: Props) {
   return (
-    <div className="space-y-6 pb-28 animate-in fade-in duration-300 relative">
+    <div className="space-y-6 pb-40 animate-in fade-in duration-300 relative">
       {/* Sección Fecha */}
       <section className="space-y-3">
         <div className="flex items-center gap-2.5">
@@ -101,8 +101,8 @@ export default function PasoSeleccionFechaHora({
         </section>
       )}
 
-      {/* 📱 STICKY FOOTER INFERIOR TIPO APP NATIVA */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-t border-slate-200/80 dark:border-zinc-800/80 p-4 shadow-xl max-w-md sm:max-w-xl mx-auto rounded-t-[24px]">
+      {/* FOOTER FLOTANTE UBICADO ARRIBA DEL NAV INFERIOR */}
+      <div className="fixed bottom-16 left-0 right-0 z-40 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-slate-200/80 dark:border-zinc-800/80 p-4 shadow-2xl max-w-md sm:max-w-xl mx-auto rounded-t-[24px]">
         <div className="flex flex-col gap-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-1.5 text-slate-600 dark:text-zinc-400 text-xs font-bold">
