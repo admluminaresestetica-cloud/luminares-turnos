@@ -72,6 +72,9 @@ try {
       const nuevosPuntos = puntosActuales - premio.puntos_requeridos;
       const codigoUnico = generarCodigoCanje();
 
+      // 📅 Declaramos la fecha de expiración a 30 días exactos aquí:
+      const fechaVencimiento = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
       // 1. Descontar puntos del usuario
       const { error: errorUpdate } = await supabase
         .from('puntos_usuarios')
@@ -80,7 +83,7 @@ try {
 
       if (errorUpdate) throw errorUpdate;
 
-      // 2. Insertar en puntos_historial (asignando const { error: errorHistorial })
+      // 2. Insertar en puntos_historial
       const { error: errorHistorial } = await supabase.from('puntos_historial').insert([
         {
           user_id: userId,
@@ -101,6 +104,7 @@ try {
           premio_id: premio.id,
           codigo_canje: codigoUnico,
           estado: 'pendiente',
+          fecha_expiracion: fechaVencimiento, // <--- Y acá ya la toma perfecto sin marcarte error de TypeScript
         },
       ]);
 

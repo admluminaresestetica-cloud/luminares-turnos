@@ -222,25 +222,25 @@ async function cargarProximoTurno(userId: string) {
     fetchData();
   }, [user?.id, isOpen]);
 
-  async function cargarCanjesPendientes(userId: string) {
-  setCargandoCanjes(true);
-  try {
-    const { data, error } = await supabase
-      .from('canjes_usuarios')
-      .select('id, codigo_canje, created_at, estado, premios_catalogo(titulo, descripcion)')
-      .eq('user_id', userId)
-      .eq('estado', 'pendiente')
-      .order('created_at', { ascending: false });
+async function cargarCanjesPendientes(userId: string) {
+    setCargandoCanjes(true);
+    try {
+      const { data, error } = await supabase
+        .from('canjes_usuarios')
+        .select('id, codigo_canje, created_at, estado, fecha_expiracion, premios_catalogo(titulo, descripcion)')
+        .eq('user_id', userId)
+        .eq('estado', 'pendiente')
+        .order('created_at', { ascending: false });
 
-    if (!error && data) {
-      setCanjesPendientes(data);
+      if (!error && data) {
+        setCanjesPendientes(data);
+      }
+    } catch (err) {
+      console.error('Error al cargar canjes pendientes:', err);
+    } finally {
+      setCargandoCanjes(false);
     }
-  } catch (err) {
-    console.error('Error al cargar canjes pendientes:', err);
-  } finally {
-    setCargandoCanjes(false);
   }
-}
 
   // Cerrar con Escape y bloquear el scroll del fondo mientras está abierto
   useEffect(() => {
@@ -478,7 +478,7 @@ return createPortal(
                   onCopiarCodigo={copiarCodigo}
                 />
 
-                {canjesPendientes.length > 0 && (
+{canjesPendientes.length > 0 && (
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between px-1">
                       <h4 className="text-xs font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wider">
@@ -490,27 +490,55 @@ return createPortal(
                     </div>
 
                     <div className="space-y-2">
-                      {canjesPendientes.map((canje) => (
-                        <div
-                          key={canje.id}
-                          className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/[0.05] to-transparent border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-between gap-3 shadow-xs"
-                        >
-                          <div className="min-w-0 space-y-0.5">
-                            <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider block">
-                              Código de canje
-                            </span>
-                            <h5 className="text-xs font-extrabold text-stone-900 dark:text-zinc-100 truncate">
-                              {canje.premios_catalogo?.titulo || 'Premio Canjeado'}
-                            </h5>
-                          </div>
+                      {canjesPendientes.map((canje) => {
+                        // 📅 Cálculo de expiración (30 días desde la creación si no tiene fecha explícita)
+                        const fechaCreacion = new Date(canje.created_at || Date.now());
+                        const fechaVencimiento = canje.fecha_expiracion 
+                          ? new Date(canje.fecha_expiracion) 
+                          : new Date(fechaCreacion.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-                          <div className="shrink-0 text-right bg-white dark:bg-zinc-900 px-3 py-1.5 rounded-xl border border-emerald-500/20 shadow-2xs">
-                            <span className="font-mono font-black text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 tracking-wider">
-                              {canje.codigo_canje}
-                            </span>
+                        const estaExpirado = new Date() > fechaVencimiento;
+                        const tituloPremio = canje.premios_catalogo?.titulo || 'Premio Canjeado';
+
+                        return (
+                          <div
+                            key={canje.id}
+                            className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 shadow-xs ${
+                              estaExpirado
+                                ? 'bg-stone-100 border-stone-200 opacity-60 dark:bg-zinc-800/40 dark:border-zinc-800/60' // 🎨 Estilo Gris / Expirado
+                                : 'bg-gradient-to-r from-emerald-500/10 via-emerald-500/[0.05] to-transparent border-emerald-500/20 dark:border-emerald-500/30' // Estilo Vigente
+                            }`}
+                          >
+                            <div className="min-w-0 space-y-0.5">
+                              <span className={`text-[10px] font-black uppercase tracking-wider block ${
+                                estaExpirado ? 'text-stone-400 dark:text-zinc-500' : 'text-emerald-600 dark:text-emerald-400'
+                              }`}>
+                                {estaExpirado ? '⚠️ Cupón Expirado' : 'Código de canje'}
+                              </span>
+                              <h5 className="text-xs font-extrabold text-stone-900 dark:text-zinc-100 truncate">
+                                {tituloPremio}
+                              </h5>
+                              <p className="text-[10px] text-stone-400 dark:text-zinc-500 font-medium">
+                                Vence el: {fechaVencimiento.toLocaleDateString('es-AR')}
+                              </p>
+                            </div>
+
+                            <div className="shrink-0 text-right">
+                              {estaExpirado ? (
+                                <span className="text-[10px] font-bold bg-stone-200 text-stone-600 px-3 py-1.5 rounded-xl dark:bg-zinc-800 dark:text-zinc-400">
+                                  Expirado
+                                </span>
+                              ) : (
+                                <div className="bg-white dark:bg-zinc-900 px-3 py-1.5 rounded-xl border border-emerald-500/20 shadow-2xs">
+                                  <span className="font-mono font-black text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 tracking-wider">
+                                    {canje.codigo_canje}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
