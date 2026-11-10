@@ -44,8 +44,8 @@ export default function SelectorHorario({
   }
 
   return (
-    /* 📱 ESTRUCTURA DE 2 COLUMNAS ANCHAS EN MÓVIL */
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 animate-in fade-in duration-300">
+    /* 2 COLUMNAS AMPLIAS Y CÓMODAS */
+    <div className="grid grid-cols-2 gap-3 animate-in fade-in duration-300">
       {slotsValidos.map(({ hora, estado }) => {
         const activa = horaSeleccionada === hora;
         const enProceso = estado === 'en_proceso';
@@ -58,7 +58,7 @@ export default function SelectorHorario({
             disabled={enProceso}
             onClick={() => !enProceso && onSelect(hora)}
             className={`
-              h-auto py-3.5 px-4 rounded-2xl text-xs sm:text-sm font-extrabold border transition-all duration-200 flex items-center justify-between gap-2 shadow-2xs
+              h-auto py-4 px-4 rounded-2xl text-xs sm:text-sm font-extrabold border transition-all duration-200 flex items-center justify-between gap-2 shadow-2xs
               ${
                 enProceso
                   ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 opacity-90 cursor-not-allowed shadow-none'
@@ -83,7 +83,7 @@ export default function SelectorHorario({
             ) : activa ? (
               <Check className="w-4 h-4 shrink-0 stroke-[2.5]" />
             ) : (
-              <Clock className="w-3.5 h-3.5 shrink-0 text-slate-400 dark:text-zinc-500 opacity-60" />
+              <Clock className="w-4 h-4 shrink-0 text-slate-400 dark:text-zinc-500 opacity-60" />
             )}
           </Button>
         );
