@@ -84,6 +84,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
         .maybeSingle();
 
       if (cliente) {
+        console.log("📥 [DEBUG] Cliente cargado desde Supabase:", cliente);
         setClienteData(cliente);
         setNombreInput(cliente.nombre || '');
         setCelularInput(cliente.celular || '');
