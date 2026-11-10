@@ -84,7 +84,6 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
         .maybeSingle();
 
       if (cliente) {
-        console.log("📥 [DEBUG] Cliente cargado desde Supabase:", cliente);
         setClienteData(cliente);
         setNombreInput(cliente.nombre || '');
         setCelularInput(cliente.celular || '');
@@ -129,8 +128,6 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
  const guardarPerfilReal = async () => {
     if (!user?.id || !nombreInput.trim()) return;
     try {
-      console.log("📤 [DEBUG] Guardando perfil con avatar:", avatarInput);
-
       const { data, error } = await supabase
         .from('clientes')
         .update({ 
@@ -140,14 +137,12 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user!.id)
-        .select(); // 👈 El .select() nos devuelve el registro actualizado
+        .select();
 
       if (error) {
         console.error("❌ [DEBUG] Error de Supabase al actualizar:", error);
         throw error;
       }
-
-      console.log("✅ [DEBUG] Respuesta exitosa de Supabase:", data);
 
       setClienteData((prev: any) => ({ 
         ...prev, 
@@ -158,7 +153,6 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
       setNombreIncompleto(false);
       setIsEditingProfile(false);
     } catch (err) {
-      console.error('🔥 [DEBUG] Error general al guardar:', err);
       alert('Hubo un error al guardar los cambios.');
     }
   };
