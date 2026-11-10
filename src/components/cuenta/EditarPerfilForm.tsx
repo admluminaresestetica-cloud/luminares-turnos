@@ -6,9 +6,23 @@ interface EditarPerfilFormProps {
   setNombreInput: (val: string) => void;
   celularInput: string;
   setCelularInput: (val: string) => void;
+  avatarInput: string;
+  setAvatarInput: (val: string) => void;
   onGuardar: () => void;
   onCancelar?: () => void;
 }
+
+// 🎨 Galería de avatares predefinidos de DiceBear
+const AVATARES_DISPONIBLES = [
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Bandit",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Zack",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Snuggles",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Coco",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Milo",
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Cleo",
+];
 
 export default function EditarPerfilForm({
   esIncompleto,
@@ -16,6 +30,8 @@ export default function EditarPerfilForm({
   setNombreInput,
   celularInput,
   setCelularInput,
+  avatarInput,
+  setAvatarInput,
   onGuardar,
   onCancelar,
 }: EditarPerfilFormProps) {
@@ -47,6 +63,24 @@ export default function EditarPerfilForm({
       </div>
 
       <div className="space-y-3 text-left">
+        {/* 🎨 Selector de Avatar */}
+        <div>
+          <label className="text-[11px] font-bold text-stone-500 dark:text-zinc-400 block mb-1.5">Elegí tu Avatar</label>
+          <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
+            {AVATARES_DISPONIBLES.map((urlAvatar, index) => (
+              <img
+                key={index}
+                src={urlAvatar}
+                alt={`Avatar ${index + 1}`}
+                onClick={() => setAvatarInput(urlAvatar)}
+                className={`w-12 h-12 rounded-2xl cursor-pointer p-1 ring-2 transition-all hover:scale-105 shrink-0 bg-stone-100 dark:bg-zinc-800 ${
+                  avatarInput === urlAvatar ? "ring-primary scale-105 shadow-md" : "ring-transparent opacity-60 hover:opacity-100"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
         <div>
           <label className="text-[11px] font-bold text-stone-500 dark:text-zinc-400 block mb-1">Nombre y Apellido</label>
           <input

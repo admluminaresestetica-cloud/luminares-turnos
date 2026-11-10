@@ -43,6 +43,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [nombreInput, setNombreInput] = useState('');
   const [celularInput, setCelularInput] = useState('');
+  const [avatarInput, setAvatarInput] = useState('');
 
   const [canjesPendientes, setCanjesPendientes] = useState<any[]>([]);
   const [cargandoCanjes, setCargandoCanjes] = useState(false);
@@ -132,6 +133,7 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
         .update({ 
           nombre: nombreInput.trim(),
           celular: celularInput.trim(),
+          avatar_url: avatarInput, // 👈 1. Agregamos el avatar a Supabase
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id);
@@ -142,7 +144,8 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
       setClienteData((prev: any) => ({ 
         ...prev, 
         nombre: nombreInput.trim(), 
-        celular: celularInput.trim() 
+        celular: celularInput.trim(),
+        avatar_url: avatarInput // 👈 2. Actualizamos también el estado local
       }));
       setNombreIncompleto(false);
       setIsEditingProfile(false);
@@ -409,6 +412,8 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
               setNombreInput={setNombreInput}
               celularInput={celularInput}
               setCelularInput={setCelularInput}
+              avatarInput={avatarInput}  
+              setAvatarInput={setAvatarInput}  
               onGuardar={async () => {
                 await guardarPerfilReal();
                 setIsEditingProfile(false);

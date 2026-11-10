@@ -49,6 +49,8 @@ export default function ModalCobro({
   const [cuponesCliente, setCuponesCliente] = useState<any[]>([]);
   const [cuponSeleccionado, setCuponSeleccionado] = useState<any | null>(null);
   const [buscandoCupones, setBuscandoCupones] = useState<boolean>(false); 
+  const [clientesSugeridos, setClientesSugeridos] = useState<any[]>([]);
+  const [mostrarSugerencias, setMostrarSugerencias] = useState<boolean>(false);
 
   const inputPagoRef = useRef<HTMLInputElement>(null);
 
@@ -83,21 +85,24 @@ export default function ModalCobro({
       try {
         console.log("🔍 Buscando cliente con texto:", nombreCliente.trim());
 
-        const { data: clientes, error: errCliente } = await supabase
+const { data: clientes, error: errCliente } = await supabase
           .from("clientes")
           .select("*")
           .or(`nombre.ilike.%${nombreCliente.trim()}%,celular.ilike.%${nombreCliente.trim()}%`)
-          .limit(1);
+          .limit(5); // 🔍 Traemos hasta 5 sugerencias para el buscador
 
         if (errCliente) {
           console.error("❌ Error buscando cliente:", errCliente);
+          setClientesSugeridos([]);
           setCuponesCliente([]);
           return;
         }
 
         if (clientes && clientes.length > 0) {
+          setClientesSugeridos(clientes);
+          setMostrarSugerencias(true);
+
           const cliente = clientes[0];
-          console.log("👤 Cliente encontrado:", cliente);
           
           const { data: cupones, error: errCupones } = await supabase
   .from("canjes_usuarios")
@@ -496,16 +501,39 @@ if (data && data.pedido_id) {
           </div>
         )}
 
-        {/* Nombre Cliente */}
-        <div className="pt-1">
-          <label className="text-[11px] font-bold text-gray-800 dark:text-zinc-200">Nombre Cliente (Opcional)</label>
+ {/* Nombre Cliente con Buscador Predictivo */}
+        <div className="pt-1 relative">
+          <label className="text-[11px] font-bold text-gray-800 dark:text-zinc-200">Cliente / Titular de Cupones</label>
           <input
             type="text"
             value={nombreCliente}
-            onChange={(e) => setNombreCliente(e.target.value)}
-            placeholder="Cliente Ocasional"
+            onChange={(e) => {
+              setNombreCliente(e.target.value);
+              setMostrarSugerencias(true);
+            }}
+            onFocus={() => setMostrarSugerencias(true)}
+            placeholder="Escribí nombre o celular..."
             className="mt-0.5 w-full rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800/50 p-2 text-xs font-medium text-gray-900 dark:text-zinc-100 outline-none focus:border-[#0E6E55]"
           />
+
+          {/* Lista desplegable de sugerencias */}
+          {mostrarSugerencias && clientesSugeridos.length > 0 && (
+            <div className="absolute left-0 right-0 z-50 mt-1 max-h-40 overflow-y-auto rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl">
+              {clientesSugeridos.map((cli) => (
+                <div
+                  key={cli.id}
+                  onClick={() => {
+                    setNombreCliente(cli.nombre);
+                    setMostrarSugerencias(false);
+                  }}
+                  className="cursor-pointer px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-zinc-800 border-b border-gray-100 dark:border-zinc-800 last:border-none"
+                >
+                  <p className="font-bold text-gray-800 dark:text-zinc-200">{cli.nombre}</p>
+                  {cli.celular && <p className="text-[10px] text-gray-400">Cel: {cli.celular}</p>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Acciones del Modal */}
@@ -528,15 +556,16 @@ if (data && data.pedido_id) {
         </div>
       </div>
 
-      {/* 🏷️ SECCIÓN DE CUPONES / CANJES DISPONIBLES POR PUNTOS */}
+{/* ✅ REEMPLAZAR POR ESTO AL FINAL DEL ARCHIVO: */}
+{/* 🏷️ SECCIÓN DE CUPONES / CANJES DISPONIBLES */}
 {buscandoCupones && (
   <p className="text-[10px] text-gray-400 mt-1 animate-pulse">Buscando cupones activos del cliente...</p>
 )}
 
 {cuponesCliente.length > 0 && (
-  <div className="mt-2 rounded-xl border border-gray-200 dark:border-zinc-800 bg-gray-50/80 dark:bg-zinc-800/40 p-2.5">
-    <span className="text-[10px] font-extrabold text-gray-700 dark:text-zinc-300 block mb-1">
-    Cupones / Puntos disponibles del cliente:
+  <div className="mt-2 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/30 dark:bg-emerald-950/20 p-2.5">
+    <span className="text-[11px] font-extrabold text-[#0E6E55] dark:text-emerald-400 block mb-1.5">
+      🏷️ Cupones disponibles para: <span className="underline">{nombreCliente}</span>
     </span>
     <div className="space-y-1.5">
       {cuponesCliente.map((cup) => {
@@ -544,26 +573,18 @@ if (data && data.pedido_id) {
         return (
           <div key={cup.id} className="flex items-center justify-between bg-white dark:bg-zinc-900 p-2 rounded-lg border border-amber-100 dark:border-zinc-800">
             <div>
-<p className="text-xs font-bold text-gray-800 dark:text-zinc-200">
-  {cup.premios_catalogo?.titulo || cup.titulo || "Descuento por Puntos"} (-${Number(
-    cup.premios_catalogo?.valor || 
-    cup.premios_catalogo?.monto || 
-    cup.premios_catalogo?.descuento || 
-    cup.monto_descuento || 
-    cup.valor || 
-    (cup.premios_catalogo?.titulo?.match(/\d+/) ? Number(cup.premios_catalogo.titulo.match(/\d+/)[0]) : 0) || 
-    0
-  ).toLocaleString("es-AR")})
-</p>
-<span className="text-[9px] text-gray-400">Código: {cup.codigo_canje || cup.codigo || "CANJE"}</span>
+              <p className="text-xs font-bold text-gray-800 dark:text-zinc-200">
+                {cup.premios_catalogo?.titulo || cup.titulo || "Descuento por Puntos"} (-${Number(
+                  cup.premios_catalogo?.valor || cup.premios_catalogo?.monto || cup.premios_catalogo?.descuento || cup.monto_descuento || cup.valor || 0
+                ).toLocaleString("es-AR")})
+              </p>
+              <span className="text-[9px] text-gray-400">Código: {cup.codigo_canje || cup.codigo || "CANJE"}</span>
             </div>
             <button
               type="button"
               onClick={() => setCuponSeleccionado(esEsteSeleccionado ? null : cup)}
               className={`px-3 py-1 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
-                esEsteSeleccionado
-                  ? "bg-red-500 text-white"
-                  : "bg-[#0E6E55] text-white hover:bg-[#0A5340]"
+                esEsteSeleccionado ? "bg-red-500 text-white" : "bg-[#0E6E55] text-white hover:bg-[#0A5340]"
               }`}
             >
               {esEsteSeleccionado ? "Quitar" : "Aplicar"}
