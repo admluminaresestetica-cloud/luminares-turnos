@@ -1,22 +1,37 @@
+'use client';
+
+import { useRef } from 'react';
+import { Gift, Sparkles, Clock, AlertCircle } from 'lucide-react';
+
 interface CanjesPendientesListProps {
   canjesPendientes: any[];
 }
 
 export default function CanjesPendientesList({ canjesPendientes }: CanjesPendientesListProps) {
-  if (canjesPendientes.length === 0) return null;
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  if (!canjesPendientes || canjesPendientes.length === 0) return null;
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
+      {/* Cabecera de la sección */}
       <div className="flex items-center justify-between px-1">
-        <h4 className="text-xs font-bold text-stone-500 dark:text-zinc-400 uppercase tracking-wider">
-          Premios listos para retirar
-        </h4>
-        <span className="text-[10px] font-extrabold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+        <div className="flex items-center gap-1.5">
+          <Gift className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <h4 className="text-xs font-bold text-stone-700 dark:text-zinc-300 uppercase tracking-wider">
+            Mis Cupones y Premios
+          </h4>
+        </div>
+        <span className="text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
           {canjesPendientes.length} pendiente{canjesPendientes.length > 1 ? 's' : ''}
         </span>
       </div>
 
-      <div className="space-y-2">
+      {/* 📱 CARRUSEL HORIZONTAL DESLIZANTE DE CUPONES */}
+      <div 
+        ref={scrollRef}
+        className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 scrollbar-none snap-x touch-pan-x"
+      >
         {canjesPendientes.map((canje) => {
           const fechaCreacion = new Date(canje.created_at || Date.now());
           const fechaVencimiento = canje.fecha_expiracion 
@@ -29,33 +44,58 @@ export default function CanjesPendientesList({ canjesPendientes }: CanjesPendien
           return (
             <div
               key={canje.id}
-              className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 shadow-xs ${
-                estaExpirado
-                  ? 'bg-stone-100 border-stone-200 opacity-60 dark:bg-zinc-800/40 dark:border-zinc-800/60'
-                  : 'bg-gradient-to-r from-emerald-500/10 via-emerald-500/[0.05] to-transparent border-emerald-500/20 dark:border-emerald-500/30'
-              }`}
+              className={`
+                snap-start shrink-0 w-[260px] sm:w-[280px] p-4 rounded-[22px] border transition-all duration-200 flex flex-col justify-between gap-3 shadow-xs relative overflow-hidden
+                ${
+                  estaExpirado
+                    ? 'bg-stone-100/80 border-stone-200 opacity-60 dark:bg-zinc-800/40 dark:border-zinc-800/60'
+                    : 'bg-gradient-to-br from-emerald-500/[0.08] via-emerald-500/[0.03] to-white dark:to-zinc-900 border-emerald-500/20 dark:border-emerald-500/30'
+                }
+              `}
             >
-              <div className="min-w-0 space-y-0.5">
-                <span className={`text-[10px] font-black uppercase tracking-wider block ${
-                  estaExpirado ? 'text-stone-400 dark:text-zinc-500' : 'text-emerald-600 dark:text-emerald-400'
-                }`}>
-                  {estaExpirado ? '⚠️ Cupón Expirado' : 'Código de canje'}
-                </span>
-                <h5 className="text-xs font-extrabold text-stone-900 dark:text-zinc-100 truncate">
+              {/* Decoración de fondo sutil */}
+              {!estaExpirado && (
+                <div className="absolute -right-4 -bottom-4 w-20 h-20 bg-emerald-500/5 rounded-full blur-xl pointer-events-none" />
+              )}
+
+              {/* Parte superior de la tarjeta */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className={`text-[10px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                    estaExpirado ? 'text-stone-400 dark:text-zinc-500' : 'text-emerald-600 dark:text-emerald-400'
+                  }`}>
+                    {estaExpirado ? (
+                      <>
+                        <AlertCircle className="w-3 h-3" /> Expirado
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3" /> Código de canje
+                      </>
+                    )}
+                  </span>
+                  <span className="text-[10px] text-stone-400 dark:text-zinc-500 font-medium flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> Vence: {fechaVencimiento.toLocaleDateString('es-AR')}
+                  </span>
+                </div>
+
+                <h5 className="text-xs sm:text-sm font-extrabold text-stone-900 dark:text-zinc-100 line-clamp-1">
                   {tituloPremio}
                 </h5>
-                <p className="text-[10px] text-stone-400 dark:text-zinc-500 font-medium">
-                  Vence el: {fechaVencimiento.toLocaleDateString('es-AR')}
-                </p>
               </div>
 
-              <div className="shrink-0 text-right">
+              {/* Parte inferior: Código o estado */}
+              <div className="pt-2 border-t border-stone-200/60 dark:border-zinc-800/80 flex items-center justify-between">
+                <span className="text-[10px] text-stone-500 dark:text-zinc-400 font-medium">
+                  {estaExpirado ? 'No disponible' : 'Mostrá este código'}
+                </span>
+
                 {estaExpirado ? (
-                  <span className="text-[10px] font-bold bg-stone-200 text-stone-600 px-3 py-1.5 rounded-xl dark:bg-zinc-800 dark:text-zinc-400">
+                  <span className="text-[10px] font-bold bg-stone-200/80 text-stone-600 px-3 py-1.5 rounded-xl dark:bg-zinc-800 dark:text-zinc-400">
                     Expirado
                   </span>
                 ) : (
-                  <div className="bg-white dark:bg-zinc-900 px-3 py-1.5 rounded-xl border border-emerald-500/20 shadow-2xs">
+                  <div className="bg-white dark:bg-zinc-900 px-3 py-1.5 rounded-xl border border-emerald-500/30 shadow-2xs">
                     <span className="font-mono font-black text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 tracking-wider">
                       {canje.codigo_canje}
                     </span>
