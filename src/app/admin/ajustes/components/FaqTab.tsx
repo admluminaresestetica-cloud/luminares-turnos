@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { HelpCircle, Pencil, Trash2, X, Loader2, ChevronDown, Tag, ArrowUp, ArrowDown } from 'lucide-react'
+import { HelpCircle, Pencil, Trash2, X, Loader2, ChevronDown, Tag, ArrowUp, ArrowDown, Globe } from 'lucide-react'
 
 interface FaqItem {
   id: number;
   pregunta: string;
   respuesta: string;
   badge: string;
+  ubicacion?: string; // Nuevo campo para filtrar dónde se muestra
   orden: number;
 }
 
@@ -27,6 +28,7 @@ export default function FaqTab() {
   const [pregunta, setPregunta] = useState('')
   const [respuesta, setRespuesta] = useState('')
   const [badge, setBadge] = useState('general')
+  const [ubicacion, setUbicacion] = useState('ambos') // Estado para la ubicación
   const [editingId, setEditingId] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [openId, setOpenId] = useState<number | null>(null)
@@ -61,7 +63,7 @@ export default function FaqTab() {
       if (editingId !== null) {
         const { error } = await supabase
           .from('preguntas_frecuentes')
-          .update({ pregunta, respuesta, badge })
+          .update({ pregunta, respuesta, badge, ubicacion })
           .eq('id', editingId)
 
         if (error) throw error
@@ -72,13 +74,14 @@ export default function FaqTab() {
 
         const { error } = await supabase
           .from('preguntas_frecuentes')
-          .insert([{ pregunta, respuesta, badge, orden: siguienteOrden }])
+          .insert([{ pregunta, respuesta, badge, ubicacion, orden: siguienteOrden }])
 
         if (error) throw error
 
         setPregunta('')
         setRespuesta('')
         setBadge('general')
+        setUbicacion('ambos')
         await fetchFaqs()
       }
     } catch (err: any) {
@@ -94,6 +97,7 @@ export default function FaqTab() {
     setPregunta(faq.pregunta)
     setRespuesta(faq.respuesta)
     setBadge(faq.badge || 'general')
+    setUbicacion(faq.ubicacion || 'ambos')
   }
 
   const handleCancelEdit = () => {
@@ -101,6 +105,7 @@ export default function FaqTab() {
     setPregunta('')
     setRespuesta('')
     setBadge('general')
+    setUbicacion('ambos')
   }
 
   const handleDelete = async (id: number) => {
@@ -202,6 +207,22 @@ export default function FaqTab() {
               />
             </div>
 
+            {/* Selector de Dónde se Muestra (Ubicación) */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1.5 flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5" /> ¿Dónde mostrar esta pregunta?
+              </label>
+              <select
+                value={ubicacion}
+                onChange={(e) => setUbicacion(e.target.value)}
+                className="w-full bg-slate-50/50 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700 rounded-2xl p-3.5 text-xs sm:text-sm font-medium text-slate-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-2xs cursor-pointer"
+              >
+                <option value="ambos">🌐 En todos lados (Tienda y Centro de Ayuda)</option>
+                <option value="tienda">🛍️ Solo en la Tienda (Productos / Checkout)</option>
+                <option value="turnos">📅 Solo en Turnos / Centro de Ayuda General</option>
+              </select>
+            </div>
+
             {/* Selector de Etiqueta / Categoria */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-zinc-400 mb-1.5 flex items-center gap-1.5">
@@ -285,6 +306,18 @@ export default function FaqTab() {
                       <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-zinc-100 leading-snug">
                         {faq.pregunta}
                       </p>
+                      
+                      {/* Indicador visual de ubicación */}
+                      <span className={`text-[9px] px-2 py-0.5 rounded-md font-extrabold uppercase tracking-wide ${
+                        faq.ubicacion === 'tienda' 
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' 
+                          : faq.ubicacion === 'turnos' 
+                          ? 'bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300' 
+                          : 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                      }`}>
+                        {faq.ubicacion === 'tienda' ? '🛍️ Tienda' : faq.ubicacion === 'turnos' ? '📅 Turnos' : '🌐 Ambos'}
+                      </span>
+
                       {faq.badge && faq.badge !== 'general' && (
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${badgeInfo.color}`}>
                           {badgeInfo.label}
@@ -316,7 +349,7 @@ export default function FaqTab() {
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
 
-                      <div className="p-1.5 text-slate-400 dark:text-zinc-500">
+                      <div className="p-1.5 text-400 dark:text-zinc-500">
                         <ChevronDown
                           className={`w-4 h-4 transition-transform duration-200 ${
                             isOpen ? 'rotate-180 text-blue-600 dark:text-blue-400' : ''

@@ -16,8 +16,11 @@
  ┃ ┃ ┃ ┃ ┣ 📜GeneralesTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜GuiasAjustesTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜HorariosTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜ModuloFidelizacionTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜PreciosTab.tsx
- ┃ ┃ ┃ ┃ ┗ 📜ReferidosTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜PremiosAdminTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜ReferidosTab.tsx
+ ┃ ┃ ┃ ┃ ┗ 📜ValidarCanjesTab.tsx
  ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂components
  ┃ ┃ ┃ ┣ 📜AdminChatWidget.tsx
@@ -58,7 +61,6 @@
  ┃ ┃ ┃ ┃ ┣ 📜MediosPagoCard.tsx
  ┃ ┃ ┃ ┃ ┣ 📜OrigenFinanzasCard.tsx
  ┃ ┃ ┃ ┃ ┗ 📜RevenueChart.tsx
- ┃ ┃ ┃ ┣ 📂utils
  ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂tienda
  ┃ ┃ ┃ ┣ 📂components
@@ -79,16 +81,22 @@
  ┃ ┃ ┃ ┃ ┣ 📜ListaProductos.tsx
  ┃ ┃ ┃ ┃ ┣ 📜MetricasHeader.tsx
  ┃ ┃ ┃ ┃ ┣ 📜ModalAnulacionPedido.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜PedidoCard.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜PedidosFiltros.tsx
  ┃ ┃ ┃ ┃ ┣ 📜PedidosTab.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜PedidoTicketPrint.tsx
  ┃ ┃ ┃ ┃ ┣ 📜PuntoVentaTab.tsx
  ┃ ┃ ┃ ┃ ┣ 📜ScannerModal.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜SeccionCarteles.tsx
  ┃ ┃ ┃ ┃ ┣ 📜SeccionEtiquetas.tsx
+ ┃ ┃ ┃ ┃ ┣ 📜SeccionEtiquetasPrecios.tsx
  ┃ ┃ ┃ ┃ ┣ 📜TagsTab.tsx
  ┃ ┃ ┃ ┃ ┗ 📜TiendaHeaderNav.tsx
  ┃ ┃ ┃ ┗ 📜page.tsx
  ┃ ┃ ┣ 📂turnos
  ┃ ┃ ┃ ┣ 📂components
  ┃ ┃ ┃ ┃ ┣ 📂modals
+ ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalBloqueoHorarios.tsx
  ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalCobro.tsx
  ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalEditarTurno.tsx
  ┃ ┃ ┃ ┃ ┃ ┣ 📜ModalNuevoTurno.tsx
@@ -128,6 +136,9 @@
  ┃ ┃ ┗ 📂webhooks
  ┃ ┃ ┃ ┗ 📂mercadopago
  ┃ ┃ ┃ ┃ ┗ 📜route.ts
+ ┃ ┣ 📂auth
+ ┃ ┃ ┗ 📂callback
+ ┃ ┃ ┃ ┗ 📜route.ts
  ┃ ┣ 📂faq
  ┃ ┃ ┗ 📜page.tsx
  ┃ ┣ 📂favoritos
@@ -142,6 +153,8 @@
  ┃ ┣ 📂mis-turnos
  ┃ ┃ ┗ 📜page.tsx
  ┃ ┣ 📂reserva-exitosa
+ ┃ ┃ ┗ 📜page.tsx
+ ┃ ┣ 📂seguimiento
  ┃ ┃ ┗ 📜page.tsx
  ┃ ┣ 📂servicios
  ┃ ┃ ┗ 📜page.tsx
@@ -185,6 +198,11 @@
  ┃ ┃ ┣ 📜CarritoItem.tsx
  ┃ ┃ ┣ 📜FormularioEnvio.tsx
  ┃ ┃ ┗ 📜ModalExito.tsx
+ ┃ ┣ 📂cuenta
+ ┃ ┃ ┣ 📜AtajosSection.tsx
+ ┃ ┃ ┣ 📜AuthSection.tsx
+ ┃ ┃ ┣ 📜CanjesPendientesList.tsx
+ ┃ ┃ ┗ 📜EditarPerfilForm.tsx
  ┃ ┣ 📂Home
  ┃ ┃ ┣ 📜AccionesRapidas.tsx
  ┃ ┃ ┣ 📜BannerModal.tsx
@@ -205,6 +223,12 @@
  ┃ ┃ ┣ 📜PanelZonasIndividuales.tsx
  ┃ ┃ ┣ 📜SelectorGenero.tsx
  ┃ ┃ ┗ 📜SelectorModoLaser.tsx
+ ┃ ┣ 📂puntos
+ ┃ ┃ ┣ 📜HistorialPuntosList.tsx
+ ┃ ┃ ┣ 📜ModalCanjePremios.tsx
+ ┃ ┃ ┣ 📜ProximoTurnoWidget.tsx
+ ┃ ┃ ┣ 📜PuntosCardWidget.tsx
+ ┃ ┃ ┗ 📜ReferidosCardWidget.tsx
  ┃ ┣ 📂story-generator
  ┃ ┃ ┣ 📂presets
  ┃ ┃ ┃ ┗ 📜festivosPresets.ts
@@ -228,12 +252,15 @@
  ┃ ┣ 📜CarritoDrawer.tsx
  ┃ ┣ 📜footer.tsx
  ┃ ┣ 📜FooterTienda.tsx
+ ┃ ┣ 📜GoogleLoginButton.tsx
  ┃ ┣ 📜PinModal.tsx
  ┃ ┣ 📜ProductoCard.tsx
  ┃ ┣ 📜ThemeProvider.tsx
  ┃ ┣ 📜ThemeToggle.tsx
+ ┃ ┣ 📜UserAccountModal.tsx
  ┃ ┗ 📜WhatsAppButton.tsx
  ┣ 📂context
+ ┃ ┣ 📜AuthContext.tsx
  ┃ ┣ 📜CarritoContext.tsx
  ┃ ┣ 📜ConfigContext.tsx
  ┃ ┗ 📜FavoritosContext.tsx
@@ -271,6 +298,7 @@
  ┃ ┃ ┣ 📜configuracion-empresa.ts
  ┃ ┃ ┣ 📜configuracion.ts
  ┃ ┃ ┣ 📜laser.ts
+ ┃ ┃ ┣ 📜puntos.ts
  ┃ ┃ ┣ 📜reservas.ts
  ┃ ┃ ┗ 📜servicios-generales.ts
  ┃ ┣ 📂utils

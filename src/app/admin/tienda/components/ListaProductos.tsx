@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TabletSmartphone, Search, Pencil, Trash2, Package, Tag } from "lucide-react";
+import { TabletSmartphone, Search, Pencil, Trash2, Package, Tag, Percent } from "lucide-react";
 import { calcularCuotas } from "@/lib/precios";
 import { ModalGeneradorStory } from "@/components/story-generator/ModalGeneradorStory";
 
@@ -28,6 +28,7 @@ interface ListaProductosProps {
   onEditar: (producto: Producto) => void;
   onToggleActivo?: (id: number | string, nuevoEstado: boolean) => void;
   onRestock?: (id: number | string, cantidadASumar: number) => void;
+  onActualizarPreciosMasivo?: (porcentaje: number, categoria?: string) => Promise<void> | void;
 }
 
 export default function ListaProductos({
@@ -37,13 +38,23 @@ export default function ListaProductos({
   onEditar,
   onToggleActivo,
   onRestock,
+  onActualizarPreciosMasivo,
 }: ListaProductosProps) {
   const [busqueda, setBusqueda] = useState("");
   const [modalRestockId, setModalRestockId] = useState<number | string | null>(null);
   const [cantidadRestock, setCantidadRestock] = useState<string>("1");
 
+  // ESTADO PARA EL MODAL DE AUMENTO MASIVO DE PRECIOS
+  const [modalAumentoAbierto, setModalAumentoAbierto] = useState(false);
+  const [porcentajeAumento, setPorcentajeAumento] = useState<string>("10");
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>("todas");
+  const [procesandoAumento, setProcesandoAumento] = useState(false);
+
   // ESTADO PARA EL GENERADOR DE STORY/IMAGEN REDES
   const [productoStory, setProductoStory] = useState<Producto | null>(null);
+
+  // Extraer categorías únicas para el selector del aumento masivo
+  const categoriasUnicas = Array.from(new Set(productos.map((p) => p.categoria).filter(Boolean))) as string[];
 
   const productosFiltrados = productos.filter((p) => {
     const termino = busqueda.toLowerCase().trim();
@@ -66,12 +77,47 @@ export default function ListaProductos({
     setCantidadRestock("1");
   };
 
+  const handleConfirmarAumentoMasivo = async () => {
+    const porc = parseFloat(porcentajeAumento);
+    if (isNaN(porc)) return;
+
+    setProcesandoAumento(true);
+    try {
+      if (onActualizarPreciosMasivo) {
+        await onActualizarPreciosMasivo(
+          porc, 
+          categoriaSeleccionada === "todas" ? undefined : categoriaSeleccionada
+        );
+      }
+      setModalAumentoAbierto(false);
+      setPorcentajeAumento("10");
+      setCategoriaSeleccionada("todas");
+    } catch (error) {
+      console.error("Error al actualizar precios masivamente:", error);
+    } finally {
+      setProcesandoAumento(false);
+    }
+  };
+
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs sm:rounded-3xl sm:p-6 pb-24 sm:pb-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="m-0 text-base font-bold text-gray-900 dark:text-zinc-100 sm:text-lg flex items-center gap-2">
-          📦 Listado de Productos
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="m-0 text-base font-bold text-gray-900 dark:text-zinc-100 sm:text-lg flex items-center gap-2">
+            📦 Listado de Productos
+          </h2>
+          
+          {/* BOTÓN DE AUMENTO MASIVO DE PRECIOS */}
+          <button
+            type="button"
+            onClick={() => setModalAumentoAbierto(true)}
+            className="flex items-center gap-1 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-1.5 text-xs font-bold text-[#0E6E55] dark:text-emerald-400 transition-all hover:bg-emerald-100 active:scale-95 cursor-pointer shadow-2xs"
+            title="Actualizar precios masivamente por porcentaje"
+          >
+            <Percent className="h-3.5 w-3.5" />
+            <span>Ajuste masivo</span>
+          </button>
+        </div>
 
         <div className="relative sm:w-72">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-zinc-500" />
@@ -252,7 +298,7 @@ export default function ListaProductos({
         </div>
       )}
 
-      {/* Modal Ajuste Stock */}
+      {/* MODAL AJUSTE DE STOCK */}
       {modalRestockId && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 pb-20 sm:pb-4 backdrop-blur-xs animate-fadeIn">
           <div className="w-full max-w-xs rounded-t-3xl sm:rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-2xl">
@@ -282,6 +328,76 @@ export default function ListaProductos({
                 className="h-10 rounded-xl bg-[#0E6E55] px-4 text-xs font-bold text-white transition-all hover:bg-[#0A5340] active:scale-95 shadow-xs"
               >
                 Aplicar Cambio
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE AUMENTO MASIVO DE PRECIOS */}
+      {modalAumentoAbierto && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4 pb-20 sm:pb-4 backdrop-blur-xs animate-fadeIn">
+          <div className="w-full max-w-sm rounded-t-3xl sm:rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 sm:p-6 shadow-2xl">
+            <div className="sm:hidden w-12 h-1 bg-gray-300 dark:bg-zinc-700 rounded-full mx-auto mb-3" />
+            <h3 className="m-0 text-sm sm:text-base font-bold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+              <Percent className="h-4 w-4 text-[#0E6E55] dark:text-emerald-400" /> Actualización Masiva de Precios
+            </h3>
+            <p className="mt-2 text-xs text-gray-500 dark:text-zinc-400 leading-relaxed">
+              Ingresá el porcentaje de aumento (ej: <strong className="text-emerald-600 dark:text-emerald-400">15</strong> para un 15%) o de descuento (ej: <strong className="text-red-500">-10</strong> para bajar un 10%):
+            </p>
+
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 dark:text-zinc-300 mb-1">
+                  Porcentaje (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={porcentajeAumento}
+                  onChange={(e) => setPorcentajeAumento(e.target.value)}
+                  placeholder="Ej: 15 o -10"
+                  className="w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 p-3 text-sm font-bold text-gray-900 dark:text-zinc-100 outline-none focus:border-[#0E6E55]"
+                />
+              </div>
+
+              {categoriasUnicas.length > 0 && (
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 dark:text-zinc-300 mb-1">
+                    Aplicar a categoría
+                  </label>
+                  <select
+                    value={categoriaSeleccionada}
+                    onChange={(e) => setCategoriaSeleccionada(e.target.value)}
+                    className="w-full rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 p-3 text-xs font-bold text-gray-900 dark:text-zinc-100 outline-none focus:border-[#0E6E55]"
+                  >
+                    <option value="todas">🌍 Todas las categorías (Todo el catálogo)</option>
+                    {categoriasUnicas.map((cat) => (
+                      <option key={cat} value={cat}>
+                        📂 {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={procesandoAumento}
+                onClick={() => setModalAumentoAbierto(false)}
+                className="h-10 rounded-xl px-4 text-xs font-bold text-gray-500 dark:text-zinc-400 hover:bg-gray-100 active:scale-95 transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={procesandoAumento}
+                onClick={handleConfirmarAumentoMasivo}
+                className="h-10 rounded-xl bg-[#0E6E55] px-4 text-xs font-bold text-white transition-all hover:bg-[#0A5340] active:scale-95 shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {procesandoAumento ? "Actualizando..." : "Aplicar Aumento"}
               </button>
             </div>
           </div>

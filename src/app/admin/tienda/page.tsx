@@ -94,6 +94,52 @@ export default function AdminTiendaPage() {
     else setCategorias(data || []);
   };
 
+
+const handleActualizarPreciosMasivo = async (porcentaje: number, categoria?: string) => {
+    const factor = 1 + porcentaje / 100; // Ej: 15% -> 1.15 | -10% -> 0.90
+
+    try {
+      // Filtramos los productos según la categoría seleccionada o todo el catálogo
+      const productosAActualizar = categoria 
+        ? productos.filter(p => p.categoria === categoria)
+        : productos;
+
+      if (productosAActualizar.length === 0) {
+        alert("No hay productos para actualizar en este criterio.");
+        return;
+      }
+
+      // Actualizamos cada producto en Supabase
+      for (const prod of productosAActualizar) {
+        const precioActual = Number(prod.precio) || 0;
+        const nuevoPrecio = Math.round(precioActual * factor);
+
+        // Objeto con los datos a actualizar
+        const datosActualizacion: any = { precio: nuevoPrecio };
+
+        // 🔍 Si el producto tiene un precio anterior (oferta), también lo actualizamos para mantener la proporción
+        if (prod.precio_original && Number(prod.precio_original) > 0) {
+          const precioOriginalActual = Number(prod.precio_original);
+          datosActualizacion.precio_original = Math.round(precioOriginalActual * factor);
+        }
+
+        const { error } = await supabase
+          .from("productos")
+          .update(datosActualizacion)
+          .eq("id", prod.id);
+
+        if (error) throw error;
+      }
+
+      // Recargamos los productos para reflejar los cambios al instante
+      await fetchProductos();
+      alert("¡Precios y ofertas actualizados masivamente con éxito!");
+    } catch (err: any) {
+      console.error("Error al actualizar precios:", err);
+      alert("Hubo un error al actualizar los precios: " + (err.message || err));
+    }
+  };
+
   const fetchPedidos = async () => {
     setCargandoPedidos(true);
 
@@ -401,6 +447,7 @@ return (
                   fetchProductos();
                 }
               }}
+              onActualizarPreciosMasivo={handleActualizarPreciosMasivo}
             />
           </>
         )}
