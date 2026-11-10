@@ -125,33 +125,39 @@ export default function UserAccountModal({ isOpen, onClose }: UserAccountModalPr
   }
 
   // Función para actualizar o guardar el perfil real de forma segura
-  const guardarPerfilReal = async () => {
+ const guardarPerfilReal = async () => {
     if (!user?.id || !nombreInput.trim()) return;
     try {
-      // Usamos .update() porque el cliente ya fue creado al iniciar sesión
-      const { error } = await supabase
+      console.log("📤 [DEBUG] Guardando perfil con avatar:", avatarInput);
+
+      const { data, error } = await supabase
         .from('clientes')
         .update({ 
           nombre: nombreInput.trim(),
           celular: celularInput.trim(),
-          avatar_url: avatarInput, // 👈 1. Agregamos el avatar a Supabase
+          avatar_url: avatarInput,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id);
+        .eq('user_id', user!.id)
+        .select(); // 👈 El .select() nos devuelve el registro actualizado
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ [DEBUG] Error de Supabase al actualizar:", error);
+        throw error;
+      }
 
-      // Actualizamos el estado local de forma limpia
+      console.log("✅ [DEBUG] Respuesta exitosa de Supabase:", data);
+
       setClienteData((prev: any) => ({ 
         ...prev, 
         nombre: nombreInput.trim(), 
         celular: celularInput.trim(),
-        avatar_url: avatarInput // 👈 2. Actualizamos también el estado local
+        avatar_url: avatarInput 
       }));
       setNombreIncompleto(false);
       setIsEditingProfile(false);
     } catch (err) {
-      console.error('Error al actualizar perfil en Supabase:', err);
+      console.error('🔥 [DEBUG] Error general al guardar:', err);
       alert('Hubo un error al guardar los cambios.');
     }
   };
