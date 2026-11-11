@@ -1,5 +1,5 @@
 'use client';
-
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -293,73 +293,95 @@ function LaserContent() {
           </div>
         </header>
 
-        {/* Paso 1: pantalla limpia con tarjetas de género */}
-        {!genero && (
-          <section className="animate-in fade-in duration-200">
-            <SelectorGenero genero={genero} onSelect={handleGenero} />
-          </section>
-        )}
+{/* Paso 1: pantalla limpia con tarjetas de género */}
+        <AnimatePresence mode="wait">
+          {!genero && (
+            <motion.div
+              key="genero"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <SelectorGenero genero={genero} onSelect={handleGenero} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Paso 2: selección de servicios */}
-        {genero && (
-          <section className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
-            {/* Cambio rápido de perfil (misma lógica que el paso 1) */}
-            <SelectorGenero genero={genero} onSelect={handleGenero} compacto />
+        <AnimatePresence mode="wait">
+          {genero && (
+            <motion.div
+              key="servicios"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="space-y-4"
+            >
+              {/* Cambio rápido de perfil */}
+              <SelectorGenero genero={genero} onSelect={handleGenero} compacto />
 
-            {cargando ? (
-              <div className="rounded-[28px] border border-border bg-card p-10 text-center shadow-xs">
-                <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                <p className="text-sm font-semibold text-muted-foreground">Cargando opciones…</p>
-              </div>
-            ) : (
-              <>
-                <SelectorModoLaser modo={modo} onChange={handleModoChange} />
-
-                <div className="space-y-4">
-                  {modo === 'promo' ? (
-                    <>
-                      <PanelPromos
-                        promos={promos}
-                        zonas={zonas}
-                        promoSeleccionada={promoSeleccionada}
-                        swaps={swaps}
-                        onSelectPromo={handleSelectPromo}
-                        onSwapClick={setSwapModalZonaId}
-                      />
-                      {promoSeleccionada && (
-                        <div className="animate-in fade-in slide-in-from-bottom-2 duration-200">
-                          <PanelZonasExtra
-                            zonas={zonas}
-                            zonasPromoIds={zonasPromoActivas}
-                            zonasExtraIds={zonasExtraIds}
-                            onToggleExtra={toggleZonaExtra}
-                          />
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {sugerenciaPromo && (
-                        <BannerSugerenciaPromo
-                          promo={sugerenciaPromo.promo}
-                          ahorro={sugerenciaPromo.ahorro}
-                          precioIndividual={sugerenciaPromo.precioIndividual}
-                          onAplicarPromo={handleAplicarPromo}
-                          onDismiss={() => setBannerDismissed(true)}
-                        />
-                      )}
-                      <PanelZonasIndividuales
-                        zonas={zonas}
-                        seleccionadas={zonasIndividualesIds}
-                        onToggle={toggleZonaIndividual}
-                      />
-                    </>
-                  )}
+              {cargando ? (
+                <div className="rounded-[28px] border border-border bg-card p-10 text-center shadow-xs">
+                  <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <p className="text-sm font-semibold text-muted-foreground">Cargando opciones…</p>
                 </div>
-              </>
-            )}
-          </section>
-        )}
+              ) : (
+                <>
+                  <SelectorModoLaser modo={modo} onChange={handleModoChange} />
+
+                  <div className="space-y-4">
+                    {modo === 'promo' ? (
+                      <>
+                        <PanelPromos
+                          promos={promos}
+                          zonas={zonas}
+                          promoSeleccionada={promoSeleccionada}
+                          swaps={swaps}
+                          onSelectPromo={handleSelectPromo}
+                          onSwapClick={setSwapModalZonaId}
+                        />
+                        {promoSeleccionada && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <PanelZonasExtra
+                              zonas={zonas}
+                              zonasPromoIds={zonasPromoActivas}
+                              zonasExtraIds={zonasExtraIds}
+                              onToggleExtra={toggleZonaExtra}
+                            />
+                          </motion.div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {sugerenciaPromo && (
+                          <BannerSugerenciaPromo
+                            promo={sugerenciaPromo.promo}
+                            ahorro={sugerenciaPromo.ahorro}
+                            precioIndividual={sugerenciaPromo.precioIndividual}
+                            onAplicarPromo={handleAplicarPromo}
+                            onDismiss={() => setBannerDismissed(true)}
+                          />
+                        )}
+                        <PanelZonasIndividuales
+                          zonas={zonas}
+                          seleccionadas={zonasIndividualesIds}
+                          onToggle={toggleZonaIndividual}
+                        />
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Modal swap */}

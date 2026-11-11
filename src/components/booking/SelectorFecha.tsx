@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Grid, Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,6 +38,17 @@ export default function SelectorFecha({
   const [mostrarCalendarioCompleto, setMostrarCalendarioCompleto] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Si es láser, filtramos y mostramos exclusivamente las fechas activas de la jornada
+  const diasLaserDisponibles = useMemo(() => {
+    if (tipo !== 'laser') return [];
+    const hoyIso = formatDateISO(hoy);
+    return fechasLaser
+      .filter((iso) => iso >= hoyIso)
+      .sort()
+      .map((iso) => new Date(iso + 'T00:00:00'));
+  }, [tipo, fechasLaser, hoy]);
+
+  // Carrusel estándar para servicio general
   const diasCarrusel = useMemo(() => {
     const lista = [];
     const base = new Date(hoy);
@@ -67,17 +78,83 @@ export default function SelectorFecha({
     return { year: y, month: m, celdas: c };
   }, [hoy, mesOffset]);
 
-  // Mantiene visible la tarjeta seleccionada al volver al carrusel
   useEffect(() => {
     if (mostrarCalendarioCompleto || !fechaSeleccionada) return;
     const el = scrollRef.current?.querySelector<HTMLElement>('[data-selected="true"]');
     el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, [fechaSeleccionada, mostrarCalendarioCompleto]);
 
+  // 🎯 Vista exclusiva y directa para depilación láser
+  if (tipo === 'laser') {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-extrabold text-foreground tracking-tight">
+              Próximas jornadas láser disponibles
+            </span>
+          </div>
+          <span className="text-xs font-semibold text-muted-foreground">
+            {diasLaserDisponibles.length} {diasLaserDisponibles.length === 1 ? 'fecha' : 'fechas'}
+          </span>
+        </div>
+
+        {diasLaserDisponibles.length === 0 ? (
+          <div className="rounded-3xl border border-border bg-card p-6 text-center space-y-2">
+            <p className="text-sm font-semibold text-foreground">No hay jornadas láser programadas próximamente.</p>
+            <p className="text-xs text-muted-foreground">Por favor, consultanos por nuestros canales habituales para conocer nuevas fechas.</p>
+          </div>
+        ) : (
+          <div 
+            ref={scrollRef}
+            className="grid grid-cols-2 sm:grid-cols-3 gap-3 animate-in fade-in duration-300"
+          >
+            {diasLaserDisponibles.map((fecha) => {
+              const iso = formatDateISO(fecha);
+              const seleccionada = fechaSeleccionada === iso;
+              const nombreDia = DIAS_LETRAS_CORTAS[fecha.getDay()];
+              const nombreMes = MESES[fecha.getMonth()];
+
+              return (
+                <button
+                  key={iso}
+                  type="button"
+                  data-selected={seleccionada}
+                  onClick={() => onSelect(iso)}
+                  className={`
+                    relative p-4 rounded-2xl border transition-all duration-200 flex flex-col items-start gap-1 cursor-pointer shadow-xs active:scale-[0.98]
+                    ${
+                      seleccionada
+                        ? 'bg-primary text-primary-foreground border-primary shadow-md ring-4 ring-primary/20'
+                        : 'bg-card text-card-foreground border-border/80 hover:border-primary/50 hover:bg-accent/50'
+                    }
+                  `}
+                >
+                  <span className={`text-xs font-bold uppercase tracking-wider ${seleccionada ? 'text-primary-foreground/90' : 'text-muted-foreground'}`}>
+                    {nombreDia}
+                  </span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-black tracking-tight tabular-nums">
+                      {fecha.getDate()}
+                    </span>
+                    <span className={`text-xs font-semibold capitalize ${seleccionada ? 'text-primary-foreground/90' : 'text-muted-foreground'}`}>
+                      {nombreMes}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Vista estándar de carrusel/calendario para servicios generales
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between px-1">
-        <span className="text-base font-bold capitalize tracking-tight text-slate-800 dark:text-zinc-100">
+        <span className="text-base font-extrabold capitalize tracking-tight text-foreground">
           {fechaSeleccionada
             ? new Date(fechaSeleccionada + 'T00:00:00').toLocaleDateString('es-AR', {
                 month: 'long',
@@ -90,7 +167,7 @@ export default function SelectorFecha({
           variant="ghost"
           size="sm"
           onClick={() => setMostrarCalendarioCompleto(!mostrarCalendarioCompleto)}
-          className="h-10 gap-2 rounded-xl px-3.5 text-sm font-extrabold text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/10 cursor-pointer"
+          className="h-10 gap-2 rounded-xl px-3.5 text-sm font-extrabold text-primary hover:bg-primary/10 cursor-pointer"
         >
           <Grid className="w-4 h-4" />
           <span>{mostrarCalendarioCompleto ? 'Ver carrusel' : 'Ver mes'}</span>
@@ -98,7 +175,6 @@ export default function SelectorFecha({
       </div>
 
       {!mostrarCalendarioCompleto ? (
-        /* Carrusel con sangrado lateral: las tarjetas llegan al borde de la pantalla */
         <div
           ref={scrollRef}
           className="-mx-4 flex items-center gap-3 overflow-x-auto px-4 py-3 scrollbar-none snap-x snap-mandatory touch-pan-x scroll-px-4"
@@ -121,16 +197,16 @@ export default function SelectorFecha({
                   relative snap-start shrink-0 w-20 h-24 rounded-3xl flex flex-col items-center justify-center gap-1.5 border transition-all duration-200 active:scale-95 cursor-pointer shadow-2xs
                   ${
                     seleccionada
-                      ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))] shadow-lg ring-4 ring-[hsl(var(--primary))]/20'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-lg ring-4 ring-primary/20'
                       : habilitada
-                      ? 'bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 border-slate-200/80 dark:border-zinc-800 hover:border-[hsl(var(--primary))]/40 hover:bg-slate-50 dark:hover:bg-zinc-800'
-                      : 'bg-slate-100/50 dark:bg-zinc-800/30 text-slate-300 dark:text-zinc-700 border-slate-100 dark:border-zinc-800/40 cursor-not-allowed opacity-50'
+                      ? 'bg-card text-card-foreground border-border hover:border-primary/40 hover:bg-accent'
+                      : 'bg-muted/50 text-muted-foreground/40 border-border/40 cursor-not-allowed opacity-50'
                   }
                 `}
               >
                 <span
                   className={`text-xs font-bold ${
-                    seleccionada ? 'opacity-90' : 'text-slate-500 dark:text-zinc-400'
+                    seleccionada ? 'opacity-90' : 'text-muted-foreground'
                   }`}
                 >
                   {esHoy ? 'Hoy' : nombreDia}
@@ -139,14 +215,14 @@ export default function SelectorFecha({
                   {fecha.getDate()}
                 </span>
                 {esHoy && !seleccionada && (
-                  <span className="absolute bottom-2 w-1.5 h-1.5 rounded-full bg-[hsl(var(--primary))]" />
+                  <span className="absolute bottom-2 w-1.5 h-1.5 rounded-full bg-primary" />
                 )}
               </button>
             );
           })}
         </div>
       ) : (
-        <Card className="bg-slate-50/70 dark:bg-zinc-900/60 border-slate-200/80 dark:border-zinc-800 rounded-[28px] p-5 sm:p-6 shadow-none animate-in fade-in duration-200">
+        <Card className="bg-card border-border rounded-[28px] p-5 sm:p-6 shadow-none animate-in fade-in duration-200">
           <div className="flex items-center justify-between mb-6">
             <Button
               type="button"
@@ -154,12 +230,12 @@ export default function SelectorFecha({
               size="icon"
               onClick={() => setMesOffset((m) => m - 1)}
               disabled={mesOffset === 0}
-              className="h-11 w-11 rounded-2xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 cursor-pointer"
+              className="h-11 w-11 rounded-2xl border-border text-foreground bg-card hover:bg-accent cursor-pointer"
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>
 
-            <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-zinc-100">
+            <h3 className="text-base font-extrabold tracking-tight text-foreground">
               {MESES[month]} {year}
             </h3>
 
@@ -168,7 +244,7 @@ export default function SelectorFecha({
               variant="outline"
               size="icon"
               onClick={() => setMesOffset((m) => m + 1)}
-              className="h-11 w-11 rounded-2xl border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 cursor-pointer"
+              className="h-11 w-11 rounded-2xl border-border text-foreground bg-card hover:bg-accent cursor-pointer"
             >
               <ChevronRight className="w-5 h-5" />
             </Button>
@@ -178,7 +254,7 @@ export default function SelectorFecha({
             {DIAS_CORTOS.map((d) => (
               <div
                 key={d}
-                className="py-1 text-center text-xs font-bold text-slate-400 dark:text-zinc-500"
+                className="py-1 text-center text-xs font-bold text-muted-foreground"
               >
                 {d}
               </div>
@@ -205,31 +281,24 @@ export default function SelectorFecha({
                   }}
                   className={`
                     relative aspect-square rounded-2xl text-sm sm:text-base font-extrabold tabular-nums transition-all duration-150 flex flex-col items-center justify-center active:scale-95
-                    ${
+                    {
                       seleccionada
-                        ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-md z-10 ring-4 ring-[hsl(var(--primary))]/20'
+                        ? 'bg-primary text-primary-foreground shadow-md z-10 ring-4 ring-primary/20'
                         : habilitada
-                        ? 'bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/20 border border-[hsl(var(--primary))]/20 cursor-pointer'
-                        : 'bg-white/40 dark:bg-zinc-800/30 text-slate-300 dark:text-zinc-700 border border-slate-100 dark:border-zinc-800/50 cursor-not-allowed'
+                        ? 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 cursor-pointer'
+                        : 'bg-muted/40 text-muted-foreground/30 border border-border/50 cursor-not-allowed'
                     }
                   `}
                 >
                   <span>{fecha.getDate()}</span>
                   {esHoy && !seleccionada && (
-                    <span className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-[hsl(var(--primary))]" />
+                    <span className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
                   )}
                 </button>
               );
             })}
           </div>
         </Card>
-      )}
-
-      {tipo === 'laser' && fechasLaser.length > 0 && (
-        <div className="flex items-center gap-2.5 rounded-2xl bg-slate-50/70 dark:bg-zinc-900/60 border border-slate-200/60 dark:border-zinc-800 px-4 py-3 text-xs font-medium text-slate-500 dark:text-zinc-400">
-          <CalendarIcon className="w-4 h-4 shrink-0 text-[hsl(var(--primary))]" />
-          <span>Días destacados disponibles exclusivamente para la jornada láser.</span>
-        </div>
       )}
     </div>
   );

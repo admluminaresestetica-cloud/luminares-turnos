@@ -427,9 +427,9 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
   })();
 
 
-    return (
-    <main className="min-h-screen bg-background px-4 py-5 sm:p-6 md:p-12 pb-48 relative font-sans">
-      <div className="max-w-lg mx-auto">
+ return (
+    <main className="min-h-screen bg-background px-4 py-5 sm:p-6 md:p-10 pb-48 relative font-sans">
+      <div className="max-w-lg lg:max-w-6xl mx-auto w-full">
         <div className="mb-5">
           {volverHref ? (
             <Link href={volverHref} className="inline-flex items-center gap-2 h-11 text-sm font-bold text-foreground bg-card border border-border px-4 rounded-2xl shadow-xs hover:bg-accent hover:text-accent-foreground transition-all active:scale-95">
@@ -444,11 +444,11 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
           ) : null}
         </div>
 
-        {/* Contenedor: en mobile el contenido respira sobre el fondo; desde sm vuelve a ser tarjeta */}
-        <div className="text-card-foreground sm:bg-card sm:border sm:border-border sm:rounded-[32px] sm:p-8 sm:shadow-xs">
+{/* Contenedor principal: en PC expandido sin cajas forzadas, en mobile limpio */}
+        <div className="text-card-foreground w-full">
           <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1 no-scrollbar">
             <span className={`text-sm font-extrabold px-4 py-2.5 rounded-2xl transition-all flex items-center gap-2 shrink-0 ${paso === 'agenda' ? styles.stepActive : 'bg-muted text-muted-foreground'}`}>
-              <Calendar className="w-4 h-4" /> 1. Fecha y hora
+              <Calendar className="w-4 h-4" />1. Fecha y hora
             </span>
             <ChevronRight className="w-4 h-4 text-muted-foreground/50 shrink-0" />
             <span className={`text-sm font-extrabold px-4 py-2.5 rounded-2xl transition-all flex items-center gap-2 shrink-0 ${paso === 'confirmacion' ? styles.stepActive : 'bg-muted text-muted-foreground'}`}>
@@ -483,7 +483,7 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
           )}
 
           {paso === 'confirmacion' && fecha && hora && (
-            <div>
+            <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-xs">
               <button
                 type="button"
                 onClick={() => setPaso('agenda')}
@@ -540,5 +540,3 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
     </main>
   );
 }
-
-  

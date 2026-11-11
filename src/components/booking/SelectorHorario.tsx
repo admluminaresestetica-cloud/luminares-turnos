@@ -44,7 +44,7 @@ export default function SelectorHorario({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3.5 animate-in fade-in duration-300">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 animate-in fade-in duration-300">
       {slotsValidos.map(({ hora, estado }) => {
         const activa = horaSeleccionada === hora;
         const enProceso = estado === 'en_proceso';
@@ -57,7 +57,7 @@ export default function SelectorHorario({
             disabled={enProceso}
             onClick={() => !enProceso && onSelect(hora)}
             className={`
-              h-auto w-full py-4 px-5 rounded-2xl border transition-all duration-200 flex items-center justify-between gap-3 shadow-2xs
+              h-auto w-full py-3.5 px-4 rounded-2xl border transition-all duration-200 flex items-center justify-between gap-2 shadow-2xs
               ${
                 enProceso
                   ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 opacity-90 cursor-not-allowed shadow-none'
@@ -69,20 +69,20 @@ export default function SelectorHorario({
             title={enProceso ? 'Horario en proceso de pago por otro usuario' : undefined}
           >
             <div className="flex flex-col items-start text-left leading-tight">
-              <span className="text-xl font-black tracking-tight tabular-nums">{hora}</span>
+              <span className="text-lg font-black tracking-tight tabular-nums">{hora}</span>
               {enProceso && (
-                <span className="mt-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                <span className="mt-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400">
                   En proceso
                 </span>
               )}
             </div>
 
             {enProceso ? (
-              <Lock className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400" />
+              <Lock className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
             ) : activa ? (
-              <Check className="w-5 h-5 shrink-0 stroke-[3]" />
+              <Check className="w-4 h-4 shrink-0 stroke-[3]" />
             ) : (
-              <Clock className="w-5 h-5 shrink-0 text-slate-400 dark:text-zinc-500 opacity-60" />
+              <Clock className="w-4 h-4 shrink-0 text-slate-400 dark:text-zinc-500 opacity-60" />
             )}
           </Button>
         );

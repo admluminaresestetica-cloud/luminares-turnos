@@ -1,5 +1,5 @@
 'use client';
-
+import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, Zap } from 'lucide-react';
@@ -57,7 +57,13 @@ export default function LaserAgendaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background font-sans flex flex-col">
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.25, ease: 'easeInOut' }}
+      className="min-h-screen bg-background font-sans flex flex-col"
+    >
       {/* 1. Header móvil limpio e integrado con los tonos semánticos */}
       <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-md border-b border-border px-4 sm:px-6 py-3">
         <div className="max-w-xl mx-auto flex items-center justify-between">
@@ -79,7 +85,7 @@ export default function LaserAgendaPage() {
       </header>
 
       {/* 2. Área principal enfocada en la agenda */}
-      <main className="max-w-xl mx-auto w-full p-4 sm:p-6 flex-1">
+      <main className="max-w-xl lg:max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-10 flex-1">
         <FlujoAgendaConfirmacion
           tipo="laser"
           precioTotal={seleccion.precio_total}
@@ -91,6 +97,6 @@ export default function LaserAgendaPage() {
           colorAccent="emerald"
         />
       </main>
-    </div>
+    </motion.div>
   );
 }
