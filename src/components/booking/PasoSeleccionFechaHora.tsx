@@ -120,11 +120,11 @@ export default function PasoSeleccionFechaHora({
 {/* Columna Derecha: Panel Lateral Fijo/Sticky en PC */}
 <div className="lg:col-span-5 lg:sticky lg:top-24 mt-6 lg:mt-0">
   <motion.div
-    initial={{ y: 20, opacity: 0 }}
-    animate={{ y: 0, opacity: 1 }}
-    transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-    className={`fixed ${OFFSET_NAV} left-4 right-4 z-40 mx-auto w-full max-w-md lg:static lg:inset-auto lg:max-w-none lg:mx-0`}
-  >
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+            className={`fixed ${OFFSET_NAV} left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-md lg:static lg:inset-auto lg:translate-x-0 lg:max-w-none lg:w-full lg:mx-0`}
+          >
     <div
       className={`rounded-3xl border border-border/80 bg-card/95 dark:bg-zinc-950/95 backdrop-blur-xl p-6 shadow-2xl lg:shadow-md ${
         summaryBgStyle || ''
