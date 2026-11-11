@@ -1,9 +1,9 @@
-
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, ChevronRight, CheckCircle2, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import FormConfirmacion from '@/components/booking/FormConfirmacion';
 import ModalReservaExitosa, { DatosReservaExitosa } from '@/components/booking/ModalReservaExitosa';
@@ -134,23 +134,21 @@ export default function FlujoAgendaConfirmacion({
     return () => window.removeEventListener('pageshow', handlePageShow);
   }, []);
 
-const cargarSlots = useCallback(async (fechaSel: string) => {
+  const cargarSlots = useCallback(async (fechaSel: string) => {
     if (!configCalendario) return;
     setCargandoSlots(true);
     setHora(null);
     const reservas = await getReservasPorFecha(fechaSel);
 
-    // ➕ Extraemos los bloqueos configurados por el admin
     const horariosBase = configCalendario.horarios_atencion || {};
     const bloqueosDelAdmin = (horariosBase as any).bloqueos_franjas || [];
 
-    // ➕ Pasamos los bloqueos como último parámetro a la función de los slots
     const slotsConEstado = calcularSlotsConEstado(
       fechaSel, 
       duracionTotal, 
       configCalendario.horarios_atencion, 
       reservas, 
-      15, // buffer predeterminado
+      15,
       bloqueosDelAdmin
     );
 
@@ -171,17 +169,15 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
     const nombreLimpio = nombre.trim();
     let codigoReferidoPropio = '';
 
-    // Tu búsqueda original por celular
     const { data: clienteExistente } = await supabase
       .from('clientes')
-      .select('id, codigo_referido, user_id') // <--- Traemos también el id y user_id
+      .select('id, codigo_referido, user_id')
       .eq('celular', celularLimpio)
       .maybeSingle();
 
     if (clienteExistente) {
       codigoReferidoPropio = clienteExistente.codigo_referido;
 
-      // Si ya existía, pero el usuario está logueado y no tenía su user_id guardado, se lo asociamos
       if (user?.id && !clienteExistente.user_id) {
         await supabase
           .from('clientes')
@@ -190,12 +186,11 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
       }
     } else {
       codigoReferidoPropio = generarCodigoReferido(nombreLimpio);
-      
-      // Tu inserción original, agregando user_id (irá con el ID si está logueado, o null si es anónimo)
+
       const { data: nuevoCliente, error: errorInsert } = await supabase
         .from('clientes')
         .insert([{
-          user_id: user?.id || null, // <--- Esto es lo único nuevo para que no quede vacío
+          user_id: user?.id || null,
           celular: celularLimpio,
           nombre: nombreLimpio,
           codigo_referido: codigoReferidoPropio,
@@ -204,7 +199,7 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
         .select('codigo_referido')
         .maybeSingle();
 
-      if (errorInsert) {
+  if (errorInsert) {
         const { data: clienteReintento } = await supabase
           .from('clientes')
           .select('codigo_referido')
@@ -237,10 +232,9 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
       }
     }
 
-// Si hay canjeId, buscamos el título o monto del cupón para restarlo
     let descuentoCuponMonto = 0;
     let codigoCuponTexto = '';
-    
+
     if (canjeId) {
       const { data: datosCanje } = await supabase
         .from('canjes_usuarios')
@@ -257,7 +251,6 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
     }
 
     const montoDescuentoAplicar = sistemaReferidosActivo ? descuentoMonto : 0;
-    // Restamos referidos Y el cupón del total
     const precioFinal = Math.max(0, precioTotal - montoDescuentoAplicar - descuentoCuponMonto);
 
     const [year, month, day] = fecha.split('-').map(Number);
@@ -277,7 +270,7 @@ const cargarSlots = useCallback(async (fechaSel: string) => {
       canje_id: canjeId || null,
     });
 
-if (canjeId) {
+    if (canjeId) {
       await supabase
         .from('canjes_usuarios')
         .update({ estado: 'utilizado' })
@@ -297,7 +290,7 @@ if (canjeId) {
         setError('No pudimos crear la reserva. Intentá de nuevo.');
         return;
       }
-      
+
       const { reserva, nombreLimpio, precioFinal, codigoReferidoPropio, codigoUsadoLimpio, codigoCuponTexto, descuentoCuponMonto } = base;
       const datosExito: DatosReservaExitosa = {
         codigo: reserva.codigo_unico,
@@ -336,7 +329,7 @@ if (canjeId) {
     }
   };
 
-const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => {
+  const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => {
     setCargandoMP(true);
     setError(null);
     try {
@@ -426,8 +419,7 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
     return activos.length > 0 ? activos : [0, 1, 2, 3, 4, 5, 6];
   })();
 
-
-    return (
+  return (
     <main className="min-h-screen bg-background px-4 py-5 sm:p-6 md:p-12 pb-48 relative font-sans">
       <div className="max-w-lg mx-auto">
         <div className="mb-5">
@@ -444,8 +436,7 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
           ) : null}
         </div>
 
-        {/* Contenedor: en mobile el contenido respira sobre el fondo; desde sm vuelve a ser tarjeta */}
-        <div className="text-card-foreground sm:bg-card sm:border sm:border-border sm:rounded-[32px] sm:p-8 sm:shadow-xs">
+        <div className="text-card-foreground sm:bg-card sm:border sm:border-border sm:rounded-[32px] sm:p-8 sm:shadow-xs overflow-hidden">
           <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1 no-scrollbar">
             <span className={`text-sm font-extrabold px-4 py-2.5 rounded-2xl transition-all flex items-center gap-2 shrink-0 ${paso === 'agenda' ? styles.stepActive : 'bg-muted text-muted-foreground'}`}>
               <Calendar className="w-4 h-4" /> 1. Fecha y hora
@@ -463,68 +454,85 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
             </div>
           )}
 
-          {paso === 'agenda' && (
-            <PasoSeleccionFechaHora
-              tipo={tipo}
-              fechasLaser={fechasLaser}
-              diasSemana={diasSemana}
-              fecha={fecha}
-              hora={hora}
-              slots={slots}
-              cargandoSlots={cargandoSlots}
-              precioTotal={precioTotal}
-              duracionTotal={duracionTotal}
-              buttonStyle={styles.button}
-              summaryBgStyle={styles.summaryBg}
-              onSelectFecha={setFecha}
-              onSelectHora={setHora}
-              onContinuar={() => setPaso('confirmacion')}
-            />
-          )}
-
-          {paso === 'confirmacion' && fecha && hora && (
-            <div>
-              <button
-                type="button"
-                onClick={() => setPaso('agenda')}
-                className={`inline-flex items-center gap-2 h-11 text-sm font-extrabold mb-6 transition-colors cursor-pointer ${styles.link}`}
+          {/* ═════════ TRANSICIÓN FLUIDA CON FRAMER MOTION ═════════ */}
+          <AnimatePresence mode="wait">
+            {paso === 'agenda' && (
+              <motion.div
+                key="agenda"
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 15 }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
               >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Cambiar fecha u hora</span>
-              </button>
+                <PasoSeleccionFechaHora
+                  tipo={tipo}
+                  fechasLaser={fechasLaser}
+                  diasSemana={diasSemana}
+                  fecha={fecha}
+                  hora={hora}
+                  slots={slots}
+                  cargandoSlots={cargandoSlots}
+                  precioTotal={precioTotal}
+                  duracionTotal={duracionTotal}
+                  buttonStyle={styles.button}
+                  summaryBgStyle={styles.summaryBg}
+                  onSelectFecha={setFecha}
+                  onSelectHora={setHora}
+                  onContinuar={() => setPaso('confirmacion')}
+                />
+              </motion.div>
+            )}
 
-              <FormConfirmacion
-                tipo={tipo}
-                servicioDetalle={detalleTexto}
-                precioTotal={precioTotal}
-                duracionTotal={duracionTotal}
-                fecha={fecha}
-                hora={hora}
-                porcentajeSena={configSistema.porcentaje_sena}
-                nombre={nombre}
-                celular={celular}
-                codigoReferidoUsado={codigoReferidoUsado}
-                descuentoMonto={descuentoMonto}
-                referidoValido={referidoValido}
-                mensajeReferido={mensajeReferido}
-                referidosActivo={configSistema?.referidos_activo}
-                onNombreChange={setNombre}
-                onCelularChange={setCelular}
-                onCodigoReferidoChange={setCodigoReferidoUsado}
-                onConfirmar={handleConfirmar}
-                confirmando={confirmando}
-                error={error}
-                colorAccent={colorAccent}
-                onPagarMercadoPago={handlePagarMercadoPago}
-                cargandoMP={cargandoMP}
-                onCancelarMP={() => setCargandoMP(false)}
-                banco={config?.banco}
-                titularCuenta={config?.titular_cuenta}
-                cbu={config?.cbu}
-                alias={config?.mp_alias}
-              />
-            </div>
-          )}
+            {paso === 'confirmacion' && fecha && hora && (
+              <motion.div
+                key="confirmacion"
+                initial={{ opacity: 0, x: 15 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -15 }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setPaso('agenda')}
+                  className={`inline-flex items-center gap-2 h-11 text-sm font-extrabold mb-6 transition-colors cursor-pointer ${styles.link}`}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Cambiar fecha u hora</span>
+                </button>
+
+                <FormConfirmacion
+                  tipo={tipo}
+                  servicioDetalle={detalleTexto}
+                  precioTotal={precioTotal}
+                  duracionTotal={duracionTotal}
+                  fecha={fecha}
+                  hora={hora}
+                  porcentajeSena={configSistema.porcentaje_sena}
+                  nombre={nombre}
+                  celular={celular}
+                  codigoReferidoUsado={codigoReferidoUsado}
+                  descuentoMonto={descuentoMonto}
+                  referidoValido={referidoValido}
+                  mensajeReferido={mensajeReferido}
+                  referidosActivo={configSistema?.referidos_activo}
+                  onNombreChange={setNombre}
+                  onCelularChange={setCelular}
+                  onCodigoReferidoChange={setCodigoReferidoUsado}
+                  onConfirmar={handleConfirmar}
+                  confirmando={confirmando}
+                  error={error}
+                  colorAccent={colorAccent}
+                  onPagarMercadoPago={handlePagarMercadoPago}
+                  cargandoMP={cargandoMP}
+                  onCancelarMP={() => setCargandoMP(false)}
+                  banco={config?.banco}
+                  titularCuenta={config?.titular_cuenta}
+                  cbu={config?.cbu}
+                  alias={config?.mp_alias}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -540,5 +548,3 @@ const handlePagarMercadoPago = async (montoAPagar: number, canjeId?: string) => 
     </main>
   );
 }
-
-  
