@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, ShoppingBag, Heart, User, PackageSearch } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import UserAccountModal from '@/components/UserAccountModal';
+import UserAccountModal from '@/components/cuenta/UserAccountModal';
 
 export default function BottomNav() {
   const pathname = usePathname();

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
-import { ArrowLeft, Loader2, LayoutDashboard, BarChart3, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Loader2, LayoutDashboard, BarChart3, CalendarDays, UserCheck } from 'lucide-react';
 
 import DateRangePicker, { RangoFecha } from './components/DateRangePicker';
 import RevenueChart from './components/RevenueChart';
@@ -17,6 +17,7 @@ import GraficoDiasSemana from './components/GraficoDiasSemana';
 import FranjasHorariasCard from './components/FranjasHorariasCard';
 import CrossSellingCard from './components/CrossSellingCard';
 import OrigenFinanzasCard from './components/OrigenFinanzasCard';
+import ClienteAnalisisTab from './components/clientes/ClienteAnalisisTab';
 
 import {
   getKpisReservas,
@@ -50,7 +51,7 @@ const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-type TabTipo = 'general' | 'ventas' | 'agenda';
+type TabTipo = 'general' | 'ventas' | 'agenda' | 'clientes';
 
 export default function MetricasPage() {
   const router = useRouter();
@@ -319,11 +320,26 @@ export default function MetricasPage() {
                 <CalendarDays className="w-4 h-4" />
                 Rubros y Días
               </button>
+
+              {/* NUEVO BOTÓN DE CLIENTES */}
+              <button
+                type="button"
+                onClick={() => setTabActiva('clientes')}
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                  tabActiva === 'clientes'
+                    ? 'bg-white text-blue-700 shadow-md dark:bg-zinc-900 dark:text-blue-400'
+                    : 'text-white/80 hover:text-white hover:bg-white/15'
+                }`}
+              >
+                <UserCheck className="w-4 h-4" />
+                Clientes
+              </button>
             </div>
           </div>
 
         </div>
       </div>
+
 
       {/* ⬜ CONTENEDOR FLOTANTE PRINCIPAL (-mt-12) */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 space-y-6">
@@ -431,6 +447,13 @@ export default function MetricasPage() {
                 </div>
 
                 <FranjasHorariasCard franjas={franjasHorarias} noShow={noShow} loading={cargando} />
+              </div>
+            )}
+
+            {/* Pestaña 4: Análisis de Clientes */}
+            {tabActiva === 'clientes' && (
+              <div className="space-y-6">
+                <ClienteAnalisisTab />
               </div>
             )}
           </>

@@ -5,15 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { ShoppingCart, ArrowLeft, Tag as TagIcon, X } from "lucide-react";
-import CarritoDrawer from "@/components/CarritoDrawer";
+import CarritoDrawer from "@/components/carrito/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
 import BeneficiosTienda from "./components/BeneficiosTienda";
-import FooterTienda from "@/components/FooterTienda";
+import FooterTienda from "@/components/common/FooterTienda";
 import { useCarrito } from "@/context/CarritoContext";
 import { useConfig } from "@/context/ConfigContext";
 import { Producto } from "@/types/tienda";
 import BotonFlotanteCarrito from "./components/BotonFlotanteCarrito";
-import ThemeToggle from "@/components/ThemeToggle";
+import ThemeToggle from "@/components/common/ThemeToggle";
 import Fuse from "fuse.js";
 import ModalExito from "@/components/carrito/ModalExito";
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import localFont from "next/font/local";
 import { usePathname } from "next/navigation";
 import "./globals.css";
-import Footer from "@/components/footer";
+import Footer from "@/components/common/footer";
 import BottomNav from '@/components/Home/BottomNav';
 import { CarritoProvider } from "@/context/CarritoContext";
 import { ConfigProvider } from "@/context/ConfigContext";

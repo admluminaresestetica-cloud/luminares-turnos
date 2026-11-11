@@ -18,7 +18,7 @@ import {
   Lock,
   ChevronRight
 } from 'lucide-react';
-import ThemeToggle from '@/components/ThemeToggle';
+import ThemeToggle from '@/components/common/ThemeToggle';
 import AdminChatWidget from './components/AdminChatWidget';
 import ModalPinAutorizacion from './components/ModalPinAutorizacion';
 

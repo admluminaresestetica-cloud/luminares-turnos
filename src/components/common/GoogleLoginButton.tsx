@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { LogIn, LogOut, User as UserIcon } from 'lucide-react';
-import UserAccountModal from '@/components/UserAccountModal';
+import UserAccountModal from '@/components/cuenta/UserAccountModal';
 
 export default function AuthButton() {
   const [user, setUser] = useState<User | null>(null);

@@ -6,10 +6,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Search, Calendar, ShoppingBag, Star, X, Loader2, Zap, PackageSearch, User, LogOut, ChevronDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import ThemeToggle from '@/components/ThemeToggle';
+import ThemeToggle from '@/components/common/ThemeToggle';
 import { useConfig } from '@/context/ConfigContext';
-import GoogleLoginButton from '@/components/GoogleLoginButton';
-import UserAccountModal from '@/components/UserAccountModal';
+import GoogleLoginButton from '@/components/common/GoogleLoginButton';
+import UserAccountModal from '@/components/cuenta/UserAccountModal';
 
 interface HeaderBusquedaProps {
   nombreEmpresa: string;

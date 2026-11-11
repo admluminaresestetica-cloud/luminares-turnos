@@ -14,7 +14,7 @@ import GuiaReservaCard from '@/components/Home/GuiaReservaCard';
 import ServiciosDestacados from '@/components/Home/ServiciosDestacados';
 import InstallPrompt from '@/components/Home/InstallPrompt';
 import BannerModal from '@/components/Home/BannerModal';
-import UserAccountModal from '@/components/UserAccountModal';
+import UserAccountModal from '@/components/cuenta/UserAccountModal';
 
 interface Banner {
   id: string;
