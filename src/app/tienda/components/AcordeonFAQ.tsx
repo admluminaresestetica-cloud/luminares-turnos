@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 import { ChevronDown, HelpCircle } from "lucide-react";
 
 interface PreguntaDB {
@@ -9,7 +8,12 @@ interface PreguntaDB {
   pregunta: string;
   respuesta: string;
   badge?: string;
+  ubicacion?: string;
   orden?: number;
+}
+
+interface AcordeonFAQProps {
+  faqs?: PreguntaDB[];
 }
 
 const BADGES_CONFIG: Record<string, { label: string; color: string }> = {
@@ -21,40 +25,14 @@ const BADGES_CONFIG: Record<string, { label: string; color: string }> = {
   Terminos: { label: 'Términos y Condiciones', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40' },
 };
 
-export default function AcordeonFAQ() {
-  const [faqs, setFaqs] = useState<PreguntaDB[]>([]);
+export default function AcordeonFAQ({ faqs = [] }: AcordeonFAQProps) {
   const [faqAbierta, setFaqAbierta] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchFaqsTienda = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("preguntas_frecuentes")
-          .select("*")
-          .order("orden", { ascending: true });
-
-        if (error) throw error;
-        if (data) setFaqs(data);
-      } catch (err) {
-        console.error("Error al cargar FAQs en tienda:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFaqsTienda();
-  }, []);
 
   const toggleFaq = (id: number) => {
     setFaqAbierta((prev) => (prev === id ? null : id));
   };
 
-  if (loading) {
-    return <div className="mt-8 pt-6 text-center text-xs text-slate-400">Cargando información...</div>;
-  }
-
-  if (faqs.length === 0) {
+  if (!faqs || faqs.length === 0) {
     return null;
   }
 

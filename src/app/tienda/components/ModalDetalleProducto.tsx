@@ -9,6 +9,7 @@ import GaleriaProducto from "./GaleriaProducto";
 import ProductosRelacionados from "./ProductosRelacionados";
 import CarruselEtiquetaModal from "./CarruselEtiquetaModal";
 import { calcularCuotas } from "@/lib/precios";
+import { supabase } from "@/lib/supabase";
 
 interface ModalDetalleProductoProps {
   producto: Producto | null;
@@ -34,7 +35,8 @@ export default function ModalDetalleProducto({
 
   // Estado para controlar el mini carrusel desplegable por etiqueta
   const [tagSeleccionadoCarrusel, setTagSeleccionadoCarrusel] = useState<string | null>(null);
-
+  const [faqsTienda, setFaqsTienda] = useState<any[]>([]);
+   
   const context = useCarrito();
   const agregarAlCarrito = context?.agregarAlCarrito;
   const actualizarCantidad = (context as any)?.actualizarCantidad;
@@ -112,6 +114,29 @@ export default function ModalDetalleProducto({
       setStartY(e.touches[0].clientY);
     }
   };
+
+
+useEffect(() => {
+    const fetchFaqsTienda = async () => {
+      const { data, error } = await supabase
+        .from("preguntas_frecuentes")
+        .select("*")
+        .order("orden", { ascending: true });
+
+      if (!error && data) {
+        const filtradas = data.filter(
+          (f: any) => f.ubicacion === "tienda" || f.ubicacion === "ambos" || !f.ubicacion
+        );
+        
+        // Ponianos el console.log acá:
+        console.log("FAQs filtradas para tienda:", filtradas);
+        
+        setFaqsTienda(filtradas);
+      }
+    };
+
+    fetchFaqsTienda();
+  }, []);
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (startY === null) return;
@@ -423,8 +448,7 @@ export default function ModalDetalleProducto({
           </div>
         </div>
 
-        <AcordeonFAQ />
-
+        <AcordeonFAQ faqs={faqsTienda} />
         {/* SUBCOMPONENTE DE PRODUCTOS RECOMENDADOS */}
         <ProductosRelacionados
           productosRelacionados={productosRelacionados}
