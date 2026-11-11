@@ -452,35 +452,34 @@ function ServiciosContent() {
         </div>
       )}
 
-      {/* Barra flotante inferior de confirmación (apoyada sobre la navegación de la app) */}
+      {/* 🎯 Barra inferior adaptativa y fluida sin solapar contenido al scrolear */}
       {paso === 'servicios' && seleccionados.length > 0 && (
-        <div className="fixed inset-x-0 z-40 bottom-[calc(var(--bottom-nav-h,4rem)+env(safe-area-inset-bottom,0px))] sm:bottom-0 sm:pb-[env(safe-area-inset-bottom,0px)]">
-          <div className="mx-auto max-w-2xl">
-            <div className="rounded-t-[28px] border-t border-border bg-card px-5 pb-4 pt-4 text-card-foreground shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.18)] sm:px-6">
-              <p className="mb-2 truncate text-xs font-medium text-muted-foreground">
-                {totales.detalle}
-              </p>
-
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0 flex-1">
+        <div className="sticky bottom-6 z-40 mt-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="mx-auto max-w-2xl px-1">
+            <div className="rounded-[28px] border border-border/80 bg-card/95 backdrop-blur-xl px-6 py-4 text-card-foreground shadow-2xl flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="mb-0.5 truncate text-xs font-semibold text-muted-foreground">
+                  {totales.detalle}
+                </p>
+                <div className="flex items-baseline gap-3">
                   <p className="text-2xl font-black leading-none tabular-nums tracking-tight text-foreground">
                     ${totales.precio.toLocaleString('es-AR')}
                   </p>
-                  <span className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
                     <Clock className="h-3.5 w-3.5" />
                     {totales.duracion} min
                   </span>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleContinuarServicios}
-                  className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-7 text-sm font-extrabold text-primary-foreground transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>Continuar</span>
-                  <ArrowRight className="h-4 w-4 stroke-[2.5]" />
-                </button>
               </div>
+
+              <button
+                type="button"
+                onClick={handleContinuarServicios}
+                className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-primary px-7 text-sm font-extrabold text-primary-foreground shadow-md transition-all active:scale-95 cursor-pointer hover:opacity-90"
+              >
+                <span>Continuar</span>
+                <ArrowRight className="h-4 w-4 stroke-[2.5]" />
+              </button>
             </div>
           </div>
         </div>

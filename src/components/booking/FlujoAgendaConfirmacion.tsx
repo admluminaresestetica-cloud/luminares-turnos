@@ -436,7 +436,7 @@ export default function FlujoAgendaConfirmacion({
           ) : null}
         </div>
 
-        <div className="text-card-foreground sm:bg-card sm:border sm:border-border sm:rounded-[32px] sm:p-8 sm:shadow-xs overflow-hidden">
+        <div className="text-card-foreground sm:bg-card sm:border sm:border-border sm:rounded-[32px] sm:p-8 sm:shadow-xs">
           <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1 no-scrollbar">
             <span className={`text-sm font-extrabold px-4 py-2.5 rounded-2xl transition-all flex items-center gap-2 shrink-0 ${paso === 'agenda' ? styles.stepActive : 'bg-muted text-muted-foreground'}`}>
               <Calendar className="w-4 h-4" />1. Fecha y hora
