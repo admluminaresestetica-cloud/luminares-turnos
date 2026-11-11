@@ -419,16 +419,9 @@ export default function FlujoAgendaConfirmacion({
     return activos.length > 0 ? activos : [0, 1, 2, 3, 4, 5, 6];
   })();
 
-<<<<<<< HEAD
-
- return (
-    <main className="min-h-screen bg-background px-4 py-5 sm:p-6 md:p-10 pb-48 relative font-sans">
-      <div className="max-w-lg lg:max-w-6xl mx-auto w-full">
-=======
   return (
     <main className="min-h-screen bg-background px-4 py-5 sm:p-6 md:p-12 pb-48 relative font-sans">
       <div className="max-w-lg mx-auto">
->>>>>>> 94ddf15bc323cf87051b16bc4f7e3d457f0d2816
         <div className="mb-5">
           {volverHref ? (
             <Link href={volverHref} className="inline-flex items-center gap-2 h-11 text-sm font-bold text-foreground bg-card border border-border px-4 rounded-2xl shadow-xs hover:bg-accent hover:text-accent-foreground transition-all active:scale-95">
@@ -443,12 +436,7 @@ export default function FlujoAgendaConfirmacion({
           ) : null}
         </div>
 
-<<<<<<< HEAD
-{/* Contenedor principal: en PC expandido sin cajas forzadas, en mobile limpio */}
-        <div className="text-card-foreground w-full">
-=======
         <div className="text-card-foreground sm:bg-card sm:border sm:border-border sm:rounded-[32px] sm:p-8 sm:shadow-xs overflow-hidden">
->>>>>>> 94ddf15bc323cf87051b16bc4f7e3d457f0d2816
           <div className="flex items-center gap-2 mb-8 overflow-x-auto pb-1 no-scrollbar">
             <span className={`text-sm font-extrabold px-4 py-2.5 rounded-2xl transition-all flex items-center gap-2 shrink-0 ${paso === 'agenda' ? styles.stepActive : 'bg-muted text-muted-foreground'}`}>
               <Calendar className="w-4 h-4" />1. Fecha y hora
@@ -466,33 +454,6 @@ export default function FlujoAgendaConfirmacion({
             </div>
           )}
 
-<<<<<<< HEAD
-          {paso === 'agenda' && (
-            <PasoSeleccionFechaHora
-              tipo={tipo}
-              fechasLaser={fechasLaser}
-              diasSemana={diasSemana}
-              fecha={fecha}
-              hora={hora}
-              slots={slots}
-              cargandoSlots={cargandoSlots}
-              precioTotal={precioTotal}
-              duracionTotal={duracionTotal}
-              buttonStyle={styles.button}
-              summaryBgStyle={styles.summaryBg}
-              onSelectFecha={setFecha}
-              onSelectHora={setHora}
-              onContinuar={() => setPaso('confirmacion')}
-            />
-          )}
-
-          {paso === 'confirmacion' && fecha && hora && (
-            <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-xs">
-              <button
-                type="button"
-                onClick={() => setPaso('agenda')}
-                className={`inline-flex items-center gap-2 h-11 text-sm font-extrabold mb-6 transition-colors cursor-pointer ${styles.link}`}
-=======
           {/* ═════════ TRANSICIÓN FLUIDA CON FRAMER MOTION ═════════ */}
           <AnimatePresence mode="wait">
             {paso === 'agenda' && (
@@ -502,7 +463,6 @@ export default function FlujoAgendaConfirmacion({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 15 }}
                 transition={{ duration: 0.2, ease: 'easeInOut' }}
->>>>>>> 94ddf15bc323cf87051b16bc4f7e3d457f0d2816
               >
                 <PasoSeleccionFechaHora
                   tipo={tipo}
