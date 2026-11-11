@@ -421,7 +421,7 @@ export default function FlujoAgendaConfirmacion({
 
   return (
     <main className="min-h-screen bg-background px-4 py-5 sm:p-6 md:p-12 pb-48 relative font-sans">
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-lg lg:max-w-5xl mx-auto">
         <div className="mb-5">
           {volverHref ? (
             <Link href={volverHref} className="inline-flex items-center gap-2 h-11 text-sm font-bold text-foreground bg-card border border-border px-4 rounded-2xl shadow-xs hover:bg-accent hover:text-accent-foreground transition-all active:scale-95">
