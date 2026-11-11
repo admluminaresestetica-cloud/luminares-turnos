@@ -5,7 +5,7 @@ import { useCarrito } from "@/context/CarritoContext";
 import { useConfig } from "@/context/ConfigContext";
 import { supabase } from "@/lib/supabase";
 import { X, Trash2, ShoppingCart, ArrowRight, Lock, ShieldCheck, CheckCircle2 } from "lucide-react";
-import FormularioEnvio from "./carrito/FormularioEnvio";
+import FormularioEnvio from "./FormularioEnvio";
 import { useAuth } from "@/context/AuthContext";
 
 interface CarritoDrawerProps {
