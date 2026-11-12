@@ -320,7 +320,7 @@ export default function FormularioEmpresaTab() {
                 name="mensaje_ticket"
                 value={form.mensaje_ticket}
                 onChange={handleChange}
-                placeholder="Ej. ¡Gracias por tu compra! ✨ (o legales como: Cambios hasta 15 días)"
+                placeholder="Ej. ¡Gracias por tu compra!  (o legales como: Cambios hasta 15 días)"
                 className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-400/20"
               />
               <p className="mt-1 text-[11px] text-slate-400">
