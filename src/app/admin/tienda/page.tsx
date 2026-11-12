@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { motion, AnimatePresence, useReducedMotion, type Variants } from "framer-motion";
 
 // Componentes modulares de la vista
 import TiendaHeaderNav, { TabKey } from "./components/TiendaHeaderNav";
@@ -44,8 +45,41 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// ✨ Variantes de animación (solo UI)
+const contenedorVariants: Variants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.08, delayChildren: 0.05 },
+  },
+};
+
+const seccionVariants: Variants = {
+  hidden: { opacity: 0, y: 22, scale: 0.985 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: "spring", stiffness: 300, damping: 26 },
+  },
+};
+
+const heroVariants: Variants = {
+  hidden: { opacity: 0, y: -14 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: "easeOut" },
+  },
+};
+
+// Envoltorio animado para cada bloque de una pestaña (hereda el stagger del contenedor)
+const Seccion = ({ children }: { children: ReactNode }) => (
+  <motion.div variants={seccionVariants}>{children}</motion.div>
+);
+
 export default function AdminTiendaPage() {
   const { perfil } = usePerfil();
+  const reducirMovimiento = useReducedMotion();
   const [activeTab, setActiveTab] = useState<TabKey>("catalogo");
   const [mounted, setMounted] = useState(false);
 
@@ -358,23 +392,125 @@ const handleActualizarPreciosMasivo = async (porcentaje: number, categoria?: str
   const totalProductos = productos.length;
   const stockTotal = productos.reduce((acc, p) => acc + (Number(p.stock) || 0), 0);
   const pedidosPendientes = pedidos.filter((p) => p.estado === "pendiente").length;
+  // 🔔 Solo UI: dato derivado de los productos ya cargados, para el chip de estado del hero
+  const productosSinStock = productos.filter((p) => (Number(p.stock) || 0) <= 0).length;
 
 return (
-  <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 transition-colors pb-24 sm:pb-12">
-    {/* HERO / CABECERA CON DEGRADADO VERDE FINTECH CONTINUO */}
-    <div className="bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-500 dark:from-emerald-950 dark:via-emerald-900 dark:to-zinc-900 pt-6 pb-20 px-4 sm:px-10 transition-colors">
-      <div className="max-w-[1200px] mx-auto">
-        <TiendaHeaderNav
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          pedidosPendientes={pedidosPendientes}
-        />
+  <div className="min-h-screen bg-slate-100 dark:bg-zinc-950 transition-colors pb-24 sm:pb-12">
+    {/* 🟩 HERO FINTECH: DEGRADADO ESMERALDA → TEAL → CYAN CON ORBES DE LUZ */}
+    <div className="relative bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-500 dark:from-emerald-950 dark:via-teal-950 dark:to-zinc-900 pt-6 pb-24 px-4 sm:px-10 shadow-lg transition-colors">
+      {/* Orbes decorativos (capa recortada propia, no interactiva) */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-16 -top-20 h-64 w-64 rounded-full bg-lime-300/25 blur-3xl" />
+        <div className="absolute -right-20 top-2 h-72 w-72 rounded-full bg-cyan-300/30 blur-3xl" />
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/10 to-transparent" />
+      </div>
+
+      <div className="relative max-w-[1200px] mx-auto">
+        {/* Solo opacidad: así no se altera el posicionamiento de elementos fijos de la navegación */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
+          <TiendaHeaderNav
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            pedidosPendientes={pedidosPendientes}
+          />
+        </motion.div>
+
+        {/* Chips de estado en vivo */}
+        <motion.div
+          variants={contenedorVariants}
+          initial="hidden"
+          animate="show"
+          className="mt-5 flex flex-wrap items-center gap-2"
+        >
+          <motion.div
+            variants={heroVariants}
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-bold backdrop-blur-md ${
+              pedidosPendientes > 0
+                ? "border-amber-200/40 bg-amber-400/20 text-amber-50"
+                : "border-white/20 bg-white/10 text-white/90"
+            }`}
+          >
+            <span className="relative flex h-2 w-2">
+              {pedidosPendientes > 0 && (
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-75" />
+              )}
+              <span
+                className={`relative inline-flex h-2 w-2 rounded-full ${
+                  pedidosPendientes > 0 ? "bg-amber-300" : "bg-emerald-300"
+                }`}
+              />
+            </span>
+            {pedidosPendientes > 0 ? (
+              <span className="flex items-center gap-1">
+                <motion.span
+                  key={pedidosPendientes}
+                  initial={{ y: -8, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="font-black tabular-nums"
+                >
+                  {pedidosPendientes}
+                </motion.span>
+                {pedidosPendientes === 1 ? "pedido pendiente" : "pedidos pendientes"}
+              </span>
+            ) : (
+              <span>Pedidos al día</span>
+            )}
+          </motion.div>
+
+          <AnimatePresence>
+            {productosSinStock > 0 && (
+              <motion.div
+                key="sin-stock"
+                variants={heroVariants}
+                initial="hidden"
+                animate="show"
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="inline-flex items-center gap-2 rounded-full border border-rose-200/40 bg-rose-500/25 px-3 py-1.5 text-[11px] font-bold text-rose-50 backdrop-blur-md"
+              >
+                <span className="h-2 w-2 rounded-full bg-rose-300" />
+                <span className="flex items-center gap-1">
+                  <motion.span
+                    key={productosSinStock}
+                    initial={{ y: -8, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    className="font-black tabular-nums"
+                  >
+                    {productosSinStock}
+                  </motion.span>
+                  {productosSinStock === 1 ? "producto sin stock" : "productos sin stock"}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {cargandoPedidos && (
+              <motion.div
+                key="sync"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white/90 backdrop-blur-md"
+              >
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                Actualizando
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </div>
 
-    {/* CONTENIDO PRINCIPAL FLOTANTE (-mt-12 sobre el hero verde) */}
+    {/* CONTENIDO PRINCIPAL FLOTANTE (-mt-14 sobre el hero) */}
     <div
-      className={`mx-auto -mt-12 transition-all ${
+      className={`relative mx-auto -mt-14 transition-all ${
         activeTab === "pos"
           ? "max-w-full px-2 sm:px-6 sm:max-w-[1200px]"
           : "max-w-[1200px] px-3 sm:px-10"
@@ -382,116 +518,151 @@ return (
     >
       {/* Métricas resumidas flotantes (excepto en vista POS) */}
       {activeTab !== "pos" && (
-        <div className="mb-6">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 280, damping: 24, delay: 0.15 }}
+          whileHover={reducirMovimiento ? undefined : { y: -2 }}
+          className="mb-6"
+        >
           <MetricasHeader
             totalProductos={totalProductos}
             stockTotal={stockTotal}
             pedidosPendientes={pedidosPendientes}
             totalCategorias={categorias.length}
           />
-        </div>
+        </motion.div>
       )}
 
-      {/* Contenido según Pestaña Activa */}
-      <div className="space-y-4 sm:space-y-6">
-        {activeTab === "catalogo" && (
-          <>
-            <CategoriasTab
-              categorias={categorias}
-              cargandoCat={cargandoCat}
-              onCrearCategoria={async (nombre) => {
-                setCargandoCat(true);
-                await supabase.from("categorias").insert([{ nombre }]);
-                fetchCategorias();
-                setCargandoCat(false);
-              }}
-              onEliminarCategoria={async (cat) => {
-                await supabase.from("categorias").delete().eq("id", cat.id);
-                fetchCategorias();
-              }}
-            />
+      {/* Contenido según Pestaña Activa (transición suave al cambiar de pestaña) */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={activeTab}
+          variants={contenedorVariants}
+          initial="hidden"
+          animate="show"
+          exit={{ opacity: 0, y: -6, transition: { duration: 0.12 } }}
+          className="space-y-4 sm:space-y-6"
+        >
+          {activeTab === "catalogo" && (
+            <>
+              <Seccion>
+                <CategoriasTab
+                  categorias={categorias}
+                  cargandoCat={cargandoCat}
+                  onCrearCategoria={async (nombre) => {
+                    setCargandoCat(true);
+                    await supabase.from("categorias").insert([{ nombre }]);
+                    fetchCategorias();
+                    setCargandoCat(false);
+                  }}
+                  onEliminarCategoria={async (cat) => {
+                    await supabase.from("categorias").delete().eq("id", cat.id);
+                    fetchCategorias();
+                  }}
+                />
+              </Seccion>
 
-            <FormularioProducto
-              onProductoAgregado={fetchProductos}
-              supabase={supabase}
-              categorias={categorias}
-              productoEditando={productoEditando}
-              onCancelarEdicion={() => setProductoEditando(null)}
-            />
+              <Seccion>
+                <FormularioProducto
+                  onProductoAgregado={fetchProductos}
+                  supabase={supabase}
+                  categorias={categorias}
+                  productoEditando={productoEditando}
+                  onCancelarEdicion={() => setProductoEditando(null)}
+                />
+              </Seccion>
 
-            <ListaProductos
-              productos={productos}
-              config={configEmpresa}
-              onEliminar={async (id) => {
-                if (confirm("¿Eliminar producto?")) {
-                  await supabase.from("productos").delete().eq("id", id);
+              <Seccion>
+                <ListaProductos
+                  productos={productos}
+                  config={configEmpresa}
+                  onEliminar={async (id) => {
+                    if (confirm("¿Eliminar producto?")) {
+                      await supabase.from("productos").delete().eq("id", id);
+                      fetchProductos();
+                    }
+                  }}
+                  onEditar={(prod) => {
+                    setProductoEditando(prod);
+                    window.scrollTo({ top: 180, behavior: "smooth" });
+                  }}
+                  onRestock={async (id, cantidadASumar) => {
+                    const prod = productos.find((p) => p.id === id);
+                    if (!prod) return;
+
+                    const nuevoStock = (Number(prod.stock) || 0) + cantidadASumar;
+
+                    const { error } = await supabase
+                      .from("productos")
+                      .update({ stock: nuevoStock })
+                      .eq("id", id);
+
+                    if (!error) {
+                      fetchProductos();
+                    }
+                  }}
+                  onActualizarPreciosMasivo={handleActualizarPreciosMasivo}
+                />
+              </Seccion>
+            </>
+          )}
+
+          {activeTab === "pos" && (
+            <Seccion>
+              <PuntoVentaTab
+                productos={productos}
+                supabase={supabase}
+                onActualizarProductos={() => {
                   fetchProductos();
-                }
-              }}
-              onEditar={(prod) => {
-                setProductoEditando(prod);
-                window.scrollTo({ top: 180, behavior: "smooth" });
-              }}
-              onRestock={async (id, cantidadASumar) => {
-                const prod = productos.find((p) => p.id === id);
-                if (!prod) return;
+                  fetchPedidos();
+                }}
+              />
+            </Seccion>
+          )}
 
-                const nuevoStock = (Number(prod.stock) || 0) + cantidadASumar;
+          {activeTab === "caja" && (
+            <Seccion>
+              <ControlCajaTab supabase={supabase} />
+            </Seccion>
+          )}
 
-                const { error } = await supabase
-                  .from("productos")
-                  .update({ stock: nuevoStock })
-                  .eq("id", id);
+          {activeTab === "pedidos" && (
+            <Seccion>
+              <PedidosTab
+                pedidos={pedidos}
+                cargandoPedidos={cargandoPedidos}
+                procesandoPedidoId={procesandoPedidoId}
+                onFetchPedidos={fetchPedidos}
+                onCambiarEstado={avanzarEstadoPedido} // <-- Debe ser esta prop, no onAprobarPedido
+                onCancelarPedido={(id) => {
+                  const ped = pedidos.find((p) => p.id === id);
+                  if (ped) iniciarAnulacion(ped);
+                }}
+                onEliminarPedido={(id) => {
+                  const ped = pedidos.find((p) => p.id === id);
+                  if (ped) iniciarAnulacion(ped);
+                }}
+              />
+            </Seccion>
+          )}
 
-                if (!error) {
-                  fetchProductos();
-                }
-              }}
-              onActualizarPreciosMasivo={handleActualizarPreciosMasivo}
-            />
-          </>
-        )}
+          {activeTab === "tags" && (
+            <Seccion>
+              <TagsTab />
+            </Seccion>
+          )}
 
-        {activeTab === "pos" && (
-          <PuntoVentaTab
-            productos={productos}
-            supabase={supabase}
-            onActualizarProductos={() => {
-              fetchProductos();
-              fetchPedidos();
-            }}
-          />
-        )}
-
-        {activeTab === "caja" && <ControlCajaTab supabase={supabase} />}
-
-        {activeTab === "pedidos" && (
-          <PedidosTab
-            pedidos={pedidos}
-            cargandoPedidos={cargandoPedidos}
-            procesandoPedidoId={procesandoPedidoId}
-            onFetchPedidos={fetchPedidos}
-            onCambiarEstado={avanzarEstadoPedido} // <-- Debe ser esta prop, no onAprobarPedido
-            onCancelarPedido={(id) => {
-              const ped = pedidos.find((p) => p.id === id);
-              if (ped) iniciarAnulacion(ped);
-            }}
-            onEliminarPedido={(id) => {
-              const ped = pedidos.find((p) => p.id === id);
-              if (ped) iniciarAnulacion(ped);
-            }}
-          />
-        )}
-        {activeTab === "tags" && <TagsTab />}
-
-        {activeTab === "etiquetas" && (
-          <SeccionEtiquetasPrecios
-            productos={productos}
-            categorias={categorias}
-          />
-        )}
-
-      </div>
+          {activeTab === "etiquetas" && (
+            <Seccion>
+              <SeccionEtiquetasPrecios
+                productos={productos}
+                categorias={categorias}
+              />
+            </Seccion>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
 
     {/* Modal de Anulación */}

@@ -2,14 +2,15 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { 
   ArrowLeft, Building2, Image as ImageIcon, Flame, BookOpen, 
   Clock, Tag, Layers, Share2, ClipboardList, HelpCircle, Shield,
-  ChevronRight, FileStack, Palette, Gift, QrCode
+  ChevronRight, FileStack, Palette, Gift, QrCode,
+  PanelLeftClose, PanelLeftOpen, Search, X, LayoutGrid
 } from 'lucide-react'
 
 import { useConfigCalendario } from '@/hooks/admin/useConfigCalendario'
@@ -34,6 +35,7 @@ import ModalServicioLaser from '@/app/admin/turnos/components/modals/ModalServic
 import ModalPromo from '@/app/admin/turnos/components/modals/ModalPromo'
 import ModalServicioGeneral from '@/app/admin/turnos/components/modals/ModalServicioGeneral'
 import ModuloFidelizacionTab from './components/ModuloFidelizacionTab'
+
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -68,6 +70,11 @@ export default function AjustesAdminPage() {
   const [cargandoSesion, setCargandoSesion] = useState(true)
   const [autenticado, setAutenticado] = useState(false)
   const [moduloActivo, setModuloActivo] = useState<ModuloAjustes | null>(null)
+  const [busquedaSeccion, setBusquedaSeccion] = useState('')
+
+  // 🎨 Solo UI: estado de colapso del menú lateral (solo aplica en desktop, lg+)
+  const [colapsado, setColapsado] = useState(false)
+  const inputBusquedaRef = useRef<HTMLInputElement>(null)
 
   const configAgendaProps = useConfigCalendario()
   const precios = usePreciosLaser()
@@ -217,14 +224,43 @@ export default function AjustesAdminPage() {
     }
   ]
 
-return (
+  // 🔎 Solo UI: categorías filtradas por el buscador del menú lateral
+  const termino = busquedaSeccion.trim().toLowerCase()
+  const categoriasFiltradas = categorias
+    .map((cat) => ({
+      ...cat,
+      tarjetas: cat.tarjetas.filter(
+        (t) =>
+          !termino ||
+          t.titulo.toLowerCase().includes(termino) ||
+          t.descripcion.toLowerCase().includes(termino)
+      )
+    }))
+    .filter((cat) => cat.tarjetas.length > 0)
+
+  const abrirBuscadorDesdeColapsado = () => {
+    setColapsado(false)
+    setTimeout(() => inputBusquedaRef.current?.focus(), 320)
+  }
+
+  // Tooltip reutilizable (solo visible en desktop con el menú colapsado)
+  const Tooltip = ({ texto }: { texto: string }) =>
+    colapsado ? (
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 hidden -translate-y-1/2 translate-x-1 whitespace-nowrap rounded-xl bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white opacity-0 shadow-xl transition-all duration-200 group-hover/item:translate-x-0 group-hover/item:opacity-100 group-focus-visible/item:translate-x-0 group-focus-visible/item:opacity-100 lg:block dark:bg-zinc-100 dark:text-zinc-900"
+      >
+        {texto}
+      </span>
+    ) : null
+
+  return (
     <div className="min-h-screen bg-slate-100 dark:bg-zinc-950 font-sans text-slate-900 dark:text-zinc-100 transition-colors pb-12">
       
       {/* 🟦 HERO CONTINUO SUPERIOR CON DEGRADADO AZUL FINTECH */}
       <div className="bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 dark:from-blue-950 dark:via-blue-900 dark:to-zinc-900 pb-20 shadow-lg text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
           
-          {/* Encabezado con Botón de Volver al lado del Título */}
           <div className="flex items-center gap-3.5">
             {moduloActivo ? (
               <button
@@ -252,7 +288,7 @@ return (
               <p className="text-xs text-blue-100/80 mt-0.5">
                 {moduloActivo 
                   ? 'Editá los valores del módulo seleccionado.' 
-                  : 'Seleccioná la sección que querés configurar.'}
+                  : 'Navegá por las secciones desde el menú lateral o seleccioná una tarjeta.'}
               </p>
             </div>
           </div>
@@ -260,120 +296,323 @@ return (
         </div>
       </div>
 
-      {/* ⬜ CONTENEDOR FLOTANTE PRINCIPAL (-mt-10) */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 space-y-6">
-        {/* VISTA 1: GRID HUB DE TARJETAS */}
-        {!moduloActivo && (
-          <div className="space-y-8 pt-6"> {/* <--- Agregale pt-6 aquí */}
-            {categorias.map((cat, idx) => (
-              <div key={idx} className="space-y-3">
-                <h2 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400 px-1">
-                  {cat.titulo}
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {cat.tarjetas.map((tarjeta) => {
-                    const Icono = tarjeta.icono
-                    return (
-                      <button
-                        key={tarjeta.id}
-                        type="button"
-                        onClick={() => setModuloActivo(tarjeta.id)}
-                        className="group text-left p-5 sm:p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-zinc-700 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between cursor-pointer relative overflow-hidden shadow-xl"
-                      >
-                        <div>
-                          <div className="flex items-center justify-between mb-4">
-                            <div className={`p-3 rounded-2xl ${tarjeta.colorIcono} transition-transform group-hover:scale-110 shadow-2xs`}>
-                              <Icono className="w-5 h-5" />
-                            </div>
-                            {tarjeta.badge && (
-                              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                {tarjeta.badge}
-                              </span>
-                            )}
-                          </div>
-                          <h3 className="text-base font-black text-slate-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors tracking-tight">
-                            {tarjeta.titulo}
-                          </h3>
-                          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1.5 leading-relaxed">
-                            {tarjeta.descripcion}
-                          </p>
-                        </div>
+      {/* ⬜ CONTENEDOR FLOTANTE PRINCIPAL (-mt-4) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 space-y-6">
+        
+        {/* Layout: Menú Lateral colapsable + Contenido fluido */}
+        <div className="flex flex-col lg:flex-row gap-6 items-start pt-6">
+          
+          {/* 1. MENÚ LATERAL IZQUIERDO (Sticky en PC, glassmorphism, colapsable) */}
+          <aside
+            className={`w-full shrink-0 lg:sticky lg:top-24 transition-[width] duration-300 ease-in-out motion-reduce:transition-none ${
+              colapsado ? 'lg:w-[4.5rem]' : 'lg:w-72'
+            }`}
+          >
+            <div className="rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl p-3 shadow-xl dark:shadow-2xl space-y-4">
 
-                        <div className="mt-5 pt-3.5 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          <span>Gestionar</span>
-                          <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                        </div>
-                      </button>
-                    )
-                  })}
+              {/* Cabecera del menú + botón de colapso (solo desktop) */}
+              <div className={`flex items-center px-1 ${colapsado ? 'lg:justify-center' : 'justify-between'}`}>
+                <span
+                  className={`text-sm font-black tracking-tight text-slate-800 dark:text-zinc-100 transition-all duration-300 ${
+                    colapsado ? 'lg:hidden' : ''
+                  }`}
+                >
+                  Secciones
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setColapsado((v) => !v)}
+                  aria-label={colapsado ? 'Expandir menú lateral' : 'Colapsar menú lateral'}
+                  title={colapsado ? 'Expandir menú' : 'Colapsar menú'}
+                  className="hidden lg:flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 dark:text-zinc-500 transition-all duration-200 hover:scale-105 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60"
+                >
+                  {colapsado ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+                </button>
+              </div>
+
+              {/* 🔎 Buscador integrado */}
+              <div>
+                {/* Input (mobile siempre; desktop solo expandido) */}
+                <div className={`relative ${colapsado ? 'lg:hidden' : ''}`}>
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 dark:text-zinc-500" />
+                  <input
+                    ref={inputBusquedaRef}
+                    type="text"
+                    value={busquedaSeccion}
+                    onChange={(e) => setBusquedaSeccion(e.target.value)}
+                    placeholder="Buscar sección..."
+                    aria-label="Buscar sección de ajustes"
+                    className="w-full rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-slate-100/70 dark:bg-zinc-800/60 py-2.5 pl-9 pr-8 text-xs font-medium text-slate-800 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 outline-none transition-all duration-200 focus:border-blue-400 focus:bg-white dark:focus:border-blue-500/60 dark:focus:bg-zinc-900 focus:ring-4 focus:ring-blue-500/10"
+                  />
+                  {busquedaSeccion && (
+                    <button
+                      type="button"
+                      onClick={() => setBusquedaSeccion('')}
+                      aria-label="Limpiar búsqueda"
+                      className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-slate-400 transition-all duration-200 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-zinc-700 dark:hover:text-zinc-200 cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
+
+                {/* Ícono de búsqueda (solo desktop colapsado) */}
+                {colapsado && (
+                  <button
+                    type="button"
+                    onClick={abrirBuscadorDesdeColapsado}
+                    aria-label="Buscar sección"
+                    className="group/item relative hidden lg:flex h-10 w-full items-center justify-center rounded-2xl bg-slate-100/70 dark:bg-zinc-800/60 text-slate-500 dark:text-zinc-400 transition-all duration-200 hover:scale-105 hover:bg-slate-200/70 hover:text-slate-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60"
+                  >
+                    <Search className="h-4 w-4 transition-transform duration-200 group-hover/item:-translate-y-0.5" />
+                    <Tooltip texto="Buscar sección" />
+                  </button>
+                )}
               </div>
-            ))}
-          </div>
-        )}
 
-        {/* VISTA 2: COMPONENTE SELECCIONADO A PANTALLA COMPLETA */}
-        {moduloActivo && (
-          <div className="animate-in fade-in duration-200">
-            {moduloActivo === 'empresa' && <FormularioEmpresaTab />}
-            {moduloActivo === 'apariencia' && <AparienciaAjustesTab />}
-            {moduloActivo === 'banners_home' && <BannersHomeTab />}
-            {moduloActivo === 'destacados' && <DestacadosAjustesTab />}
-            {moduloActivo === 'guias_app' && <GuiasAjustesTab />}
-            {moduloActivo === 'agenda' && <HorariosTab {...configAgendaProps} />}
+              {/* Vista general */}
+              <button
+                type="button"
+                onClick={() => setModuloActivo(null)}
+                aria-current={moduloActivo === null ? 'page' : undefined}
+                className={`group/item relative flex w-full items-center rounded-2xl p-2 text-xs font-bold transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 ${
+                  colapsado ? 'lg:justify-center lg:hover:scale-105' : 'justify-between'
+                } ${
+                  moduloActivo === null
+                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300'
+                    : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100'
+                }`}
+              >
+                {moduloActivo === null && (
+                  <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-blue-600 dark:bg-blue-400" />
+                )}
+                <div className="flex min-w-0 items-center">
+                  <div
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all duration-200 group-hover/item:-translate-y-0.5 group-hover/item:scale-110 ${
+                      moduloActivo === null
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                        : 'bg-slate-200/70 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300'
+                    }`}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </div>
+                  <span
+                    className={`truncate text-left transition-all duration-300 ease-in-out ${
+                      colapsado ? 'lg:ml-0 lg:w-0 lg:opacity-0' : 'ml-2.5 opacity-100'
+                    }`}
+                  >
+                    Vista general
+                  </span>
+                </div>
+                <ChevronRight
+                  className={`h-3.5 w-3.5 shrink-0 opacity-50 transition-all duration-300 group-hover/item:translate-x-0.5 ${
+                    colapsado ? 'lg:hidden' : ''
+                  }`}
+                />
+                <Tooltip texto="Vista general" />
+              </button>
 
-            {moduloActivo === 'precios' && (
-              <PreciosTab
-                loadingPrecios={precios.loadingPrecios}
-                servicios={precios.servicios}
-                promos={precios.promos}
-                seccionPrecios={precios.seccionPrecios}
-                setSeccionPrecios={precios.setSeccionPrecios}
-                onNuevaZona={() => precios.abrirModalServicio()}
-                onEditarZona={(s) => precios.abrirModalServicio(s)}
-                onToggleActivoZona={precios.toggleActivoServicio}
-                onEliminarZona={precios.eliminarServicio}
-                onNuevaPromo={() => precios.abrirModalPromo()}
-                onEditarPromo={(p) => precios.abrirModalPromo(p)}
-                onToggleActivoPromo={precios.toggleActivoPromo}
-                onEliminarPromo={precios.eliminarPromo}
-              />
-            )}
+              {/* Navegación por categorías */}
+              <nav className="space-y-4" aria-label="Secciones de ajustes">
+                {categoriasFiltradas.length === 0 && (
+                  <p className={`px-3 py-4 text-center text-xs text-slate-400 dark:text-zinc-500 ${colapsado ? 'lg:hidden' : ''}`}>
+                    No hay secciones que coincidan con “{busquedaSeccion}”.
+                  </p>
+                )}
 
-            {moduloActivo === 'generales' && (
-              <GeneralesTab
-                loadingGenerales={generales.loadingGenerales}
-                serviciosGenerales={generales.serviciosGenerales}
-                onNuevoServicio={() => generales.abrirModalGeneral()}
-                onEditarServicio={(s) => generales.abrirModalGeneral(s)}
-                onToggleActivo={generales.toggleActivoGeneral}
-                onEliminarServicio={generales.eliminarServicioGeneral}
-                referidosActivo={referidos.referidosActivo}
-                setReferidosActivo={referidos.setReferidosActivo}
-                referidosTipoDescuento={referidos.referidosTipoDescuento}
-                setReferidosTipoDescuento={referidos.setReferidosTipoDescuento}
-                referidosValorDescuento={referidos.referidosValorDescuento}
-                setReferidosValorDescuento={referidos.setReferidosValorDescuento}
-              />
-            )}
+                {categoriasFiltradas.map((cat, idx) => (
+                  <div key={idx} className="space-y-1.5">
+                    {/* Título de categoría (expandido) / divisor (colapsado) */}
+                    <span
+                      className={`block px-3 text-[11px] font-bold tracking-wide text-slate-400 dark:text-zinc-500 ${
+                        colapsado ? 'lg:hidden' : ''
+                      }`}
+                    >
+                      {cat.titulo}
+                    </span>
+                    {colapsado && (
+                      <div className="mx-3 hidden h-px bg-slate-200/80 dark:bg-zinc-800 lg:block" />
+                    )}
 
-            {moduloActivo === 'banners' && <BannersAjustesTab />}
-            {moduloActivo === 'referidos' && <ReferidosTab />}
-            {moduloActivo === 'anamnesis' && <ConfiguracionAnamnesisTab />}
+                    <div className="space-y-1">
+                      {cat.tarjetas.map((tarjeta) => {
+                        const Icono = tarjeta.icono
+                        const activo = moduloActivo === tarjeta.id
+                        return (
+                          <button
+                            key={tarjeta.id}
+                            type="button"
+                            onClick={() => setModuloActivo(tarjeta.id)}
+                            aria-current={activo ? 'page' : undefined}
+                            className={`group/item relative flex w-full items-center rounded-2xl p-2 text-xs font-semibold transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 ${
+                              colapsado ? 'lg:justify-center lg:hover:scale-105' : 'justify-between'
+                            } ${
+                              activo
+                                ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300'
+                                : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 dark:text-zinc-400 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-100'
+                            }`}
+                          >
+                            {/* Indicador lateral del módulo activo */}
+                            {activo && (
+                              <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-blue-600 dark:bg-blue-400" />
+                            )}
 
-            {moduloActivo === 'faqs' && (
-              <div className="bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-xl transition-colors">
-                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tight mb-4">
-                  Gestión de Preguntas Frecuentes
-                </h2>
-                <FaqTab />
+                            <div className="flex min-w-0 items-center">
+                              <div
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all duration-200 group-hover/item:-translate-y-0.5 group-hover/item:scale-110 ${
+                                  activo
+                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                                    : tarjeta.colorIcono
+                                }`}
+                              >
+                                <Icono className="h-4 w-4" />
+                              </div>
+                              <span
+                                className={`truncate text-left transition-all duration-300 ease-in-out ${
+                                  colapsado ? 'lg:ml-0 lg:w-0 lg:opacity-0' : 'ml-2.5 opacity-100'
+                                }`}
+                              >
+                                {tarjeta.titulo}
+                              </span>
+                            </div>
+
+                            <ChevronRight
+                              className={`h-3.5 w-3.5 shrink-0 transition-all duration-300 group-hover/item:translate-x-0.5 ${
+                                activo ? 'opacity-80' : 'opacity-40'
+                              } ${colapsado ? 'lg:hidden' : ''}`}
+                            />
+
+                            <Tooltip texto={tarjeta.titulo} />
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </nav>
+
+            </div>
+          </aside>
+
+          {/* 2. ÁREA DE CONTENIDO PRINCIPAL (Derecha, ocupa el ancho restante) */}
+          <div className="min-w-0 w-full flex-1 space-y-6">
+            
+            {/* VISTA 1: GRID HUB DE TARJETAS */}
+            {!moduloActivo && (
+              <div className="space-y-8">
+                {categorias.map((cat, idx) => (
+                  <div key={idx} className="space-y-3">
+                    <h2 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-zinc-400 px-1">
+                      {cat.titulo}
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {cat.tarjetas.map((tarjeta) => {
+                        const Icono = tarjeta.icono
+                        return (
+                          <button
+                            key={tarjeta.id}
+                            type="button"
+                            onClick={() => setModuloActivo(tarjeta.id)}
+                            className="group text-left p-5 rounded-3xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-zinc-700 hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between cursor-pointer relative overflow-hidden shadow-xl"
+                          >
+                            <div>
+                              <div className="flex items-center justify-between mb-4">
+                                <div className={`p-3 rounded-2xl ${tarjeta.colorIcono} transition-transform group-hover:scale-110 shadow-2xs`}>
+                                  <Icono className="w-5 h-5" />
+                                </div>
+                                {tarjeta.badge && (
+                                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                    {tarjeta.badge}
+                                  </span>
+                                )}
+                              </div>
+                              <h3 className="text-base font-black text-slate-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors tracking-tight">
+                                {tarjeta.titulo}
+                              </h3>
+                              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1.5 leading-relaxed">
+                                {tarjeta.descripcion}
+                              </p>
+                            </div>
+
+                            <div className="mt-5 pt-3.5 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                              <span>Gestionar</span>
+                              <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
-            {moduloActivo === 'seguridad' && <ConfiguracionPinTab />}
-            {moduloActivo === 'referidos' && <ModuloFidelizacionTab />}
+            {/* VISTA 2: COMPONENTE SELECCIONADO A PANTALLA COMPLETA */}
+            {moduloActivo && (
+              <div className="animate-in fade-in duration-200">
+                {moduloActivo === 'empresa' && <FormularioEmpresaTab />}
+                {moduloActivo === 'apariencia' && <AparienciaAjustesTab />}
+                {moduloActivo === 'banners_home' && <BannersHomeTab />}
+                {moduloActivo === 'destacados' && <DestacadosAjustesTab />}
+                {moduloActivo === 'guias_app' && <GuiasAjustesTab />}
+                {moduloActivo === 'agenda' && <HorariosTab {...configAgendaProps} />}
+
+                {moduloActivo === 'precios' && (
+                  <PreciosTab
+                    loadingPrecios={precios.loadingPrecios}
+                    servicios={precios.servicios}
+                    promos={precios.promos}
+                    seccionPrecios={precios.seccionPrecios}
+                    setSeccionPrecios={precios.setSeccionPrecios}
+                    onNuevaZona={() => precios.abrirModalServicio()}
+                    onEditarZona={(s) => precios.abrirModalServicio(s)}
+                    onToggleActivoZona={precios.toggleActivoServicio}
+                    onEliminarZona={precios.eliminarServicio}
+                    onNuevaPromo={() => precios.abrirModalPromo()}
+                    onEditarPromo={(p) => precios.abrirModalPromo(p)}
+                    onToggleActivoPromo={precios.toggleActivoPromo}
+                    onEliminarPromo={precios.eliminarPromo}
+                  />
+                )}
+
+                {moduloActivo === 'generales' && (
+                  <GeneralesTab
+                    loadingGenerales={generales.loadingGenerales}
+                    serviciosGenerales={generales.serviciosGenerales}
+                    onNuevoServicio={() => generales.abrirModalGeneral()}
+                    onEditarServicio={(s) => generales.abrirModalGeneral(s)}
+                    onToggleActivo={generales.toggleActivoGeneral}
+                    onEliminarServicio={generales.eliminarServicioGeneral}
+                    referidosActivo={referidos.referidosActivo}
+                    setReferidosActivo={referidos.setReferidosActivo}
+                    referidosTipoDescuento={referidos.referidosTipoDescuento}
+                    setReferidosTipoDescuento={referidos.setReferidosTipoDescuento}
+                    referidosValorDescuento={referidos.referidosValorDescuento}
+                    setReferidosValorDescuento={referidos.setReferidosValorDescuento}
+                  />
+                )}
+
+                {moduloActivo === 'banners' && <BannersAjustesTab />}
+                {moduloActivo === 'referidos' && <ReferidosTab />}
+                {moduloActivo === 'anamnesis' && <ConfiguracionAnamnesisTab />}
+
+                {moduloActivo === 'faqs' && (
+                  <div className="bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-xl transition-colors">
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tight mb-4">
+                      Gestión de Preguntas Frecuentes
+                    </h2>
+                    <FaqTab />
+                  </div>
+                )}
+
+                {moduloActivo === 'seguridad' && <ConfiguracionPinTab />}
+                {moduloActivo === 'referidos' && <ModuloFidelizacionTab />}
+              </div>
+            )}
+
           </div>
-        )}
+
+        </div>
 
       </main>
 
