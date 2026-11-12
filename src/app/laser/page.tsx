@@ -1,5 +1,5 @@
 'use client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -28,18 +28,21 @@ import type { GeneroLaser, PromoLaser, ServicioLaser } from '@/lib/types';
 const STORAGE_KEY = 'laser-seleccion';
 
 /* ------------------------------------------------------------------ */
-/* UI auxiliar (solo presentación, usa únicamente tokens del tema)     */
+/* UI auxiliar (respeta los tokens dinámicos del tema/admin)          */
 /* ------------------------------------------------------------------ */
 
 function IndicadorPasos({ paso }: { paso: 1 | 2 }) {
   return (
     <div className="flex items-center gap-1.5" aria-label={`Paso ${paso} de 2`}>
       {[1, 2].map((n) => (
-        <span
+        <motion.span
           key={n}
-          className={`h-1.5 rounded-full transition-all ${
-            n === paso ? 'w-6 bg-primary' : n < paso ? 'w-1.5 bg-primary' : 'w-1.5 bg-border'
-          }`}
+          animate={{
+            width: n === paso ? 24 : 6,
+            opacity: n <= paso ? 1 : 0.4,
+          }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          className="h-1.5 rounded-full bg-primary"
         />
       ))}
     </div>
@@ -47,12 +50,13 @@ function IndicadorPasos({ paso }: { paso: 1 | 2 }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Página                                                              */
+/* Página                                                             */
 /* ------------------------------------------------------------------ */
 
 function LaserContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const reducirMovimiento = useReducedMotion();
 
   // Parámetros opcionales enviados desde el buscador o links directos
   const generoQuery = searchParams.get('genero');
@@ -263,69 +267,87 @@ function LaserContent() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-start px-4 pt-4 sm:px-6 sm:pt-6 pb-44 font-sans">
-      <div className="w-full max-w-md sm:max-w-2xl space-y-5">
+    <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-start px-4 pt-4 sm:px-6 sm:pt-6 pb-44 font-sans transition-colors relative overflow-hidden">
+      
+      {/* 🌫️ Orbes de luz en tonos grises neutros que otorgan profundidad y combinan con cualquier color */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 -left-32 w-[32rem] h-[32rem] bg-slate-400/10 dark:bg-zinc-700/15 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-32 w-[32rem] h-[32rem] bg-slate-500/10 dark:bg-zinc-600/15 rounded-full blur-3xl" />
+      </div>
 
-        {/* Barra superior: volver + progreso */}
+      <div className="w-full max-w-md sm:max-w-2xl space-y-6 relative z-10">
+
+        {/* Barra superior: volver + progreso con diseño bento/glass */}
         <div className="flex w-full items-center justify-between">
-          <Link
-            href="/"
-            className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card pl-3 pr-4 text-xs font-bold text-muted-foreground shadow-xs transition-all hover:text-foreground active:scale-95"
+          <motion.div
+            whileTap={{ scale: 0.95 }}
+            whileHover={reducirMovimiento ? undefined : { scale: 1.02, y: -1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Volver</span>
-          </Link>
+            <Link
+              href="/"
+              className="inline-flex h-10 items-center gap-2 rounded-2xl border border-border bg-card/80 backdrop-blur-xl px-4 text-xs font-bold text-muted-foreground shadow-xs hover:text-foreground transition-all cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Volver</span>
+            </Link>
+          </motion.div>
           <IndicadorPasos paso={genero ? 2 : 1} />
         </div>
 
-        {/* Título */}
-        <header className="flex items-center gap-4 px-1">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-primary text-primary-foreground shadow-md">
+        {/* Encabezado / Título principal */}
+        <motion.header
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex items-center gap-4 px-1"
+        >
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-primary text-primary-foreground shadow-md shadow-primary/25">
             <Zap className="h-6 w-6 fill-primary-foreground" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+            <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
               Depilación láser
             </h1>
-            <p className="mt-0.5 text-sm font-medium text-muted-foreground">
+            <p className="mt-0.5 text-xs sm:text-sm font-semibold text-muted-foreground">
               {!genero ? '¿Para quién es el turno?' : 'Elegí tu promo o armá tu combo'}
             </p>
           </div>
-        </header>
+        </motion.header>
 
-{/* Paso 1: pantalla limpia con tarjetas de género */}
+        {/* Paso 1: tarjetas bento de género */}
         <AnimatePresence mode="wait">
           {!genero && (
             <motion.div
               key="genero"
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
             >
               <SelectorGenero genero={genero} onSelect={handleGenero} />
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Paso 2: selección de servicios */}
+        {/* Paso 2: selección de servicios con contenedores de vidrio moderno */}
         <AnimatePresence mode="wait">
           {genero && (
             <motion.div
               key="servicios"
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
-              className="space-y-4"
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="space-y-5"
             >
               {/* Cambio rápido de perfil */}
               <SelectorGenero genero={genero} onSelect={handleGenero} compacto />
 
               {cargando ? (
-                <div className="rounded-[28px] border border-border bg-card p-10 text-center shadow-xs">
+                <div className="rounded-[28px] border border-border bg-card/85 backdrop-blur-xl p-12 text-center shadow-xl">
                   <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  <p className="text-sm font-semibold text-muted-foreground">Cargando opciones…</p>
+                  <p className="text-xs font-bold text-muted-foreground">Cargando opciones…</p>
                 </div>
               ) : (
                 <>
@@ -347,7 +369,7 @@ function LaserContent() {
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.2 }}
+                            transition={{ duration: 0.25 }}
                           >
                             <PanelZonasExtra
                               zonas={zonas}
@@ -384,20 +406,22 @@ function LaserContent() {
         </AnimatePresence>
       </div>
 
-      {/* Modal swap */}
-      {swapModalZonaId && zonaSwapOriginal && (
-        <ModalSwapZona
-          zonaOriginal={zonaSwapOriginal}
-          opciones={opcionesSwap}
-          onSelect={(nuevaId) => {
-            setSwaps((prev) => ({ ...prev, [swapModalZonaId]: nuevaId }));
-            setSwapModalZonaId(null);
-          }}
-          onClose={() => setSwapModalZonaId(null)}
-        />
-      )}
+      {/* Modal swap con animaciones fluidas */}
+      <AnimatePresence>
+        {swapModalZonaId && zonaSwapOriginal && (
+          <ModalSwapZona
+            zonaOriginal={zonaSwapOriginal}
+            opciones={opcionesSwap}
+            onSelect={(nuevaId) => {
+              setSwaps((prev) => ({ ...prev, [swapModalZonaId]: nuevaId }));
+              setSwapModalZonaId(null);
+            }}
+            onClose={() => setSwapModalZonaId(null)}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Barra flotante */}
+      {/* Barra flotante estilo app nativa */}
       {genero && (
         <BarraFlotanteLaser
           precio={totales.precio}
