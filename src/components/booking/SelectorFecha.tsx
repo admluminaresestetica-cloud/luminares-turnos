@@ -271,30 +271,30 @@ export default function SelectorFecha({
               const esHoy = formatDateISO(hoy) === iso;
 
               return (
-                <button
-                  key={iso}
-                  type="button"
-                  disabled={!habilitada}
-                  onClick={() => {
-                    onSelect(iso);
-                    setMostrarCalendarioCompleto(false);
-                  }}
-                  className={`
-                    relative aspect-square rounded-2xl text-sm sm:text-base font-extrabold tabular-nums transition-all duration-150 flex flex-col items-center justify-center active:scale-95
-                    {
-                      seleccionada
-                        ? 'bg-primary text-primary-foreground shadow-md z-10 ring-4 ring-primary/20'
-                        : habilitada
-                        ? 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 cursor-pointer'
-                        : 'bg-muted/40 text-muted-foreground/30 border border-border/50 cursor-not-allowed'
-                    }
-                  `}
-                >
-                  <span>{fecha.getDate()}</span>
-                  {esHoy && !seleccionada && (
-                    <span className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
-                  )}
-                </button>
+ <button
+                key={iso}
+                type="button"
+                disabled={!habilitada}
+                onClick={() => {
+                  onSelect(iso);
+                  setMostrarCalendarioCompleto(false);
+                }}
+                className={`
+                  relative aspect-square rounded-2xl text-sm sm:text-base font-extrabold tabular-nums transition-all duration-150 flex flex-col items-center justify-center active:scale-95
+                  ${
+                    seleccionada
+                      ? 'bg-primary text-primary-foreground shadow-md z-10 ring-4 ring-primary/20'
+                      : habilitada
+                      ? 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 cursor-pointer'
+                      : 'bg-muted/40 text-muted-foreground/30 border border-border/50 cursor-not-allowed'
+                  }
+                `}
+              >
+                <span>{fecha.getDate()}</span>
+                {esHoy && !seleccionada && (
+                  <span className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
+                )}
+              </button>
               );
             })}
           </div>

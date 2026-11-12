@@ -10,8 +10,8 @@ export default function Footer() {
   const anioActual = new Date().getFullYear();
   const { config } = useConfig();
 
-  // Si el usuario está en la tienda, este footer NO se renderiza
-  if (pathname?.startsWith('/tienda')) {
+  // Si el usuario NO está en el home ('/'), este footer NO se renderiza en ninguna otra parte de la app
+  if (pathname !== '/') {
     return null;
   }
 
