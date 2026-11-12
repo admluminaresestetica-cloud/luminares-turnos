@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 import { Producto } from "@/types/tienda";
 
@@ -14,6 +15,8 @@ interface GaleriaProductoProps {
   porcentajeDescuento: number;
   sinStock: boolean;
 }
+
+const springTap = { type: "spring" as const, stiffness: 420, damping: 20 };
 
 export default function GaleriaProducto({
   producto,
@@ -76,25 +79,33 @@ export default function GaleriaProducto({
   };
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex w-full flex-col gap-3">
       {/* VISTA PREVIA PRINCIPAL */}
       <div
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 flex items-center justify-center group select-none"
+        className="group relative flex aspect-square w-full select-none items-center justify-center overflow-hidden rounded-3xl border border-border bg-slate-50 shadow-lg shadow-black/5 dark:bg-zinc-900 dark:shadow-black/20"
       >
         {imagenSeleccionada && !errorCarga ? (
-          <Image
-            src={imagenSeleccionada}
-            alt={producto.nombre}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
-            className="object-cover transition-all duration-300"
-            priority
-            onError={() => setErrorCarga(true)}
-          />
+          <motion.div
+            key={imagenSeleccionada}
+            initial={{ opacity: 0, scale: 1.03 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="absolute inset-0"
+          >
+            <Image
+              src={imagenSeleccionada}
+              alt={producto.nombre}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
+              className="object-cover"
+              priority
+              onError={() => setErrorCarga(true)}
+            />
+          </motion.div>
         ) : (
-          <div className="flex flex-col items-center justify-center gap-2 text-slate-400 dark:text-zinc-500">
+          <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <ImageOff className="h-8 w-8 stroke-[1.5]" />
             <span className="text-xs font-medium">Imagen no disponible</span>
           </div>
@@ -103,35 +114,41 @@ export default function GaleriaProducto({
         {/* FLECHAS DE NAVEGACIÓN EN IMAGEN PRINCIPAL (Visible en Hover o si hay varias fotos) */}
         {totalImagenes > 1 && (
           <>
-            <button
+            <motion.button
               onClick={irAAnterior}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 dark:bg-zinc-800/80 text-slate-700 dark:text-zinc-200 backdrop-blur-md shadow-sm transition-all hover:bg-white dark:hover:bg-zinc-800 hover:scale-105 active:scale-95 cursor-pointer md:opacity-0 md:group-hover:opacity-100"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.9 }}
+              transition={springTap}
+              className="absolute left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border bg-white/80 text-foreground shadow-lg shadow-black/5 backdrop-blur-xl transition-opacity dark:bg-zinc-800/80 dark:shadow-black/20 md:opacity-0 md:group-hover:opacity-100"
               aria-label="Imagen anterior"
             >
               <ChevronLeft className="h-5 w-5" />
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
               onClick={irASiguiente}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 dark:bg-zinc-800/80 text-slate-700 dark:text-zinc-200 backdrop-blur-md shadow-sm transition-all hover:bg-white dark:hover:bg-zinc-800 hover:scale-105 active:scale-95 cursor-pointer md:opacity-0 md:group-hover:opacity-100"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.9 }}
+              transition={springTap}
+              className="absolute right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-border bg-white/80 text-foreground shadow-lg shadow-black/5 backdrop-blur-xl transition-opacity dark:bg-zinc-800/80 dark:shadow-black/20 md:opacity-0 md:group-hover:opacity-100"
               aria-label="Imagen siguiente"
             >
               <ChevronRight className="h-5 w-5" />
-            </button>
+            </motion.button>
           </>
         )}
 
         {/* BADGE DESCUENTO */}
         {tieneDescuento && !sinStock && (
-          <span className="absolute top-3 right-3 rounded-full bg-[#0E6E55] px-2.5 py-1 text-[11px] font-bold tracking-wide text-white shadow-md z-10">
+          <span className="absolute right-3 top-3 z-10 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold tracking-wide text-primary-foreground shadow-lg shadow-primary/20">
             -{porcentajeDescuento}% OFF
           </span>
         )}
 
         {/* CARTEL SIN STOCK */}
         {sinStock && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/40 dark:bg-zinc-950/60 backdrop-blur-[2px]">
-            <span className="rounded-xl bg-white/95 dark:bg-zinc-900 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-zinc-100 shadow-lg">
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] dark:bg-zinc-950/60">
+            <span className="rounded-2xl border border-border bg-white/95 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-slate-900 shadow-lg shadow-black/10 dark:bg-zinc-900 dark:text-zinc-100">
               Sin Stock
             </span>
           </div>
@@ -139,13 +156,17 @@ export default function GaleriaProducto({
 
         {/* INDICADOR PUNTOS MOBILE (DOTS) */}
         {totalImagenes > 1 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 rounded-full bg-black/20 dark:bg-black/40 backdrop-blur-md px-2 py-1 sm:hidden">
+          <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/10 bg-black/25 px-2 py-1.5 backdrop-blur-xl dark:bg-black/40 sm:hidden">
             {imagenesTotales.map((_, idx) => (
-              <span
+              <motion.span
                 key={idx}
-                className={`h-1.5 rounded-full transition-all ${
-                  indiceActual === idx ? "w-4 bg-white" : "w-1.5 bg-white/50"
-                }`}
+                initial={false}
+                animate={{
+                  width: indiceActual === idx ? 16 : 6,
+                  opacity: indiceActual === idx ? 1 : 0.5,
+                }}
+                transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                className="h-1.5 rounded-full bg-white"
               />
             ))}
           </div>
@@ -154,18 +175,20 @@ export default function GaleriaProducto({
 
       {/* MINIATURAS INTERACTIVAS */}
       {totalImagenes > 1 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
+        <div className="no-scrollbar flex items-center gap-2 overflow-x-auto px-0.5 pb-1 pt-1">
           {imagenesTotales.map((img: string, index: number) => {
             const esSeleccionada = imagenSeleccionada === img;
             return (
-              <button
+              <motion.button
                 key={index}
                 onClick={() => setImagenSeleccionada(img)}
                 aria-label={`Ver foto ${index + 1}`}
-                className={`relative h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all cursor-pointer ${
-                  esSeleccionada
-                    ? "border-[#0E6E55] dark:border-emerald-500 ring-2 ring-[#0E6E55]/20 dark:ring-emerald-500/20 scale-95 shadow-sm"
-                    : "border-slate-100 dark:border-zinc-800 opacity-60 hover:opacity-100 hover:border-slate-300 dark:hover:border-zinc-600"
+                initial={false}
+                animate={{ scale: esSeleccionada ? 0.95 : 1 }}
+                whileTap={{ scale: 0.88 }}
+                transition={springTap}
+                className={`relative h-14 w-14 flex-shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-border transition-opacity sm:h-16 sm:w-16 ${
+                  esSeleccionada ? "opacity-100" : "opacity-60 hover:opacity-100"
                 }`}
               >
                 <Image
@@ -175,7 +198,16 @@ export default function GaleriaProducto({
                   sizes="64px"
                   className="object-cover"
                 />
-              </button>
+
+                {/* Marco activo que se desliza entre miniaturas */}
+                {esSeleccionada && (
+                  <motion.span
+                    layoutId="galeria-miniatura-activa"
+                    transition={{ type: "spring", stiffness: 450, damping: 34 }}
+                    className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-primary ring-2 ring-primary/20"
+                  />
+                )}
+              </motion.button>
             );
           })}
         </div>

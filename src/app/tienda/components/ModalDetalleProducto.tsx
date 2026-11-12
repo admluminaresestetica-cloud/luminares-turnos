@@ -259,6 +259,13 @@ useEffect(() => {
 
   const springTap = { type: "spring" as const, stiffness: 420, damping: 20 };
 
+  // Entrada escalonada de la columna de info (dos valores por propiedad)
+  const entradaBloque = (delay: number) => ({
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    transition: { type: "spring" as const, stiffness: 320, damping: 28, delay },
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -282,16 +289,17 @@ useEffect(() => {
       >
         {/* Barra superior indicadora de deslizamiento para mobile */}
         <div className="-mt-1 mb-3 flex cursor-grab justify-center active:cursor-grabbing sm:hidden">
-          <span className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+          <span className="h-1.5 w-12 rounded-full bg-slate-300 dark:bg-zinc-700" />
         </div>
 
         {/* Botones Flotantes de Cierre / Compartir */}
         <div className="sticky top-0 z-30 -mr-1 -mt-1 flex items-center gap-2 float-right sm:-mr-4 sm:-mt-4">
           <motion.button
             onClick={handleCompartir}
+            whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.9 }}
             transition={springTap}
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border bg-card/80 text-muted-foreground shadow-lg shadow-black/5 backdrop-blur-xl transition-colors hover:text-foreground dark:shadow-black/20"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border bg-white/90 text-slate-600 shadow-lg shadow-black/5 backdrop-blur-xl transition-colors hover:text-slate-900 dark:bg-zinc-800/90 dark:text-zinc-300 dark:shadow-black/20 dark:hover:text-white"
             title="Compartir producto"
             aria-label="Compartir producto"
           >
@@ -300,9 +308,10 @@ useEffect(() => {
 
           <motion.button
             onClick={onClose}
+            whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.9 }}
             transition={springTap}
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border bg-card/80 text-muted-foreground shadow-lg shadow-black/5 backdrop-blur-xl transition-colors hover:text-foreground dark:shadow-black/20"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border bg-white/90 text-slate-600 shadow-lg shadow-black/5 backdrop-blur-xl transition-colors hover:text-slate-900 dark:bg-zinc-800/90 dark:text-zinc-300 dark:shadow-black/20 dark:hover:text-white"
             title="Cerrar (Esc)"
             aria-label="Cerrar"
           >
@@ -325,42 +334,48 @@ useEffect(() => {
           {/* INFORMACIÓN DEL PRODUCTO */}
           <div className="flex flex-col justify-between space-y-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                {producto.categoria}
-              </span>
+              {/* Categoría, nombre y etiquetas */}
+              <motion.div key={`cabecera-${producto.id}`} {...entradaBloque(0.05)}>
+                <span className="text-xs font-bold uppercase tracking-wider text-primary">
+                  {producto.categoria}
+                </span>
 
-              <h2 className="mt-1 text-xl font-bold leading-snug tracking-tight text-foreground sm:text-2xl">
-                {producto.nombre}
-              </h2>
+                <h2 className="mt-1 text-xl font-bold leading-snug tracking-tight text-slate-900 dark:text-zinc-100 sm:text-2xl">
+                  {producto.nombre}
+                </h2>
 
-              {/* ETIQUETAS / TAGS */}
-              {producto.etiquetas && producto.etiquetas.length > 0 && (
-                <div className="mt-2.5 flex flex-wrap gap-1.5">
-                  {producto.etiquetas.map((tag, idx) => (
-                    <motion.button
-                      key={idx}
-                      type="button"
-                      onClick={() => setTagSeleccionadoCarrusel(tag)}
-                      whileTap={{ scale: 0.94 }}
-                      transition={springTap}
-                      className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-background/60 px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
-                      title={`Ver productos con #${tag}`}
-                    >
-                      <Tag className="h-3 w-3 opacity-70" />
-                      #{tag}
-                    </motion.button>
-                  ))}
-                </div>
-              )}
+                {producto.etiquetas && producto.etiquetas.length > 0 && (
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {producto.etiquetas.map((tag, idx) => (
+                      <motion.button
+                        key={idx}
+                        type="button"
+                        onClick={() => setTagSeleccionadoCarrusel(tag)}
+                        whileTap={{ scale: 0.94 }}
+                        transition={springTap}
+                        className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary dark:bg-zinc-800/60 dark:text-zinc-300"
+                        title={`Ver productos con #${tag}`}
+                      >
+                        <Tag className="h-3 w-3 opacity-70" />
+                        #{tag}
+                      </motion.button>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
 
               {/* PRECIOS, CUOTAS Y STOCK (bloque bento) */}
-              <div className="mt-4 rounded-2xl border border-border bg-background/60 p-3.5">
+              <motion.div
+                key={`precio-${producto.id}`}
+                {...entradaBloque(0.1)}
+                className="mt-4 rounded-2xl border border-border bg-slate-50 p-3.5 dark:bg-zinc-800/50"
+              >
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-extrabold tracking-tight text-foreground">
+                  <span className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-zinc-100">
                     ${producto.precio.toLocaleString("es-AR")}
                   </span>
                   {tieneDescuento && (
-                    <span className="text-sm font-medium text-muted-foreground line-through">
+                    <span className="text-sm font-medium text-slate-400 line-through dark:text-zinc-500">
                       ${precioOriginal.toLocaleString("es-AR")}
                     </span>
                   )}
@@ -374,35 +389,43 @@ useEffect(() => {
                         3 cuotas fijas de ${montoCuota.toLocaleString("es-AR")}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-xl border border-border bg-card/80 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 rounded-xl border border-border bg-white px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-zinc-800 dark:text-zinc-400">
                         Solo Contado / Débito
                       </span>
                     )}
                   </div>
                 )}
 
-                <p className="mt-2.5 text-xs text-muted-foreground">
-                  Stock disponible: <strong className="text-foreground">{stockDisponible}</strong>
+                <p className="mt-2.5 text-xs text-slate-500 dark:text-zinc-400">
+                  Stock disponible: <strong className="text-slate-800 dark:text-zinc-200">{stockDisponible}</strong>
                   {cantidadEnCarrito > 0 && (
                     <span className="ml-1 font-medium text-primary">
                       ({cantidadEnCarrito} en el carrito)
                     </span>
                   )}
                 </p>
-              </div>
+              </motion.div>
 
               {producto.descripcion && (
-                <p className="mt-4 text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                <motion.p
+                  key={`desc-${producto.id}`}
+                  {...entradaBloque(0.15)}
+                  className="mt-4 text-xs leading-relaxed text-slate-600 dark:text-zinc-300 sm:text-sm"
+                >
                   {producto.descripcion}
-                </p>
+                </motion.p>
               )}
             </div>
 
             {/* CONTROLES DE CANTIDAD (DESKTOP) */}
-            <div className="hidden space-y-3 pt-2 sm:block">
-              <div className="flex items-center justify-between rounded-2xl border border-border bg-background/60 p-2">
-                <span className="pl-2 text-xs font-semibold text-muted-foreground">Cantidad a agregar:</span>
-                <div className="flex items-center gap-3 rounded-xl border border-border bg-card/80 p-1">
+            <motion.div
+              key={`acciones-${producto.id}`}
+              {...entradaBloque(0.2)}
+              className="hidden space-y-3 pt-2 sm:block"
+            >
+              <div className="flex items-center justify-between rounded-2xl border border-border bg-slate-50 p-2 dark:bg-zinc-800/50">
+                <span className="pl-2 text-xs font-semibold text-slate-600 dark:text-zinc-300">Cantidad a agregar:</span>
+                <div className="flex items-center gap-3 rounded-xl border border-border bg-white p-1 dark:bg-zinc-800">
                   <motion.button
                     onClick={() => puedeRestar && setCantidad(cantidad - 1)}
                     disabled={!puedeRestar}
@@ -410,8 +433,8 @@ useEffect(() => {
                     transition={springTap}
                     className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
                       puedeRestar
-                        ? "cursor-pointer text-foreground hover:bg-muted"
-                        : "cursor-not-allowed text-muted-foreground/40"
+                        ? "cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                        : "cursor-not-allowed text-slate-300 dark:text-zinc-600"
                     }`}
                     aria-label="Restar cantidad"
                   >
@@ -423,7 +446,7 @@ useEffect(() => {
                     initial={{ scale: 0.8, opacity: 0.4 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 24 }}
-                    className="w-6 text-center text-sm font-bold text-foreground"
+                    className="w-6 text-center text-sm font-bold text-slate-900 dark:text-zinc-100"
                   >
                     {cantidad}
                   </motion.span>
@@ -435,8 +458,8 @@ useEffect(() => {
                     transition={springTap}
                     className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
                       puedeSumar
-                        ? "cursor-pointer text-foreground hover:bg-muted"
-                        : "cursor-not-allowed text-muted-foreground/40"
+                        ? "cursor-pointer text-slate-700 hover:bg-slate-100 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                        : "cursor-not-allowed text-slate-300 dark:text-zinc-600"
                     }`}
                     aria-label="Sumar cantidad"
                   >
@@ -453,7 +476,7 @@ useEffect(() => {
                 transition={springTap}
                 className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-colors ${
                   compraDeshabilitada
-                    ? "cursor-not-allowed bg-muted text-muted-foreground"
+                    ? "cursor-not-allowed bg-slate-200 text-slate-500 dark:bg-zinc-800 dark:text-zinc-500"
                     : "cursor-pointer bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
                 }`}
               >
@@ -473,13 +496,13 @@ useEffect(() => {
                 whileHover={compraDeshabilitada ? undefined : { scale: 1.01 }}
                 whileTap={compraDeshabilitada ? undefined : { scale: 0.97 }}
                 transition={springTap}
-                className={`flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/40 bg-card/60 py-3 text-sm font-bold text-primary backdrop-blur-xl transition-colors hover:bg-primary/10 ${
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/40 bg-white py-3 text-sm font-bold text-primary transition-colors hover:bg-primary/10 dark:bg-zinc-900 ${
                   compraDeshabilitada ? "cursor-not-allowed opacity-50" : "cursor-pointer"
                 }`}
               >
                 <span>Comprar ahora</span>
               </motion.button>
-            </div>
+            </motion.div>
           </div>
         </div>
 
@@ -494,17 +517,19 @@ useEffect(() => {
         />
 
         {/* BARRA STICKY INFERIOR EXCLUSIVA PARA MOVILES (CON MARGEN PARA BOTTOM NAV) */}
-        <div className="sticky bottom-0 z-40 -mx-4 -mb-4 mt-6 space-y-2 border-t border-border bg-card/80 p-3 pb-20 backdrop-blur-xl sm:hidden sm:pb-3">
+        <div className="sticky bottom-0 z-40 -mx-4 -mb-4 mt-6 space-y-2 border-t border-border bg-white/95 p-3 pb-20 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:bg-zinc-900/95 sm:hidden">
           <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-muted-foreground">Cantidad:</span>
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-background/60 p-1">
+            <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">Cantidad:</span>
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-slate-50 p-1 dark:bg-zinc-800">
               <motion.button
                 onClick={() => puedeRestar && setCantidad(cantidad - 1)}
                 disabled={!puedeRestar}
                 whileTap={puedeRestar ? { scale: 0.88 } : undefined}
                 transition={springTap}
                 className={`flex h-7 w-7 items-center justify-center rounded-lg ${
-                  puedeRestar ? "bg-card text-foreground shadow-xs" : "text-muted-foreground/40"
+                  puedeRestar
+                    ? "bg-white text-slate-700 shadow-xs dark:bg-zinc-700 dark:text-zinc-200"
+                    : "text-slate-300 dark:text-zinc-600"
                 }`}
                 aria-label="Restar cantidad"
               >
@@ -515,7 +540,7 @@ useEffect(() => {
                 initial={{ scale: 0.8, opacity: 0.4 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 500, damping: 24 }}
-                className="w-5 text-center text-xs font-bold text-foreground"
+                className="w-5 text-center text-xs font-bold text-slate-900 dark:text-zinc-100"
               >
                 {cantidad}
               </motion.span>
@@ -525,7 +550,9 @@ useEffect(() => {
                 whileTap={puedeSumar ? { scale: 0.88 } : undefined}
                 transition={springTap}
                 className={`flex h-7 w-7 items-center justify-center rounded-lg ${
-                  puedeSumar ? "bg-card text-foreground shadow-xs" : "text-muted-foreground/40"
+                  puedeSumar
+                    ? "bg-white text-slate-700 shadow-xs dark:bg-zinc-700 dark:text-zinc-200"
+                    : "text-slate-300 dark:text-zinc-600"
                 }`}
                 aria-label="Sumar cantidad"
               >
@@ -542,7 +569,7 @@ useEffect(() => {
               transition={springTap}
               className={`flex items-center justify-center gap-1.5 rounded-2xl py-3 text-xs font-bold transition-colors ${
                 compraDeshabilitada
-                  ? "cursor-not-allowed bg-muted text-muted-foreground"
+                  ? "cursor-not-allowed bg-slate-200 text-slate-500 dark:bg-zinc-800 dark:text-zinc-500"
                   : "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
               }`}
             >
@@ -557,7 +584,7 @@ useEffect(() => {
               disabled={compraDeshabilitada}
               whileTap={compraDeshabilitada ? undefined : { scale: 0.96 }}
               transition={springTap}
-              className={`flex items-center justify-center rounded-2xl border border-primary/40 bg-card/60 py-3 text-xs font-bold text-primary ${
+              className={`flex items-center justify-center rounded-2xl border border-primary/40 bg-white py-3 text-xs font-bold text-primary dark:bg-zinc-900 ${
                 compraDeshabilitada ? "cursor-not-allowed opacity-50" : ""
               }`}
             >

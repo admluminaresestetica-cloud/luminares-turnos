@@ -296,14 +296,14 @@ if (pedidoId) {
 
   const hayTagActivo = Boolean(tagSeleccionado);
 
-  return (
-    <div className="relative min-h-screen bg-background text-foreground flex flex-col justify-between font-sans selection:bg-primary/20 selection:text-foreground transition-colors">
+ return (
+    <div className="relative min-h-screen bg-background text-foreground flex flex-col justify-between font-sans selection:bg-primary/25 selection:text-foreground transition-colors">
       <FondoOrbes />
 
       <div className="relative z-10">
-        {/* App Bar flotante de vidrio */}
-        <div className="sticky top-0 z-50 px-3 pt-3 sm:px-10 sm:pt-4">
-          <nav className="mx-auto flex max-w-[1150px] items-center justify-between gap-3 rounded-3xl border border-border bg-card/80 px-3 py-2.5 backdrop-blur-xl shadow-lg shadow-black/5 dark:shadow-black/20 sm:px-4 sm:py-3">
+ {/* App Bar fija arriba de todo */}
+<div className="fixed top-0 left-0 right-0 z-50 w-full px-3 py-3 sm:px-10 sm:py-4 bg-background/60 backdrop-blur-md pointer-events-none">
+  <nav className="pointer-events-auto mx-auto flex max-w-[1150px] items-center justify-between gap-3 rounded-3xl border border-border bg-card/90 px-3 py-2.5 backdrop-blur-xl shadow-lg shadow-black/5 dark:shadow-black/20 sm:px-4 sm:py-3">
             <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
               <motion.div whileTap={{ scale: 0.92 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
                 <Link
@@ -347,7 +347,7 @@ if (pedidoId) {
                 </Link>
               </motion.div>
             </div>
-
+            
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <motion.button
@@ -376,7 +376,7 @@ if (pedidoId) {
           </nav>
         </div>
 
-        <div className="mx-auto max-w-[1150px] space-y-5 px-4 pb-28 pt-5 sm:space-y-6 sm:px-10 sm:pb-16">
+        <div className="mx-auto max-w-[1150px] space-y-5 px-4 pb-28 pt-24 sm:space-y-6 sm:px-10 sm:pb-16 sm:pt-28">
           {/* 1. Buscador y Filtros Principales (Bien arriba para fácil acceso) */}
           <BuscadorYCategorias
             busqueda={busqueda}
