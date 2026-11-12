@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import { ShoppingCart, ArrowLeft, Tag as TagIcon, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import CarritoDrawer from "@/components/carrito/CarritoDrawer";
 import BannerCarousel from "./components/BannerCarousel";
 import BeneficiosTienda from "./components/BeneficiosTienda";
@@ -27,6 +28,31 @@ export const dynamic = 'force-dynamic';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+/* Fondo neutro con orbes grises: profundidad sin competir con el acento dinámico */
+function FondoOrbes() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+    >
+      <div className="absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full bg-slate-400/10 dark:bg-zinc-700/15 blur-3xl" />
+      <div className="absolute -right-40 top-1/3 h-[520px] w-[520px] rounded-full bg-slate-400/10 dark:bg-zinc-700/15 blur-3xl" />
+      <div className="absolute -bottom-40 left-1/4 h-[460px] w-[460px] rounded-full bg-slate-400/10 dark:bg-zinc-700/15 blur-3xl" />
+    </div>
+  );
+}
+
+function PantallaCarga() {
+  return (
+    <div className="relative min-h-screen bg-background flex items-center justify-center font-sans">
+      <FondoOrbes />
+      <div className="relative z-10 rounded-3xl border border-border bg-card/80 backdrop-blur-xl shadow-lg shadow-black/5 dark:shadow-black/20 p-6">
+        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-primary border-t-transparent" />
+      </div>
+    </div>
+  );
+}
 
 function TiendaContenido() {
   const { config } = useConfig();
@@ -258,11 +284,7 @@ if (pedidoId) {
   }, [productosFiltrados, ordenarPor]);
 
   if (!mounted) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center font-sans">
-        <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#0E6E55] border-t-transparent" />
-      </div>
-    );
+    return <PantallaCarga />;
   }
 
   const resetearFiltros = () => {
@@ -275,68 +297,86 @@ if (pedidoId) {
   const hayTagActivo = Boolean(tagSeleccionado);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 text-[#12151B] dark:text-zinc-100 flex flex-col justify-between font-sans selection:bg-emerald-100 selection:text-emerald-900 transition-colors">
-      <div>
-        {/* Navbar / App Bar superior limpia */}
-        <nav className="sticky top-0 z-50 flex items-center justify-between gap-3 border-b border-slate-200/80 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 px-4 py-3.5 backdrop-blur-md sm:px-10 sm:py-4 shadow-xs">
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 hover:text-slate-900 dark:hover:text-white px-3.5 py-2 rounded-xl transition-all active:scale-95 border border-slate-200/80 dark:border-zinc-700/80 shadow-xs"
-              title="Volver a la selección principal"
-            >
-              <ArrowLeft className="w-4 h-4 stroke-[2.2]" />
-            </Link>
+    <div className="relative min-h-screen bg-background text-foreground flex flex-col justify-between font-sans selection:bg-primary/20 selection:text-foreground transition-colors">
+      <FondoOrbes />
 
-            <Link
-              href="/tienda"
-              onClick={resetearFiltros}
-              className="flex min-w-0 items-center gap-3 cursor-pointer transition-opacity hover:opacity-85 active:scale-[0.98]"
-            >
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center sm:h-11 sm:w-11 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200/80 dark:border-zinc-700/80 shadow-xs p-1.5 overflow-hidden">
-                <Image
-                  src={config?.logo_url || "/logodoradoo.svg"}
-                  alt={config?.nombre_empresa || "Logo"}
-                  width={44}
-                  height={44}
-                  className="h-full w-full object-contain"
-                  priority
-                />
-              </div>
+      <div className="relative z-10">
+        {/* App Bar flotante de vidrio */}
+        <div className="sticky top-0 z-50 px-3 pt-3 sm:px-10 sm:pt-4">
+          <nav className="mx-auto flex max-w-[1150px] items-center justify-between gap-3 rounded-3xl border border-border bg-card/80 px-3 py-2.5 backdrop-blur-xl shadow-lg shadow-black/5 dark:shadow-black/20 sm:px-4 sm:py-3">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+              <motion.div whileTap={{ scale: 0.92 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
+                <Link
+                  href="/"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-background/60 text-muted-foreground transition-colors hover:text-foreground sm:h-11 sm:w-11"
+                  title="Volver a la selección principal"
+                  aria-label="Volver a la selección principal"
+                >
+                  <ArrowLeft className="h-4 w-4 stroke-[2.2]" />
+                </Link>
+              </motion.div>
 
-              <div className="flex min-w-0 flex-col leading-tight">
-                <h2 className="m-0 truncate text-sm sm:text-base font-extrabold tracking-tight text-slate-900 dark:text-zinc-100">
-                  {config?.nombre_empresa || "Luminares"}
-                </h2>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0E6E55] animate-pulse" />
-                  <span className="truncate text-[11px] font-semibold text-slate-500 dark:text-zinc-400">
-                    {config?.subtitulo_tienda || "Tienda Oficial"}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          </div>
+              <motion.div whileTap={{ scale: 0.97 }} transition={{ type: "spring", stiffness: 400, damping: 22 }} className="min-w-0">
+                <Link
+                  href="/tienda"
+                  onClick={resetearFiltros}
+                  className="flex min-w-0 cursor-pointer items-center gap-3 transition-opacity hover:opacity-85"
+                >
+                  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-background/60 p-1.5 sm:h-11 sm:w-11">
+                    <Image
+                      src={config?.logo_url || "/logodoradoo.svg"}
+                      alt={config?.nombre_empresa || "Logo"}
+                      width={44}
+                      height={44}
+                      className="h-full w-full object-contain"
+                      priority
+                    />
+                  </div>
 
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <button
-              onClick={() => setModalAbierto(true)}
-              className="relative flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-800 px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-800 dark:text-zinc-200 transition-all duration-200 hover:border-slate-300 dark:hover:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700 active:scale-95 cursor-pointer shadow-xs"
-            >
-              <ShoppingCart className="h-4 w-4 shrink-0 text-slate-700 dark:text-zinc-300" strokeWidth={2.2} />
-              <span className="hidden sm:inline">Mi Carrito</span>
+                  <div className="flex min-w-0 flex-col leading-tight">
+                    <h2 className="m-0 truncate text-sm font-extrabold tracking-tight text-foreground sm:text-base">
+                      {config?.nombre_empresa || "Luminares"}
+                    </h2>
+                    <div className="mt-0.5 flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                      <span className="truncate text-[11px] font-semibold text-muted-foreground">
+                        {config?.subtitulo_tienda || "Tienda Oficial"}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            </div>
 
-              {totalItems > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 bg-[#0E6E55] px-1.5 text-[10px] font-extrabold leading-none text-white shadow-md animate-in zoom-in-50 duration-200 sm:static sm:ml-1 sm:h-5 sm:min-w-[20px] sm:border-0 sm:text-[11px]">
-                  {totalItems}
-                </span>
-              )}
-            </button>
-          </div>
-        </nav>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <motion.button
+                onClick={() => setModalAbierto(true)}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.94 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className="relative flex h-10 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-border bg-background/60 px-3.5 text-xs font-bold text-foreground transition-colors hover:bg-background/90 sm:h-11 sm:px-4 sm:text-sm"
+              >
+                <ShoppingCart className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.2} />
+                <span className="hidden sm:inline">Mi Carrito</span>
 
-<div className="mx-auto max-w-[1150px] px-4 pb-28 pt-4 sm:px-10 sm:pb-16 space-y-5 sm:space-y-6">
+                {totalItems > 0 && (
+                  <motion.span
+                    key={totalItems}
+                    initial={{ scale: 0.6 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 18 }}
+                    className="absolute -right-1.5 -top-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full border-2 border-card bg-primary px-1.5 text-[10px] font-extrabold leading-none text-primary-foreground shadow-md sm:static sm:ml-1 sm:border-0 sm:text-[11px]"
+                  >
+                    {totalItems}
+                  </motion.span>
+                )}
+              </motion.button>
+            </div>
+          </nav>
+        </div>
+
+        <div className="mx-auto max-w-[1150px] space-y-5 px-4 pb-28 pt-5 sm:space-y-6 sm:px-10 sm:pb-16">
           {/* 1. Buscador y Filtros Principales (Bien arriba para fácil acceso) */}
           <BuscadorYCategorias
             busqueda={busqueda}
@@ -361,26 +401,37 @@ if (pedidoId) {
           />
 
           {/* Indicador visual de etiqueta activa */}
-          {hayTagActivo && (
-            <div className="flex items-center justify-between bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-[#0E6E55]/25 rounded-[22px] px-4 sm:px-5 py-3.5 shadow-sm animate-in fade-in slide-in-from-top-1 duration-300">
-              <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold text-[#0E6E55] dark:text-emerald-400">
-                <div className="w-7 h-7 rounded-xl bg-[#0E6E55]/10 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
-                  <TagIcon className="w-3.5 h-3.5 stroke-[2.2]" />
-                </div>
-                <span>
-                  Filtrando por etiqueta:{" "}
-                  <strong className="underline decoration-2 underline-offset-2">#{tagSeleccionado}</strong>
-                </span>
-              </div>
-              <button
-                onClick={() => setTagSeleccionado(null)}
-                className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 border border-slate-200/80 dark:border-zinc-700 px-3 py-2 rounded-xl transition-all cursor-pointer active:scale-95 shadow-xs"
+          <AnimatePresence initial={false}>
+            {hayTagActivo && (
+              <motion.div
+                key="tag-activo"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                className="flex items-center justify-between rounded-3xl border border-primary/25 bg-card/80 px-4 py-3 backdrop-blur-xl shadow-lg shadow-black/5 dark:shadow-black/20 sm:px-5 sm:py-3.5"
               >
-                <span>Limpiar</span>
-                <X className="w-3.5 h-3.5 stroke-[2.5]" />
-              </button>
-            </div>
-          )}
+                <div className="flex min-w-0 items-center gap-2.5 text-xs font-bold text-primary sm:text-sm">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                    <TagIcon className="h-3.5 w-3.5 stroke-[2.2]" />
+                  </div>
+                  <span className="truncate">
+                    Filtrando por etiqueta:{" "}
+                    <strong className="underline decoration-2 underline-offset-2">#{tagSeleccionado}</strong>
+                  </span>
+                </div>
+                <motion.button
+                  onClick={() => setTagSeleccionado(null)}
+                  whileTap={{ scale: 0.92 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                  className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-2xl border border-border bg-background/60 px-3 py-2 text-xs font-bold text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <span>Limpiar</span>
+                  <X className="h-3.5 w-3.5 stroke-[2.5]" />
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* 4. Bloque compacto de Beneficios con un respiro superior */}
           <div className="pt-2">
@@ -424,20 +475,16 @@ if (pedidoId) {
         <BotonFlotanteCarrito onOpenCarrito={() => setModalAbierto(true)} />
       </div>
 
-      <FooterTienda />
+      <div className="relative z-10">
+        <FooterTienda />
+      </div>
     </div>
   );
 }
 
 export default function TiendaPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-white dark:bg-zinc-950 flex items-center justify-center font-sans">
-          <div className="h-8 w-8 animate-spin rounded-full border-3 border-[#0E6E55] border-t-transparent" />
-        </div>
-      }
-    >
+    <Suspense fallback={<PantallaCarga />}>
       <TiendaContenido />
     </Suspense>
   );

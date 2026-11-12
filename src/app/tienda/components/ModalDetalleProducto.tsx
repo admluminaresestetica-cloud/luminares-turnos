@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { X, Plus, Minus, ShoppingCartPlus, Share2, CreditCard, Tag } from "lucide-react";
+import { motion } from "framer-motion";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 import AcordeonFAQ from "./AcordeonFAQ";
@@ -254,11 +255,17 @@ useEffect(() => {
 
   const puedeSumar = cantidad < maximoPermitidoParaAgregar;
   const puedeRestar = cantidad > 1;
+  const compraDeshabilitada = sinStock || maximoPermitidoParaAgregar <= 0;
 
-    return (
-    <div
+  const springTap = { type: "spring" as const, stiffness: 420, damping: 20 };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 overscroll-none"
+      className="fixed inset-0 z-50 flex items-end justify-center overscroll-none bg-slate-900/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
     >
       <div
         ref={modalContainerRef}
@@ -266,7 +273,7 @@ useEffect(() => {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[88vh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white dark:bg-zinc-900 p-4 sm:p-8 shadow-2xl dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)] flex flex-col justify-between"
+        className="relative flex max-h-[90vh] w-full flex-col justify-between overflow-y-auto overscroll-contain rounded-t-3xl border border-border bg-white p-4 shadow-lg shadow-black/5 animate-in slide-in-from-bottom-8 duration-300 dark:bg-zinc-900 dark:shadow-black/20 sm:max-h-[88vh] sm:max-w-2xl sm:rounded-3xl sm:p-8"
         style={{
           overscrollBehaviorY: "contain",
           transform: `translateY(${currentOffsetY}px)`,
@@ -274,30 +281,36 @@ useEffect(() => {
         }}
       >
         {/* Barra superior indicadora de deslizamiento para mobile */}
-        <div className="flex justify-center -mt-1 mb-3 sm:hidden cursor-grab active:cursor-grabbing">
-          <span className="h-1.5 w-12 rounded-full bg-slate-300 dark:bg-zinc-700" />
+        <div className="-mt-1 mb-3 flex cursor-grab justify-center active:cursor-grabbing sm:hidden">
+          <span className="h-1.5 w-12 rounded-full bg-muted-foreground/30" />
         </div>
 
         {/* Botones Flotantes de Cierre / Compartir */}
-        <div className="sticky top-0 float-right z-30 -mr-1 -mt-1 sm:-mr-4 sm:-mt-4 flex items-center gap-2">
-          <button
+        <div className="sticky top-0 z-30 -mr-1 -mt-1 flex items-center gap-2 float-right sm:-mr-4 sm:-mt-4">
+          <motion.button
             onClick={handleCompartir}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 dark:bg-zinc-800/90 text-slate-600 dark:text-zinc-300 backdrop-blur-md border border-slate-100 dark:border-zinc-700 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-90 cursor-pointer"
+            whileTap={{ scale: 0.9 }}
+            transition={springTap}
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border bg-card/80 text-muted-foreground shadow-lg shadow-black/5 backdrop-blur-xl transition-colors hover:text-foreground dark:shadow-black/20"
             title="Compartir producto"
+            aria-label="Compartir producto"
           >
             <Share2 className="h-4 w-4" />
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 dark:bg-zinc-800/90 text-slate-500 dark:text-zinc-400 backdrop-blur-md border border-slate-100 dark:border-zinc-700 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-90 cursor-pointer"
+            whileTap={{ scale: 0.9 }}
+            transition={springTap}
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-border bg-card/80 text-muted-foreground shadow-lg shadow-black/5 backdrop-blur-xl transition-colors hover:text-foreground dark:shadow-black/20"
             title="Cerrar (Esc)"
+            aria-label="Cerrar"
           >
             <X className="h-5 w-5" />
-          </button>
+          </motion.button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start clear-both">
+        <div className="clear-both grid grid-cols-1 items-start gap-6 md:grid-cols-2">
           {/* GALERÍA DE IMÁGENES */}
           <GaleriaProducto
             producto={producto}
@@ -312,11 +325,11 @@ useEffect(() => {
           {/* INFORMACIÓN DEL PRODUCTO */}
           <div className="flex flex-col justify-between space-y-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#0E6E55] dark:text-emerald-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-primary">
                 {producto.categoria}
               </span>
 
-              <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 sm:text-2xl mt-1 leading-snug">
+              <h2 className="mt-1 text-xl font-bold leading-snug tracking-tight text-foreground sm:text-2xl">
                 {producto.nombre}
               </h2>
 
@@ -324,105 +337,124 @@ useEffect(() => {
               {producto.etiquetas && producto.etiquetas.length > 0 && (
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
                   {producto.etiquetas.map((tag, idx) => (
-                    <button
+                    <motion.button
                       key={idx}
                       type="button"
                       onClick={() => setTagSeleccionadoCarrusel(tag)}
-                      className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-zinc-800 hover:bg-[#0E6E55]/10 dark:hover:bg-emerald-500/20 px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-zinc-300 hover:text-[#0E6E55] dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                      whileTap={{ scale: 0.94 }}
+                      transition={springTap}
+                      className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-border bg-background/60 px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
                       title={`Ver productos con #${tag}`}
                     >
-                      <Tag className="h-3 w-3 text-slate-400 dark:text-zinc-500" />
+                      <Tag className="h-3 w-3 opacity-70" />
                       #{tag}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               )}
 
-              {/* PRECIOS Y CUOTAS */}
-              <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-slate-900 dark:text-zinc-100">
-                  ${producto.precio.toLocaleString("es-AR")}
-                </span>
-                {tieneDescuento && (
-                  <span className="text-sm font-medium text-slate-400 dark:text-zinc-500 line-through">
-                    ${precioOriginal.toLocaleString("es-AR")}
+              {/* PRECIOS, CUOTAS Y STOCK (bloque bento) */}
+              <div className="mt-4 rounded-2xl border border-border bg-background/60 p-3.5">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-extrabold tracking-tight text-foreground">
+                    ${producto.precio.toLocaleString("es-AR")}
                   </span>
-                )}
-              </div>
-
-              {!sinStock && (
-                <div className="mt-2">
-                  {permiteCuotas ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 dark:border-purple-900/60 bg-purple-50 dark:bg-purple-950/40 px-2.5 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300">
-                      <CreditCard className="h-3.5 w-3.5" />
-                      3 cuotas fijas de ${montoCuota.toLocaleString("es-AR")}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-800 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-zinc-400">
-                      Solo Contado / Débito
+                  {tieneDescuento && (
+                    <span className="text-sm font-medium text-muted-foreground line-through">
+                      ${precioOriginal.toLocaleString("es-AR")}
                     </span>
                   )}
                 </div>
-              )}
 
-              <p className="text-xs text-slate-500 dark:text-zinc-400 mt-2">
-                Stock disponible: <strong className="text-slate-800 dark:text-zinc-200">{stockDisponible}</strong>
-                {cantidadEnCarrito > 0 && (
-                  <span className="ml-1 text-emerald-700 dark:text-emerald-400 font-medium">
-                    ({cantidadEnCarrito} en el carrito)
-                  </span>
+                {!sinStock && (
+                  <div className="mt-2">
+                    {permiteCuotas ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                        <CreditCard className="h-3.5 w-3.5" />
+                        3 cuotas fijas de ${montoCuota.toLocaleString("es-AR")}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-xl border border-border bg-card/80 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                        Solo Contado / Débito
+                      </span>
+                    )}
+                  </div>
                 )}
-              </p>
+
+                <p className="mt-2.5 text-xs text-muted-foreground">
+                  Stock disponible: <strong className="text-foreground">{stockDisponible}</strong>
+                  {cantidadEnCarrito > 0 && (
+                    <span className="ml-1 font-medium text-primary">
+                      ({cantidadEnCarrito} en el carrito)
+                    </span>
+                  )}
+                </p>
+              </div>
 
               {producto.descripcion && (
-                <p className="mt-4 text-xs sm:text-sm text-slate-600 dark:text-zinc-300 leading-relaxed">
+                <p className="mt-4 text-xs leading-relaxed text-muted-foreground sm:text-sm">
                   {producto.descripcion}
                 </p>
               )}
             </div>
 
             {/* CONTROLES DE CANTIDAD (DESKTOP) */}
-            <div className="hidden sm:block pt-2 space-y-4">
-              <div className="flex items-center justify-between rounded-2xl border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800/50 p-2">
-                <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300 pl-2">Cantidad a agregar:</span>
-                <div className="flex items-center gap-3 bg-white dark:bg-zinc-800 rounded-xl border border-slate-200 dark:border-zinc-700 p-1">
-                  <button
+            <div className="hidden space-y-3 pt-2 sm:block">
+              <div className="flex items-center justify-between rounded-2xl border border-border bg-background/60 p-2">
+                <span className="pl-2 text-xs font-semibold text-muted-foreground">Cantidad a agregar:</span>
+                <div className="flex items-center gap-3 rounded-xl border border-border bg-card/80 p-1">
+                  <motion.button
                     onClick={() => puedeRestar && setCantidad(cantidad - 1)}
                     disabled={!puedeRestar}
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
+                    whileTap={puedeRestar ? { scale: 0.88 } : undefined}
+                    transition={springTap}
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
                       puedeRestar
-                        ? "text-slate-700 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-700 cursor-pointer"
-                        : "text-slate-300 dark:text-zinc-600 cursor-not-allowed"
+                        ? "cursor-pointer text-foreground hover:bg-muted"
+                        : "cursor-not-allowed text-muted-foreground/40"
                     }`}
+                    aria-label="Restar cantidad"
                   >
                     <Minus className="h-3.5 w-3.5" />
-                  </button>
+                  </motion.button>
 
-                  <span className="w-6 text-center text-sm font-bold text-slate-900 dark:text-zinc-100">
+                  <motion.span
+                    key={cantidad}
+                    initial={{ scale: 0.8, opacity: 0.4 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 24 }}
+                    className="w-6 text-center text-sm font-bold text-foreground"
+                  >
                     {cantidad}
-                  </span>
+                  </motion.span>
 
-                  <button
+                  <motion.button
                     onClick={() => puedeSumar && setCantidad(cantidad + 1)}
                     disabled={!puedeSumar}
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-all active:scale-90 ${
+                    whileTap={puedeSumar ? { scale: 0.88 } : undefined}
+                    transition={springTap}
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
                       puedeSumar
-                        ? "text-slate-700 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-700 cursor-pointer"
-                        : "text-slate-300 dark:text-zinc-600 cursor-not-allowed"
+                        ? "cursor-pointer text-foreground hover:bg-muted"
+                        : "cursor-not-allowed text-muted-foreground/40"
                     }`}
+                    aria-label="Sumar cantidad"
                   >
                     <Plus className="h-3.5 w-3.5" />
-                  </button>
+                  </motion.button>
                 </div>
               </div>
 
-              <button
+              <motion.button
                 onClick={handleAgregarPrincipal}
-                disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-all ${
-                  sinStock || maximoPermitidoParaAgregar <= 0
-                    ? "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-500 cursor-not-allowed"
-                    : "bg-[#0E6E55] dark:bg-emerald-600 text-white hover:bg-[#0b5944] dark:hover:bg-emerald-500 active:scale-[0.98] shadow-md shadow-[#0E6E55]/20 dark:shadow-emerald-950/40 cursor-pointer"
+                disabled={compraDeshabilitada}
+                whileHover={compraDeshabilitada ? undefined : { scale: 1.01 }}
+                whileTap={compraDeshabilitada ? undefined : { scale: 0.97 }}
+                transition={springTap}
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition-colors ${
+                  compraDeshabilitada
+                    ? "cursor-not-allowed bg-muted text-muted-foreground"
+                    : "cursor-pointer bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
                 }`}
               >
                 <ShoppingCartPlus className="h-4 w-4" />
@@ -433,17 +465,20 @@ useEffect(() => {
                     ? "Máximo alcanzado en el carrito"
                     : `Agregar al Carrito • $${(producto.precio * cantidad).toLocaleString("es-AR")}`}
                 </span>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
                 onClick={handleComprarAhora}
-                disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-                className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold transition-all border-2 border-[#0E6E55] dark:border-emerald-500 bg-transparent text-[#0E6E55] dark:text-emerald-400 hover:bg-[#0E6E55]/10 dark:hover:bg-emerald-500/10 cursor-pointer ${
-                  sinStock || maximoPermitidoParaAgregar <= 0 ? "opacity-50 cursor-not-allowed" : ""
+                disabled={compraDeshabilitada}
+                whileHover={compraDeshabilitada ? undefined : { scale: 1.01 }}
+                whileTap={compraDeshabilitada ? undefined : { scale: 0.97 }}
+                transition={springTap}
+                className={`flex w-full items-center justify-center gap-2 rounded-2xl border border-primary/40 bg-card/60 py-3 text-sm font-bold text-primary backdrop-blur-xl transition-colors hover:bg-primary/10 ${
+                  compraDeshabilitada ? "cursor-not-allowed opacity-50" : "cursor-pointer"
                 }`}
               >
                 <span>Comprar ahora</span>
-              </button>
+              </motion.button>
             </div>
           </div>
         </div>
@@ -459,57 +494,75 @@ useEffect(() => {
         />
 
         {/* BARRA STICKY INFERIOR EXCLUSIVA PARA MOVILES (CON MARGEN PARA BOTTOM NAV) */}
-        <div className="sticky bottom-0 -mx-4 -mb-4 mt-6 p-3 pb-20 sm:pb-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-slate-200 dark:border-zinc-800 sm:hidden z-40 space-y-2">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <span className="text-xs font-semibold text-slate-600 dark:text-zinc-300">Cantidad:</span>
-            <div className="flex items-center gap-3 bg-slate-100 dark:bg-zinc-800 rounded-xl p-1">
-              <button
+        <div className="sticky bottom-0 z-40 -mx-4 -mb-4 mt-6 space-y-2 border-t border-border bg-card/80 p-3 pb-20 backdrop-blur-xl sm:hidden sm:pb-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold text-muted-foreground">Cantidad:</span>
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-background/60 p-1">
+              <motion.button
                 onClick={() => puedeRestar && setCantidad(cantidad - 1)}
                 disabled={!puedeRestar}
-                className={`flex h-7 w-7 items-center justify-center rounded-lg active:scale-90 ${
-                  puedeRestar ? "bg-white dark:bg-zinc-700 text-slate-700 dark:text-zinc-200 shadow-xs" : "text-slate-300 dark:text-zinc-600"
+                whileTap={puedeRestar ? { scale: 0.88 } : undefined}
+                transition={springTap}
+                className={`flex h-7 w-7 items-center justify-center rounded-lg ${
+                  puedeRestar ? "bg-card text-foreground shadow-xs" : "text-muted-foreground/40"
                 }`}
+                aria-label="Restar cantidad"
               >
                 <Minus className="h-3 w-3" />
-              </button>
-              <span className="w-5 text-center text-xs font-bold text-slate-900 dark:text-zinc-100">{cantidad}</span>
-              <button
+              </motion.button>
+              <motion.span
+                key={cantidad}
+                initial={{ scale: 0.8, opacity: 0.4 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 24 }}
+                className="w-5 text-center text-xs font-bold text-foreground"
+              >
+                {cantidad}
+              </motion.span>
+              <motion.button
                 onClick={() => puedeSumar && setCantidad(cantidad + 1)}
                 disabled={!puedeSumar}
-                className={`flex h-7 w-7 items-center justify-center rounded-lg active:scale-90 ${
-                  puedeSumar ? "bg-white dark:bg-zinc-700 text-slate-700 dark:text-zinc-200 shadow-xs" : "text-slate-300 dark:text-zinc-600"
+                whileTap={puedeSumar ? { scale: 0.88 } : undefined}
+                transition={springTap}
+                className={`flex h-7 w-7 items-center justify-center rounded-lg ${
+                  puedeSumar ? "bg-card text-foreground shadow-xs" : "text-muted-foreground/40"
                 }`}
+                aria-label="Sumar cantidad"
               >
                 <Plus className="h-3 w-3" />
-              </button>
+              </motion.button>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <button
+            <motion.button
               onClick={handleAgregarPrincipal}
-              disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-              className={`flex items-center justify-center gap-1.5 rounded-xl py-3 text-xs font-bold transition-all ${
-                sinStock || maximoPermitidoParaAgregar <= 0
-                  ? "bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-500 cursor-not-allowed"
-                  : "bg-[#0E6E55] dark:bg-emerald-600 text-white active:scale-[0.98] shadow-xs"
+              disabled={compraDeshabilitada}
+              whileTap={compraDeshabilitada ? undefined : { scale: 0.96 }}
+              transition={springTap}
+              className={`flex items-center justify-center gap-1.5 rounded-2xl py-3 text-xs font-bold transition-colors ${
+                compraDeshabilitada
+                  ? "cursor-not-allowed bg-muted text-muted-foreground"
+                  : "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
               }`}
             >
               <ShoppingCartPlus className="h-3.5 w-3.5" />
               <span>
                 {sinStock ? "Sin Stock" : `$${(producto.precio * cantidad).toLocaleString("es-AR")}`}
               </span>
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
               onClick={handleComprarAhora}
-              disabled={sinStock || maximoPermitidoParaAgregar <= 0}
-              className={`flex items-center justify-center rounded-xl py-3 text-xs font-bold border border-[#0E6E55] dark:border-emerald-500 text-[#0E6E55] dark:text-emerald-400 active:scale-[0.98] ${
-                sinStock || maximoPermitidoParaAgregar <= 0 ? "opacity-50 cursor-not-allowed" : ""
+              disabled={compraDeshabilitada}
+              whileTap={compraDeshabilitada ? undefined : { scale: 0.96 }}
+              transition={springTap}
+              className={`flex items-center justify-center rounded-2xl border border-primary/40 bg-card/60 py-3 text-xs font-bold text-primary ${
+                compraDeshabilitada ? "cursor-not-allowed opacity-50" : ""
               }`}
             >
               <span>Comprar ahora</span>
-            </button>
+            </motion.button>
           </div>
         </div>
 
@@ -534,6 +587,6 @@ useEffect(() => {
           />
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React from "react";
+import { motion } from "framer-motion";
 import { Producto } from "@/types/tienda";
 import { useCarrito } from "@/context/CarritoContext";
 import { useFavoritos } from "@/context/FavoritosContext";
@@ -17,6 +18,8 @@ interface TarjetaProductoProps {
   };
   onVerDetalle?: (producto: Producto) => void;
 }
+
+const springTap = { type: "spring" as const, stiffness: 420, damping: 20 };
 
 export default function TarjetaProducto({
   producto,
@@ -118,33 +121,47 @@ export default function TarjetaProducto({
   };
 
   return (
-    <div
+    <motion.div
       onClick={() => onVerDetalle && onVerDetalle(producto)}
-      className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 sm:p-3.5 shadow-2xs transition-all duration-200 active:scale-[0.97] hover:shadow-md hover:border-slate-300 dark:hover:border-zinc-700 cursor-pointer select-none"
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 380, damping: 24 }}
+      className="group relative flex cursor-pointer select-none flex-col justify-between overflow-hidden rounded-3xl border border-border bg-white p-2.5 shadow-lg shadow-black/5 transition-colors hover:border-primary/30 dark:bg-zinc-900 dark:shadow-black/20 sm:p-3.5"
     >
       {/* Botón Flotante de Favoritos (Esquina Superior Izquierda) */}
-      <button
+      <motion.button
         type="button"
         onClick={handleToggleFavorito}
-        className="absolute top-3 left-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md shadow-2xs transition-transform active:scale-90 hover:bg-white dark:hover:bg-zinc-800 cursor-pointer"
+        whileTap={{ scale: 0.85 }}
+        transition={springTap}
+        className="absolute left-3 top-3 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-white/80 shadow-lg shadow-black/5 backdrop-blur-xl dark:bg-zinc-800/80 dark:shadow-black/20"
         title={esFav ? "Quitar de favoritos" : "Guardar en favoritos"}
+        aria-label={esFav ? "Quitar de favoritos" : "Guardar en favoritos"}
       >
-        <Heart
-          className={`h-4 w-4 transition-colors ${
-            esFav ? "fill-red-500 text-red-500" : "text-slate-400 dark:text-zinc-400 hover:text-slate-600 dark:hover:text-zinc-200"
-          }`}
-        />
-      </button>
+        <motion.span
+          key={esFav ? "fav" : "no-fav"}
+          initial={{ scale: 0.6 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 500, damping: 16 }}
+          className="flex items-center justify-center"
+        >
+          <Heart
+            className={`h-4 w-4 transition-colors ${
+              esFav ? "fill-red-500 text-red-500" : "text-muted-foreground hover:text-foreground"
+            }`}
+          />
+        </motion.span>
+      </motion.button>
 
       {/* Badges superiores derechos (% OFF / Últimas Unidades) */}
-      <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1 pointer-events-none">
+      <div className="pointer-events-none absolute right-3 top-3 z-10 flex flex-col items-end gap-1">
         {tieneOferta && !sinStock && (
-          <span className="rounded-full bg-[#0E6E55] dark:bg-emerald-600 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-xs tracking-tight">
+          <span className="rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-extrabold tracking-tight text-primary-foreground shadow-lg shadow-primary/20 sm:text-[11px]">
             {porcentajeDescuento}% OFF
           </span>
         )}
         {esUltimasUnidades && (
-          <span className="flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-extrabold text-white shadow-xs animate-pulse">
+          <span className="flex animate-pulse items-center gap-1 rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] font-extrabold text-white shadow-lg shadow-amber-500/20 sm:text-[11px]">
             <Flame className="h-3 w-3" /> Últimas unidades
           </span>
         )}
@@ -152,18 +169,18 @@ export default function TarjetaProducto({
 
       {/* Badge de Envío Gratis */}
       {esEnvioGratis && !sinStock && (
-        <span className="absolute top-12 left-3 z-10 flex items-center gap-1 rounded-full bg-slate-900 dark:bg-zinc-800 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold text-white shadow-xs">
+        <span className="absolute left-3 top-12 z-10 flex items-center gap-1 rounded-full border border-border bg-white/80 px-2.5 py-0.5 text-[10px] font-bold text-foreground shadow-lg shadow-black/5 backdrop-blur-xl dark:bg-zinc-800/80 dark:shadow-black/20 sm:text-[11px]">
           <Truck className="h-3 w-3" /> Envío gratis
         </span>
       )}
 
       {/* Imagen del Producto o Icono Lucide por defecto */}
-      <div className="relative mb-2.5 aspect-square w-full overflow-hidden rounded-2xl bg-slate-50 dark:bg-zinc-800/60 flex items-center justify-center">
+      <div className="relative mb-2.5 flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-50 dark:bg-zinc-800/60">
         {producto.imagen_url ? (
           <img
             src={producto.imagen_url}
             alt={producto.nombre}
-            className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="flex flex-col items-center justify-center text-slate-300 dark:text-zinc-600">
@@ -172,41 +189,41 @@ export default function TarjetaProducto({
         )}
 
         {sinStock && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/40 dark:bg-zinc-950/60 backdrop-blur-[1px]">
-            <PackageX className="h-6 w-6 text-white mb-0.5" />
-            <span className="rounded-full bg-white/95 dark:bg-zinc-900 px-3 py-1 text-[10px] sm:text-[11px] font-bold text-slate-900 dark:text-zinc-100 shadow-xs">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/40 backdrop-blur-[2px] dark:bg-zinc-950/60">
+            <PackageX className="mb-0.5 h-6 w-6 text-white" />
+            <span className="rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold text-slate-900 shadow-lg shadow-black/10 dark:bg-zinc-900 dark:text-zinc-100 sm:text-[11px]">
               Sin Stock
             </span>
           </div>
         )}
       </div>
 
-{/* Información del Producto */}
+      {/* Información del Producto */}
       <div className="flex flex-1 flex-col justify-between">
         <div>
-          <h3 className="line-clamp-2 text-xs sm:text-sm font-bold text-slate-900 dark:text-zinc-100 leading-snug tracking-tight min-h-[2.5rem]">
+          <h3 className="line-clamp-2 min-h-[2.5rem] text-xs font-bold leading-snug tracking-tight text-foreground sm:text-sm">
             {producto.nombre}
           </h3>
         </div>
 
         {/* Precios, Cuotas y Stock (Estructura de altura uniforme) */}
-        <div className="mt-2 mb-2.5 flex flex-col justify-between flex-1">
+        <div className="mb-2.5 mt-2 flex flex-1 flex-col justify-between">
           <div>
-            <div className="flex items-baseline gap-1.5 flex-wrap">
-              <span className="text-base sm:text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tight">
+            <div className="flex flex-wrap items-baseline gap-1.5">
+              <span className="text-base font-black tracking-tight text-foreground sm:text-lg">
                 ${precioFormateado}
               </span>
               {tieneOferta && (
-                <span className="text-[11px] font-medium text-slate-400 dark:text-zinc-500 line-through">
+                <span className="text-[11px] font-medium text-muted-foreground line-through">
                   ${precioOriginalFormateado}
                 </span>
               )}
             </div>
 
             {/* Contenedor con altura reservada para cuotas (evita saltos si no tiene cuotas) */}
-            <div className="min-h-[24px] mt-1 flex items-center">
+            <div className="mt-1 flex min-h-[24px] items-center">
               {aplicaCuotas ? (
-                <span className="inline-flex items-center gap-1 rounded-lg border border-purple-200/80 dark:border-purple-900/60 bg-purple-50/80 dark:bg-purple-950/40 px-2 py-0.5 text-[10px] font-bold text-purple-700 dark:text-purple-300">
+                <span className="inline-flex items-center gap-1 rounded-xl border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
                   <CreditCard className="h-3 w-3 shrink-0 stroke-[2.2]" />
                   <span>{cantidadCuotasConfig} cuotas fijas de ${cuotaFormateada}</span>
                 </span>
@@ -214,7 +231,7 @@ export default function TarjetaProducto({
             </div>
           </div>
 
-          <p className="text-[10px] font-medium text-slate-400 dark:text-zinc-500 mt-2">
+          <p className="mt-2 text-[10px] font-medium text-muted-foreground">
             Stock: {producto.stock}
           </p>
         </div>
@@ -223,53 +240,70 @@ export default function TarjetaProducto({
         {sinStock ? (
           <button
             disabled
-            className="w-full py-2.5 px-2 rounded-2xl text-xs font-bold bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 cursor-not-allowed opacity-80"
+            className="w-full cursor-not-allowed rounded-2xl bg-muted px-2 py-2.5 text-xs font-bold text-muted-foreground opacity-80"
           >
             Agotado
           </button>
         ) : cantidadEnCarrito === 0 ? (
-          <button
+          <motion.button
             type="button"
             onClick={handleSumar}
-            className="w-full py-2.5 px-2 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 bg-[#0E6E55] dark:bg-emerald-600 text-white hover:bg-[#0b5944] dark:hover:bg-emerald-500 active:scale-[0.96] shadow-2xs cursor-pointer"
+            whileTap={{ scale: 0.95 }}
+            transition={springTap}
+            className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-2xl bg-primary px-2 py-2.5 text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-colors hover:bg-primary/90"
           >
             <ShoppingCart className="h-3.5 w-3.5 stroke-[2.2]" />
             <span>Agregar</span>
-          </button>
+          </motion.button>
         ) : (
-          <div
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 26 }}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center justify-between w-full rounded-2xl border border-[#0E6E55]/30 dark:border-emerald-800/60 bg-[#0E6E55]/10 dark:bg-emerald-950/40 p-1"
+            className="flex w-full items-center justify-between rounded-2xl border border-primary/30 bg-primary/10 p-1"
           >
-            <button
+            <motion.button
               type="button"
               onClick={handleRestar}
-              className="flex h-7.5 w-7.5 items-center justify-center rounded-xl bg-white dark:bg-zinc-800 text-[#0E6E55] dark:text-emerald-400 shadow-2xs hover:bg-[#0E6E55] dark:hover:bg-emerald-600 hover:text-white transition-all active:scale-90 cursor-pointer"
+              whileTap={{ scale: 0.88 }}
+              transition={springTap}
+              className="flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-xl bg-white text-primary shadow-lg shadow-black/5 transition-colors hover:bg-primary hover:text-primary-foreground dark:bg-zinc-800 dark:shadow-black/20"
               title="Restar una unidad"
+              aria-label="Restar una unidad"
             >
               <Minus className="h-3.5 w-3.5 stroke-[2.5]" />
-            </button>
+            </motion.button>
 
-            <span className="text-xs font-black text-[#0E6E55] dark:text-emerald-400 px-1">
+            <motion.span
+              key={cantidadEnCarrito}
+              initial={{ scale: 0.85, opacity: 0.5 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 24 }}
+              className="px-1 text-xs font-black text-primary"
+            >
               {cantidadEnCarrito} en carrito
-            </span>
+            </motion.span>
 
-            <button
+            <motion.button
               type="button"
               onClick={handleSumar}
               disabled={limiteAlcanzado}
-              className={`flex h-7.5 w-7.5 items-center justify-center rounded-xl transition-all active:scale-90 ${
+              whileTap={limiteAlcanzado ? undefined : { scale: 0.88 }}
+              transition={springTap}
+              className={`flex h-7.5 w-7.5 items-center justify-center rounded-xl transition-colors ${
                 limiteAlcanzado
-                  ? "bg-slate-200 dark:bg-zinc-800 text-slate-400 dark:text-zinc-600 cursor-not-allowed"
-                  : "bg-[#0E6E55] dark:bg-emerald-600 text-white hover:bg-[#0b5944] dark:hover:bg-emerald-500 cursor-pointer shadow-2xs"
+                  ? "cursor-not-allowed bg-muted text-muted-foreground/50"
+                  : "cursor-pointer bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
               }`}
               title={limiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
+              aria-label={limiteAlcanzado ? "Stock máximo alcanzado" : "Sumar una unidad"}
             >
               <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
