@@ -1,4 +1,4 @@
-import type { Reserva } from '../types';
+import type { BloqueHorario, DisponibilidadMensualGeneral, Reserva } from '../types';
 
 export interface HorarioDia {
   abierto: boolean;
@@ -80,7 +80,8 @@ export function calcularSlotsConEstado(
   horarios: HorariosAtencion | any,
   reservas: Reserva[],
   bufferMinimoRestante: number = 15,
-  bloqueosFranjas: { fecha: string; hora_inicio: string; hora_fin: string }[] = []
+  bloqueosFranjas: { fecha: string; hora_inicio: string; hora_fin: string }[] = [],
+  opcionesGeneral: OpcionesSlotsGeneral = {}
 ): SlotDisponibilidad[] {
   if (!horarios) return [];
 
@@ -219,9 +220,18 @@ export function calcularSlotsDisponibles(
   horarios: HorariosAtencion | any,
   reservas: Reserva[],
   bufferMinimoRestante: number = 15,
-  bloqueosFranjas: { fecha: string; hora_inicio: string; hora_fin: string }[] = []
+  bloqueosFranjas: { fecha: string; hora_inicio: string; hora_fin: string }[] = [],
+  opcionesGeneral: OpcionesSlotsGeneral = {}
 ): string[] {
-  const conEstado = calcularSlotsConEstado(fecha, duracionMin, horarios, reservas, bufferMinimoRestante, bloqueosFranjas);
+  const conEstado = calcularSlotsConEstado(
+    fecha,
+    duracionMin,
+    horarios,
+    reservas,
+    bufferMinimoRestante,
+    bloqueosFranjas,
+    opcionesGeneral
+  );
   return conEstado.filter((s) => s.estado === 'disponible').map((s) => s.hora);
 }
 
@@ -276,4 +286,69 @@ export function generarSlotsIntervalo(desde: string, hasta: string, intervaloMin
 export function getIsoWeekday(date: Date): number {
   const day = date.getDay();
   return day === 0 ? 7 : day;
+}
+
+export interface OpcionesSlotsGeneral {
+  disponibilidadMensual?: DisponibilidadMensualGeneral[];
+  empleadoId?: string | null;
+  excepciones?: string[];
+}
+
+/**
+ * Resuelve los bloques horarios { inicio, fin } para Servicios Generales en una fecha ("YYYY-MM-DD").
+ * Si existe disponibilidad mensual cargada para la fecha, tiene prioridad sobre el horario semanal.
+ */
+export function resolverBloquesGeneralParaFecha(
+  fecha: string,
+  horarios: HorariosAtencion | any,
+  opciones: OpcionesSlotsGeneral = {}
+): { inicio: string; fin: string }[] {
+  const { disponibilidadMensual = [], empleadoId = null, excepciones = [] } = opciones;
+
+  if (excepciones.includes(fecha)) {
+    return [];
+  }
+
+  // 1. Buscar override mensual para la fecha (priorizando empleadoId si se pasa, o registro general con empleado_id null)
+  const overrideMensual = disponibilidadMensual.find((item) => {
+    if (item.fecha !== fecha) return false;
+    if (empleadoId) {
+      return item.empleado_id === empleadoId;
+    }
+    return item.empleado_id === null || item.empleado_id === undefined;
+  });
+
+  if (overrideMensual) {
+    if (!overrideMensual.activo || !Array.isArray(overrideMensual.bloques) || overrideMensual.bloques.length === 0) {
+      return [];
+    }
+    return overrideMensual.bloques
+      .filter((b: BloqueHorario) => Boolean(b.inicio && b.fin) && parseTime(b.inicio) < parseTime(b.fin))
+      .map((b) => ({ inicio: b.inicio, fin: b.fin }));
+  }
+
+  // 2. Fallback a lógica semanal existente
+  if (!horarios) return [];
+
+  const diasNombres = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+  const [year, month, day] = fecha.split('-').map(Number);
+  const fechaObj = new Date(year, month - 1, day);
+  const nombreDia = diasNombres[fechaObj.getDay()];
+
+  const configDia = horarios[nombreDia];
+
+  if (configDia) {
+    if (!configDia.abierto) return [];
+    return [{ inicio: configDia.inicio, fin: configDia.fin }];
+  }
+
+  if (horarios.inicio && horarios.fin) {
+    return [{ inicio: horarios.inicio, fin: horarios.fin }];
+  }
+
+  if (horarios.bloques && Array.isArray(horarios.bloques)) {
+    return horarios.bloques;
+  }
+
+  return [];
 }

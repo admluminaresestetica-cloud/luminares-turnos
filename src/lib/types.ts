@@ -169,3 +169,20 @@ export interface PreguntaFrecuenteDB {
   orden?: number;
   created_at?: string;
 }
+
+export interface BloqueHorario {
+  inicio: string; // formato "HH:mm", ej. "09:00"
+  fin: string;    // formato "HH:mm", ej. "13:00"
+}
+
+export interface DisponibilidadMensualGeneral {
+  id?: string;
+  fecha: string; // formato "YYYY-MM-DD"
+  empleado_id?: string | null;
+  activo: boolean;
+  bloques: BloqueHorario[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type FiltroDisponibilidadGeneral = 'general' | string; // 'general' o empleado_id

@@ -3,6 +3,7 @@
 
 import { Plus, Calendar, PencilLine, CheckCircle2, XCircle, Trash2, CalendarX, Save } from 'lucide-react'
 import { ConfigCalendario, DIAS_SEMANA, HorarioDia, HorariosSemana, formatFecha, horarioDiaDefault } from '../../turnos/components/types'
+import DisponibilidadMensualGeneralCard from './DisponibilidadMensualGeneralCard';
 
 // Definimos el tipo para una franja horaria bloqueada (puedes moverlo a types.ts si prefieres)
 export interface BloqueoFranjaHoraria {
@@ -402,6 +403,7 @@ export default function HorariosTab({
           </div>
         </div>
       </div>
+      <DisponibilidadMensualGeneralCard />
     </div>
   )
 }
