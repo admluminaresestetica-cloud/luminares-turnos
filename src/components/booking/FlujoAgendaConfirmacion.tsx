@@ -13,6 +13,8 @@ import { useReferidos } from '@/hooks/useReferidos';
 import { calcularSlotsConEstado, type SlotDisponibilidad } from '@/lib/calendario/slots';
 import { getConfiguracionCalendario, getConfiguracionSistema } from '@/lib/supabase/configuracion';
 import { crearReserva, getReservasPorFecha } from '@/lib/supabase/reservas';
+import { obtenerDisponibilidadMesGeneral } from '@/lib/supabase/disponibilidad-mensual';
+import type { DisponibilidadMensualGeneral } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { generarCodigoReferido } from '@/lib/admin/helpers';
 import { buildMensajeReserva, buildWhatsAppUrl, calcularMontoSena } from '@/lib/whatsapp';
@@ -86,6 +88,7 @@ export default function FlujoAgendaConfirmacion({
   const [hora, setHora] = useState<string | null>(null);
   const [slots, setSlots] = useState<SlotDisponibilidad[]>([]);
   const [cargandoSlots, setCargandoSlots] = useState(false);
+  const [disponibilidadMensual, setDisponibilidadMensual] = useState<DisponibilidadMensualGeneral[]>([]);
 
   const [nombre, setNombre] = useState('');
   const [celular, setCelular] = useState('');
@@ -143,18 +146,49 @@ export default function FlujoAgendaConfirmacion({
     const horariosBase = configCalendario.horarios_atencion || {};
     const bloqueosDelAdmin = (horariosBase as any).bloqueos_franjas || [];
 
+const horariosConExcepciones = {
+      ...horariosBase,
+      excepciones: (horariosBase as any).excepciones || [],
+    };
+
     const slotsConEstado = calcularSlotsConEstado(
-      fechaSel, 
-      duracionTotal, 
-      configCalendario.horarios_atencion, 
-      reservas, 
+      fechaSel,
+      duracionTotal,
+      horariosConExcepciones,
+      reservas,
       15,
-      bloqueosDelAdmin
+      bloqueosDelAdmin,
+      {
+        disponibilidadMensual,
+        excepciones: horariosConExcepciones.excepciones,
+      }
     );
 
     setSlots(slotsConEstado);
     setCargandoSlots(false);
-  }, [configCalendario, duracionTotal]);
+  }, [configCalendario, duracionTotal, disponibilidadMensual]);
+
+useEffect(() => {
+    let activo = true;
+
+    async function cargarMensual() {
+      if (!fecha || tipo === 'laser') {
+        if (activo) setDisponibilidadMensual([]);
+        return;
+      }
+
+      const mesYYYYMM = fecha.slice(0, 7);
+      const datos = await obtenerDisponibilidadMesGeneral(mesYYYYMM, 'general');
+      if (activo) {
+        setDisponibilidadMensual(datos);
+      }
+    }
+
+    cargarMensual();
+    return () => {
+      activo = false;
+    };
+  }, [fecha, tipo]);
 
   useEffect(() => {
     if (fecha && configCalendario) {

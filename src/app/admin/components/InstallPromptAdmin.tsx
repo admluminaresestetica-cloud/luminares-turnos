@@ -31,7 +31,6 @@ export const dispararInstalacionAdmin = async () => {
     promptEvent.prompt();
     const { outcome } = await promptEvent.userChoice;
     if (outcome === 'accepted') {
-      console.log('App Admin instalada con éxito');
     }
     (window as any).__deferredAdminInstallPrompt = null;
   } else if (isIosDevice) {

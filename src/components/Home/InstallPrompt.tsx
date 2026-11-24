@@ -34,7 +34,6 @@ export default function InstallPrompt() {
     const { outcome } = await deferredPrompt.userChoice;
     
     if (outcome === 'accepted') {
-      console.log('El usuario aceptó instalar la PWA');
     }
 
     // Limpia el prompt porque ya no se puede reutilizar

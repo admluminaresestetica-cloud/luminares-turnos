@@ -1,4 +1,4 @@
-export type EstiloPlantilla = "minimal" | "destacado" | "collage" | "ecommerce_modern";
+export type EstiloPlantilla = "minimal" | "destacado" | "collage" | "ecommerce_modern" | "mosaico_stories";
 
 export type FormatoStory = "story" | "feed" | "banner"; // "story" (9:16), "feed" (1:1), "banner" (16:9)
 
@@ -8,7 +8,7 @@ export type TipoFuente = "modern" | "bold" | "display" | "serif";
 
 export type AlineacionTexto = "left" | "center" | "right";
 
-export type BadgeTipo = 
+export type BadgeTipo =
   | "ninguno"
   | "ultimas_unidades"
   | "mas_vendido"
@@ -19,12 +19,23 @@ export type BadgeTipo =
   | "descuento_20"
   | "descuento_50";
 
-// --- NUEVOS TIPOS PARA ETAPA 3 ---
 export type SombraProducto = "ninguna" | "suave" | "profunda" | "neon";
 
 export type BordeProducto = "ninguno" | "blanco" | "dorado" | "fino_sutil";
 
-export type StickerDecorativo = "ninguno" | "oferta_estrella" | "copo_nieve" | "lazo_regalo" | "corona_oro";
+export type StickerDecorativo =
+  | "ninguno"
+  | "oferta_estrella"
+  | "copo_nieve"
+  | "lazo_regalo"
+  | "corona_oro";
+
+export type LayoutCollage = "2-cols" | "3-mix" | "4-grid";
+
+export interface ConfiguracionCollage {
+  layout: LayoutCollage;
+  celdas: string[]; // URLs o dataUrls asignadas a cada celda (longitud 2, 3 o 4)
+}
 
 export interface FiltrosImagen {
   brillo: number; // 50 a 150 (por defecto 100)
@@ -49,8 +60,17 @@ export interface OpcionesStory {
   mostrarCategoria: boolean;
   filtrosImagen: FiltrosImagen;
 
-  // --- PROPIEDADES AÑADIDAS ETAPA 3 ---
   sombraProducto?: SombraProducto;
   bordeProducto?: BordeProducto;
   stickerDecorativo?: StickerDecorativo;
+  collageConfig?: ConfiguracionCollage;
+}
+
+export interface PiezaTandaStory {
+  id: string;
+  dataUrl: string;
+  nombreArchivo: string;
+  formato: FormatoStory;
+  etiqueta: string;
+  textoSugerido?: string;
 }

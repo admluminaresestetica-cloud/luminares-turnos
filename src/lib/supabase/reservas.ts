@@ -66,9 +66,6 @@ export async function buscarReserva(
     const celularNorm = celular.replace(/\D/g, '');
     const numeroCodigo = codigo.replace('#', '').trim();
 
-    console.log('--- BUSCANDO RESERVA ---');
-    console.log('Ingresado -> Celular limpia:', celularNorm, '| Código limpia:', numeroCodigo);
-
     if (!numeroCodigo) return null;
 
     // Consultamos en Supabase buscando registros no eliminados
@@ -83,10 +80,8 @@ export async function buscarReserva(
       return null;
     }
 
-    console.log('Registros encontrados en Supabase por código:', data);
 
     if (!data || data.length === 0) {
-      console.log('No se encontró ninguna reserva en Supabase con ese código.');
       return null;
     }
 
@@ -94,7 +89,6 @@ export async function buscarReserva(
     const reserva = data.find((r) => {
       if (!r.cliente_celular) return false;
       const celReserva = r.cliente_celular.replace(/\D/g, '');
-      console.log('Comparando cel DB:', celReserva, 'vs cel buscado:', celularNorm);
       return (
         celReserva === celularNorm ||
         celReserva.endsWith(celularNorm) ||
@@ -102,7 +96,6 @@ export async function buscarReserva(
       );
     });
 
-    console.log('Reserva final matcheada:', reserva);
     return reserva ?? null;
   } catch (err) {
     console.error('Error inesperado en buscarReserva:', err);

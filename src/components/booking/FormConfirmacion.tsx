@@ -126,11 +126,9 @@ useEffect(() => {
   
 useEffect(() => {
     if (!user) {
-      console.log('🔴 [DEBUG]: No hay usuario logueado todavía.');
       return;
     }
     const userId = user.id;
-    console.log('🟢 [DEBUG]: Usuario logueado ID:', userId);
 
 async function cargarCuponesPendientes() {
       try {
@@ -140,16 +138,12 @@ async function cargarCuponesPendientes() {
           .eq('user_id', userId)
           .ilike('estado', 'pendiente');
 
-        console.log('📦 [DEBUG]: Respuesta de Supabase cupones:', { data, error });
-
         if (!error && data) {
           // 🛑 FILTRO DE HIERRO: Si estamos en servicios, bloqueamos explícitamente el ID de la tienda ("3000") 
           // y cualquier otro que no sea de servicios o todos.
           const cuponesFiltrados = data.filter((c: any) => {
             const tituloPremio = c.premios_catalogo?.titulo || '';
             const tipoApp = c.premios_catalogo?.tipo_aplicacion;
-
-            console.log(`Evaluando cupón -> Título: "${tituloPremio}" | Tipo: "${tipoApp}" | Vista: "${tipo}"`);
 
             if (tipo === 'laser') {
               return tipoApp === 'laser' || tipoApp === 'todos';
@@ -163,7 +157,6 @@ async function cargarCuponesPendientes() {
             }
           });
 
-          console.log("✅ Cupones permitidos para esta vista:", cuponesFiltrados);
           setCuponesDisponibles(cuponesFiltrados);
         }
       } catch (err) {
@@ -231,13 +224,6 @@ const extraerMontoDelTitulo = (texto?: string) => {
  // Evaluar horario comercial (09:00 hs a 20:00 hs)
   const horaActual = new Date().getHours();
   const esHorarioComercial = horaActual >= 9 && horaActual < 23;
-
-
-  console.log('👀 [DEBUG RENDER]: Estado actual ->', {
-    userExistente: !!user,
-    cantidadCupones: cuponesDisponibles.length,
-    cupones: cuponesDisponibles
-  });
 
   return (
     <div className="space-y-10 pb-4 animate-in fade-in duration-300">

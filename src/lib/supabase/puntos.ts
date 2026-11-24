@@ -7,8 +7,6 @@ export async function acreditarPuntosTransaccion(
   tipoTransaccion: 'pedido' | 'reserva',
   transaccionId: string
 ): Promise<boolean> {
-  console.log('--- [PUNTOS] INICIO ACREDITACIÓN ---');
-  console.log('Datos recibidos:', { userId, montoTotal, tipoTransaccion, transaccionId });
 
   if (!userId) {
     console.warn('⚠️ [PUNTOS] Cancelado: userId está vacío/null.');
@@ -22,7 +20,6 @@ export async function acreditarPuntosTransaccion(
 
   // 1. Configuración
   const config = await getConfiguracionSistema();
-  console.log('Configuración del sistema:', config);
 
   if (!config || !config.puntos_activo) {
     console.warn('⚠️ [PUNTOS] Cancelado: El sistema de puntos está desactivado en la configuración.');
@@ -30,11 +27,9 @@ export async function acreditarPuntosTransaccion(
   }
 
   const pesosPorPunto = config.puntos_pesos_por_punto || 1000;
-  console.log('Pesos por punto:', pesosPorPunto);
 
   // 2. Cálculo
   const puntosAGenerar = Math.floor(montoTotal / pesosPorPunto);
-  console.log('Puntos a generar calculados:', puntosAGenerar);
 
   if (puntosAGenerar <= 0) {
     console.warn(`⚠️ [PUNTOS] Cancelado: El monto ($${montoTotal}) no alcanza el mínimo de $${pesosPorPunto} para otorgar al menos 1 punto.`);
@@ -72,7 +67,6 @@ export async function acreditarPuntosTransaccion(
 
   const puntosAnteriores = registroActual?.puntos_totales || 0;
   const nuevosPuntos = puntosAnteriores + puntosAGenerar;
-  console.log(`Puntos anteriores: ${puntosAnteriores} | Nuevos puntos: ${nuevosPuntos}`);
 
   // 5. Guardar en puntos_usuarios
   const { error: errorUpsert } = await supabase
@@ -102,6 +96,5 @@ export async function acreditarPuntosTransaccion(
     return false;
   }
 
-  console.log('✅ [PUNTOS] ¡Acreditación realizada con éxito!');
   return true;
 }
