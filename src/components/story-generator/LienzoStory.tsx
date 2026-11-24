@@ -4,7 +4,7 @@ import { forwardRef } from "react";
 import { Camera, MapPin, ShoppingCart } from "lucide-react";
 import { calcularCuotas } from "@/lib/precios";
 import { ConfiguracionEmpresa } from "@/lib/supabase/configuracion-empresa";
-import { OpcionesStory, BadgeTipo } from "@/types/story";
+import { OpcionesStory, BadgeTipo, PiezaTandaStory } from "@/types/story";
 import { obtenerColorTextoContraste } from "@/lib/utils/color";
 
 const IconInstagram = ({
@@ -86,10 +86,11 @@ interface LienzoStoryProps {
   producto: any;
   config: ConfiguracionEmpresa | null;
   opciones: OpcionesStory;
+  piezasTanda?: PiezaTandaStory[];
 }
 
 export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
-  ({ producto, config, opciones }, ref) => {
+  ({ producto, config, opciones, piezasTanda = [] }, ref) => {
     const imagenes =
       producto.imagenes_urls && producto.imagenes_urls.length > 0
         ? producto.imagenes_urls
@@ -175,6 +176,59 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
     const claseSombraProducto = SOMBRA_CLASES[opciones.sombraProducto || "ninguna"];
     const claseBordeProducto = BORDE_CLASES[opciones.bordeProducto || "ninguno"];
 
+
+    if (opciones.estiloPlantilla === "mosaico_stories") {
+      const cuadrantes = [0, 1, 2, 3].map((idx) => piezasTanda[idx] || null);
+
+      return (
+        <div
+          ref={ref}
+          style={{ ...bgStyle, color: colorTextoHex }}
+          className={`relative flex shrink-0 flex-col justify-between p-2.5 shadow-2xl transition-all overflow-hidden ${dimensionesClase} ${bgClass} ${claseFuente}`}
+        >
+          {tieneImagenFondo && (
+            <div className="absolute inset-0 bg-black/35 backdrop-blur-[0.5px] z-0 pointer-events-none" />
+          )}
+
+          {/* Grilla 2x2 de 4 stories completas */}
+          <div className="relative z-10 grid grid-cols-2 grid-rows-2 gap-2 w-full h-full">
+            {cuadrantes.map((pieza, idx) => (
+              <div
+                key={idx}
+                className="relative flex items-center justify-center overflow-hidden rounded-xl border border-black/10 dark:border-white/15 bg-black/5 dark:bg-white/5 shadow-sm"
+              >
+                {pieza ? (
+                  <img
+                    src={pieza.dataUrl}
+                    alt={pieza.etiqueta}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-1 p-2 text-center opacity-60">
+                    <Camera className="h-5 w-5" />
+                    <span className="text-[9px] font-bold leading-tight">
+                      Story #{idx + 1}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Badge opcional por encima del mosaico */}
+          {opciones.badge !== "ninguno" && BADGE_MAP[opciones.badge] && (
+            <span
+              className={`absolute top-3 left-3 px-2.5 py-0.5 text-[9px] font-black rounded-md shadow-md uppercase tracking-wider z-20 ${
+                BADGE_MAP[opciones.badge].bg
+              }`}
+            >
+              {BADGE_MAP[opciones.badge].texto}
+            </span>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div
         ref={ref}
@@ -221,34 +275,108 @@ export const LienzoStory = forwardRef<HTMLDivElement, LienzoStoryProps>(
               : "h-52 my-2"
           }`}
         >
-          {opciones.estiloPlantilla === "collage" ? (
-            <div className="grid grid-cols-2 gap-1 w-full h-full p-1">
-              <div className="relative overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center">
-                {imagenPortada ? (
-                  <img
-                    src={imagenPortada}
-                    alt={producto.nombre}
-                    style={estiloFiltroImagen}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <Camera className="h-6 w-6 text-gray-300" />
-                )}
+{opciones.estiloPlantilla === "collage" ? (() => {
+            const layout = opciones.collageConfig?.layout || "2-cols";
+            const cantidadCeldas =
+              layout === "4-grid" ? 4 : layout === "3-mix" ? 3 : 2;
+
+            const fallbackPool =
+              imagenes.length > 0
+                ? imagenes
+                : [imagenPortada, imagenSecundaria].filter(Boolean) as string[];
+
+            const celdasRender = Array.from({ length: cantidadCeldas }).map(
+              (_, idx) =>
+                opciones.collageConfig?.celdas?.[idx] ||
+                fallbackPool[idx % Math.max(fallbackPool.length, 1)] ||
+                null
+            );
+
+            if (layout === "4-grid") {
+              return (
+                <div className="grid grid-cols-2 grid-rows-2 gap-1 w-full h-full p-1">
+                  {celdasRender.map((srcImg, idx) => (
+                    <div
+                      key={idx}
+                      className="relative overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center"
+                    >
+                      {srcImg ? (
+                        <img
+                          src={srcImg}
+                          alt={`${producto.nombre} ${idx + 1}`}
+                          style={estiloFiltroImagen}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <Camera className="h-5 w-5 text-gray-300" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+
+            if (layout === "3-mix") {
+              return (
+                <div className="grid grid-cols-2 gap-1 w-full h-full p-1">
+                  <div className="relative overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center">
+                    {celdasRender[0] ? (
+                      <img
+                        src={celdasRender[0]}
+                        alt={`${producto.nombre} 1`}
+                        style={estiloFiltroImagen}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <Camera className="h-6 w-6 text-gray-300" />
+                    )}
+                  </div>
+                  <div className="grid grid-rows-2 gap-1 h-full">
+                    {[celdasRender[1], celdasRender[2]].map((srcImg, idx) => (
+                      <div
+                        key={idx}
+                        className="relative overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center"
+                      >
+                        {srcImg ? (
+                          <img
+                            src={srcImg}
+                            alt={`${producto.nombre} ${idx + 2}`}
+                            style={estiloFiltroImagen}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Camera className="h-5 w-5 text-gray-300" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
+            // Por defecto: "2-cols"
+            return (
+              <div className="grid grid-cols-2 gap-1 w-full h-full p-1">
+                {[celdasRender[0], celdasRender[1]].map((srcImg, idx) => (
+                  <div
+                    key={idx}
+                    className="relative overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center"
+                  >
+                    {srcImg ? (
+                      <img
+                        src={srcImg}
+                        alt={`${producto.nombre} ${idx + 1}`}
+                        style={estiloFiltroImagen}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <Camera className="h-6 w-6 text-gray-300" />
+                    )}
+                  </div>
+                ))}
               </div>
-              <div className="relative overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center">
-                {imagenSecundaria ? (
-                  <img
-                    src={imagenSecundaria}
-                    alt={`${producto.nombre} 2`}
-                    style={estiloFiltroImagen}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <Camera className="h-6 w-6 text-gray-300" />
-                )}
-              </div>
-            </div>
-          ) : (
+            );
+          })() : (
             <>
               {imagenPortada ? (
                 <img

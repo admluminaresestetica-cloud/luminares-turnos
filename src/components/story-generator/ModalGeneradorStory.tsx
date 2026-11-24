@@ -14,7 +14,13 @@ import {
 } from "lucide-react";
 import { toPng } from "html-to-image";
 import { ConfiguracionEmpresa } from "@/lib/supabase/configuracion-empresa";
-import { OpcionesStory, PiezaTandaStory } from "@/types/story";
+import { LayoutCollage, OpcionesStory, PiezaTandaStory } from "@/types/story";
+
+import {
+  SelectorCollage,
+  OpcionImagenCollage,
+} from "./subcomponents/SelectorCollage";
+
 import { LienzoStory } from "./LienzoStory";
 import { ControlesEditor } from "./ControlesEditor";
 import { BandejaTandaStory } from "./BandejaTandaStory";
@@ -63,6 +69,82 @@ export function ModalGeneradorStory({
   });
 
   if (!isOpen || !producto) return null;
+
+  const fotosProducto: string[] =
+    producto?.imagenes_urls && producto.imagenes_urls.length > 0
+      ? producto.imagenes_urls
+      : producto?.imagen_url
+      ? [producto.imagen_url]
+      : [];
+
+  const opcionesImagenCollage: OpcionImagenCollage[] = [
+    ...fotosProducto.map((url, idx) => ({
+      id: `prod-${idx}`,
+      etiqueta: `Foto producto ${idx + 1}`,
+      origen: "producto" as const,
+      url,
+    })),
+    ...tanda.map((pieza, idx) => ({
+      id: `tanda-${pieza.id}`,
+      etiqueta: `Tanda #${idx + 1}`,
+      origen: "tanda" as const,
+      url: pieza.dataUrl,
+    })),
+  ];
+
+  const handleChangeLayoutCollage = (nuevoLayout: LayoutCollage) => {
+    const cantidad = nuevoLayout === "4-grid" ? 4 : nuevoLayout === "3-mix" ? 3 : 2;
+    const basePool =
+      opcionesImagenCollage.length > 0
+        ? opcionesImagenCollage.map((o) => o.url)
+        : [];
+
+    const celdasActuales = opciones.collageConfig?.celdas || [];
+    const nuevasCeldas = Array.from({ length: cantidad }).map(
+      (_, idx) =>
+        celdasActuales[idx] ||
+        basePool[idx % Math.max(basePool.length, 1)] ||
+        ""
+    );
+
+    setPiezaInspeccionada(null);
+    setOpciones((prev) => ({
+      ...prev,
+      estiloPlantilla: "collage",
+      collageConfig: {
+        layout: nuevoLayout,
+        celdas: nuevasCeldas,
+      },
+    }));
+  };
+
+  const handleChangeCeldaCollage = (indiceCelda: number, url: string) => {
+    const layoutActual = opciones.collageConfig?.layout || "2-cols";
+    const cantidad =
+      layoutActual === "4-grid" ? 4 : layoutActual === "3-mix" ? 3 : 2;
+    const basePool =
+      opcionesImagenCollage.length > 0
+        ? opcionesImagenCollage.map((o) => o.url)
+        : [];
+
+    const celdasActuales = Array.from({ length: cantidad }).map(
+      (_, idx) =>
+        opciones.collageConfig?.celdas?.[idx] ||
+        basePool[idx % Math.max(basePool.length, 1)] ||
+        ""
+    );
+    celdasActuales[indiceCelda] = url;
+
+    setPiezaInspeccionada(null);
+    setOpciones((prev) => ({
+      ...prev,
+      estiloPlantilla: "collage",
+      collageConfig: {
+        layout: layoutActual,
+        celdas: celdasActuales,
+      },
+    }));
+  };
 
   const textoSugerido = `¡Mirá esta oferta de ${producto.nombre || "nuestra tienda"}${
     producto.precio ? ` a $${producto.precio}` : ""
@@ -140,6 +222,23 @@ export function ModalGeneradorStory({
     dataUrls: string[];
     nombresArchivo: string[];
   } | null> => {
+    if (opciones.estiloPlantilla === "mosaico_stories") {
+      if (!cardRef.current) return null;
+      try {
+        const dataUrlMosaico = await toPng(cardRef.current, {
+          pixelRatio: 3,
+          cacheBust: true,
+        });
+        return {
+          dataUrls: [dataUrlMosaico],
+          nombresArchivo: [construirNombreArchivo("story")],
+        };
+      } catch (err) {
+        console.error("Error al generar mosaico:", err);
+        return null;
+      }
+    }
+
     if (tanda.length > 0) {
       return {
         dataUrls: tanda.map((p) => p.dataUrl),
@@ -184,7 +283,12 @@ export function ModalGeneradorStory({
     setProcesando(false);
   };
 
-  const cantidadLista = tanda.length > 0 ? tanda.length : 1;
+  const cantidadLista =
+    opciones.estiloPlantilla === "mosaico_stories"
+      ? 1
+      : tanda.length > 0
+      ? tanda.length
+      : 1;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 dark:bg-black/80 p-2 sm:p-4 backdrop-blur-sm transition-all pb-16 sm:pb-4">
@@ -263,11 +367,12 @@ export function ModalGeneradorStory({
                   />
                 ) : (
                   <LienzoStory
-                    ref={cardRef}
-                    producto={producto}
-                    config={config}
-                    opciones={opciones}
-                  />
+                   ref={cardRef}
+                   producto={producto}
+                   config={config}
+                   opciones={opciones}
+                   piezasTanda={tanda}
+                   />
                 )}
               </div>
             </div>
@@ -281,6 +386,33 @@ export function ModalGeneradorStory({
             onEliminarPieza={eliminarPiezaDeTanda}
             onLimpiarTanda={limpiarTanda}
           />
+
+          {tanda.length >= 2 && (
+  <div className="flex items-center justify-between gap-2 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/70 dark:bg-emerald-950/30 px-3.5 py-2">
+    <span className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
+      Tenés {tanda.length} piezas creadas. ¿Querés juntar hasta 4 en una sola Story?
+    </span>
+    <button
+      type="button"
+      onClick={() => {
+        setPiezaInspeccionada(null);
+        setOpciones((prev) => ({
+          ...prev,
+          estiloPlantilla:
+            prev.estiloPlantilla === "mosaico_stories"
+              ? "minimal"
+              : "mosaico_stories",
+          formato: "story",
+        }));
+      }}
+      className="shrink-0 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-[11px] font-bold text-white transition-all cursor-pointer"
+    >
+      {opciones.estiloPlantilla === "mosaico_stories"
+        ? "Volver a edición normal"
+        : "Combinar 4 en 1 Story"}
+        </button>
+        </div>
+        )}
         </div>
 
         {/* Pie de acciones */}
