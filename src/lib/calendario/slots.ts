@@ -85,23 +85,34 @@ export function calcularSlotsConEstado(
 ): SlotDisponibilidad[] {
   if (!horarios) return [];
 
-  let bloquesAtencion: { inicio: string; fin: string }[] = [];
-  const diasNombres = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-  const [year, month, day] = fecha.split('-').map(Number);
-  const fechaObj = new Date(year, month - 1, day);
-  const nombreDia = diasNombres[fechaObj.getDay()];
+let bloquesAtencion: { inicio: string; fin: string }[] = [];
 
-  const configDia = horarios[nombreDia];
+  const tieneMensualParaFecha =
+    Array.isArray(opcionesGeneral.disponibilidadMensual) &&
+    opcionesGeneral.disponibilidadMensual.some((item) => item.fecha === fecha);
+  const tieneExcepcionParaFecha =
+    Array.isArray(opcionesGeneral.excepciones) &&
+    opcionesGeneral.excepciones.includes(fecha);
 
-  if (configDia) {
-    if (!configDia.abierto) return [];
-    bloquesAtencion = [{ inicio: configDia.inicio, fin: configDia.fin }];
-  } else if (horarios.inicio && horarios.fin) {
-    bloquesAtencion = [{ inicio: horarios.inicio, fin: horarios.fin }];
-  } else if (horarios.bloques && Array.isArray(horarios.bloques)) {
-    bloquesAtencion = horarios.bloques;
+  if (tieneMensualParaFecha || tieneExcepcionParaFecha) {
+    bloquesAtencion = resolverBloquesGeneralParaFecha(fecha, horarios, opcionesGeneral);
+  } else {
+    const diasNombres = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    const [year, month, day] = fecha.split('-').map(Number);
+    const fechaObj = new Date(year, month - 1, day);
+    const nombreDia = diasNombres[fechaObj.getDay()];
+
+    const configDia = horarios[nombreDia];
+
+    if (configDia) {
+      if (!configDia.abierto) return [];
+      bloquesAtencion = [{ inicio: configDia.inicio, fin: configDia.fin }];
+    } else if (horarios.inicio && horarios.fin) {
+      bloquesAtencion = [{ inicio: horarios.inicio, fin: horarios.fin }];
+    } else if (horarios.bloques && Array.isArray(horarios.bloques)) {
+      bloquesAtencion = horarios.bloques;
+    }
   }
-
   if (bloquesAtencion.length === 0) return [];
 
   const intervalo = horarios.intervalo_minutos || 15;
@@ -303,7 +314,16 @@ export function resolverBloquesGeneralParaFecha(
   horarios: HorariosAtencion | any,
   opciones: OpcionesSlotsGeneral = {}
 ): { inicio: string; fin: string }[] {
-  const { disponibilidadMensual = [], empleadoId = null, excepciones = [] } = opciones;
+
+const { disponibilidadMensual = [], empleadoId = null, excepciones = [] } = opciones;
+
+  console.log('DEBUG RESOLVER:', {
+    fecha,
+    excepciones,
+    empleadoId,
+    cantidadMensual: disponibilidadMensual.length,
+    disponibilidadMensual,
+  });
 
   if (excepciones.includes(fecha)) {
     return [];
@@ -318,13 +338,27 @@ export function resolverBloquesGeneralParaFecha(
     return item.empleado_id === null || item.empleado_id === undefined;
   });
 
-  if (overrideMensual) {
-    if (!overrideMensual.activo || !Array.isArray(overrideMensual.bloques) || overrideMensual.bloques.length === 0) {
+if (overrideMensual) {
+    if (!overrideMensual.activo) {
       return [];
     }
-    return overrideMensual.bloques
-      .filter((b: BloqueHorario) => Boolean(b.inicio && b.fin) && parseTime(b.inicio) < parseTime(b.fin))
-      .map((b) => ({ inicio: b.inicio, fin: b.fin }));
+
+    let bloquesCrudos: any = overrideMensual.bloques;
+    if (typeof bloquesCrudos === 'string') {
+      try {
+        bloquesCrudos = JSON.parse(bloquesCrudos);
+      } catch {
+        bloquesCrudos = [];
+      }
+    }
+
+    if (!Array.isArray(bloquesCrudos) || bloquesCrudos.length === 0) {
+      return [];
+    }
+
+    return bloquesCrudos
+      .filter((b: any) => Boolean(b?.inicio && b?.fin) && parseTime(String(b.inicio)) < parseTime(String(b.fin)))
+      .map((b: any) => ({ inicio: String(b.inicio), fin: String(b.fin) }));
   }
 
   // 2. Fallback a lógica semanal existente

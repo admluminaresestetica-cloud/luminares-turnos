@@ -126,34 +126,67 @@ export async function obtenerDisponibilidadPorFechaGeneral(
  * Guarda o actualiza (upsert) la disponibilidad de uno o varios días en un solo lote.
  */
 export async function guardarDisponibilidadDiasGeneral(
-  registros: Omit<DisponibilidadMensualGeneral, 'id' | 'created_at' | 'updated_at'>[]
+  items: {
+    fecha: string;
+    empleado_id?: string | null;
+    activo: boolean;
+    bloques: BloqueHorario[];
+  }[]
 ): Promise<{ ok: boolean; error?: string }> {
-  if (registros.length === 0) return { ok: true };
+  try {
+    if (!items.length) return { ok: true };
 
-  const ahora = new Date().toISOString();
-  const payload = registros.map((r) => ({
-    fecha: r.fecha.slice(0, 10),
-    empleado_id: r.empleado_id ?? null,
-    activo: r.activo,
-    bloques: r.bloques.map((b) => ({
-      inicio: b.inicio.slice(0, 5),
-      fin: b.fin.slice(0, 5),
-    })),
-    updated_at: ahora,
-  }));
+    for (const item of items) {
+      const empId = item.empleado_id ?? null;
 
-  const { error } = await supabase
-    .from('disponibilidad_mensual_general')
-    .upsert(payload, {
-      onConflict: 'fecha,empleado_id',
-    });
+      let consultaExistente = supabase
+        .from('disponibilidad_mensual_general')
+        .select('id')
+        .eq('fecha', item.fecha);
 
-  if (error) {
-    console.error('Error al guardar disponibilidad mensual general:', error.message);
-    return { ok: false, error: error.message };
+      if (empId) {
+        consultaExistente = consultaExistente.eq('empleado_id', empId);
+      } else {
+        consultaExistente = consultaExistente.is('empleado_id', null);
+      }
+
+      const { data: existente, error: errorBuscar } = await consultaExistente.maybeSingle();
+
+      if (errorBuscar) {
+        return { ok: false, error: errorBuscar.message };
+      }
+
+      const payload = {
+        fecha: item.fecha,
+        empleado_id: empId,
+        activo: item.activo,
+        bloques: item.activo ? item.bloques : [],
+      };
+
+      if (existente?.id) {
+        const { error: errorUpdate } = await supabase
+          .from('disponibilidad_mensual_general')
+          .update(payload)
+          .eq('id', existente.id);
+
+        if (errorUpdate) {
+          return { ok: false, error: errorUpdate.message };
+        }
+      } else {
+        const { error: errorInsert } = await supabase
+          .from('disponibilidad_mensual_general')
+          .insert(payload);
+
+        if (errorInsert) {
+          return { ok: false, error: errorInsert.message };
+        }
+      }
+    }
+
+    return { ok: true };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || 'Error inesperado al guardar.' };
   }
-
-  return { ok: true };
 }
 
 /**
