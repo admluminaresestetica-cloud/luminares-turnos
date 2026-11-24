@@ -8,7 +8,7 @@ export type TipoFuente = "modern" | "bold" | "display" | "serif";
 
 export type AlineacionTexto = "left" | "center" | "right";
 
-export type BadgeTipo = 
+export type BadgeTipo =
   | "ninguno"
   | "ultimas_unidades"
   | "mas_vendido"
@@ -24,7 +24,12 @@ export type SombraProducto = "ninguna" | "suave" | "profunda" | "neon";
 
 export type BordeProducto = "ninguno" | "blanco" | "dorado" | "fino_sutil";
 
-export type StickerDecorativo = "ninguno" | "oferta_estrella" | "copo_nieve" | "lazo_regalo" | "corona_oro";
+export type StickerDecorativo =
+  | "ninguno"
+  | "oferta_estrella"
+  | "copo_nieve"
+  | "lazo_regalo"
+  | "corona_oro";
 
 export interface FiltrosImagen {
   brillo: number; // 50 a 150 (por defecto 100)
@@ -53,4 +58,13 @@ export interface OpcionesStory {
   sombraProducto?: SombraProducto;
   bordeProducto?: BordeProducto;
   stickerDecorativo?: StickerDecorativo;
+}
+
+export interface PiezaTandaStory {
+  id: string;
+  dataUrl: string;
+  nombreArchivo: string;
+  formato: FormatoStory;
+  etiqueta: string;
+  textoSugerido?: string;
 }

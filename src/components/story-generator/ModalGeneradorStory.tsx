@@ -1,15 +1,26 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Smartphone, X, Share2, Download, Loader2 } from "lucide-react";
+import {
+  Smartphone,
+  X,
+  Share2,
+  Download,
+  Loader2,
+  PlusCircle,
+  Sparkles,
+  Copy,
+  Check,
+} from "lucide-react";
 import { toPng } from "html-to-image";
 import { ConfiguracionEmpresa } from "@/lib/supabase/configuracion-empresa";
-import { OpcionesStory } from "@/types/story";
+import { OpcionesStory, PiezaTandaStory } from "@/types/story";
 import { LienzoStory } from "./LienzoStory";
 import { ControlesEditor } from "./ControlesEditor";
+import { BandejaTandaStory } from "./BandejaTandaStory";
 import {
-  compartirOGuardarImagen,
-  descargarImagenDirecta,
+  compartirMultiplesImagenes,
+  descargarMultiplesImagenes,
 } from "@/utils/shareImage";
 
 interface ModalGeneradorStoryProps {
@@ -27,11 +38,13 @@ export function ModalGeneradorStory({
 }: ModalGeneradorStoryProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [procesando, setProcesando] = useState(false);
+  const [tanda, setTanda] = useState<PiezaTandaStory[]>([]);
+  const [piezaInspeccionada, setPiezaInspeccionada] = useState<PiezaTandaStory | null>(null);
+  const [textoCopiado, setTextoCopiado] = useState(false);
 
-  // Estado inicial con todas las opciones de personalización avanzadas
   const [opciones, setOpciones] = useState<OpcionesStory>({
     estiloPlantilla: "minimal",
-    formato: "story", // "story" (9:16) | "feed" (1:1) | "banner" (16:9)
+    formato: "story",
     fitImagen: "contain",
     colorFondo: "#ffffff",
     usarColorPersonalizado: false,
@@ -51,8 +64,19 @@ export function ModalGeneradorStory({
 
   if (!isOpen || !producto) return null;
 
-  // Genera el dataUrl en formato PNG a partir del lienzo
-  const generarDataUrl = async (): Promise<string | null> => {
+  const textoSugerido = `¡Mirá esta oferta de ${producto.nombre || "nuestra tienda"}${
+    producto.precio ? ` a $${producto.precio}` : ""
+  }!`;
+
+  const nombreLimpio = (producto.nombre || "producto")
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+
+  const generarDataUrlActual = async (): Promise<string | null> => {
+    // Si está inspeccionando una pieza ya guardada, devolvemos su dataUrl
+    if (piezaInspeccionada) {
+      return piezaInspeccionada.dataUrl;
+    }
     if (!cardRef.current) return null;
     try {
       return await toPng(cardRef.current, {
@@ -65,50 +89,120 @@ export function ModalGeneradorStory({
     }
   };
 
-  // Nombres de archivo formateados según el formato elegido
-  const sufijoFormato = opciones.formato;
-  const nombreLimpio = (producto.nombre || "producto")
-    .toLowerCase()
-    .replace(/\s+/g, "-");
-  const nombreArchivo = `${sufijoFormato}-${nombreLimpio}.png`;
+  const construirNombreArchivo = (formato: OpcionesStory["formato"], indice?: number) => {
+    const sufijoIndice = typeof indice === "number" ? `-${indice + 1}` : "";
+    return `${formato}-${nombreLimpio}${sufijoIndice}.png`;
+  };
 
-  // Acción 1: Compartir directamente en apps (WhatsApp, Instagram, etc.)
+  const agregarPiezaATanda = async () => {
+    setProcesando(true);
+    const dataUrl = await generarDataUrlActual();
+    if (dataUrl) {
+      const nuevaPieza: PiezaTandaStory = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        dataUrl,
+        formato: opciones.formato,
+        nombreArchivo: construirNombreArchivo(opciones.formato, tanda.length),
+        etiqueta: `${producto.nombre || "Pieza"} (${opciones.estiloPlantilla})`,
+        textoSugerido,
+      };
+      setTanda((prev) => [...prev, nuevaPieza]);
+      setPiezaInspeccionada(null);
+    }
+    setProcesando(false);
+  };
+
+  const eliminarPiezaDeTanda = (id: string) => {
+    setTanda((prev) => prev.filter((item) => item.id !== id));
+    if (piezaInspeccionada?.id === id) {
+      setPiezaInspeccionada(null);
+    }
+  };
+
+  const limpiarTanda = () => {
+    setTanda([]);
+    setPiezaInspeccionada(null);
+  };
+
+  const copiarTexto = async () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(textoSugerido);
+        setTextoCopiado(true);
+        setTimeout(() => setTextoCopiado(false), 2000);
+      } catch {
+        // Ignorar error de portapapeles
+      }
+    }
+  };
+
+  const obtenerLoteParaExportar = async (): Promise<{
+    dataUrls: string[];
+    nombresArchivo: string[];
+  } | null> => {
+    if (tanda.length > 0) {
+      return {
+        dataUrls: tanda.map((p) => p.dataUrl),
+        nombresArchivo: tanda.map((p) => p.nombreArchivo),
+      };
+    }
+
+    const actual = await generarDataUrlActual();
+    if (!actual) return null;
+    return {
+      dataUrls: [actual],
+      nombresArchivo: [construirNombreArchivo(opciones.formato)],
+    };
+  };
+
   const compartirStory = async () => {
     setProcesando(true);
-    const dataUrl = await generarDataUrl();
-    if (dataUrl) {
-      await compartirOGuardarImagen({
-        dataUrl,
-        nombreArchivo,
+    const lote = await obtenerLoteParaExportar();
+    if (lote) {
+      await compartirMultiplesImagenes({
+        dataUrls: lote.dataUrls,
+        nombresArchivo: lote.nombresArchivo,
+        nombreBase: `${opciones.formato}-${nombreLimpio}`,
         titulo: producto.nombre || "Promoción",
-        texto: `¡Mirá esta oferta de ${producto.nombre || "nuestra tienda"}!`,
+        texto: textoSugerido,
+        copiarTextoAlPortapapeles: true,
       });
     }
     setProcesando(false);
   };
 
-  // Acción 2: Descargar directamente el archivo PNG
   const descargarStory = async () => {
     setProcesando(true);
-    const dataUrl = await generarDataUrl();
-    if (dataUrl) {
-      descargarImagenDirecta(dataUrl, nombreArchivo);
+    const lote = await obtenerLoteParaExportar();
+    if (lote) {
+      descargarMultiplesImagenes(
+        lote.dataUrls,
+        lote.nombresArchivo,
+        `${opciones.formato}-${nombreLimpio}`
+      );
     }
     setProcesando(false);
   };
 
+  const cantidadLista = tanda.length > 0 ? tanda.length : 1;
+
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 dark:bg-black/80 p-2 sm:p-4 backdrop-blur-sm transition-all pb-16 sm:pb-4">
-      <div className="relative flex max-h-[88vh] sm:max-h-[92vh] w-full max-w-3xl flex-col rounded-3xl bg-white dark:bg-zinc-900 shadow-2xl border border-slate-100 dark:border-zinc-800 overflow-hidden transition-colors">
+      <div className="relative flex max-h-[90vh] sm:max-h-[92vh] w-full max-w-4xl flex-col rounded-3xl bg-white dark:bg-zinc-900 shadow-2xl border border-slate-100 dark:border-zinc-800 overflow-hidden transition-colors">
         {/* Cabecera del Modal */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 px-4 py-3 sm:px-6 sm:py-4 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-100 dark:border-emerald-900/50 rounded-xl text-emerald-600 dark:text-emerald-400">
               <Smartphone className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">
-              Generador de Imagen Promocional
-            </h3>
+            <div>
+              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">
+                Generador de Imagen Promocional
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                Armá una o varias piezas en la tanda y compartilas juntas
+              </p>
+            </div>
           </div>
 
           <button
@@ -120,74 +214,148 @@ export function ModalGeneradorStory({
           </button>
         </div>
 
-        {/* Cuerpo: Panel Lateral de Controles + Vista Previa en Vivo */}
-        <div className="flex flex-1 flex-col sm:flex-row p-3 sm:p-6 gap-3 sm:gap-6 items-stretch sm:items-center justify-start sm:justify-center bg-slate-50 dark:bg-zinc-950/50 overflow-y-auto">
-          {/* Editor de controles con altura fija y scroll interno para PC */}
-          <div className="w-full sm:w-[380px] lg:w-[420px] shrink-0 h-full max-h-[75vh] sm:max-h-[80vh] flex flex-col overflow-hidden bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm">
-            <div className="flex-1 overflow-y-auto p-2 sm:p-3">
-              <ControlesEditor
-                opciones={opciones}
-                onChangeOpciones={setOpciones}
-              />
+        {/* Cuerpo: Controles + Vista Previa + Bandeja de Tanda */}
+        <div className="flex flex-1 flex-col gap-3 sm:gap-4 p-3 sm:p-5 bg-slate-50 dark:bg-zinc-950/50 overflow-y-auto">
+          <div className="flex flex-1 flex-col sm:flex-row gap-3 sm:gap-5 items-stretch sm:items-center justify-start sm:justify-center">
+            {/* Editor de controles */}
+            <div className="w-full sm:w-[360px] lg:w-[400px] shrink-0 h-full max-h-[60vh] sm:max-h-[62vh] flex flex-col overflow-hidden bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm">
+              <div className="flex-1 overflow-y-auto p-2 sm:p-3">
+                <ControlesEditor
+                  opciones={opciones}
+                  onChangeOpciones={(nuevas) => {
+                    setPiezaInspeccionada(null);
+                    setOpciones(nuevas);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Área de vista previa */}
+            <div className="relative flex-1 flex flex-col justify-center items-center p-2 sm:p-3 w-full min-h-[280px] sm:min-h-[420px] overflow-hidden bg-slate-200/50 dark:bg-zinc-900/80 rounded-2xl border border-slate-200/80 dark:border-zinc-800">
+              {piezaInspeccionada && (
+                <div className="mb-2 flex items-center gap-2 rounded-full bg-emerald-600/90 px-3 py-1 text-[11px] font-bold text-white shadow-xs z-20">
+                  <span>Viendo pieza guardada: {piezaInspeccionada.etiqueta}</span>
+                  <button
+                    type="button"
+                    onClick={() => setPiezaInspeccionada(null)}
+                    className="inline-flex items-center gap-1 underline hover:text-emerald-100 cursor-pointer"
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    Volver al editor
+                  </button>
+                </div>
+              )}
+
+              <div
+                className={`transform transition-transform origin-center flex items-center justify-center ${
+                  opciones.formato === "story"
+                    ? "scale-[0.58] xs:scale-[0.68] sm:scale-90"
+                    : opciones.formato === "feed"
+                    ? "scale-[0.68] xs:scale-[0.78] sm:scale-95"
+                    : "scale-[0.62] xs:scale-[0.72] sm:scale-90"
+                }`}
+              >
+                {piezaInspeccionada ? (
+                  <img
+                    src={piezaInspeccionada.dataUrl}
+                    alt={piezaInspeccionada.etiqueta}
+                    className="rounded-xl shadow-2xl max-h-[440px] w-auto object-contain"
+                  />
+                ) : (
+                  <LienzoStory
+                    ref={cardRef}
+                    producto={producto}
+                    config={config}
+                    opciones={opciones}
+                  />
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Área de vista previa adaptativa y centrada */}
-          <div className="flex-1 flex justify-center items-center p-2 sm:p-3 w-full min-h-[280px] sm:min-h-[500px] overflow-hidden bg-slate-200/50 dark:bg-zinc-900/80 rounded-2xl border border-slate-200/80 dark:border-zinc-800">
-            <div
-              className={`transform transition-transform origin-center flex items-center justify-center ${
-                opciones.formato === "story"
-                  ? "scale-[0.60] xs:scale-[0.70] sm:scale-90"
-                  : opciones.formato === "feed"
-                  ? "scale-[0.70] xs:scale-[0.80] sm:scale-95"
-                  : "scale-[0.65] xs:scale-[0.75] sm:scale-90"
-              }`}
-            >
-              <LienzoStory
-                ref={cardRef}
-                producto={producto}
-                config={config}
-                opciones={opciones}
-              />
-            </div>
-          </div>
+          {/* Bandeja inferior con las imágenes creadas */}
+          <BandejaTandaStory
+            piezas={tanda}
+            piezaSeleccionadaId={piezaInspeccionada?.id ?? null}
+            onSeleccionarPieza={(pieza) => setPiezaInspeccionada(pieza)}
+            onEliminarPieza={eliminarPiezaDeTanda}
+            onLimpiarTanda={limpiarTanda}
+          />
         </div>
 
-        {/* Pie de acciones (Fijo abajo y por encima) */}
-        <div className="flex flex-wrap items-center justify-end border-t border-slate-100 dark:border-zinc-800 px-4 py-3 sm:px-6 sm:py-4 gap-2 bg-white dark:bg-zinc-900 shrink-0 z-10">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl px-3 py-2 text-xs font-bold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
-          >
-            Cancelar
-          </button>
+        {/* Pie de acciones */}
+        <div className="flex flex-wrap items-center justify-between border-t border-slate-100 dark:border-zinc-800 px-4 py-3 sm:px-6 sm:py-3.5 gap-2 bg-white dark:bg-zinc-900 shrink-0 z-10">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={agregarPiezaATanda}
+              disabled={procesando || Boolean(piezaInspeccionada)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-600/30 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <PlusCircle className="h-3.5 w-3.5" />
+              <span>Agregar a la tanda</span>
+            </button>
 
-          {/* Botón Secundario: Descargar */}
-          <button
-            type="button"
-            onClick={descargarStory}
-            disabled={procesando}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
-          >
-            <Download className="h-3.5 w-3.5" />
-            <span>Descargar</span>
-          </button>
+            <button
+              type="button"
+              onClick={copiarTexto}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 px-3 py-2 text-xs font-bold text-slate-700 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer"
+            >
+              {textoCopiado ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Texto copiado</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" />
+                  <span>Copiar texto</span>
+                </>
+              )}
+            </button>
+          </div>
 
-          {/* Botón Principal: Compartir */}
-          <button
-            type="button"
-            onClick={compartirStory}
-            disabled={procesando}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white active:scale-95 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
-          >
-            {procesando ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Share2 className="h-3.5 w-3.5" />
-            )}
-            <span>{procesando ? "Generando..." : "Compartir"}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl px-3 py-2 text-xs font-bold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
+            >
+              Cerrar
+            </button>
+
+            <button
+              type="button"
+              onClick={descargarStory}
+              disabled={procesando}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-700 active:scale-95 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span>
+                {cantidadLista > 1 ? `Descargar (${cantidadLista})` : "Descargar"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={compartirStory}
+              disabled={procesando}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white active:scale-95 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+            >
+              {procesando ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Share2 className="h-3.5 w-3.5" />
+              )}
+              <span>
+                {procesando
+                  ? "Generando..."
+                  : cantidadLista > 1
+                  ? `Compartir (${cantidadLista})`
+                  : "Compartir"}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
