@@ -164,13 +164,6 @@ const horariosConExcepciones = {
       }
     );
 
-
-    console.log('DEBUG SLOTS:', {
-      fechaSel,
-      disponibilidadMensual,
-      horariosBase,
-      slotsConEstado,
-    });
     setSlots(slotsConEstado);
     setCargandoSlots(false);
   }, [configCalendario, duracionTotal, disponibilidadMensual]);
@@ -198,7 +191,6 @@ useEffect(() => {
   }, [fecha, tipo]);
 
   useEffect(() => {
-    console.log('DEBUG EFECTO FECHA:', { fecha, tieneConfig: Boolean(configCalendario) });
     if (fecha && configCalendario) {
       cargarSlots(fecha);
     }

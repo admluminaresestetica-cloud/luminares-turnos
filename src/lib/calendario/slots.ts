@@ -317,14 +317,6 @@ export function resolverBloquesGeneralParaFecha(
 
 const { disponibilidadMensual = [], empleadoId = null, excepciones = [] } = opciones;
 
-  console.log('DEBUG RESOLVER:', {
-    fecha,
-    excepciones,
-    empleadoId,
-    cantidadMensual: disponibilidadMensual.length,
-    disponibilidadMensual,
-  });
-
   if (excepciones.includes(fecha)) {
     return [];
   }

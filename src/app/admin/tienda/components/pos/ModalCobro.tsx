@@ -83,7 +83,6 @@ export default function ModalCobro({
 
       setBuscandoCupones(true);
       try {
-        console.log("🔍 Buscando cliente con texto:", nombreCliente.trim());
 
 const { data: clientes, error: errCliente } = await supabase
           .from("clientes")
@@ -113,7 +112,6 @@ const { data: clientes, error: errCliente } = await supabase
             setCuponesCliente([]);
           } else {
             console.log("📦 Total de registros en canjes_usuarios:", cupones);
-            
             // Relajamos temporalmente el filtro para ver todos los canjes de este cliente o mostrar algo en pantalla
               const activos = (cupones || []).filter((c: any) => {
 const coincideCliente = 
@@ -136,12 +134,9 @@ const tipoValido =
 
 return coincideCliente && estaActivo && tipoValido;
             });
-
-            console.log("🎁 Primer cupón completo para inspeccionar:", activos[0]);
             setCuponesCliente(activos);
           }
         } else {
-          console.log("⚠️ No se encontró ningún cliente en la tabla clientes con ese nombre.");
           setCuponesCliente([]);
         }
       } catch (err) {

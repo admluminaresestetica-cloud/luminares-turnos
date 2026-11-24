@@ -7,7 +7,6 @@ import { acreditarPuntosTransaccion } from '../puntos';
 // FUNCIÓN AUXILIAR: Acreditación de puntos y activación de referidos
 // ---------------------------------------------------------------------------
 export async function procesarAsistenciaYReferidos(reservaId: string) {
-  console.log('🟢 [DEBUG] 1. Ejecutando procesarAsistenciaYReferidos para la reserva ID:', reservaId);
 
   const { data: reservaInfo, error: errorReserva } = await supabase
     .from('reservas')
@@ -15,16 +14,13 @@ export async function procesarAsistenciaYReferidos(reservaId: string) {
     .eq('id', reservaId)
     .maybeSingle();
 
-  console.log('🟢 [DEBUG] 2. Datos de la reserva encontrados:', reservaInfo, '| Error:', errorReserva);
 
   // 🛑 REQUISITO CLAVE: Solo procesar si el estado es realmente 'completado'
   if (reservaInfo?.estado !== 'completado') {
-    console.log('⚠️ [DEBUG] La reserva no está completada (estado actual:', reservaInfo?.estado, '). No se otorgan puntos ni referidos.');
     return;
   }
 
   if (reservaInfo?.user_id) {
-    console.log('🟢 [DEBUG] 3. user_id detectado con éxito:', reservaInfo.user_id);
 
     // 1. Acreditar puntos de fidelidad
     try {
@@ -34,7 +30,6 @@ export async function procesarAsistenciaYReferidos(reservaId: string) {
         'reserva',
         reservaId
       );
-      console.log('🟢 [DEBUG] 4. Puntos acreditados correctamente.');
     } catch (errPuntos) {
       console.error('🔴 [ERROR] Falló la acreditación de puntos:', errPuntos);
     }
@@ -46,13 +41,11 @@ export async function procesarAsistenciaYReferidos(reservaId: string) {
       .eq('user_id', reservaInfo.user_id)
       .select();
 
-    console.log('🟢 [DEBUG] 5. Resultado de actualizar tabla clientes:', clienteActualizado, '| Error Supabase:', errorActivacion);
 
     if (errorActivacion) {
       console.error('🔴 [ERROR] Supabase rechazó activar el código de referido:', errorActivacion);
     }
   } else {
-    console.log('⚠️ [ADVERTENCIA] La reserva NO tiene un user_id asociado. Por eso no se activó nada.');
   }
 }
 

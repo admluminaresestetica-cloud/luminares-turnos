@@ -43,11 +43,6 @@ export function useAgenda() {
       const reservasData = data.reservas
       const clientesData = data.clientes
 
-      // 🔍 LOGS DE DIAGNÓSTICO
-      console.log('--- DIAGNÓSTICO REFERIDOS ---')
-      console.log('1. Clientes desde API:', clientesData)
-      console.log('2. Reservas desde API:', reservasData)
-
       if (reservasData) {
         const turnosConCodigoPropio = reservasData.map((reserva: any) => {
           const celReserva = (reserva.cliente_celular || '').replace(/\D/g, '')
@@ -69,7 +64,6 @@ export function useAgenda() {
           }
         })
 
-        console.log('3. Turnos procesados con código:', turnosConCodigoPropio)
         setTurnos(turnosConCodigoPropio as Reserva[])
       }
     } catch (err: any) {
