@@ -557,23 +557,24 @@ export default function AjustesAdminPage() {
                 {moduloActivo === 'guias_app' && <GuiasAjustesTab />}
                 {moduloActivo === 'agenda' && <HorariosTab {...configAgendaProps} />}
 
-                {moduloActivo === 'precios' && (
-                  <PreciosTab
-                    loadingPrecios={precios.loadingPrecios}
-                    servicios={precios.servicios}
-                    promos={precios.promos}
-                    seccionPrecios={precios.seccionPrecios}
-                    setSeccionPrecios={precios.setSeccionPrecios}
-                    onNuevaZona={() => precios.abrirModalServicio()}
-                    onEditarZona={(s) => precios.abrirModalServicio(s)}
-                    onToggleActivoZona={precios.toggleActivoServicio}
-                    onEliminarZona={precios.eliminarServicio}
-                    onNuevaPromo={() => precios.abrirModalPromo()}
-                    onEditarPromo={(p) => precios.abrirModalPromo(p)}
-                    onToggleActivoPromo={precios.toggleActivoPromo}
-                    onEliminarPromo={precios.eliminarPromo}
-                  />
-                )}
+{moduloActivo === 'precios' && (
+  <PreciosTab
+    loadingPrecios={precios.loadingPrecios}
+    servicios={precios.servicios}
+    promos={precios.promos}
+    seccionPrecios={precios.seccionPrecios}
+    setSeccionPrecios={precios.setSeccionPrecios}
+    onRefrescar={precios.fetchPreciosYPromos}
+    onNuevaZona={() => precios.abrirModalServicio()}
+    onEditarZona={(s) => precios.abrirModalServicio(s)}
+    onToggleActivoZona={precios.toggleActivoServicio}
+    onEliminarZona={precios.eliminarServicio}
+    onNuevaPromo={() => precios.abrirModalPromo()}
+    onEditarPromo={(p) => precios.abrirModalPromo(p)}
+    onToggleActivoPromo={precios.toggleActivoPromo}
+    onEliminarPromo={precios.eliminarPromo}
+  />
+)}
 
                 {moduloActivo === 'generales' && (
                   <GeneralesTab

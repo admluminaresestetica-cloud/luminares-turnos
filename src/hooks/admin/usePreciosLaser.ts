@@ -240,10 +240,11 @@ export function usePreciosLaser() {
     }
   }
 
-  return {
+return {
     servicios,
     promos,
     loadingPrecios,
+    fetchPreciosYPromos,
     seccionPrecios, setSeccionPrecios,
     serviciosLaserActivos,
     promosLaserActivas,
