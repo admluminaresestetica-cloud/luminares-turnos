@@ -42,16 +42,18 @@ export function getZonasPromoResueltas(
 export function getZonasSwapDisponibles(
   zonaOriginal: ServicioLaser,
   zonas: ServicioLaser[],
-  idsOcupados: string[]
+  idsOcupados: string[],
+  idZonaActiva?: string
 ): ServicioLaser[] {
   const generoOriginal = zonaOriginal.genero?.toLowerCase();
+  const zonaAExcluir = idZonaActiva || zonaOriginal.id;
 
   return zonas.filter((z) => {
     // 1. Misma categoría (chica por chica, media por media, grande por grande)
     const mismaCategoria = z.categoria_zona === zonaOriginal.categoria_zona;
 
-    // 2. No es la misma zona ni está ya seleccionada en la sesión
-    const noEstaOcupada = z.id !== zonaOriginal.id && !idsOcupados.includes(z.id);
+    // 2. No es la zona actualmente activa en este slot ni otra ya ocupada en la sesión
+    const noEstaOcupada = z.id !== zonaAExcluir && !idsOcupados.includes(z.id);
 
     // 3. Filtro estricto por género (coincide el género o es unisex)
     const generoValido =

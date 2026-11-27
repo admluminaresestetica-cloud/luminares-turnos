@@ -226,14 +226,22 @@ function LaserContent() {
     return getZonasPromoResueltas(promoSeleccionada, zonas, swaps).map((z) => z.id);
   }, [promoSeleccionada, zonas, swaps]);
 
-  const zonaSwapOriginal = swapModalZonaId ? getZonaById(zonas, swapModalZonaId) : undefined;
+const zonaSwapOriginal = swapModalZonaId ? getZonaById(zonas, swapModalZonaId) : undefined;
+  const zonaActivaEnSlotId = swapModalZonaId
+    ? (swaps[swapModalZonaId] || swapModalZonaId)
+    : undefined;
+
   const opcionesSwap =
-    zonaSwapOriginal && promoSeleccionada
-      ? getZonasSwapDisponibles(zonaSwapOriginal, zonas, [
-          ...promoSeleccionada.zonas_incluidas,
-          ...Object.values(swaps),
-          ...zonasExtraIds,
-        ])
+    zonaSwapOriginal && promoSeleccionada && zonaActivaEnSlotId
+      ? getZonasSwapDisponibles(
+          zonaSwapOriginal,
+          zonas,
+          [
+            ...zonasPromoActivas.filter((id) => id !== zonaActivaEnSlotId),
+            ...zonasExtraIds,
+          ],
+          zonaActivaEnSlotId
+        )
       : [];
 
   const handleContinuar = () => {
