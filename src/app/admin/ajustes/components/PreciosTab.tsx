@@ -17,7 +17,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { ServicioLaser, PromoLaser, getNombresZonas } from '@/app/admin/turnos/components/types'
-
+import GeneradorPlacaLaser from './GeneradorPlacaLaser';
 type FiltroGenero = 'todos' | 'masculino' | 'femenino'
 
 interface PreciosTabProps {
@@ -574,6 +574,8 @@ export default function PreciosTab({
           </div>
         </div>
       )}
+
+      <GeneradorPlacaLaser promos={promos} zonas={servicios} />
     </div>
   )
 }
