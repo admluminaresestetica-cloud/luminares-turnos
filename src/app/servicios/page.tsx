@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import * as Icons from 'lucide-react';
-import { ChevronRight, X, ZoomIn, Check, CircleStar, ArrowLeft, Tag, Clock, ArrowRight } from 'lucide-react';
+import { ChevronRight, X, ZoomIn, Check, CircleStar, ArrowLeft, Tag, Clock, ArrowRight, LayoutDashboard } from 'lucide-react';
 import FlujoAgendaConfirmacion from '@/components/booking/FlujoAgendaConfirmacion';
 import { SERVICIOS_STORAGE_KEY } from '@/lib/booking/session';
 import {
@@ -21,6 +21,8 @@ function obtenerIconoDinamico(nombreIcono?: string) {
   const IconoComponente = (Icons as Record<string, any>)[nombreIcono];
   return IconoComponente || CircleStar;
 }
+
+const SERVICIOS_PROXIMAMENTE = true;
 
 // Helper para detectar si una categoría o servicio es un Combo/Promo
 function esPromocionOCombo(texto?: string): boolean {
@@ -196,6 +198,40 @@ function ServiciosContent() {
     paso === 'servicios' && categoria
       ? obtenerIconoDinamico(servicios.find((s) => s.categoria === categoria && s.icono)?.icono)
       : CircleStar;
+
+
+  if (SERVICIOS_PROXIMAMENTE) {
+    return (
+      <main className="min-h-[80vh] bg-background flex items-center justify-center px-4 py-12 font-sans">
+        <div className="max-w-md w-full bg-card text-card-foreground border border-border rounded-[32px] p-8 sm:p-10 shadow-xs text-center space-y-6">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+            <LayoutDashboard className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="inline-block text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-primary/10 text-primary">
+              Próximamente
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+              Servicios Generales próximamente
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+              Estamos terminando de preparar esta sección para que puedas reservar tus turnos online. ¡Volvé a visitarnos pronto!
+            </p>
+          </div>
+
+          <div className="pt-2 flex justify-center">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center h-11 px-6 rounded-2xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-all active:scale-95"
+            >
+              Volver al inicio
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background px-4 pt-4 pb-44 font-sans selection:bg-muted sm:px-6 sm:pt-6">
