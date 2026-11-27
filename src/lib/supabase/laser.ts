@@ -23,7 +23,8 @@ export async function getPromosLaser(genero: GeneroLaser): Promise<PromoLaser[]>
     .select('*')
     .eq('genero', genero)
     .eq('activo', true)
-    .order('nombre_promo');
+    .order('orden', { ascending: true })
+    .order('nombre_promo', { ascending: true });
 
   if (error) {
     console.error('Error al obtener promos láser:', error);

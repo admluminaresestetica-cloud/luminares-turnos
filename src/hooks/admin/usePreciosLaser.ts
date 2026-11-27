@@ -16,7 +16,7 @@ export function usePreciosLaser() {
   const [modalPromo, setModalPromo] = useState<boolean>(false)
   const [promoEdit, setPromoEdit] = useState<Partial<PromoLaser> | null>(null)
 
-  const fetchPreciosYPromos = async () => {
+const fetchPreciosYPromos = async () => {
     setLoadingPrecios(true)
     const { data: servData } = await supabase
       .from('servicios_laser')
@@ -26,6 +26,7 @@ export function usePreciosLaser() {
     const { data: promoData } = await supabase
       .from('promos_laser')
       .select('*')
+      .order('orden', { ascending: true })
       .order('nombre_promo', { ascending: true })
 
     if (servData) setServicios(servData as ServicioLaser[])
@@ -240,6 +241,41 @@ export function usePreciosLaser() {
     }
   }
 
+const moverOrdenPromo = async (promoId: string, direccion: 'arriba' | 'abajo') => {
+    const listaActual = [...promos]
+    const index = listaActual.findIndex((p) => p.id === promoId)
+    if (index === -1) return
+
+    const targetIndex = direccion === 'arriba' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= listaActual.length) return
+
+    const temp = listaActual[index]
+    listaActual[index] = listaActual[targetIndex]
+    listaActual[targetIndex] = temp
+
+    const actualizadas = listaActual.map((promo, idx) => ({
+      ...promo,
+      orden: idx + 1,
+    }))
+
+    setPromos(actualizadas)
+
+    const resultados = await Promise.all(
+      actualizadas.map((promo) =>
+        supabase
+          .from('promos_laser')
+          .update({ orden: promo.orden })
+          .eq('id', promo.id)
+      )
+    )
+
+    const huboError = resultados.some((r) => r.error)
+    if (huboError) {
+      alert('Error al guardar el nuevo orden de las promos')
+      fetchPreciosYPromos()
+    }
+  }
+
 return {
     servicios,
     promos,
@@ -255,6 +291,7 @@ return {
 
     modalPromo, promoEdit, setPromoEdit,
     abrirModalPromo, cerrarModalPromo, toggleZonaEnPromo,
-    guardarPromo, toggleActivoPromo, eliminarPromo
+    guardarPromo, toggleActivoPromo, eliminarPromo,
+    moverOrdenPromo
   }
 }

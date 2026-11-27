@@ -28,6 +28,7 @@ export interface PromoLaser {
   duracion_total_min: number;
   permite_swap: boolean;
   activo: boolean;
+  orden?: number;
 }
 
 export interface ServicioGeneral {

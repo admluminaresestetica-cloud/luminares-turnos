@@ -13,6 +13,8 @@ import {
   RefreshCw,
   Search,
   X,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react'
 import { ServicioLaser, PromoLaser, getNombresZonas } from '@/app/admin/turnos/components/types'
 
@@ -36,6 +38,7 @@ interface PreciosTabProps {
   onEditarPromo: (promo: PromoLaser) => void
   onToggleActivoPromo: (promo: PromoLaser) => void
   onEliminarPromo: (id: string) => void
+  onMoverPromo: (promoId: string, direccion: 'arriba' | 'abajo') => void
 }
 
 export default function PreciosTab({
@@ -53,6 +56,7 @@ export default function PreciosTab({
   onEditarPromo,
   onToggleActivoPromo,
   onEliminarPromo,
+  onMoverPromo
 }: PreciosTabProps) {
   const [filtroGenero, setFiltroGenero] = useState<FiltroGenero>('todos')
   const [busqueda, setBusqueda] = useState('')
@@ -414,16 +418,17 @@ export default function PreciosTab({
           </div>
         </div>
       ) : (
-        /* TABLA DE PROMOCIONES */
+/* TABLA DE PROMOCIONES */
         <div className="space-y-2">
           <p className="sm:hidden text-[11px] text-slate-400 dark:text-zinc-500 font-bold">
             ↔ Deslizá la tabla hacia los costados para ver más columnas
           </p>
-          <div className="overflow-x-auto scroll-smooth -mx-4 sm:mx-0 border border-slate-100 dark:border-zinc-800 rounded-2xl shadow-2xs">
+<div className="overflow-x-auto scroll-smooth -mx-4 sm:mx-0 border border-slate-100 dark:border-zinc-800 rounded-2xl shadow-2xs">
             <div className="inline-block min-w-full align-middle">
               <table className="min-w-full text-left text-xs">
                 <thead className="bg-slate-50 dark:bg-zinc-800/80 border-b border-slate-200/80 dark:border-zinc-800 text-slate-500 uppercase tracking-wider text-[11px] font-bold dark:text-zinc-400">
                   <tr>
+                    <th className="px-3 py-3.5">Orden</th>
                     <th className="px-4 py-3.5">Promoción</th>
                     <th className="px-4 py-3.5">Género</th>
                     <th className="px-4 py-3.5">Zonas Incluidas</th>
@@ -437,15 +442,45 @@ export default function PreciosTab({
                 <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80">
                   {promosFiltradas.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-10 text-center text-slate-400 dark:text-zinc-500 font-semibold">
+                      <td
+                        colSpan={9}
+                        className="px-4 py-10 text-center text-slate-400 dark:text-zinc-500 font-semibold"
+                      >
                         No hay promociones que coincidan con el filtro o búsqueda.
                       </td>
                     </tr>
                   ) : (
-                    promosFiltradas.map((p) => {
+                    promosFiltradas.map((p, idx) => {
                       const esMasculino = p.genero?.toLowerCase() === 'masculino'
+                      const esPrimera = idx === 0
+                      const esUltima = idx === promosFiltradas.length - 1
                       return (
                         <tr key={p.id} className="hover:bg-slate-50/60 transition-colors dark:hover:bg-zinc-800/40">
+                          <td className="px-3 py-3.5 whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                disabled={esPrimera}
+                                onClick={() => onMoverPromo(p.id, 'arriba')}
+                                title="Subir promoción"
+                                aria-label="Subir promoción"
+                                className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-90 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 cursor-pointer"
+                              >
+                                  <ChevronUp className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={esUltima}
+                                  onClick={() => onMoverPromo(p.id, 'abajo')}
+                                  title="Bajar promoción"
+                                  aria-label="Bajar promoción"
+                                  className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-90 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 cursor-pointer"
+                                >
+                                  <ChevronDown className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+
                           <td className="px-4 py-3.5 font-bold text-slate-900 whitespace-nowrap dark:text-zinc-100">
                             {p.nombre_promo || '-'}
                           </td>

@@ -558,7 +558,7 @@ export default function AjustesAdminPage() {
                 {moduloActivo === 'agenda' && <HorariosTab {...configAgendaProps} />}
 
 {moduloActivo === 'precios' && (
-  <PreciosTab
+<PreciosTab
     loadingPrecios={precios.loadingPrecios}
     servicios={precios.servicios}
     promos={precios.promos}
@@ -573,6 +573,7 @@ export default function AjustesAdminPage() {
     onEditarPromo={(p) => precios.abrirModalPromo(p)}
     onToggleActivoPromo={precios.toggleActivoPromo}
     onEliminarPromo={precios.eliminarPromo}
+    onMoverPromo={precios.moverOrdenPromo}
   />
 )}
 
